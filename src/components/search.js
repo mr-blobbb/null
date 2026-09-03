@@ -151,9 +151,18 @@
           { t: "Schedule", u: "/schedule.html", i: "sched" },
           { t: "Settings", u: "/settings.html", i: "settings" },
         ].forEach(function (s) {
-          var el = rowEl({ title: s.t, sub: s.u, icon: s.i, run: function () { location.href = s.u; } });
+          var it = {
+            kind: "page",
+            title: s.t,
+            sub: s.u,
+            icon: s.i,
+            run: function () {
+              location.href = s.u;
+            },
+          };
+          var el = rowEl(it);
           results.appendChild(el);
-          rows.push(el);
+          rows.push({ el: el, _it: it });
         });
         return;
       }
@@ -174,7 +183,7 @@
         byGroup[k].slice(0, 6).forEach(function (h) {
           var el = rowEl(h.it);
           results.appendChild(el);
-          rows.push(el);
+          rows.push({ el: el, _it: h.it });
         });
       });
     }
@@ -229,7 +238,7 @@
         move(-1);
       } else if (e.key === "Enter") {
         e.preventDefault();
-        if (rows[sel]) finish(rows[sel].el._it);
+        if (rows[sel]) finish(rows[sel]._it);
       } else if (e.key === "Escape") {
         e.preventDefault();
         close();

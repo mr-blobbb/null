@@ -57,8 +57,8 @@
   function paintTabPreview() {
     var p = N.tab.current();
     var img = d.qs("#tabPrev img");
-    var b = d.qs("#tabPrev b");
-    var s = d.qs("#tabPrev span");
+    var b = d.qs("#tabPrev .tp-name");
+    var s = d.qs("#tabPrev .tp-sub");
     if (p) {
       img.src = p.icon;
       img.style.display = "";

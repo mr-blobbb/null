@@ -3338,6 +3338,7 @@ window.NULL_CONTENT = {
     }
 
     ov._close = close;
+    ov._data = { dismissible: opts.dismissible };
     return { close: close, body: body, overlay: ov };
   }
 
@@ -3643,7 +3644,7 @@ window.NULL_CONTENT = {
         iconTone: "warn",
         body:
           "<p>" +
-          (entry.warning.description || "").replace(/\n/g, "<br>").replace(/</g, "&lt;") +
+          d.escHtml(entry.warning.description || "").replace(/\n/g, "<br>") +
           "</p>",
         dismissible: false,
         actions: [

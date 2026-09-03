@@ -81,6 +81,7 @@
     }
 
     ov._close = close;
+    ov._data = { dismissible: opts.dismissible };
     return { close: close, body: body, overlay: ov };
   }
 
