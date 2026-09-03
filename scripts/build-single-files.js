@@ -113,8 +113,7 @@ const RELEASE_CSS = `
 .rel-shell{max-width:1120px;margin:0 auto;padding:14px 16px 80px}
 .rel-top{position:sticky;top:0;z-index:80;display:flex;align-items:center;gap:10px;
   padding:10px 14px;border:1px solid var(--line);border-radius:16px;
-  background:color-mix(in srgb,var(--bg) 55%,transparent);
-  backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4)}
+  background:var(--bg-2)}
 .rel-top .sp{flex:1}
 .rel-nav{display:flex;flex-wrap:wrap;gap:6px;padding:12px 0 6px}
 .rel-view{margin-top:14px}
@@ -160,15 +159,11 @@ const APP_JS = String.raw`
 
   var NAV = {
     mini: ["home", "games", "apps", "settings"],
-    lite: ["home", "games", "apps", "proxies", "favorites", "schedule", "settings"],
-    regular: ["home", "games", "apps", "proxies", "favorites", "recent", "announcements", "schedule", "backups", "settings"]
+    lite: ["home", "games", "apps", "proxies", "schedule", "settings"],
+    regular: ["home", "games", "apps", "proxies", "announcements", "schedule", "backups", "settings"]
   };
   var NAV_T = { home: "Home", games: "Games", apps: "Apps", proxies: "Proxies",
-    favorites: "Favorites", recent: "Recent", announcements: "News", schedule: "Schedule",
-    backups: "Backups", settings: "Settings" };
-  var NAV_I = { home: "home", games: "game", apps: "grid", proxies: "proxy",
-    favorites: "star", recent: "clock", announcements: "ann", schedule: "sched",
-    backups: "backups", settings: "settings" };
+    announcements: "News", schedule: "Schedule", backups: "Backups", settings: "Settings" };
 
   function cat() { return window.NULL_CATALOG || { games: [], apps: [], proxies: [] }; }
 
@@ -342,7 +337,7 @@ const APP_JS = String.raw`
   function homeView() {
     var view = d.h("div", { class: "rel-view" });
     var c = cat();
-    var hero = d.h("div", { class: "hero glass-2 glow-el" }, [
+    var hero = d.h("div", { class: "hero glass-2" }, [
       d.h("span", { class: "hero-eyebrow" }, "NULL \u2014 " + TIER + " \u00b7 standalone single file"),
       d.h("h1", null, "Games, apps & tools."),
       d.h("p", { class: "sub" }, "This is a self-contained NULL build. Favorites, history and settings below are shared with the main site (same browser). Everything else is right here in this one file.")
@@ -359,12 +354,8 @@ const APP_JS = String.raw`
     hero.appendChild(actions);
     view.appendChild(hero);
 
-    var cols = d.h("div", { class: "home-cols", style: { marginTop: "16px" } });
-    var recent = d.h("div", { class: "panel glass" });
-    var fav = d.h("div", { class: "panel glass" });
-    cols.appendChild(recent);
-    if (TIER !== "mini") cols.appendChild(fav);
-    view.appendChild(cols);
+    var recent = d.h("div", { class: "panel glass", style: { marginTop: "16px" } });
+    view.appendChild(recent);
 
     function paintRecent() {
       recent.textContent = "";
@@ -385,25 +376,7 @@ const APP_JS = String.raw`
       items.forEach(function (it) { list.appendChild(N.cards.row(it.e, it.k)); });
       recent.appendChild(list);
     }
-    function paintFavs() {
-      if (TIER === "mini") return;
-      fav.textContent = "";
-      fav.appendChild(d.h("div", { class: "panel-head" }, [d.h("h2", null, "Favorites")]));
-      var list = d.h("div", { class: "rec-list" });
-      var items = N.favs.list().map(function (f) {
-        var listKind = f.k === "app" ? cat().apps : f.k === "proxy" ? cat().proxies : cat().games;
-        var e = listKind.filter(function (x) { return x.id === f.id; })[0];
-        return e ? { e: e, k: f.k } : null;
-      }).filter(Boolean).slice(0, 5);
-      if (!items.length) {
-        fav.appendChild(N.cards.empty("No favorites yet", "Tap the star on a card."));
-        return;
-      }
-      items.forEach(function (it) { list.appendChild(N.cards.row(it.e, it.k)); });
-      fav.appendChild(list);
-    }
     paintRecent();
-    paintFavs();
     return view;
   }
 
@@ -454,11 +427,38 @@ const APP_JS = String.raw`
   }
 
   function scheduleView() {
+    var S = N.schedule;
     var view = d.h("div", { class: "rel-view" });
     view.appendChild(d.h("div", { class: "view-head" }, [d.h("h2", null, "School schedule")]));
     var panel = d.h("div", { class: "panel glass" });
     view.appendChild(panel);
-    N.schedule.render(panel, { mini: false });
+
+    var info = S.todayInfo();
+    if (!info.type) {
+      panel.appendChild(d.h("p", { style: { color: "var(--text-2)" } }, info.dayName + " \u2014 no school. Monday is a Regular day."));
+      return view;
+    }
+    var blocks = S.blocksFor(info.type);
+    var head = d.h("div", { class: "today-card" }, [
+      d.h("span", { class: "chip" + (info.type === "win" ? " accent" : "") }, info.type === "win" ? "Homeroom/WIN day" : "Regular schedule"),
+      d.h("b", { class: "tc-date" }, info.full),
+      d.h("span", { class: "tc-note" }, info.kind.note)
+    ]);
+    panel.appendChild(head);
+    var ls = S.liveStrip(blocks);
+    panel.appendChild(ls.el);
+    var lv = S.live(blocks);
+    var idx = lv.block ? lv.i : -1;
+    panel.appendChild(S.grid(blocks, idx, { live: true }));
+    panel.appendChild(d.h("p", { class: "sched-note" }, "Times are sample bells. Rename periods and pick a lunch period on the full site's /schedule.html."));
+    setInterval(function () {
+      if (!document.body.contains(panel)) return;
+      var nv = S.live(blocks);
+      ls.paint(nv);
+      panel.querySelectorAll(".sched-row").forEach(function (r, i) {
+        r.classList.toggle("now", i === (nv.block ? nv.i : -1));
+      });
+    }, 1000);
     return view;
   }
 
@@ -510,7 +510,6 @@ const APP_JS = String.raw`
       d.h("h2", { class: "set-title" }, "Appearance"),
       themeRow(card),
       accentRow(card),
-      glowRow(card),
       perfRow(card)
     ]);
     var tabCard = d.h("div", { class: "set-card glass", style: { marginTop: "14px" } }, [
@@ -589,7 +588,7 @@ const APP_JS = String.raw`
   }
   function perfRow(card) {
     var row = d.h("div", { class: "set-row" }, [
-      d.h("div", { class: "lbl-txt" }, [d.h("b", null, "Performance mode"), d.h("span", null, "Less blur/glow for weaker machines.")]),
+      d.h("div", { class: "lbl-txt" }, [d.h("b", null, "Performance mode"), d.h("span", null, "Disables hover movement and shadows on slower devices.")]),
       (function () {
         var lab = d.h("label", { class: "switch" });
         var sw = d.h("input", { type: "checkbox", checked: !!N.prefs.get("perf") });
@@ -666,8 +665,6 @@ const APP_JS = String.raw`
     else if (page === "games") viewHost = libraryView(c.games, "game");
     else if (page === "apps") viewHost = libraryView(c.apps, "app");
     else if (page === "proxies") viewHost = libraryView(c.proxies, "proxy");
-    else if (page === "favorites") viewHost = favsView(false);
-    else if (page === "recent") viewHost = favsView(true);
     else if (page === "schedule") viewHost = scheduleView();
     else if (page === "announcements") viewHost = announcementsView();
     else if (page === "backups") viewHost = backupsView();

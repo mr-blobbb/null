@@ -108,6 +108,11 @@
     heart:
       '<path d="M19.5 5.6a4.9 4.9 0 0 0-7-.2L12 5.9l-.5-.5a4.95 4.95 0 1 0-7 7l.5.5L12 19.9l7-7 .5-.5a4.9 4.9 0 0 0 0-6.8z"/>',
     chrome: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5h0a10.3 10.3 0 0 1 8.6 14.5L15.7 10"/>',
+    pen: '<path d="M4 20h4L19.5 8.5a2.12 2.12 0 0 0-3-3L5 17 4 20z"/><path d="m13.5 6.5 3 3"/>',
+    check: '<path d="m4.5 12.5 5 5 10-11"/>',
+    clock2: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    calendar:
+      '<rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M16 2.5v4M8 2.5v4M3 9.5h18"/>',
   };
 
   function icon(name, cls) {

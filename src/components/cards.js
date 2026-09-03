@@ -324,30 +324,38 @@
 
     cols = colsFor();
     build();
+    /* paint once immediately — never leave a full grid of blank rows if a
+       later hook (rAF / observer) is unavailable in this browser */
+    paint();
     schedulePaint();
 
-    var onScroll = scrollEl === window
-      ? function () {
-          schedulePaint();
-        }
-      : function () {
-          schedulePaint();
-        };
+    var onScroll = function () {
+      schedulePaint();
+    };
     scrollEl.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", resize);
-    var ro = new ResizeObserver(function () {
-      resize();
-    });
-    if (host.isConnected) ro.observe(host);
+    var ro = null;
+    if (typeof ResizeObserver !== "undefined") {
+      ro = new ResizeObserver(function () {
+        resize();
+      });
+      if (host.isConnected) ro.observe(host);
+    }
+    /* safety: if rows are still empty shortly after setup (exotic embeds),
+       force a repaint so the library is never a blank page */
+    var fallback = setTimeout(function () {
+      if (!destroyed) paint();
+    }, 400);
 
     return {
       update: update,
       destroy: function () {
         destroyed = true;
         if (raf) cancelAnimationFrame(raf);
+        clearTimeout(fallback);
         scrollEl.removeEventListener("scroll", onScroll);
         window.removeEventListener("resize", resize);
-        ro.disconnect();
+        if (ro) ro.disconnect();
       },
     };
   }

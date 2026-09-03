@@ -1,5 +1,5 @@
 /* NULL — theme.js
-   Applies theme / accent / glow / performance prefs to <html>.
+   Applies theme / accent / performance prefs to <html>.
    Accent palettes are mid-tone so they read on both dark and light surfaces. */
 (function () {
   var N = (window.N = window.N || {});
@@ -29,17 +29,10 @@
     if (a && a.c1) {
       root.style.setProperty("--ac-1", a.c1);
       root.style.setProperty("--ac-2", a.c2 || a.c1);
-      root.style.setProperty("--glow-c", a.c1);
     } else {
       root.style.removeProperty("--ac-1");
       root.style.removeProperty("--ac-2");
-      root.style.removeProperty("--glow-c");
     }
-  }
-
-  function setGlow(g) {
-    if (g && g !== "off") root.dataset.glow = g;
-    else delete root.dataset.glow;
   }
 
   function setPerf(on) {
@@ -51,21 +44,13 @@
     var p = N.prefs.data;
     setTheme(p.theme);
     setAccent(p.accent);
-    setGlow(p.glow);
     setPerf(p.perf);
   }
 
   N.theme = {
     ACCENTS: ACCENTS,
-    GLOWS: [
-      { id: "off", name: "Off" },
-      { id: "flow", name: "Flow" },
-      { id: "drift", name: "Drift" },
-      { id: "pulse", name: "Pulse" },
-    ],
     setTheme: setTheme,
     setAccent: setAccent,
-    setGlow: setGlow,
     setPerf: setPerf,
     applyAll: applyAll,
   };

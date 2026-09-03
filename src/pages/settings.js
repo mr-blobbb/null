@@ -1,7 +1,7 @@
 /* NULL — settings.js
-   Binds every control on /settings.html. Recently Played and Favorites have
-   their own clear buttons on their own pages — they are not duplicated here.
-   The Danger Zone only holds whole-app resets. */
+   Binds every control on /settings.html. Recently played has its own clear
+   button on the home page — it is not duplicated here. The Danger Zone only
+   holds whole-app resets. */
 (function () {
   var N = (window.N = window.N || {});
   var d = N.dom;
@@ -16,12 +16,9 @@
       b.classList.toggle("on", b.dataset.val === p.theme);
     });
 
-    /* accent + glow swatches */
+    /* accent swatches */
     d.qsa("#accentRow .swatch-btn").forEach(function (b) {
       b.classList.toggle("on", b.dataset.val === p.accent);
-    });
-    d.qsa("#glowRow .chip-btn").forEach(function (b) {
-      b.classList.toggle("on", b.dataset.val === p.glow);
     });
 
     /* performance switch */
@@ -97,15 +94,6 @@
       });
     });
 
-    /* glow */
-    d.qsa("#glowRow .chip-btn").forEach(function (b) {
-      b.addEventListener("click", function () {
-        N.prefs.set("glow", b.dataset.val);
-        N.theme.setGlow(b.dataset.val);
-        refresh();
-      });
-    });
-
     /* performance */
     var sw = d.qs("#perfSwitch");
     if (sw) {
@@ -157,7 +145,7 @@
           icon: "settings",
           iconTone: "danger",
           body:
-            "<p>This returns theme, accent, glow, tab preset and performance mode to their defaults. Favorites and history are <b>not</b> touched.</p>",
+            "<p>This returns theme, accent, tab preset and performance mode to their defaults. Your recently played list is <b>not</b> touched.</p>",
           actions: [
             { label: "Cancel", variant: "outline" },
             {
@@ -181,10 +169,10 @@
           title: "Wipe all NULL data?",
           icon: "trash",
           iconTone: "danger",
-          body:
-            "<p>This permanently removes everything stored on this device for NULL:</p>" +
-            "<p>\u2022 Recently played<br>\u2022 Favorites<br>\u2022 Preferences &amp; settings<br>\u2022 Seen-flag markers (welcome modal etc.)</p>" +
-            "<p>There is no undo.</p>",
+      body:
+        "<p>This permanently removes everything stored on this device for NULL:</p>" +
+        "<p>\u2022 Recently played<br>\u2022 Preferences &amp; settings<br>\u2022 Seen-flag markers (welcome modal etc.)</p>" +
+        "<p>There is no undo.</p>",
           actions: [
             { label: "Cancel", variant: "outline" },
             {
@@ -225,14 +213,6 @@
             }),
             a.name,
           ]),
-        );
-      });
-    }
-    var grow = d.qs("#glowRow");
-    if (grow) {
-      N.theme.GLOWS.forEach(function (g) {
-        grow.appendChild(
-          d.h("button", { type: "button", class: "chip chip-btn", "data-val": g.id }, g.name),
         );
       });
     }

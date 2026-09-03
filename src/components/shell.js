@@ -175,7 +175,7 @@
       d.h("div", { class: "blurb" }, [
         brandEl(),
         d.h("p", null,
-          "A frosted, black-and-white hub for games, apps, proxies and tools. NULL is local-first: preferences, history and favorites never leave your browser."),
+          "A plain black-and-white hub for games, apps, proxies and tools. NULL is local-first: preferences, history and favorites never leave your browser."),
       ]),
     );
     N.router.FOOT.forEach(function (col) {

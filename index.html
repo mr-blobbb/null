@@ -4,9 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="color-scheme" content="dark light">
-  <meta name="theme-color" content="#09090b">
+  <meta name="theme-color" content="#0a0a0b">
   <title>Home — NULL</title>
-  <meta name="description" content="NULL — a frosted, black-and-white hub for games, apps, proxies and tools. Local-first, no accounts.">
+  <meta name="description" content="NULL — a plain black-and-white hub for games, apps, proxies and tools. Local-first, no accounts.">
   <link rel="icon" id="favicon" href="/public/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/src/styles/global.css">
   <script>
@@ -23,103 +23,62 @@
 </head>
 <body data-page="home">
   <a class="skip-link" href="#main">Skip to content</a>
-  <div class="glow-bg" aria-hidden="true"></div>
   <header data-mount="nav"></header>
 
-  <main id="main" class="page">
-    <!-- hero -->
-    <section class="hero glass-2 glow-el">
-      <div class="hero-bg" aria-hidden="true"></div>
-      <span class="hero-eyebrow"><span class="chip accent">local-first</span>&nbsp;black &amp; white everything</span>
-      <h1>Games, apps &amp; tools.<br><span class="dim">One frosted hub.</span></h1>
-      <p class="sub">
-        NULL is the grayscale dashboard for everything you open around school —
-        games and apps run inside the NULL player, proxies link out, and favorites,
-        history, themes and tab presets all live in your browser. No servers. No accounts.
+  <main id="main" class="page home-page">
+    <!-- masthead: plain type + one search field, no card chrome -->
+    <section class="mast">
+      <span class="mast-kicker">NULL &mdash; everything in one place</span>
+      <h1>Games, apps, tools.<br><span class="dim">One clean hub.</span></h1>
+      <p class="mast-sub">
+        A black-and-white hub that runs in this browser only. Play from the
+        library, check the bell schedule, keep your own history &mdash; nothing
+        is uploaded anywhere.
       </p>
-      <div class="hero-stats">
-        <a class="stat" href="/games.html"><b id="stGames">0</b> games</a>
-        <a class="stat" href="/apps.html"><b id="stApps">0</b> apps</a>
-        <a class="stat" href="/proxies.html"><b id="stProxies">0</b> proxies</a>
-      </div>
-      <div class="hero-actions">
-        <button type="button" class="btn btn-primary js-search"><span data-icon="search"></span>Search NULL</button>
-        <button type="button" class="btn btn-outline" id="btnRandom"><span data-icon="zap"></span>Play random game</button>
-        <a class="btn btn-ghost" href="/schedule.html">Schedule</a>
-      </div>
+      <form class="hero-search field" id="homeSearch" role="search" aria-label="Search NULL">
+        <span data-icon="search"></span>
+        <input id="searchInput" type="text" placeholder="Search games, apps, proxies&hellip;" autocomplete="off" aria-label="Search NULL">
+        <button type="submit" class="btn btn-primary btn-sm">Search</button>
+      </form>
     </section>
 
-    <!-- jump tiles -->
-    <section class="section" aria-label="Jump in">
+    <!-- featured rail -->
+    <section class="section">
       <div class="section-head">
-        <h2>Jump in</h2>
-        <a class="more" href="/games.html">open the library &rarr;</a>
+        <h2>Featured</h2>
+        <span class="hint" id="featHint">auto-discovered from the library</span>
       </div>
-      <div class="tiles">
-        <a class="tile glass" href="/games.html">
-          <span class="count" id="tGames">0</span>
-          <span class="tile-ic"><span data-icon="game"></span></span>
-          <h3>Games</h3>
-          <p>The auto-discovered library — labels, warnings and the NULL player shell.</p>
-          <span class="go">Play something <span data-icon="chevR"></span></span>
-        </a>
-        <a class="tile glass" href="/apps.html">
-          <span class="count" id="tApps">0</span>
-          <span class="tile-ic"><span data-icon="grid"></span></span>
-          <h3>Apps</h3>
-          <p>Tools that run right inside NULL. No separate websites, same player.</p>
-          <span class="go">Open an app <span data-icon="chevR"></span></span>
-        </a>
-        <a class="tile glass" href="/proxies.html">
-          <span class="count" id="tProxies">0</span>
-          <span class="tile-ic"><span data-icon="proxy"></span></span>
-          <h3>Proxies</h3>
-          <p>External destinations with status markers — NULL links out, never wraps them.</p>
-          <span class="go">Take a link <span data-icon="chevR"></span></span>
-        </a>
-        <a class="tile glass" href="/schedule.html">
-          <span class="tile-ic"><span data-icon="sched"></span></span>
-          <h3>Schedule</h3>
-          <p>The permanent school schedule — A/B days with the current period flagged.</p>
-          <span class="go">See today <span data-icon="chevR"></span></span>
-        </a>
+      <div class="feat-panel">
+        <div id="featTrack" class="feat-track"></div>
+        <a class="feat-more" href="/games.html">open the full library <span data-icon="chevR"></span></a>
       </div>
     </section>
 
-    <!-- dashboard columns -->
-    <section class="section home-cols">
-      <div class="panel glass">
-        <div class="panel-head">
-          <h2><span data-icon="clock"></span>Recently played</h2>
-          <a class="more" href="/recent.html">all &rarr;</a>
-        </div>
-        <div id="recList"></div>
-        <div class="toolbar" style="margin:14px 0 0">
-          <button type="button" class="btn btn-primary btn-sm" id="btnRandom2"><span data-icon="zap"></span>Play random game</button>
+    <!-- recently played -->
+    <section class="section">
+      <div class="section-head">
+        <h2>Recently played</h2>
+        <div class="icon-btn-row">
+          <button type="button" class="btn btn-outline btn-sm" id="btnRandom"><span data-icon="zap"></span>Play random</button>
           <button type="button" class="btn btn-outline-danger btn-sm" id="btnClearRec">Clear list</button>
-          <span class="hint" style="margin-left:auto;color:var(--text-2);font-size:12px">clears instantly, no questions</span>
         </div>
       </div>
-
-      <div class="panel glass">
-        <div class="panel-head">
-          <h2><span data-icon="star"></span>Favorites</h2>
-          <a class="more" href="/favorites.html">all &rarr;</a>
-        </div>
-        <div id="favList"></div>
+      <div class="panel" id="recPanel">
+        <div id="recList"></div>
       </div>
     </section>
 
+    <!-- bottom columns -->
     <section class="section home-cols">
-      <div class="panel glass">
+      <div class="panel">
         <div class="panel-head">
-          <h2><span data-icon="sched"></span>School schedule</h2>
+          <h2><span data-icon="sched"></span>Today&rsquo;s schedule</h2>
           <a class="more" href="/schedule.html">full page &rarr;</a>
         </div>
         <div id="schedHome"></div>
       </div>
 
-      <div class="panel glass">
+      <div class="panel">
         <div class="panel-head">
           <h2><span data-icon="ann"></span>Announcements</h2>
           <a class="more" href="/announcements.html">all &rarr;</a>
@@ -130,7 +89,6 @@
   </main>
 
   <footer data-mount="foot"></footer>
-
   <noscript>
     <nav class="ns-nav">
       <a href="/">Home</a><a href="/games.html">Games</a><a href="/apps.html">Apps</a><a href="/proxies.html">Proxies</a><a href="/schedule.html">Schedule</a><a href="/settings.html">Settings</a>

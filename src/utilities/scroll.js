@@ -97,16 +97,19 @@
     thumb.addEventListener("pointerup", up);
     thumb.addEventListener("pointercancel", up);
 
-    var ro = new ResizeObserver(function () {
-      wake();
-    });
-    ro.observe(container);
+    var ro = null;
+    if (typeof ResizeObserver !== "undefined") {
+      ro = new ResizeObserver(function () {
+        wake();
+      });
+      ro.observe(container);
+    }
 
     window.addEventListener("resize", wake);
     wake();
 
     container._nullRail = { rail: rail, size: size, destroy: function () {
-        ro.disconnect();
+        if (ro) ro.disconnect();
         window.removeEventListener("resize", wake);
         rail.remove();
         delete container._nullRail;

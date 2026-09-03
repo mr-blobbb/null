@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="dark light">
   <meta name="theme-color" content="#09090b">
   <title>Settings — NULL</title>
-  <meta name="description" content="NULL settings — theme, accent, glow, tab presets, performance.">
+  <meta name="description" content="NULL settings — theme, accent, tab presets, performance.">
   <link rel="icon" id="favicon" href="/public/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/src/styles/global.css">
   <script>
@@ -57,18 +57,10 @@
           <div id="accentRow" class="accent-row"></div>
         </div>
 
-        <div class="set-row" style="display:block">
-          <div class="lbl-txt" style="margin-bottom:10px">
-            <b>Glow border</b>
-            <span>Moving light around the hero and player surfaces. Default: Off.</span>
-          </div>
-          <div id="glowRow" class="glow-row"></div>
-        </div>
-
         <div class="set-row">
           <div class="lbl-txt">
             <b>Performance mode</b>
-            <span>Reduces blur, glow, shadows and animations for weaker Chromebooks.</span>
+            <span>Disables hover movement and shadows for slower devices.</span>
           </div>
           <label class="switch">
             <input type="checkbox" id="perfSwitch">
@@ -88,7 +80,6 @@
         <div>
           <label class="lbl" for="tabSelect">Tab preset</label>
           <span class="field select-field">
-            <span data-icon="chevD" style="transform:rotate(0)"></span>
             <select id="tabSelect" aria-label="Tab preset"></select>
           </span>
           <div class="tab-preview" style="margin-top:10px" id="tabPrev">
@@ -139,8 +130,8 @@
       <section class="set-card glass danger-zone" aria-label="Danger zone">
         <div class="dz-head"><span data-icon="warn"></span>Danger zone</div>
         <p class="set-sub">
-          Whole-NULL resets. Recently Played and Favorites have their own clear
-          buttons on their own pages — this is only for full resets.
+          Whole-NULL resets. Recently played has its own clear button on the
+          home page — this is only for full resets.
         </p>
         <div class="toolbar" style="margin:0">
           <button type="button" class="btn btn-outline" id="dangerReset">Reset appearance</button>

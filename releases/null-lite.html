@@ -15,63 +15,67 @@
 /* ---------- tokens ---------- */
 :root {
   color-scheme: dark;
-  --bg: #09090b;
-  --bg-2: #101014;
-  --text: #f4f4f5;
-  --text-2: rgba(244, 244, 245, 0.62);
-  --line: rgba(255, 255, 255, 0.09);
-  --line-2: rgba(255, 255, 255, 0.16);
-  --glass-bg: rgba(255, 255, 255, 0.05);
-  --glass-bg-2: rgba(255, 255, 255, 0.085);
-  --glass-bg-3: rgba(255, 255, 255, 0.12);
-  --elev: rgba(24, 24, 28, 0.92);
-  --overlay: rgba(3, 3, 5, 0.6);
-  --thumb: rgba(255, 255, 255, 0.28);
-  --thumb-hi: rgba(255, 255, 255, 0.5);
-  --hi: inset 0 1px 0 rgba(255, 255, 255, 0.07);
-  --ok: #5fd39a;
-  --warn: #e7c25e;
-  --bad: #ef6f6f;
-  --ok-bg: rgba(95, 211, 154, 0.1);
-  --warn-bg: rgba(231, 194, 94, 0.1);
-  --bad-bg: rgba(239, 111, 111, 0.1);
-  /* accents are overridden inline for chosen palette; grayscale fallback below */
-  --ac-1: #d9dbe2;
-  --ac-2: #8f939e;
+  --bg: #0a0a0b;
+  --bg-2: #101012;
+  --text: #f5f5f6;
+  --text-2: rgba(245, 245, 246, 0.58);
+  --line: rgba(255, 255, 255, 0.13);
+  --line-2: rgba(255, 255, 255, 0.26);
+  --glass-bg: #161618; /* flat surfaces — no translucency, no blur */
+  --glass-bg-2: #1c1c1f;
+  --glass-bg-3: #26262b;
+  --elev: #17171a;
+  --overlay: rgba(0, 0, 0, 0.62);
+  --thumb: #3b3b41;
+  --thumb-hi: #56565e;
+  --ok: #56c990;
+  --warn: #d9b24f;
+  --bad: #e06a6a;
+  --ok-bg: rgba(86, 201, 144, 0.12);
+  --warn-bg: rgba(217, 178, 79, 0.12);
+  --bad-bg: rgba(224, 106, 106, 0.12);
+  /* accents are overridden inline for the chosen palette; grayscale below */
+  --ac-1: #e6e7ea;
+  --ac-2: #a2a6ae;
 
-  --r-sm: 10px;
-  --r-md: 14px;
-  --r-lg: 20px;
-  --r-xl: 28px;
-  --nh: 64px;
+  --r-sm: 9px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 22px;
+  --nh: 60px;
   --maxw: 1180px;
-  --b1: 14px;
-  --b2: 22px;
-  --shadow-1: 0 6px 22px rgba(0, 0, 0, 0.22);
-  --shadow-2: 0 14px 46px rgba(0, 0, 0, 0.4);
+  --shadow-1: 0 8px 26px rgba(0, 0, 0, 0.3);
+  --shadow-2: 0 18px 54px rgba(0, 0, 0, 0.45);
   --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* ---------- schedule row layout (always three columns) ---------- */
+.sched-row {
+  grid-template-columns: 44px minmax(0, 1fr) auto !important;
+}
+.sched-mini .home-grid .sched-row {
+  grid-template-columns: 34px minmax(0, 1fr) auto !important;
 }
 
 html[data-theme="light"] {
   color-scheme: light;
-  --bg: #f2f2f4;
-  --bg-2: #e9e9ed;
-  --text: #131316;
-  --text-2: rgba(19, 19, 22, 0.62);
-  --line: rgba(15, 15, 18, 0.11);
-  --line-2: rgba(15, 15, 18, 0.2);
-  --glass-bg: rgba(255, 255, 255, 0.55);
-  --glass-bg-2: rgba(255, 255, 255, 0.72);
-  --glass-bg-3: rgba(255, 255, 255, 0.88);
-  --elev: rgba(255, 255, 255, 0.96);
-  --overlay: rgba(20, 20, 26, 0.28);
-  --thumb: rgba(20, 20, 26, 0.25);
-  --thumb-hi: rgba(20, 20, 26, 0.45);
-  --hi: inset 0 1px 0 rgba(255, 255, 255, 0.7);
-  --ac-1: #232428;
-  --ac-2: #4b4d55;
-  --shadow-1: 0 6px 20px rgba(25, 25, 35, 0.08);
-  --shadow-2: 0 14px 44px rgba(25, 25, 35, 0.14);
+  --bg: #f3f3f4;
+  --bg-2: #ececef;
+  --text: #111113;
+  --text-2: rgba(17, 17, 19, 0.62);
+  --line: rgba(17, 17, 19, 0.13);
+  --line-2: rgba(17, 17, 19, 0.26);
+  --glass-bg: #ffffff;
+  --glass-bg-2: #f6f6f7;
+  --glass-bg-3: #ececee;
+  --elev: #ffffff;
+  --overlay: rgba(17, 17, 19, 0.4);
+  --thumb: #c4c4ca;
+  --thumb-hi: #9d9da5;
+  --ac-1: #26262b;
+  --ac-2: #55555f;
+  --shadow-1: 0 8px 24px rgba(20, 20, 28, 0.09);
+  --shadow-2: 0 18px 52px rgba(20, 20, 28, 0.16);
 }
 
 /* ---------- base ---------- */
@@ -141,11 +145,12 @@ textarea {
 }
 
 ::selection {
-  background: color-mix(in srgb, var(--ac-1) 26%, transparent);
+  background: var(--ac-1);
+  color: var(--bg);
 }
 
 :focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--ac-1) 65%, transparent);
+  outline: 2px solid var(--ac-1);
   outline-offset: 2px;
   border-radius: 6px;
 }
@@ -164,25 +169,13 @@ textarea {
   left: 0;
 }
 
-/* ambient light behind content (perf: off) */
+/* old ambient-glow layer — intentionally inert (plain flat background) */
 .glow-bg {
   position: fixed;
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background:
-    radial-gradient(600px 340px at 12% -8%, rgba(255, 255, 255, 0.075), transparent 70%),
-    radial-gradient(520px 300px at 92% 4%, rgba(255, 255, 255, 0.05), transparent 70%),
-    radial-gradient(700px 420px at 55% 110%, rgba(255, 255, 255, 0.045), transparent 70%);
-}
-html[data-theme="light"] .glow-bg {
-  background:
-    radial-gradient(600px 340px at 12% -8%, rgba(20, 20, 28, 0.05), transparent 70%),
-    radial-gradient(520px 300px at 92% 4%, rgba(20, 20, 28, 0.035), transparent 70%),
-    radial-gradient(700px 420px at 55% 110%, rgba(20, 20, 28, 0.03), transparent 70%);
-}
-html[data-perf="1"] .glow-bg {
-  display: none;
+  background: transparent;
 }
 
 /* ---------- shared layout ---------- */
@@ -254,29 +247,22 @@ main.sview > * {
 }
 
 /* ============================================================
-   glass surfaces — frosted layers
+   flat surfaces — solid fills, hairline borders only
    ============================================================ */
 .glass {
   background: var(--glass-bg);
   border: 1px solid var(--line);
-  backdrop-filter: blur(var(--b1)) saturate(1.4);
-  -webkit-backdrop-filter: blur(var(--b1)) saturate(1.4);
-  box-shadow: var(--hi);
 }
 
 .glass-2 {
   background: var(--glass-bg-2);
   border: 1px solid var(--line);
-  backdrop-filter: blur(var(--b2)) saturate(1.5);
-  -webkit-backdrop-filter: blur(var(--b2)) saturate(1.5);
-  box-shadow: var(--hi), var(--shadow-1);
+  box-shadow: var(--shadow-1);
 }
 
 .elev {
   background: var(--elev);
   border: 1px solid var(--line-2);
-  backdrop-filter: blur(var(--b2)) saturate(1.5);
-  -webkit-backdrop-filter: blur(var(--b2)) saturate(1.5);
   box-shadow: var(--shadow-1);
 }
 
@@ -318,28 +304,21 @@ main.sview > * {
 }
 
 .btn-primary {
-  background: var(--text);
+  background: var(--ac-1);
   color: var(--bg);
-  box-shadow: 0 2px 12px color-mix(in srgb, var(--ac-1) 18%, transparent);
+  border-color: transparent;
 }
 .btn-primary:hover {
-  box-shadow: 0 4px 18px color-mix(in srgb, var(--ac-1) 34%, transparent);
-  transform: translateY(-1px);
-}
-html[data-theme="light"] .btn-primary {
-  box-shadow: 0 2px 12px rgba(20, 20, 28, 0.14);
+  filter: brightness(1.07);
 }
 
 .btn-outline {
   border-color: var(--line-2);
   background: var(--glass-bg);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
 }
 .btn-outline:hover {
   background: var(--glass-bg-2);
   border-color: var(--thumb);
-  transform: translateY(-1px);
 }
 
 .btn-ghost {
@@ -458,13 +437,8 @@ html[data-theme="light"] .btn-primary {
 }
 .chip-btn.on {
   color: var(--bg);
-  background: var(--text);
-  border-color: var(--text);
-}
-html[data-theme="light"] .chip-btn.on {
-  color: #fff;
-  background: var(--text);
-  border-color: var(--text);
+  background: var(--ac-1);
+  border-color: var(--ac-1);
 }
 
 .field {
@@ -574,9 +548,7 @@ label.lbl {
   align-items: center;
   gap: 14px;
   padding: 0 max(18px, calc((100vw - var(--maxw)) / 2));
-  background: color-mix(in srgb, var(--bg) 55%, transparent);
-  backdrop-filter: blur(var(--b2)) saturate(1.5);
-  -webkit-backdrop-filter: blur(var(--b2)) saturate(1.5);
+  background: var(--bg);
   border-bottom: 1px solid var(--line);
 }
 
@@ -627,9 +599,8 @@ label.lbl {
 }
 .nav-link.on {
   color: var(--text);
-  background: var(--glass-bg-3);
+  background: transparent;
   box-shadow: inset 0 -2px 0 var(--ac-1);
-  border-radius: 11px 11px 4px 4px;
 }
 .nav-link svg {
   width: 16px;
@@ -723,8 +694,6 @@ label.lbl {
   inset: 0;
   z-index: 150;
   background: var(--overlay);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.2s, visibility 0.2s;
@@ -798,9 +767,7 @@ label.lbl {
 /* footer */
 .site-foot {
   border-top: 1px solid var(--line);
-  background: color-mix(in srgb, var(--bg) 70%, transparent);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: var(--bg-2);
 }
 body.lb .site-foot {
   display: none;
@@ -885,8 +852,6 @@ body.lb .site-foot {
     box-shadow 0.18s, background 0.18s;
   background: var(--glass-bg);
   border: 1px solid var(--line);
-  backdrop-filter: blur(var(--b1)) saturate(1.4);
-  -webkit-backdrop-filter: blur(var(--b1)) saturate(1.4);
 }
 .tcard:hover {
   transform: translateY(-3px);
@@ -901,13 +866,10 @@ body.lb .site-foot {
 .tmedia {
   position: relative;
   height: 106px;
-  background: linear-gradient(150deg, var(--bg-2), color-mix(in srgb, var(--bg-2) 55%, #000));
+  background: var(--bg-2);
   overflow: hidden;
   border-bottom: 1px solid var(--line);
   flex: none;
-}
-html[data-theme="light"] .tmedia {
-  background: linear-gradient(150deg, #ffffff, #e6e6ea);
 }
 .tmedia img {
   width: 100%;
@@ -1065,17 +1027,7 @@ html[data-theme="light"] .tmedia {
   position: absolute;
   inset: 0;
   z-index: -1;
-  background:
-    radial-gradient(540px 260px at 82% 0%, rgba(255, 255, 255, 0.09), transparent 70%),
-    radial-gradient(380px 240px at 8% 100%, rgba(255, 255, 255, 0.05), transparent 70%);
-}
-html[data-theme="light"] .hero .hero-bg {
-  background:
-    radial-gradient(540px 260px at 82% 0%, rgba(20, 20, 28, 0.05), transparent 70%),
-    radial-gradient(380px 240px at 8% 100%, rgba(20, 20, 28, 0.035), transparent 70%);
-}
-html[data-perf="1"] .hero .hero-bg {
-  display: none;
+  background: transparent;
 }
 .hero-eyebrow {
   display: inline-flex;
@@ -1678,11 +1630,8 @@ html[data-perf="1"] .hero .hero-bg {
   transition: all 0.16s;
 }
 .seg button.on {
-  background: var(--text);
+  background: var(--ac-1);
   color: var(--bg);
-}
-html[data-theme="light"] .seg button.on {
-  color: #fff;
 }
 .seg button .sw {
   width: 13px;
@@ -1724,8 +1673,8 @@ html[data-theme="light"] .seg button.on {
 }
 .swatch-btn.on {
   border-color: var(--ac-1);
-  color: var(--text);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ac-1) 18%, transparent);
+  color: var(--bg);
+  background: var(--ac-1);
 }
 .select-field {
   width: 100%;
@@ -1873,8 +1822,6 @@ html[data-theme="light"] .seg button.on {
   place-items: center;
   padding: 18px;
   background: var(--overlay);
-  backdrop-filter: blur(9px) saturate(1.3);
-  -webkit-backdrop-filter: blur(9px) saturate(1.3);
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.2s, visibility 0.2s;
@@ -1975,8 +1922,6 @@ html[data-theme="light"] .seg button.on {
   inset: 0;
   z-index: 250;
   background: var(--overlay);
-  backdrop-filter: blur(10px) saturate(1.2);
-  -webkit-backdrop-filter: blur(10px) saturate(1.2);
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.18s, visibility 0.18s;
@@ -2192,9 +2137,7 @@ body.player-page {
   gap: 8px;
   padding: 8px 12px;
   border-bottom: 1px solid var(--line);
-  background: color-mix(in srgb, var(--bg) 50%, transparent);
-  backdrop-filter: blur(var(--b2)) saturate(1.4);
-  -webkit-backdrop-filter: blur(var(--b2)) saturate(1.4);
+  background: var(--bg-2);
   flex: none;
   min-height: 56px;
 }
@@ -2227,9 +2170,7 @@ body.player-page {
   min-height: 0;
   display: grid;
   place-items: stretch;
-  background:
-    radial-gradient(700px 380px at 50% -20%, rgba(255, 255, 255, 0.05), transparent 70%),
-    var(--bg-2);
+  background: var(--bg-2);
 }
 .player-frame iframe {
   width: 100%;
@@ -2270,11 +2211,488 @@ body.player-page {
   color: var(--text-2);
   padding: 6px 12px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--bg) 45%, transparent);
+  background: var(--glass-bg-2);
   border: 1px solid var(--line);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
   pointer-events: none;
+}
+
+/* ============================================================
+   minimal theme cleanup + new home / schedule components
+   ============================================================ */
+
+/* legacy glow presets are gone — never render them */
+html[data-glow] .glow-el,
+html[data-glow] .glow-el::before,
+html[data-glow] .glow-el::after {
+  animation: none !important;
+  box-shadow: none !important;
+  background: none !important;
+}
+html[data-glow] .glow-el::before,
+html[data-glow] .glow-el::after {
+  display: none !important;
+}
+
+/* ---------- native selects: flat, with a small arrow ---------- */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  border-radius: var(--r-sm);
+}
+.field select,
+select.field {
+  background-color: transparent;
+  padding-right: 34px;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239a9aa2' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+.field.select-field {
+  position: relative;
+  padding-right: 6px;
+}
+.field.select-field svg {
+  display: none;
+}
+
+/* ---------- flat panels ---------- */
+.panel {
+  background: var(--glass-bg);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 20px;
+}
+
+/* ---------- home masthead (no card) ---------- */
+.home-page {
+  padding-top: calc(var(--nh) + 46px);
+}
+.mast {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 26px 0 8px;
+  text-align: left;
+}
+.mast-kicker {
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+.mast h1 {
+  font-size: clamp(40px, 7.5vw, 72px);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 0.98;
+}
+.mast h1 .dim {
+  color: var(--text-2);
+  font-weight: 600;
+}
+.mast-sub {
+  color: var(--text-2);
+  font-size: 16px;
+  line-height: 1.55;
+  max-width: 600px;
+}
+.hero-search {
+  width: min(640px, 100%);
+  height: 56px;
+  padding: 0 8px 0 20px;
+  border-radius: 999px;
+  gap: 12px;
+  margin-top: 8px;
+}
+.hero-search > svg {
+  width: 19px;
+  height: 19px;
+}
+.hero-search input {
+  font-size: 16px;
+}
+.hero-search .btn {
+  height: 40px;
+  flex: none;
+}
+
+/* ---------- featured rail ---------- */
+.feat-panel {
+  background: var(--glass-bg);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 18px 16px 12px;
+}
+.feat-track {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  padding: 2px 2px 14px;
+  scrollbar-width: none;
+}
+.feat-track::-webkit-scrollbar {
+  display: none;
+}
+.feat-track > .tcard {
+  flex: 0 0 min(232px, 74vw);
+  scroll-snap-align: start;
+  align-self: stretch;
+}
+.feat-empty {
+  color: var(--text-2);
+  font-size: 14px;
+  padding: 26px 4px;
+}
+.feat-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--text-2);
+  padding: 2px 4px 8px;
+  transition: color 0.15s;
+}
+.feat-more:hover {
+  color: var(--text);
+}
+.feat-more svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ---------- schedule component ---------- */
+.sched-days {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.sched-days .chip-btn {
+  height: 32px;
+  padding: 0 14px;
+  font-size: 12.5px;
+}
+.sched-grid {
+  display: grid;
+  gap: 7px;
+  margin-top: 14px;
+}
+.sched-row {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 9px 14px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line);
+  background: var(--glass-bg);
+  font-size: 14px;
+  position: relative;
+}
+.sched-row .s-no {
+  color: var(--text-2);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+}
+.sched-row .s-name {
+  font-weight: 650;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sched-row .s-time {
+  font-size: 12.5px;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.sched-row .nowtag {
+  position: absolute;
+  top: -9px;
+  left: 16px;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  color: var(--bg);
+  background: var(--ac-1);
+}
+.sched-row.now {
+  border-color: var(--ac-1);
+  background: color-mix(in srgb, var(--ac-1) 9%, var(--glass-bg));
+}
+.sched-row.lunch {
+  border-style: dashed;
+}
+.sched-note {
+  font-size: 12px;
+  color: var(--text-2);
+  margin-top: 14px;
+}
+
+/* home mini schedule */
+.sched-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.hs-head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin-bottom: 6px;
+}
+.hs-head b {
+  font-size: 15.5px;
+}
+.hs-head > span {
+  color: var(--text-2);
+  font-size: 12.5px;
+}
+.hs-head .chip {
+  margin-left: auto;
+  height: 22px;
+}
+.sched-mini .home-grid .sched-row {
+  padding: 7px 12px;
+  font-size: 13px;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+}
+.sched-nodays {
+  padding: 14px 16px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line);
+  color: var(--text-2);
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* today card */
+.today-card {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  align-items: flex-start;
+}
+.today-card .chip {
+  height: 26px;
+  padding: 0 12px;
+}
+.today-card .tc-date {
+  font-size: 19px;
+  letter-spacing: -0.01em;
+}
+.today-card .tc-note {
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+/* live strip */
+.live-box {
+  margin: 16px 0 0;
+}
+.live-strip {
+  display: flex;
+  align-items: stretch;
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+}
+.live-strip .ls-badge {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 14px;
+  background: var(--glass-bg);
+}
+.live-strip .ls-badge .dot {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--text-2);
+}
+.live-strip .ls-badge.on .dot {
+  background: var(--ac-1);
+}
+.live-strip .ls-badge b {
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.live-strip .ls-badge span.ls-time {
+  color: var(--text-2);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.live-strip .ls-count,
+.live-strip .ls-next {
+  background: var(--glass-bg);
+  padding: 7px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+  flex: none;
+}
+.live-strip .ls-count .ls-left {
+  font-size: 19px;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+  line-height: 1.1;
+  text-align: right;
+}
+.live-strip .ls-count.idle .ls-left {
+  color: var(--text-2);
+  font-size: 13px;
+}
+.live-strip .ls-cap {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+.live-strip .ls-next .ls-cap {
+  text-align: right;
+}
+.live-strip .ls-next b {
+  font-size: 11.5px;
+  font-weight: 620;
+  color: var(--text-2);
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* editor */
+.edit-panel {
+  margin-top: 16px;
+}
+.sched-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 4px;
+}
+.sched-editor .ed-lunch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  border: 1px dashed var(--line-2);
+  border-radius: var(--r-sm);
+  background: var(--glass-bg);
+  padding: 12px 14px;
+  margin-bottom: 6px;
+}
+.sched-editor .ed-txt b {
+  display: block;
+  font-size: 14px;
+}
+.sched-editor .ed-txt span {
+  font-size: 12px;
+  color: var(--text-2);
+  line-height: 1.45;
+}
+.lunch-seg {
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg-2);
+}
+.lunch-seg .chip {
+  height: 30px;
+  border: 0;
+  background: transparent;
+}
+.lunch-seg .chip.on {
+  background: var(--ac-1);
+  color: var(--bg);
+  border-color: transparent;
+}
+.sched-editor .ed-input {
+  min-width: 0;
+  width: 100%;
+  border: 1px solid transparent;
+  border-bottom-color: var(--line-2);
+  background: transparent;
+  color: var(--text);
+  font-weight: 650;
+  font-size: 14px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  outline: 0;
+}
+.sched-editor .ed-input:focus {
+  border-bottom-color: var(--ac-1);
+}
+.sched-editor .s-name.fixed {
+  color: var(--text-2);
+  font-weight: 600;
+}
+.sched-editor .ed-foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+.sched-editor .ed-foot .sp {
+  flex: 1;
+}
+.sched-editor .ed-foot .hint {
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+#editBar .btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+@media (max-width: 760px) {
+  .live-strip {
+    flex-wrap: wrap;
+  }
+  .live-strip .ls-badge {
+    flex-basis: 100%;
+  }
+  .live-strip .ls-count,
+  .live-strip .ls-next {
+    flex: 1;
+  }
+  .live-strip .ls-count .ls-left,
+  .live-strip .ls-cap,
+  .live-strip .ls-next b {
+    text-align: left;
+  }
+  .sched-row {
+    grid-template-columns: 30px minmax(0, 1fr);
+  }
+  .sched-row .s-time {
+    grid-column: 2;
+  }
 }
 
 /* popover (player cloak menu etc.) */
@@ -2666,8 +3084,7 @@ noscript .ns-nav a:hover {
 .rel-shell{max-width:1120px;margin:0 auto;padding:14px 16px 80px}
 .rel-top{position:sticky;top:0;z-index:80;display:flex;align-items:center;gap:10px;
   padding:10px 14px;border:1px solid var(--line);border-radius:16px;
-  background:color-mix(in srgb,var(--bg) 55%,transparent);
-  backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4)}
+  background:var(--bg-2)}
 .rel-top .sp{flex:1}
 .rel-nav{display:flex;flex-wrap:wrap;gap:6px;padding:12px 0 6px}
 .rel-view{margin-top:14px}
@@ -2707,7 +3124,7 @@ window.NULL_CONTENT = {
       title: "Welcome to NULL",
       date: "2026-08-24",
       category: "update",
-      desc: "NULL is up: a frosted, black-and-white hub for games, apps, proxies and tools. Favorites, history, tab cloaks and themes all live in your browser \u2014 nothing is uploaded anywhere.",
+      desc: "NULL is up: a plain black-and-white hub for games, apps, proxies and tools. Recently played, tab cloaks and themes all live in your browser \u2014 nothing is uploaded anywhere.",
     },
     {
       id: "new-games",
@@ -2721,7 +3138,7 @@ window.NULL_CONTENT = {
       title: "Schedule is loaded",
       date: "2026-08-17",
       category: "notice",
-      desc: "The permanent school schedule component is live on the home dashboard and the Schedule page. Times are sample data \u2014 edit src/components/schedule.js to match the real day.",
+      desc: "The schedule is live on the home page and the Schedule page: Regular days Monday/Wednesday/Friday, Homeroom/WIN on Tuesday/Thursday, with a live time-left clock. Rename your periods and pick your lunch period (4\u20136) right on the page.",
     },
     {
       id: "releases",
@@ -2738,8 +3155,8 @@ window.NULL_CONTENT = {
       title: "Home",
       url: "/",
       grp: "Pages",
-      desc: "NULL dashboard: search, recently played, favorites and the schedule.",
-      kw: "home dashboard start welcome hub",
+      desc: "NULL home: search everything, featured library items, recently played and the live school schedule.",
+      kw: "home dashboard start welcome hub search",
     },
     {
       title: "Games",
@@ -2773,8 +3190,8 @@ window.NULL_CONTENT = {
       title: "Schedule",
       url: "/schedule.html",
       grp: "Pages",
-      desc: "The permanent school schedule \u2014 A/B days, bell times, now playing.",
-      kw: "school bell time class period day",
+      desc: "The school schedule \u2014 Regular and Homeroom/WIN days, live countdown, editable period names and lunch period.",
+      kw: "school bell time class period day lunch homeroom win",
     },
     {
       title: "Backups",
@@ -2787,22 +3204,8 @@ window.NULL_CONTENT = {
       title: "Settings",
       url: "/settings.html",
       grp: "Pages",
-      desc: "Theme, accent, glow borders, tab presets, performance mode.",
-      kw: "preferences theme glow tab cloak performance",
-    },
-    {
-      title: "Recent",
-      url: "/recent.html",
-      grp: "Personal",
-      desc: "Everything you opened recently on this device.",
-      kw: "history opened played",
-    },
-    {
-      title: "Favorites",
-      url: "/favorites.html",
-      grp: "Personal",
-      desc: "Starred games and apps, saved locally.",
-      kw: "starred saved bookmarks",
+      desc: "Theme, accent, tab presets, performance mode.",
+      kw: "preferences theme accent tab cloak performance",
     },
     {
       title: "About",
@@ -2902,7 +3305,6 @@ window.NULL_CONTENT = {
   var DEFAULTS = {
     theme: "dark", // dark | light
     accent: "off", // palette id from theme.js
-    glow: "off", // off | flow | drift | pulse
     tab: "slides", // tab preset id from tabpresets.js (default: Google Slides)
     perf: false, // performance mode
     gmailAddr: "you@gmail.com",
@@ -3168,6 +3570,11 @@ window.NULL_CONTENT = {
     heart:
       '<path d="M19.5 5.6a4.9 4.9 0 0 0-7-.2L12 5.9l-.5-.5a4.95 4.95 0 1 0-7 7l.5.5L12 19.9l7-7 .5-.5a4.9 4.9 0 0 0 0-6.8z"/>',
     chrome: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5h0a10.3 10.3 0 0 1 8.6 14.5L15.7 10"/>',
+    pen: '<path d="M4 20h4L19.5 8.5a2.12 2.12 0 0 0-3-3L5 17 4 20z"/><path d="m13.5 6.5 3 3"/>',
+    check: '<path d="m4.5 12.5 5 5 10-11"/>',
+    clock2: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    calendar:
+      '<rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M16 2.5v4M8 2.5v4M3 9.5h18"/>',
   };
 
   function icon(name, cls) {
@@ -3419,7 +3826,7 @@ window.NULL_CONTENT = {
 
 ;
 /* NULL — theme.js
-   Applies theme / accent / glow / performance prefs to <html>.
+   Applies theme / accent / performance prefs to <html>.
    Accent palettes are mid-tone so they read on both dark and light surfaces. */
 (function () {
   var N = (window.N = window.N || {});
@@ -3449,17 +3856,10 @@ window.NULL_CONTENT = {
     if (a && a.c1) {
       root.style.setProperty("--ac-1", a.c1);
       root.style.setProperty("--ac-2", a.c2 || a.c1);
-      root.style.setProperty("--glow-c", a.c1);
     } else {
       root.style.removeProperty("--ac-1");
       root.style.removeProperty("--ac-2");
-      root.style.removeProperty("--glow-c");
     }
-  }
-
-  function setGlow(g) {
-    if (g && g !== "off") root.dataset.glow = g;
-    else delete root.dataset.glow;
   }
 
   function setPerf(on) {
@@ -3471,21 +3871,13 @@ window.NULL_CONTENT = {
     var p = N.prefs.data;
     setTheme(p.theme);
     setAccent(p.accent);
-    setGlow(p.glow);
     setPerf(p.perf);
   }
 
   N.theme = {
     ACCENTS: ACCENTS,
-    GLOWS: [
-      { id: "off", name: "Off" },
-      { id: "flow", name: "Flow" },
-      { id: "drift", name: "Drift" },
-      { id: "pulse", name: "Pulse" },
-    ],
     setTheme: setTheme,
     setAccent: setAccent,
-    setGlow: setGlow,
     setPerf: setPerf,
     applyAll: applyAll,
   };
@@ -4058,30 +4450,38 @@ window.NULL_CONTENT = {
 
     cols = colsFor();
     build();
+    /* paint once immediately — never leave a full grid of blank rows if a
+       later hook (rAF / observer) is unavailable in this browser */
+    paint();
     schedulePaint();
 
-    var onScroll = scrollEl === window
-      ? function () {
-          schedulePaint();
-        }
-      : function () {
-          schedulePaint();
-        };
+    var onScroll = function () {
+      schedulePaint();
+    };
     scrollEl.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", resize);
-    var ro = new ResizeObserver(function () {
-      resize();
-    });
-    if (host.isConnected) ro.observe(host);
+    var ro = null;
+    if (typeof ResizeObserver !== "undefined") {
+      ro = new ResizeObserver(function () {
+        resize();
+      });
+      if (host.isConnected) ro.observe(host);
+    }
+    /* safety: if rows are still empty shortly after setup (exotic embeds),
+       force a repaint so the library is never a blank page */
+    var fallback = setTimeout(function () {
+      if (!destroyed) paint();
+    }, 400);
 
     return {
       update: update,
       destroy: function () {
         destroyed = true;
         if (raf) cancelAnimationFrame(raf);
+        clearTimeout(fallback);
         scrollEl.removeEventListener("scroll", onScroll);
         window.removeEventListener("resize", resize);
-        ro.disconnect();
+        if (ro) ro.disconnect();
       },
     };
   }
@@ -4100,161 +4500,351 @@ window.NULL_CONTENT = {
 
 ;
 /* NULL — schedule.js
-   The permanent school schedule component.
-   Shown in compact form on the home dashboard and full size on
-   /schedule.html. Edit the SCHEDULE object below — that is all that needs
-   to change when the real day changes. */
+   The school schedule component.
+
+   Two day types:
+     • reg — Monday / Wednesday / Friday: seven 46-minute class periods.
+     • win — Tuesday / Thursday: same periods with a Homeroom/WIN block
+             added after Period 2 (the following bells shift to fit it).
+
+   One of periods 4/5/6 is your lunch period (settable on /schedule.html,
+   default 5). That row reads "Lunch" instead of a class name.
+
+   Times below are sample data. To match the real bell schedule, edit the
+   TEMPLATES object — that is the only thing that needs to change.
+
+   Rendered compact on the home dashboard and full-size on /schedule.html,
+   which also exposes the editor (rename periods, pick a lunch period). */
 (function () {
   var N = (window.N = window.N || {});
   var d = N.dom;
 
-  var SCHEDULE = {
-    week: ["A", "B", "A", "B", "A"], // Monday → Friday day types
-    note: "Sample times — edit src/components/schedule.js to match the real bell schedule.",
-    days: {
-      A: {
-        label: "A Day",
-        blocks: [
-          { name: "Period 1", course: "", time: "7:45 – 8:31" },
-          { name: "Period 2", course: "", time: "8:35 – 9:21" },
-          { name: "Period 3", course: "", time: "9:25 – 10:11" },
-          { name: "Period 4", course: "", time: "10:15 – 11:01" },
-          { name: "Lunch", course: "", time: "11:05 – 11:45" },
-          { name: "Period 5", course: "", time: "11:49 – 12:35" },
-          { name: "Period 6", course: "", time: "12:39 – 1:25" },
-          { name: "Period 7", course: "", time: "1:29 – 2:15" },
-        ],
-      },
-      B: {
-        label: "B Day",
-        blocks: [
-          { name: "Period 1", course: "", time: "7:45 – 8:31" },
-          { name: "Period 2", course: "", time: "8:35 – 9:21" },
-          { name: "Period 3", course: "", time: "9:25 – 10:11" },
-          { name: "Period 5", course: "", time: "10:15 – 11:01" },
-          { name: "Lunch", course: "", time: "11:05 – 11:45" },
-          { name: "Period 4", course: "", time: "11:49 – 12:35" },
-          { name: "Period 6", course: "", time: "12:39 – 1:25" },
-          { name: "Period 7", course: "", time: "1:29 – 2:15" },
-        ],
-      },
+  var TEMPLATES = {
+    /* n = period number. start/end in 12-hour clock strings. */
+    reg: [
+      { n: 1, start: "7:45", end: "8:31" },
+      { n: 2, start: "8:35", end: "9:21" },
+      { n: 3, start: "9:25", end: "10:11" },
+      { n: 4, start: "10:15", end: "11:01" },
+      { n: 5, start: "11:05", end: "11:51" },
+      { n: 6, start: "11:55", end: "12:41" },
+      { n: 7, start: "12:45", end: "1:31" },
+    ],
+    /* win days insert Homeroom/WIN after Period 2 and push the rest back */
+    win: [
+      { n: 1, start: "7:45", end: "8:31" },
+      { n: 2, start: "8:35", end: "9:21" },
+      { key: "win", start: "9:25", end: "9:50" },
+      { n: 3, start: "9:54", end: "10:40" },
+      { n: 4, start: "10:44", end: "11:30" },
+      { n: 5, start: "11:34", end: "12:20" },
+      { n: 6, start: "12:24", end: "1:10" },
+      { n: 7, start: "1:14", end: "2:00" },
+    ],
+  };
+
+  var KIND = {
+    reg: {
+      label: "Regular schedule",
+      short: "Regular",
+      note: "Seven class periods, normal bell times.",
+    },
+    win: {
+      label: "Homeroom/WIN",
+      short: "Homeroom/WIN",
+      note: "Class periods run with a Homeroom/WIN block right after Period 2.",
     },
   };
 
+  /* Monday(1) → Friday(5); Sun(0)/Sat(6) have no school */
+  var WEEK = { 1: "reg", 2: "win", 3: "reg", 4: "win", 5: "reg" };
+
   var WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
-  function dayType(weekdayIdx) {
-    // weekdayIdx: 0 Sun .. 6 Sat
-    if (weekdayIdx === 0 || weekdayIdx === 6) return null;
-    return SCHEDULE.week[weekdayIdx - 1];
+  var KEY = "null:sched";
+
+  /* ---------- config (names + lunch, saved locally) ---------- */
+  function conf() {
+    var c = N.store.read(KEY, null) || {};
+    var lunch = c.lunch >= 4 && c.lunch <= 6 ? c.lunch : 5;
+    var names = c.names && typeof c.names === "object" ? c.names : {};
+    return { lunch: lunch, names: names };
   }
 
-  function parseStart(t) {
-    var m = /(\d{1,2}):(\d{2})/.exec(t || "");
+  function saveConf(c) {
+    N.store.write(KEY, { lunch: c.lunch, names: c.names });
+    N.bus.emit("sched");
+  }
+
+  function saveLunch(lunch) {
+    var c = conf();
+    c.lunch = lunch;
+    saveConf(c);
+  }
+
+  function defaultName(n) {
+    return "Period " + n;
+  }
+
+  /* ---------- time helpers ---------- */
+  /* Bell times are 12-hour strings ("7:45", "12:41", "1:31"). All blocks
+     fall between 7 AM and ~3 PM, so hours 1–6 mean afternoon and 12 means noon. */
+  function parseHM(s) {
+    var m = /^(\d{1,2}):(\d{2})$/.exec(String(s).trim());
     if (!m) return -1;
-    var h = parseInt(m[1], 10) % 12;
-    if (t.indexOf("PM") >= 0) h += 12;
+    var h = parseInt(m[1], 10);
     var min = parseInt(m[2], 10);
-    if (m[1] === "12" && t.indexOf("PM") >= 0) h = 12;
-    if (m[1] === "12" && t.indexOf("AM") >= 0) h = 0;
+    if (h === 12) h = 12; // noon, not midnight
+    else if (h < 7) h += 12; // 1–6 → PM
     return h * 60 + min;
   }
 
-  function nowIndex(blocks) {
-    var now = new Date();
-    var cur = now.getHours() * 60 + now.getMinutes();
-    for (var i = 0; i < blocks.length; i++) {
-      var start = parseStart(blocks[i].time);
-      var end = blocks[i + 1] ? parseStart(blocks[i + 1].time) : 24 * 60;
-      if (start >= 0 && cur >= start && cur < end) return i;
-    }
-    return -1;
+  function fmtHM(mins) {
+    if (mins < 0) return "";
+    var h = Math.floor(mins / 60);
+    var m = mins % 60;
+    var ap = h >= 12 ? "PM" : "AM";
+    var hh = h % 12 === 0 ? 12 : h % 12;
+    return hh + ":" + (m < 10 ? "0" : "") + m + " " + ap;
   }
 
-  function todayInfo() {
-    var now = new Date();
+  function spanText(b) {
+    return fmtHM(parseHM(b.start)) + " – " + fmtHM(parseHM(b.end));
+  }
+
+  function nowMinutes() {
+    var n = new Date();
+    return n.getHours() * 60 + n.getMinutes() + n.getSeconds() / 60;
+  }
+
+  /* ---------- day info ---------- */
+  function weekType(wi) {
+    return WEEK[wi] || null;
+  }
+
+  function todayInfo(now) {
+    now = now || new Date();
     var wi = now.getDay();
-    var dt = dayType(wi);
+    var type = weekType(wi);
     return {
-      weekday: wi,
+      d: now,
+      wi: wi,
       dayName: WEEKDAYS[wi],
-      type: dt, // "A" | "B" | null (weekend)
-      dateLabel: now.toLocaleDateString(undefined, { month: "long", day: "numeric" }),
+      full: now.toLocaleDateString(undefined, {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      }),
+      dateLine: now.toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" }),
+      type: type, // "reg" | "win" | null (weekend)
+      kind: type ? KIND[type] : null,
     };
   }
 
-  function rowEl(block, idx, isNow) {
-    return d.h(
-      "div",
-      { class: "sched-row" + (isNow ? " now" : "") },
-      [
-        isNow ? d.h("span", { class: "nowtag" }, "NOW") : null,
-        d.h("span", { class: "per" }, block.name),
-        d.h("span", { class: "crs" }, block.course || "\u2014"),
-        d.h("span", { class: "tm" }, block.time),
-      ],
-    );
+  /* ---------- resolved block list for a day type ---------- */
+  /* Each block: { n (or null for WIN), key, name, start, end, fixed }
+     fixed rows (WIN, Lunch) cannot be renamed. */
+  function blocksFor(type) {
+    var c = conf();
+    return (TEMPLATES[type] || TEMPLATES.reg).map(function (t) {
+      var b = {
+        n: t.n || null,
+        key: t.key || ("p" + t.n),
+        start: t.start,
+        end: t.end,
+      };
+      if (t.key === "win") {
+        b.name = "Homeroom/WIN";
+        b.fixed = true;
+      } else if (t.n === c.lunch) {
+        b.name = "Lunch";
+        b.fixed = true; // lunch rows are never renamed
+        b.lunch = true;
+      } else {
+        b.name = c.names[t.n] || defaultName(t.n);
+      }
+      return b;
+    });
   }
 
-  /* render(el, opts) — opts: { mini: bool } */
-  function render(el, opts) {
+  /* Current block info for a list of resolved blocks.
+     Returns { i, block|null, next|null, secLeft, secToNext }
+     secLeft = seconds left in the current block (0 if none). */
+  function live(blocks, now) {
+    now = now || new Date();
+    var secs = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+    var out = { i: -1, block: null, next: null, secLeft: 0, secToNext: 0 };
+    for (var i = 0; i < blocks.length; i++) {
+      var s = parseHM(blocks[i].start) * 60;
+      var e = parseHM(blocks[i].end) * 60;
+      if (secs >= s && secs < e) {
+        out.i = i;
+        out.block = blocks[i];
+        out.secLeft = Math.max(0, e - secs);
+        if (i + 1 < blocks.length) out.next = blocks[i + 1];
+        return out;
+      }
+      if (secs < s) {
+        out.next = blocks[i];
+        out.secToNext = s - secs;
+        return out;
+      }
+    }
+    return out; // after the last block
+  }
+
+  /* full date for a chosen weekday index (Mon..Fri → the *next* occurrence) */
+  function nextDateFor(wi, from) {
+    from = from || new Date();
+    var delta = (wi - from.getDay() + 7) % 7;
+    var d = new Date(from.getFullYear(), from.getMonth(), from.getDate() + delta);
+    return d.toLocaleDateString(undefined, {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+  }
+
+  /* ---------- shared row element ---------- */
+  function rowEl(b, idx, isNow, opts) {
     opts = opts || {};
-    el.innerHTML = "";
-    var info = todayInfo();
-    var wrap = d.h("div", { class: "sched-wrap" + (opts.mini ? " sched-mini" : "") });
+    var cells = [
+      d.h("span", { class: "s-no" }, b.n ? "P" + b.n : "\u2014"),
+      d.h("span", { class: "s-name" }, b.name),
+      d.h("span", { class: "s-time" }, spanText(b)),
+    ];
+    if (isNow) cells.unshift(d.h("span", { class: "nowtag" }, "NOW"));
+    var el = d.h("div", { class: "sched-row" + (isNow ? " now" : ""), "data-key": b.key }, cells);
+    return el;
+  }
 
-    /* day-of-week chips */
-    var chipRow = d.h("div", { class: "sched-days", role: "tablist" });
-    var activeW = info.weekday; // Mon..Fri default: today when school day
-    var chosen = { w: info.weekday, forced: false };
-
-    for (var i = 1; i <= 5; i++) {
-      (function (i) {
-        var dt = dayType(i);
-        var on = chosen.w === i;
-        var chip = d.h(
-          "button",
-          {
+  /* Render the day-type chips (full page only). */
+  function dayChips(chosen, onChange) {
+    var row = d.h("div", { class: "sched-days", role: "tablist", "aria-label": "Pick a day" });
+    for (var wi = 1; wi <= 5; wi++) {
+      (function (wi) {
+        var t = weekType(wi);
+        var on = chosen === wi;
+        row.appendChild(
+          d.h("button", {
             type: "button",
+            role: "tab",
+            "aria-selected": on ? "true" : "false",
             class: "chip chip-btn" + (on ? " on" : ""),
             onclick: function () {
-              chosen.w = i;
-              render(el, opts);
+              onChange(wi);
             },
-          },
-          [WEEKDAYS[i].slice(0, 3), dt ? " \u00b7 " + dt : ""],
+          }, [WEEKDAYS[wi].slice(0, 3), " \u00b7 ", t === "win" ? KIND.win.short : "Regular"]),
         );
-        chipRow.appendChild(chip);
-      })(i);
+      })(wi);
     }
-    wrap.appendChild(chipRow);
+    return row;
+  }
 
-    if (info.type == null && chosen.w === info.weekday) {
-      // weekend: only when viewing the real today
-      wrap.appendChild(
-        d.h("div", { class: "sched-nodays" }, [
-          d.h("b", null, info.dayName + " \u2014 no school."),
-          d.h("span", null, " See you Monday \u2014 it\u2019s an " + dayType(1) + " Day."),
-        ]),
-      );
-    } else {
-      var type = dayType(chosen.w) || "A";
-      var day = SCHEDULE.days[type];
-      var grid = d.h("div", { class: "sched-grid" });
-      var nIdx = chosen.w === info.weekday ? nowIndex(day.blocks) : -1;
-      day.blocks.forEach(function (b, idx) {
-        grid.appendChild(rowEl(b, idx, idx === nIdx));
-      });
-      wrap.appendChild(grid);
-      wrap.appendChild(d.h("div", { class: "sched-note" }, [SCHEDULE.note]));
+  /* Grid of rows for a resolved block list. nowIdx = -1 to show none. */
+  function grid(blocks, nowIdx, opts) {
+    opts = opts || {};
+    var g = d.h("div", { class: "sched-grid" });
+    blocks.forEach(function (b, i) {
+      g.appendChild(rowEl(b, i, opts.live !== false && i === nowIdx, opts));
+    });
+    return g;
+  }
+
+  /* ============================================================
+     Compact live "now / next / time left" strip.
+     refresh(box) is called every second with seconds-left numbers.
+     ============================================================ */
+  function liveStrip(blocks) {
+    var badge = d.h("div", { class: "ls-badge" }, [
+      d.h("span", { class: "dot" }),
+      d.h("b", { class: "ls-name" }, "\u2014"),
+      d.h("span", { class: "ls-time" }, ""),
+    ]);
+    var count = d.h("div", { class: "ls-count" }, [d.h("span", { class: "ls-left" }, "0:00"), d.h("span", { class: "ls-cap" }, "left")]);
+    var next = d.h("div", { class: "ls-next" }, [d.h("span", { class: "ls-cap" }, "next"), d.h("b", null, "\u2014")]);
+    var el = d.h("div", { class: "live-strip" }, [badge, count, next]);
+    function paint(lv) {
+      var b = lv.block;
+      if (b) {
+        badge.classList.add("on");
+        badge.querySelector(".ls-name").textContent = b.name;
+        badge.querySelector(".ls-time").textContent = spanText(b);
+        count.querySelector(".ls-left").textContent = fmtClock(lv.secLeft);
+        count.classList.remove("idle");
+      } else {
+        badge.classList.remove("on");
+        var nx = lv.next;
+        badge.querySelector(".ls-name").textContent = nx ? "Up next \u2014 " + nx.name : "School\u2019s out";
+        badge.querySelector(".ls-time").textContent = nx ? spanText(nx) : "See you tomorrow";
+        count.querySelector(".ls-left").textContent = nx ? fmtClock(lv.secToNext) : "\u2014";
+        count.classList.add("idle");
+        if (lv.secToNext > 0) count.querySelector(".ls-cap").textContent = "until it starts";
+        else count.querySelector(".ls-cap").textContent = "left";
+      }
+      var nb = lv.next;
+      if (nb) {
+        next.querySelector("b").textContent = nb.name + " \u00b7 " + fmtHM(parseHM(nb.start));
+      } else {
+        next.querySelector("b").textContent = "No more blocks today";
+      }
     }
-    el.appendChild(wrap);
+    function fmtClock(s) {
+      var m = Math.floor(s / 60);
+      var r = Math.floor(s % 60);
+      return m + ":" + (r < 10 ? "0" : "") + r;
+    }
+    return { el: el, paint: paint };
+  }
+
+  /* ============================================================
+     Public render entry points
+     ============================================================ */
+
+  /* Full page: today card content (badge + date + note). */
+  function todayCard(wi) {
+    var info = wi == null ? todayInfo() : null;
+    var isToday = wi == null || wi === new Date().getDay();
+    var type = isToday ? weekType(wi == null ? info.wi : wi) : weekType(wi);
+    var label = isToday
+      ? todayInfo().dayName + ", " + todayInfo().dateLine
+      : nextDateFor(wi);
+    var card = d.h("div", { class: "today-card" });
+    card.appendChild(
+      d.h("span", {
+        class: "chip" + (type === "win" ? " accent" : ""),
+      }, type ? (type === "win" ? "Homeroom/WIN day" : "Regular schedule") : "No school"),
+    );
+    card.appendChild(d.h("b", { class: "tc-date" }, label));
+    card.appendChild(
+      d.h("span", { class: "tc-note" }, type ? KIND[type].note : "Weekend \u2014 see you on Monday."),
+    );
+    return card;
   }
 
   N.schedule = {
-    render: render,
-    data: SCHEDULE,
-    today: todayInfo,
+    TEMPLATES: TEMPLATES,
+    KIND: KIND,
+    WEEK: WEEK,
+    conf: conf,
+    saveConf: saveConf,
+    saveLunch: saveLunch,
+    defaultName: defaultName,
+    parseHM: parseHM,
+    fmtHM: fmtHM,
+    spanText: spanText,
+    weekType: weekType,
+    todayInfo: todayInfo,
+    blocksFor: blocksFor,
+    live: live,
+    rowEl: rowEl,
+    dayChips: dayChips,
+    grid: grid,
+    liveStrip: liveStrip,
+    todayCard: todayCard,
+    nextDateFor: nextDateFor,
   };
 })();
 
@@ -4272,15 +4862,11 @@ window.NULL_CONTENT = {
 
   var NAV = {
     mini: ["home", "games", "apps", "settings"],
-    lite: ["home", "games", "apps", "proxies", "favorites", "schedule", "settings"],
-    regular: ["home", "games", "apps", "proxies", "favorites", "recent", "announcements", "schedule", "backups", "settings"]
+    lite: ["home", "games", "apps", "proxies", "schedule", "settings"],
+    regular: ["home", "games", "apps", "proxies", "announcements", "schedule", "backups", "settings"]
   };
   var NAV_T = { home: "Home", games: "Games", apps: "Apps", proxies: "Proxies",
-    favorites: "Favorites", recent: "Recent", announcements: "News", schedule: "Schedule",
-    backups: "Backups", settings: "Settings" };
-  var NAV_I = { home: "home", games: "game", apps: "grid", proxies: "proxy",
-    favorites: "star", recent: "clock", announcements: "ann", schedule: "sched",
-    backups: "backups", settings: "settings" };
+    announcements: "News", schedule: "Schedule", backups: "Backups", settings: "Settings" };
 
   function cat() { return window.NULL_CATALOG || { games: [], apps: [], proxies: [] }; }
 
@@ -4454,7 +5040,7 @@ window.NULL_CONTENT = {
   function homeView() {
     var view = d.h("div", { class: "rel-view" });
     var c = cat();
-    var hero = d.h("div", { class: "hero glass-2 glow-el" }, [
+    var hero = d.h("div", { class: "hero glass-2" }, [
       d.h("span", { class: "hero-eyebrow" }, "NULL \u2014 " + TIER + " \u00b7 standalone single file"),
       d.h("h1", null, "Games, apps & tools."),
       d.h("p", { class: "sub" }, "This is a self-contained NULL build. Favorites, history and settings below are shared with the main site (same browser). Everything else is right here in this one file.")
@@ -4471,12 +5057,8 @@ window.NULL_CONTENT = {
     hero.appendChild(actions);
     view.appendChild(hero);
 
-    var cols = d.h("div", { class: "home-cols", style: { marginTop: "16px" } });
-    var recent = d.h("div", { class: "panel glass" });
-    var fav = d.h("div", { class: "panel glass" });
-    cols.appendChild(recent);
-    if (TIER !== "mini") cols.appendChild(fav);
-    view.appendChild(cols);
+    var recent = d.h("div", { class: "panel glass", style: { marginTop: "16px" } });
+    view.appendChild(recent);
 
     function paintRecent() {
       recent.textContent = "";
@@ -4497,25 +5079,7 @@ window.NULL_CONTENT = {
       items.forEach(function (it) { list.appendChild(N.cards.row(it.e, it.k)); });
       recent.appendChild(list);
     }
-    function paintFavs() {
-      if (TIER === "mini") return;
-      fav.textContent = "";
-      fav.appendChild(d.h("div", { class: "panel-head" }, [d.h("h2", null, "Favorites")]));
-      var list = d.h("div", { class: "rec-list" });
-      var items = N.favs.list().map(function (f) {
-        var listKind = f.k === "app" ? cat().apps : f.k === "proxy" ? cat().proxies : cat().games;
-        var e = listKind.filter(function (x) { return x.id === f.id; })[0];
-        return e ? { e: e, k: f.k } : null;
-      }).filter(Boolean).slice(0, 5);
-      if (!items.length) {
-        fav.appendChild(N.cards.empty("No favorites yet", "Tap the star on a card."));
-        return;
-      }
-      items.forEach(function (it) { list.appendChild(N.cards.row(it.e, it.k)); });
-      fav.appendChild(list);
-    }
     paintRecent();
-    paintFavs();
     return view;
   }
 
@@ -4566,11 +5130,38 @@ window.NULL_CONTENT = {
   }
 
   function scheduleView() {
+    var S = N.schedule;
     var view = d.h("div", { class: "rel-view" });
     view.appendChild(d.h("div", { class: "view-head" }, [d.h("h2", null, "School schedule")]));
     var panel = d.h("div", { class: "panel glass" });
     view.appendChild(panel);
-    N.schedule.render(panel, { mini: false });
+
+    var info = S.todayInfo();
+    if (!info.type) {
+      panel.appendChild(d.h("p", { style: { color: "var(--text-2)" } }, info.dayName + " \u2014 no school. Monday is a Regular day."));
+      return view;
+    }
+    var blocks = S.blocksFor(info.type);
+    var head = d.h("div", { class: "today-card" }, [
+      d.h("span", { class: "chip" + (info.type === "win" ? " accent" : "") }, info.type === "win" ? "Homeroom/WIN day" : "Regular schedule"),
+      d.h("b", { class: "tc-date" }, info.full),
+      d.h("span", { class: "tc-note" }, info.kind.note)
+    ]);
+    panel.appendChild(head);
+    var ls = S.liveStrip(blocks);
+    panel.appendChild(ls.el);
+    var lv = S.live(blocks);
+    var idx = lv.block ? lv.i : -1;
+    panel.appendChild(S.grid(blocks, idx, { live: true }));
+    panel.appendChild(d.h("p", { class: "sched-note" }, "Times are sample bells. Rename periods and pick a lunch period on the full site's /schedule.html."));
+    setInterval(function () {
+      if (!document.body.contains(panel)) return;
+      var nv = S.live(blocks);
+      ls.paint(nv);
+      panel.querySelectorAll(".sched-row").forEach(function (r, i) {
+        r.classList.toggle("now", i === (nv.block ? nv.i : -1));
+      });
+    }, 1000);
     return view;
   }
 
@@ -4622,7 +5213,6 @@ window.NULL_CONTENT = {
       d.h("h2", { class: "set-title" }, "Appearance"),
       themeRow(card),
       accentRow(card),
-      glowRow(card),
       perfRow(card)
     ]);
     var tabCard = d.h("div", { class: "set-card glass", style: { marginTop: "14px" } }, [
@@ -4701,7 +5291,7 @@ window.NULL_CONTENT = {
   }
   function perfRow(card) {
     var row = d.h("div", { class: "set-row" }, [
-      d.h("div", { class: "lbl-txt" }, [d.h("b", null, "Performance mode"), d.h("span", null, "Less blur/glow for weaker machines.")]),
+      d.h("div", { class: "lbl-txt" }, [d.h("b", null, "Performance mode"), d.h("span", null, "Disables hover movement and shadows on slower devices.")]),
       (function () {
         var lab = d.h("label", { class: "switch" });
         var sw = d.h("input", { type: "checkbox", checked: !!N.prefs.get("perf") });
@@ -4778,8 +5368,6 @@ window.NULL_CONTENT = {
     else if (page === "games") viewHost = libraryView(c.games, "game");
     else if (page === "apps") viewHost = libraryView(c.apps, "app");
     else if (page === "proxies") viewHost = libraryView(c.proxies, "proxy");
-    else if (page === "favorites") viewHost = favsView(false);
-    else if (page === "recent") viewHost = favsView(true);
     else if (page === "schedule") viewHost = scheduleView();
     else if (page === "announcements") viewHost = announcementsView();
     else if (page === "backups") viewHost = backupsView();

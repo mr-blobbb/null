@@ -12,16 +12,10 @@
     { id: "proxies", t: "Proxies", url: "/proxies.html", icon: "proxy" },
   ];
 
+  /* extra pages in the More menu + mobile drawer */
   var GROUPS = [
     {
-      name: "Personal",
-      links: [
-        { t: "Recent", url: "/recent.html", icon: "clock" },
-        { t: "Favorites", url: "/favorites.html", icon: "star" },
-      ],
-    },
-    {
-      name: "NULL",
+      name: "More",
       links: [
         { t: "Announcements", url: "/announcements.html", icon: "ann" },
         { t: "Schedule", url: "/schedule.html", icon: "sched" },
@@ -29,19 +23,10 @@
         { t: "Settings", url: "/settings.html", icon: "settings" },
       ],
     },
-    {
-      name: "Info",
-      links: [
-        { t: "About", url: "/about.html", icon: "info" },
-        { t: "District", url: "/district.html", icon: "school" },
-        { t: "License", url: "/license.html", icon: "book" },
-        { t: "Privacy", url: "/privacy.html", icon: "ban" },
-        { t: "Terms", url: "/terms.html", icon: "file" },
-        { t: "Cookies", url: "/cookies.html", icon: "cookie" },
-      ],
-    },
   ];
 
+  /* About / District / License / Privacy / Terms / Cookies live only in the
+     footer bottom links — they are not menu destinations. */
   var FOOT = [
     {
       name: "Explore",
@@ -52,14 +37,6 @@
         { t: "Proxies", url: "/proxies.html" },
         { t: "Announcements", url: "/announcements.html" },
         { t: "Schedule", url: "/schedule.html" },
-        { t: "Backups", url: "/backups.html" },
-      ],
-    },
-    {
-      name: "Personal",
-      links: [
-        { t: "Recent", url: "/recent.html" },
-        { t: "Favorites", url: "/favorites.html" },
         { t: "Settings", url: "/settings.html" },
       ],
     },

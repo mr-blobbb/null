@@ -1,19 +1,64 @@
 /* NULL — home.js
-   Dashboard logic: live counts, recently played, favorites preview,
-   announcements preview, the permanent schedule mini view, plus the
-   first-launch welcome modal and the popup/redirect explanation modal. */
+   Dashboard logic: the featured rail (first 10 library items), recently
+   played with random/clear, a live "today" schedule card, announcements,
+   the first-launch welcome modal and the popup/redirect explanation. */
 (function () {
   var N = (window.N = window.N || {});
   var d = N.dom;
+  var S = N.schedule;
   var C = window.NULL_CONTENT || {};
 
   var inited = false;
+  var schedTimer = null;
 
-  function stat(id, n) {
-    var el = d.qs("#" + id);
-    if (el) el.textContent = n;
+  /* ---------- search ---------- */
+  function bindSearch() {
+    var form = d.qs("#homeSearch");
+    var input = d.qs("#searchInput");
+    if (!form) return;
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      N.search.open(input.value.trim());
+    });
+    /* the whole field feels clickable */
+    form.addEventListener("click", function (e) {
+      if (e.target.tagName !== "INPUT" && e.target.tagName !== "BUTTON") input.focus();
+    });
   }
 
+  /* ---------- featured rail ---------- */
+  function renderFeatured() {
+    var track = d.qs("#featTrack");
+    var hint = d.qs("#featHint");
+    if (!track) return;
+    track.textContent = "";
+    var games = N.catalog.games();
+    var apps = N.catalog.apps();
+    var list = games.slice(0, 10).map(function (g) {
+      return { e: g, k: "game" };
+    });
+    if (list.length < 10) {
+      apps.slice(0, 10 - list.length).forEach(function (a) {
+        list.push({ e: a, k: "app" });
+      });
+    }
+    if (!list.length) {
+      track.appendChild(
+        d.h("div", { class: "feat-empty" }, "The library is empty \u2014 add folders to games/ and rebuild the catalog."),
+      );
+      if (hint) hint.textContent = "";
+      return;
+    }
+    if (hint) {
+      var extra = list.length > games.length ? " \u00b7 games first, then apps" : "";
+      hint.textContent = games.length + " game" + (games.length === 1 ? "" : "s") + extra;
+    }
+    list.forEach(function (it) {
+      track.appendChild(N.cards.card(it.e, it.k));
+    });
+  }
+
+  /* ---------- recently played ---------- */
   function renderRecents() {
     var box = d.qs("#recList");
     if (!box) return;
@@ -32,44 +77,35 @@
       );
       return;
     }
+    var listEl = d.h("div", { class: "rec-list" });
     items.forEach(function (it) {
       var row = N.cards.row(it.e, it.k, {
         sub: (N.KIND_LABEL[it.k] || "") + " \u00b7 " + N.dt.ago(it.at),
       });
-      box.appendChild(row);
+      var x = d.h("button", {
+        type: "button",
+        class: "fav-row",
+        title: "Remove from recent",
+        "aria-label": "Remove from recent",
+      }, [d.icon("x")]);
+      x.addEventListener("click", function (e) {
+        e.stopPropagation();
+        N.recent.remove(it.k, it.e.id);
+        renderRecents();
+      });
+      row.appendChild(x);
+      listEl.appendChild(row);
     });
+    box.appendChild(listEl);
   }
 
-  function renderFavs() {
-    var box = d.qs("#favList");
-    if (!box) return;
-    box.textContent = "";
-    var favs = N.favs
-      .list()
-      .map(function (f) {
-        var e = N.catalog.find(f.k, f.id);
-        return e ? { e: e, k: f.k } : null;
-      })
-      .filter(Boolean)
-      .slice(0, 5);
-    if (!favs.length) {
-      box.appendChild(
-        N.cards.empty("No favorites yet", "Tap the star on any game or app to keep it here."),
-      );
-      return;
-    }
-    favs.forEach(function (f) {
-      box.appendChild(N.cards.row(f.e, f.k));
-    });
-  }
-
+  /* ---------- announcements ---------- */
   function renderAnn() {
     var box = d.qs("#annHome");
     if (!box) return;
     box.textContent = "";
     var list = (C.announcements || []).slice(0, 3);
     list.forEach(function (a) {
-      var tone = a.category === "notice" ? "accent" : "";
       var card = d.h("div", { class: "rec-row" }, [
         d.h("div", { class: "ric" }, [d.icon("ann")]),
         d.h("div", { class: "rtxt" }, [
@@ -84,6 +120,71 @@
     });
   }
 
+  /* ---------- live schedule card ---------- */
+  function renderSchedHome() {
+    var el = d.qs("#schedHome");
+    if (!el) return;
+    el.textContent = "";
+
+    var info = S.todayInfo();
+    var wrap = d.h("div", { class: "sched-wrap sched-mini" });
+
+    if (!info.type) {
+      wrap.appendChild(
+        d.h("div", { class: "sched-nodays" }, [
+          d.h("b", null, info.dayName + " \u2014 no school."),
+          d.h("span", null, " Monday is a Regular day."),
+        ]),
+      );
+      el.appendChild(wrap);
+      return;
+    }
+
+    var blocks = S.blocksFor(info.type);
+
+    /* heading: date + day type badge */
+    wrap.appendChild(
+      d.h("div", { class: "hs-head" }, [
+        d.h("b", null, info.dayName),
+        d.h("span", null, info.dateLine),
+        d.h("span", { class: "chip" + (info.type === "win" ? " accent" : "") }, info.kind.short),
+      ]),
+    );
+
+    /* live now / next strip */
+    var ls = S.liveStrip(blocks);
+    wrap.appendChild(ls.el);
+
+    /* today's blocks */
+    var lv = S.live(blocks);
+    var lastIdx = lv.block ? lv.i : -1;
+    var g = S.grid(blocks, lastIdx, { live: true });
+    g.classList.add("home-grid");
+    wrap.appendChild(g);
+
+    el.appendChild(wrap);
+
+    /* tick every second: countdown + NOW marker */
+    clearInterval(schedTimer);
+    schedTimer = setInterval(function () {
+      if (!document.body.contains(el)) {
+        clearInterval(schedTimer);
+        return;
+      }
+      if (document.hidden) return;
+      var nv = S.live(blocks);
+      ls.paint(nv);
+      var idx = nv.block ? nv.i : -1;
+      if (idx !== lastIdx) {
+        lastIdx = idx;
+        g.querySelectorAll(".sched-row").forEach(function (row, i) {
+          row.classList.toggle("now", i === idx);
+        });
+      }
+    }, 1000);
+  }
+
+  /* ---------- modals ---------- */
   function welcome() {
     if (N.flags.get("welcome")) {
       popupNote();
@@ -94,10 +195,10 @@
       icon: "ban",
       dismissible: false,
       body:
-        "<p><b>NULL</b> is a frosted, black-and-white hub \u2014 games, apps, proxies and tools in one clean place.</p>" +
+        "<p><b>NULL</b> is a plain black-and-white hub \u2014 games, apps, proxies and tools in one place.</p>" +
         "<p>Everything here runs in your browser:</p>" +
-        "<p style='font-size:13.5px'>\u2022 Favorites &amp; recently played are saved locally<br>" +
-        "\u2022 Themes, accents, glow borders &amp; tab presets are yours to tune<br>" +
+        "<p style='font-size:13.5px'>\u2022 Recently played is saved locally<br>" +
+        "\u2022 Themes, accents &amp; tab presets are yours to tune<br>" +
         "\u2022 NULL never uploads anything \u2014 no servers, no accounts</p>",
       actions: [
         {
@@ -143,10 +244,10 @@
     });
   }
 
+  /* ---------- buttons ---------- */
   function bind() {
-    d.qsa("#btnRandom, #btnRandom2").forEach(function (rnd) {
-      rnd.addEventListener("click", N.launch.randomGame);
-    });
+    var rnd = d.qs("#btnRandom");
+    if (rnd) rnd.addEventListener("click", N.launch.randomGame);
 
     var clr = d.qs("#btnClearRec");
     if (clr) {
@@ -155,38 +256,21 @@
         d.toast("Recently played cleared");
       });
     }
-
-    d.qsa(".js-search").forEach(function (b) {
-      b.addEventListener("click", function (e) {
-        e.preventDefault();
-        N.search.open();
-      });
-    });
   }
 
   function init() {
     if (inited) return;
     inited = true;
-
-    var c = N.catalog.counts();
-    stat("stGames", c.games);
-    stat("stApps", c.apps);
-    stat("stProxies", c.proxies);
-    stat("tGames", c.games);
-    stat("tApps", c.apps);
-    stat("tProxies", c.proxies);
-
+    bindSearch();
+    renderFeatured();
     renderRecents();
-    renderFavs();
     renderAnn();
-
-    var schedEl = d.qs("#schedHome");
-    if (schedEl) N.schedule.render(schedEl, { mini: true });
-
-    N.bus.on("recent", renderRecents);
-    N.bus.on("favs", renderFavs);
-
+    renderSchedHome();
     bind();
+    N.bus.on("recent", renderRecents);
+    N.bus.on("sched", function () {
+      if (document.body.contains(d.qs("#schedHome"))) renderSchedHome();
+    });
     welcome();
   }
 

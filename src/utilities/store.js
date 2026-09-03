@@ -50,7 +50,6 @@
   var DEFAULTS = {
     theme: "dark", // dark | light
     accent: "off", // palette id from theme.js
-    glow: "off", // off | flow | drift | pulse
     tab: "slides", // tab preset id from tabpresets.js (default: Google Slides)
     perf: false, // performance mode
     gmailAddr: "you@gmail.com",

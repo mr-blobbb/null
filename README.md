@@ -1,8 +1,8 @@
 # NULL
 
-A polished, black-and-white web hub for **games**, **apps**, **proxies** and
-useful tools. Frosted glass surfaces, restrained motion, a grayscale identity —
-built as plain static HTML/CSS/JS, deployable straight to GitHub Pages.
+A plain black-and-white web hub for **games**, **apps**, **proxies** and useful
+tools. Flat surfaces, hairline borders, a grayscale identity — built as plain
+static HTML/CSS/JS, deployable straight to GitHub Pages.
 
 ```
 Primary deployment: https://googleslides2026.github.io
@@ -129,8 +129,8 @@ prefix a `<base>` tag in each HTML head.
 
 ## Features at a glance
 
-- Glass/frosted design system, dark + light themes, configurable restrained
-  accents, animated glow-border presets (default **Off**), performance mode.
+- Minimal flat design system, dark + light themes, configurable restrained
+  accents (accent color drives selected buttons/chips), performance mode.
 - Auto-discovered game/app/proxy catalog with labels, warnings, fallback thumbs.
 - Shared NULL player (fullscreen, reload, favorites, tab-preset override,
   about:blank / blob: cloaking within browser limits).

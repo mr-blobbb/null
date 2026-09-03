@@ -4,9 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="theme-color" content="#09090b">
+  <meta name="theme-color" content="#0a0a0b">
   <title>Schedule — NULL</title>
-  <meta name="description" content="The NULL school schedule — A/B days, bell times, now playing.">
+  <meta name="description" content="The NULL school schedule — regular days, Homeroom/WIN days, live countdown and editable period names.">
   <link rel="icon" id="favicon" href="/public/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/src/styles/global.css">
   <script>
@@ -23,21 +23,31 @@
 </head>
 <body data-page="schedule">
   <a class="skip-link" href="#main">Skip to content</a>
-  <div class="glow-bg" aria-hidden="true"></div>
   <header data-mount="nav"></header>
 
   <main id="main" class="page page-narrow">
     <div class="page-head">
-      <span class="eyebrow"><span data-icon="sched"></span>schedule · permanent component</span>
+      <span class="eyebrow"><span data-icon="sched"></span>schedule</span>
       <h1>School schedule</h1>
       <p>
-        The full week view. Your day is highlighted; while school is in session the
-        current block is flagged <b>NOW</b>. Times shown are sample data — the real
-        schedule lives in src/components/schedule.js.
+        Monday, Wednesday and Friday run the regular bell schedule. Tuesdays and
+        Thursdays add a Homeroom/WIN block after Period 2. Pick your lunch period
+        and rename any period on this page — it saves to this browser.
       </p>
     </div>
-    <div class="panel glass glow-el" style="padding:22px">
-      <div id="schedFull"></div>
+
+    <div class="toolbar" style="margin-top:0">
+      <div id="schedChips" class="sched-days" role="tablist"></div>
+      <span style="margin-left:auto"></span>
+      <div id="editBar"></div>
+    </div>
+
+    <div class="panel" style="padding:20px">
+      <div id="todayCard" class="today-card"></div>
+      <div id="liveBox" class="live-box"></div>
+      <div id="editPanel" class="edit-panel" style="display:none"></div>
+      <div id="schedGridBox"></div>
+      <div id="schedNote" class="sched-note"></div>
     </div>
   </main>
 

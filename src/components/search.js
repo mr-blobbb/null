@@ -1,6 +1,6 @@
 /* NULL — search.js
    Global search: games, apps, proxies, announcements and site pages.
-   Opens as a frosted overlay from anywhere; results reuse NULL cards/rows. */
+   Opens as a plain overlay from anywhere; results reuse NULL cards/rows. */
 (function () {
   var N = (window.N = window.N || {});
   var d = N.dom;
@@ -119,11 +119,7 @@
       value: initial || "",
       "aria-label": "Search NULL",
     });
-    var inputRow = d.h("div", { class: "search-input" }, [
-      d.icon("search"),
-      input,
-      d.h("span", { class: "kbd" }, "esc"),
-    ]);
+    var inputRow = d.h("div", { class: "search-input" }, [d.icon("search"), input]);
 
     var results = d.h("div", { class: "search-results", role: "listbox" });
     var panel = d.h("div", { class: "search-panel glass-2 elev" }, [inputRow, results]);
