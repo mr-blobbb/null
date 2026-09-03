@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#09090b">
+  <title>Privacy — NULL</title>
+  <meta name="description" content="NULL privacy policy.">
+  <link rel="icon" id="favicon" href="/public/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/src/styles/global.css">
+  <script>
+    (function () {
+      try {
+        var p = JSON.parse(localStorage.getItem("null:prefs") || "{}");
+        var t = p.theme === "light" ? "light" : "dark";
+        document.documentElement.dataset.theme = t;
+        if (p.perf) document.documentElement.dataset.perf = "1";
+        if (p.glow && p.glow !== "off") document.documentElement.dataset.glow = p.glow;
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body data-page="privacy">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="glow-bg" aria-hidden="true"></div>
+  <header data-mount="nav"></header>
+
+  <main id="main" class="page page-narrow">
+    <div class="page-head">
+      <span class="eyebrow"><span data-icon="ban"></span>privacy</span>
+      <h1>Privacy</h1>
+    </div>
+    <!-- WRITE MARKDOWN HERE -->
+    <article class="md-out glass" aria-label="Privacy content"></article>
+    <script type="text/markdown">
+# Privacy
+
+NULL is a static website. There is no backend, no database and no analytics server run by NULL.
+
+## What NULL stores
+
+Everything NULL remembers lives in your browser's `localStorage` on the device you're using:
+
+- Preferences (theme, accent, glow preset, tab preset, performance mode)
+- Recently played items
+- Favorites
+- Small flags (for example, whether you have seen the welcome modal)
+
+You can wipe all of it at any time from **Settings → Danger zone → Wipe all NULL data**, or by clearing your browser's site data.
+
+## What NULL does NOT do
+
+- NULL does not upload, sell or share your data anywhere.
+- NULL has no accounts and no servers of its own.
+- NULL does not track you across sites.
+
+## Third-party content
+
+Games, apps and proxies may be hosted by third parties or link out to external websites. NULL itself never sends them any of your data — but anything you do on an external site is governed by that site's own privacy rules. That includes any cookies or trackers they set when you visit them through a NULL proxy link.
+
+## Popups and permissions
+
+Some features (cloaking modes, external links) may ask your browser for popup or redirect permission. That request comes from NULL and is limited to NULL's own functionality — the browser controls every permission prompt.
+    </script>
+  </main>
+
+  <footer data-mount="foot"></footer>
+  <noscript>
+    <nav class="ns-nav">
+      <a href="/">Home</a><a href="/games.html">Games</a><a href="/apps.html">Apps</a><a href="/proxies.html">Proxies</a><a href="/schedule.html">Schedule</a><a href="/settings.html">Settings</a>
+    </nav>
+  </noscript>
+
+  <script src="/src/utilities/store.js"></script>
+  <script src="/src/utilities/dom.js"></script>
+  <script src="/src/utilities/modal.js"></script>
+  <script src="/src/utilities/theme.js"></script>
+  <script src="/src/utilities/scroll.js"></script>
+  <script src="/src/utilities/markdown.js"></script>
+  <script src="/src/routing/router.js"></script>
+  <script src="/src/catalog/generated-catalog.js"></script>
+  <script src="/src/catalog/catalog.js"></script>
+  <script src="/src/content/content.js"></script>
+  <script src="/src/components/tabpresets.js"></script>
+  <script src="/src/components/schedule.js"></script>
+  <script src="/src/components/cards.js"></script>
+  <script src="/src/components/search.js"></script>
+  <script src="/src/components/shell.js"></script>
+  <script src="/src/pages/legal.js"></script>
+</body>
+</html>

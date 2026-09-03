@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#09090b">
+  <title>About — NULL</title>
+  <meta name="description" content="About NULL.">
+  <link rel="icon" id="favicon" href="/public/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/src/styles/global.css">
+  <script>
+    (function () {
+      try {
+        var p = JSON.parse(localStorage.getItem("null:prefs") || "{}");
+        var t = p.theme === "light" ? "light" : "dark";
+        document.documentElement.dataset.theme = t;
+        if (p.perf) document.documentElement.dataset.perf = "1";
+        if (p.glow && p.glow !== "off") document.documentElement.dataset.glow = p.glow;
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body data-page="about">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="glow-bg" aria-hidden="true"></div>
+  <header data-mount="nav"></header>
+
+  <main id="main" class="page page-narrow">
+    <div class="page-head">
+      <span class="eyebrow"><span data-icon="info"></span>about</span>
+      <h1>About NULL</h1>
+    </div>
+    <!-- WRITE MARKDOWN HERE -->
+    <article class="md-out glass" aria-label="About content"></article>
+    <script type="text/markdown">
+# What is NULL?
+
+NULL is a polished, black-and-white web hub for **games**, **apps**, **proxies** and useful tools. It is designed to feel like one cohesive platform — frosted glass surfaces, restrained motion, and a grayscale identity that keeps its focus on the content.
+
+## The idea
+
+- **Games & apps** are discovered automatically from their folders. Drop a folder with an HTML file into `games/`, rebuild the catalog, and it appears with its own labels, thumbnail and optional warning.
+- **Proxies** are treated differently on purpose: they link out to external sites in a new tab. NULL never pretends an external site is part of NULL.
+- **The player** is shared. Games and apps open inside the same NULL shell with fullscreen, warnings and tab-preset overrides.
+- **Your data stays local.** Favorites, recently played, themes and settings are stored with `localStorage` on the device you are using. No server, no account, nothing uploaded.
+
+## Nice-to-know details
+
+- Pages ship as plain HTML with a shared CSS design system — no framework required.
+- The site is fully static and runs on GitHub Pages. The "releases" folder contains single-file builds: NULL Mini, NULL Lite and NULL Regular.
+- If the domain ever goes down, check the [Backups](/backups.html) page for the next places to look.
+- Tab presets (Google Slides style by default), glow borders, accents and a performance mode are all configurable in [Settings](/settings.html).
+    </script>
+  </main>
+
+  <footer data-mount="foot"></footer>
+  <noscript>
+    <nav class="ns-nav">
+      <a href="/">Home</a><a href="/games.html">Games</a><a href="/apps.html">Apps</a><a href="/proxies.html">Proxies</a><a href="/schedule.html">Schedule</a><a href="/settings.html">Settings</a>
+    </nav>
+  </noscript>
+
+  <script src="/src/utilities/store.js"></script>
+  <script src="/src/utilities/dom.js"></script>
+  <script src="/src/utilities/modal.js"></script>
+  <script src="/src/utilities/theme.js"></script>
+  <script src="/src/utilities/scroll.js"></script>
+  <script src="/src/utilities/markdown.js"></script>
+  <script src="/src/routing/router.js"></script>
+  <script src="/src/catalog/generated-catalog.js"></script>
+  <script src="/src/catalog/catalog.js"></script>
+  <script src="/src/content/content.js"></script>
+  <script src="/src/components/tabpresets.js"></script>
+  <script src="/src/components/schedule.js"></script>
+  <script src="/src/components/cards.js"></script>
+  <script src="/src/components/search.js"></script>
+  <script src="/src/components/shell.js"></script>
+  <script src="/src/pages/legal.js"></script>
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FLIP</title>
+<style>
+  html,body{margin:0;min-height:100%;background:#0b0b0d;color:#f4f4f5;font-family:system-ui,sans-serif}
+  body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:20px;box-sizing:border-box}
+  .hud{display:flex;align-items:center;gap:20px;font-size:15px;letter-spacing:.1em}
+  .hud button{border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.07);color:#f4f4f5;border-radius:999px;padding:8px 18px;font-size:13px;letter-spacing:.06em;cursor:pointer}
+  #grid{display:grid;grid-template-columns:repeat(4,minmax(64px,1fr));gap:12px;width:min(92vw,440px)}
+  .card{aspect-ratio:1;border-radius:14px;border:1px solid rgba(255,255,255,0.14);cursor:pointer;
+    display:grid;place-items:center;font-size:34px;background:linear-gradient(150deg,#16161b,#0e0e12);
+    transition:transform .18s ease,border-color .18s,opacity .3s}
+  .card:hover{border-color:rgba(255,255,255,0.4);transform:translateY(-2px)}
+  .card.hide{opacity:0;pointer-events:none;transform:scale(.8)}
+  .card.open,.card.matched{border-color:rgba(255,255,255,0.65)}
+  .card.wrong{animation:shk .28s}
+  @keyframes shk{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+  #status{font-size:13px;color:rgba(255,255,255,0.5);min-height:18px;letter-spacing:.04em}
+</style>
+</head>
+<body>
+  <div class="hud"><span id="moves">MOVES 0</span><button id="new">new game</button><span id="best">BEST —</span></div>
+  <div id="grid"></div>
+  <div id="status">flip a pair of matching tiles</div>
+<script>
+(function () {
+  var GLYPHS = ["\u25C9","\u25CB","\u25A0","\u25A1","\u25C6","\u25C7","\u25B2","\u25B3","\u2731","\u2295","\u2296","\u2261"];
+  var grid = document.getElementById("grid");
+  var movesEl = document.getElementById("moves");
+  var statusEl = document.getElementById("status");
+  var bestEl = document.getElementById("best");
+
+  var deck = [];
+  var open = [];
+  var locked = false;
+  var moves = 0;
+  var best = null;
+  try { best = +localStorage.getItem("flip.best") || null; } catch (e) {}
+  if (best) bestEl.textContent = "BEST " + best;
+
+  function build() {
+    deck = GLYPHS.slice(0, 8).concat(GLYPHS.slice(0, 8));
+    for (var i = deck.length - 1; i > 0; i--) {
+      var j = (Math.random() * (i + 1)) | 0;
+      var t = deck[i]; deck[i] = deck[j]; deck[j] = t;
+    }
+    open = [];
+    locked = false;
+    moves = 0;
+    movesEl.textContent = "MOVES 0";
+    statusEl.textContent = "flip a pair of matching tiles";
+    grid.textContent = "";
+    deck.forEach(function (glyph, idx) {
+      var el = document.createElement("button");
+      el.className = "card";
+      el.addEventListener("click", function () { flip(el, glyph, idx); });
+      grid.appendChild(el);
+    });
+  }
+
+  function flip(el, glyph, idx) {
+    if (locked || el.classList.contains("open") || el.classList.contains("matched")) return;
+    el.textContent = glyph;
+    el.classList.add("open");
+    open.push({ el: el, glyph: glyph });
+    if (open.length === 2) {
+      locked = true;
+      moves++;
+      movesEl.textContent = "MOVES " + moves;
+      var a = open[0], b = open[1];
+      setTimeout(function () {
+        if (a.glyph === b.glyph) {
+          a.el.classList.add("matched");
+          b.el.classList.add("matched");
+          statusEl.textContent = "match!";
+        } else {
+          a.el.classList.add("wrong");
+          b.el.classList.add("wrong");
+          statusEl.textContent = "no match";
+        }
+        setTimeout(function () {
+          if (a.glyph !== b.glyph) {
+            a.el.textContent = "";
+            a.el.classList.remove("open");
+            b.el.textContent = "";
+            b.el.classList.remove("open");
+          }
+          a.el.classList.remove("wrong");
+          b.el.classList.remove("wrong");
+          open = [];
+          locked = false;
+          checkWin();
+        }, 500);
+      }, 260);
+    }
+  }
+
+  function checkWin() {
+    var done = grid.querySelectorAll(".matched").length;
+    if (done === 16) {
+      statusEl.textContent = "cleared in " + moves + " moves";
+      if (!best || moves < best) {
+        best = moves;
+        try { localStorage.setItem("flip.best", best); } catch (e) {}
+        bestEl.textContent = "BEST " + best;
+      }
+    }
+  }
+
+  document.getElementById("new").addEventListener("click", build);
+  build();
+})();
+</script>
+</body>
+</html>

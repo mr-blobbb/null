@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#09090b">
+  <title>District — NULL</title>
+  <meta name="description" content="District information on NULL.">
+  <link rel="icon" id="favicon" href="/public/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/src/styles/global.css">
+  <script>
+    (function () {
+      try {
+        var p = JSON.parse(localStorage.getItem("null:prefs") || "{}");
+        var t = p.theme === "light" ? "light" : "dark";
+        document.documentElement.dataset.theme = t;
+        if (p.perf) document.documentElement.dataset.perf = "1";
+        if (p.glow && p.glow !== "off") document.documentElement.dataset.glow = p.glow;
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body data-page="district">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="glow-bg" aria-hidden="true"></div>
+  <header data-mount="nav"></header>
+
+  <main id="main" class="page page-narrow">
+    <div class="page-head">
+      <span class="eyebrow"><span data-icon="school"></span>district</span>
+      <h1>District</h1>
+    </div>
+    <!-- WRITE MARKDOWN HERE -->
+    <article class="md-out glass" aria-label="District content"></article>
+    <script type="text/markdown">
+# District info
+
+This page is meant for information about your school district. Edit the markdown above the closing tag of this file (`district.html`) and it renders here automatically — no HTML required.
+
+## Things people usually put here
+
+- District name and contact info
+- School hours and key dates
+- Links to the official district portal
+- Tech / acceptable-use expectations relevant to NULL
+
+## Official resources
+
+- Primary site: the district portal (add the real URL here)
+- Student portal / Infinite Campus: add link
+- Library & research tools: add link
+
+*Remember: NULL is a community-run page, not an official district page. Keep it aligned with school rules.*
+    </script>
+  </main>
+
+  <footer data-mount="foot"></footer>
+  <noscript>
+    <nav class="ns-nav">
+      <a href="/">Home</a><a href="/games.html">Games</a><a href="/apps.html">Apps</a><a href="/proxies.html">Proxies</a><a href="/schedule.html">Schedule</a><a href="/settings.html">Settings</a>
+    </nav>
+  </noscript>
+
+  <script src="/src/utilities/store.js"></script>
+  <script src="/src/utilities/dom.js"></script>
+  <script src="/src/utilities/modal.js"></script>
+  <script src="/src/utilities/theme.js"></script>
+  <script src="/src/utilities/scroll.js"></script>
+  <script src="/src/utilities/markdown.js"></script>
+  <script src="/src/routing/router.js"></script>
+  <script src="/src/catalog/generated-catalog.js"></script>
+  <script src="/src/catalog/catalog.js"></script>
+  <script src="/src/content/content.js"></script>
+  <script src="/src/components/tabpresets.js"></script>
+  <script src="/src/components/schedule.js"></script>
+  <script src="/src/components/cards.js"></script>
+  <script src="/src/components/search.js"></script>
+  <script src="/src/components/shell.js"></script>
+  <script src="/src/pages/legal.js"></script>
+</body>
+</html>

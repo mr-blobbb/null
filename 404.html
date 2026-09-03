@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#09090b">
+  <title>404 — NULL</title>
+  <meta name="description" content="Page not found.">
+  <link rel="icon" id="favicon" href="/public/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/src/styles/global.css">
+  <script>
+    (function () {
+      try {
+        var p = JSON.parse(localStorage.getItem("null:prefs") || "{}");
+        var t = p.theme === "light" ? "light" : "dark";
+        document.documentElement.dataset.theme = t;
+        if (p.perf) document.documentElement.dataset.perf = "1";
+        if (p.glow && p.glow !== "off") document.documentElement.dataset.glow = p.glow;
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body data-page="404" class="page-404">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header data-mount="nav"></header>
+
+  <main id="main" class="not-found">
+    <div class="numb">error 0x404</div>
+    <svg class="art" viewBox="0 0 220 220" fill="none" aria-hidden="true">
+      <ellipse cx="110" cy="200" rx="72" ry="10" fill="currentColor" opacity="0.08"/>
+      <!-- leaking barrel -->
+      <rect x="66" y="52" width="88" height="108" rx="26" stroke="currentColor" stroke-width="5" opacity="0.92"/>
+      <path d="M66 84h88M66 116h88M66 148h88" stroke="currentColor" stroke-width="3" opacity="0.25"/>
+      <ellipse cx="110" cy="52" rx="44" ry="12" stroke="currentColor" stroke-width="5" opacity="0.92"/>
+      <ellipse cx="110" cy="160" rx="44" ry="12" stroke="currentColor" stroke-width="5" opacity="0.92"/>
+      <path d="M78 160c0 26-6 34-14 42" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+      <ellipse cx="58" cy="202" rx="18" ry="5" fill="currentColor" opacity="0.22"/>
+      <!-- the slashed zero -->
+      <circle cx="110" cy="118" r="15" stroke="currentColor" stroke-width="4" opacity="0.75"/>
+      <path d="M100 108l20 20" stroke="currentColor" stroke-width="4" stroke-linecap="round" opacity="0.75"/>
+      <!-- drips -->
+      <path d="M112 160v18" stroke="currentColor" stroke-width="3" stroke-linecap="round" opacity="0.7"/>
+    </svg>
+    <div style="display:flex;gap:4px">
+      <span class="leak"></span>
+      <span class="leak" style="animation-delay:.8s"></span>
+      <span class="leak" style="animation-delay:1.5s"></span>
+    </div>
+    <h1>This barrel is NULL.</h1>
+    <p class="sub">
+      The page you were looking for has leaked out of existence. It may have been
+      moved, renamed, or never poured in the first place.
+    </p>
+    <div class="actions">
+      <a class="btn btn-primary" href="/">Take me home</a>
+      <a class="btn btn-outline" href="/games.html">Browse games</a>
+      <a class="btn btn-ghost" href="/backups.html">Backup links</a>
+    </div>
+  </main>
+
+  <footer data-mount="foot"></footer>
+  <noscript>
+    <nav class="ns-nav">
+      <a href="/">Home</a><a href="/games.html">Games</a><a href="/apps.html">Apps</a><a href="/proxies.html">Proxies</a><a href="/schedule.html">Schedule</a><a href="/settings.html">Settings</a>
+    </nav>
+  </noscript>
+
+  <script src="/src/utilities/store.js"></script>
+  <script src="/src/utilities/dom.js"></script>
+  <script src="/src/utilities/modal.js"></script>
+  <script src="/src/utilities/theme.js"></script>
+  <script src="/src/utilities/scroll.js"></script>
+  <script src="/src/routing/router.js"></script>
+  <script src="/src/catalog/generated-catalog.js"></script>
+  <script src="/src/catalog/catalog.js"></script>
+  <script src="/src/content/content.js"></script>
+  <script src="/src/components/tabpresets.js"></script>
+  <script src="/src/components/schedule.js"></script>
+  <script src="/src/components/cards.js"></script>
+  <script src="/src/components/search.js"></script>
+  <script src="/src/components/shell.js"></script>
+</body>
+</html>

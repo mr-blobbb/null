@@ -1,0 +1,2 @@
+Label: Action Metroidvania Adventure
+Label: Platformer

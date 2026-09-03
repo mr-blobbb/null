@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#09090b">
+  <title>Cookies — NULL</title>
+  <meta name="description" content="How NULL handles cookies.">
+  <link rel="icon" id="favicon" href="/public/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/src/styles/global.css">
+  <script>
+    (function () {
+      try {
+        var p = JSON.parse(localStorage.getItem("null:prefs") || "{}");
+        var t = p.theme === "light" ? "light" : "dark";
+        document.documentElement.dataset.theme = t;
+        if (p.perf) document.documentElement.dataset.perf = "1";
+        if (p.glow && p.glow !== "off") document.documentElement.dataset.glow = p.glow;
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body data-page="cookies">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="glow-bg" aria-hidden="true"></div>
+  <header data-mount="nav"></header>
+
+  <main id="main" class="page page-narrow">
+    <div class="page-head">
+      <span class="eyebrow"><span data-icon="cookie"></span>cookies</span>
+      <h1>Cookies</h1>
+    </div>
+    <!-- WRITE MARKDOWN HERE -->
+    <article class="md-out glass" aria-label="Cookie content"></article>
+    <script type="text/markdown">
+# Cookies
+
+The short version: **NULL doesn't use cookies at all.**
+
+## What NULL actually uses
+
+NULL persists a few small preferences in your browser's `localStorage`. This is not the same as a cookie:
+
+- Cookies are sent to a server with every request.
+- `localStorage` data never leaves your browser automatically.
+
+NULL's site data is strictly on-device. There is no NULL server to receive cookies, and the site sets no tracking cookies, no advertising cookies and no third-party cookies.
+
+## Third-party destinations
+
+NULL is a *hub*. Games, apps and proxies can belong to other people:
+
+- Content embedded through the NULL player is loaded directly from its own origin — it may set cookies for that origin just like any website.
+- Proxy links open external sites in a new tab. Those sites set whatever cookies their own policies describe.
+
+In both cases those cookies belong to the third party, not to NULL, and NULL receives none of them.
+
+## Managing site data
+
+You can inspect and clear everything NULL stores at any time through your browser's site-data settings, or use **Settings → Danger zone → Wipe all NULL data** inside NULL.
+    </script>
+  </main>
+
+  <footer data-mount="foot"></footer>
+  <noscript>
+    <nav class="ns-nav">
+      <a href="/">Home</a><a href="/games.html">Games</a><a href="/apps.html">Apps</a><a href="/proxies.html">Proxies</a><a href="/schedule.html">Schedule</a><a href="/settings.html">Settings</a>
+    </nav>
+  </noscript>
+
+  <script src="/src/utilities/store.js"></script>
+  <script src="/src/utilities/dom.js"></script>
+  <script src="/src/utilities/modal.js"></script>
+  <script src="/src/utilities/theme.js"></script>
+  <script src="/src/utilities/scroll.js"></script>
+  <script src="/src/utilities/markdown.js"></script>
+  <script src="/src/routing/router.js"></script>
+  <script src="/src/catalog/generated-catalog.js"></script>
+  <script src="/src/catalog/catalog.js"></script>
+  <script src="/src/content/content.js"></script>
+  <script src="/src/components/tabpresets.js"></script>
+  <script src="/src/components/schedule.js"></script>
+  <script src="/src/components/cards.js"></script>
+  <script src="/src/components/search.js"></script>
+  <script src="/src/components/shell.js"></script>
+  <script src="/src/pages/legal.js"></script>
+</body>
+</html>

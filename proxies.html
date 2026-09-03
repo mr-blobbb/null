@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#09090b">
+  <title>Proxies — NULL</title>
+  <meta name="description" content="NULL proxies — external destinations, listed with status markers.">
+  <link rel="icon" id="favicon" href="/public/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/src/styles/global.css">
+  <script>
+    (function () {
+      try {
+        var p = JSON.parse(localStorage.getItem("null:prefs") || "{}");
+        var t = p.theme === "light" ? "light" : "dark";
+        document.documentElement.dataset.theme = t;
+        if (p.perf) document.documentElement.dataset.perf = "1";
+        if (p.glow && p.glow !== "off") document.documentElement.dataset.glow = p.glow;
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body data-page="proxies" class="lb">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header data-mount="nav"></header>
+
+  <main id="scrollview" class="sview">
+    <div class="page-head">
+      <span class="eyebrow"><span data-icon="proxy"></span>proxies · external links</span>
+      <h1>Proxies</h1>
+      <p>
+        Proxies are different from games and apps: selecting one opens the external
+        destination in a new tab — NULL never wraps it inside the player. Status
+        markers below are maintained by hand, not auto-verified.
+      </p>
+    </div>
+    <div class="toolbar">
+      <span class="field" style="width:min(280px,100%)">
+        <span data-icon="search"></span>
+        <input id="libSearch" type="text" placeholder="Filter proxies" aria-label="Filter proxies">
+      </span>
+      <span id="count" class="count"></span>
+    </div>
+    <div id="labelRow" class="filter-row" role="group" aria-label="Filter by status"></div>
+    <div id="grid" class="lib-grid"></div>
+    <div id="empty"></div>
+  </main>
+
+  <noscript>
+    <nav class="ns-nav">
+      <a href="/">Home</a><a href="/games.html">Games</a><a href="/apps.html">Apps</a><a href="/proxies.html">Proxies</a><a href="/schedule.html">Schedule</a><a href="/settings.html">Settings</a>
+    </nav>
+  </noscript>
+
+  <script src="/src/utilities/store.js"></script>
+  <script src="/src/utilities/dom.js"></script>
+  <script src="/src/utilities/modal.js"></script>
+  <script src="/src/utilities/theme.js"></script>
+  <script src="/src/utilities/scroll.js"></script>
+  <script src="/src/routing/router.js"></script>
+  <script src="/src/catalog/generated-catalog.js"></script>
+  <script src="/src/catalog/catalog.js"></script>
+  <script src="/src/content/content.js"></script>
+  <script src="/src/components/tabpresets.js"></script>
+  <script src="/src/components/schedule.js"></script>
+  <script src="/src/components/cards.js"></script>
+  <script src="/src/components/search.js"></script>
+  <script src="/src/components/shell.js"></script>
+  <script src="/src/pages/library.js"></script>
+</body>
+</html>

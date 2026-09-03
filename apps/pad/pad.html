@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PAD</title>
+<style>
+  html,body{margin:0;height:100%;background:#0b0b0d;color:#f4f4f5;font-family:system-ui,sans-serif;overflow:hidden}
+  body{display:flex;flex-direction:column}
+  .bar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.1);flex-wrap:wrap}
+  .bar h1{font-size:15px;margin:0;letter-spacing:.14em;font-weight:700}
+  .sp{flex:1}
+  .bar button{border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#f4f4f5;
+    border-radius:999px;padding:7px 16px;font-size:12.5px;letter-spacing:.04em;cursor:pointer}
+  .bar button:hover{background:rgba(255,255,255,.16)}
+  .bar input[type=range]{width:90px;accent-color:#fff}
+  .bar label{font-size:12px;color:rgba(255,255,255,.55)}
+  canvas{flex:1;width:100%;touch-action:none;background:#101014;display:block;cursor:crosshair}
+</style>
+</head>
+<body>
+  <div class="bar">
+    <h1>PAD</h1>
+    <label>size</label>
+    <input type="range" id="size" min="1" max="40" value="6">
+    <span class="sp"></span>
+    <button id="undo">undo</button>
+    <button id="clear">clear</button>
+    <button id="save">save png</button>
+  </div>
+  <canvas id="c"></canvas>
+<script>
+(function () {
+  var cv = document.getElementById("c");
+  var g = cv.getContext("2d");
+  var sizeEl = document.getElementById("size");
+  var strokes = [];
+  var cur = null;
+  var drawing = false;
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+  function size() {
+    cv.width = cv.clientWidth * dpr;
+    cv.height = cv.clientHeight * dpr;
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    repaint();
+  }
+
+  function repaint() {
+    g.clearRect(0, 0, cv.clientWidth, cv.clientHeight);
+    strokes.forEach(function (s) {
+      drawStroke(s, false);
+    });
+    if (cur) drawStroke(cur, false);
+  }
+
+  function drawStroke(s, live) {
+    if (s.pts.length < 1) return;
+    g.strokeStyle = s.color;
+    g.lineWidth = s.w;
+    g.lineCap = "round";
+    g.lineJoin = "round";
+    g.beginPath();
+    g.moveTo(s.pts[0].x, s.pts[0].y);
+    for (var i = 1; i < s.pts.length; i++) g.lineTo(s.pts[i].x, s.pts[i].y);
+    g.stroke();
+    if (live) {
+      g.fillStyle = s.color;
+      g.beginPath();
+      g.arc(s.pts[s.pts.length - 1].x, s.pts[s.pts.length - 1].y, s.w / 2, 0, 7);
+      g.fill();
+    }
+  }
+
+  function pos(e) {
+    var r = cv.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  }
+
+  cv.addEventListener("pointerdown", function (e) {
+    e.preventDefault();
+    cv.setPointerCapture(e.pointerId);
+    drawing = true;
+    cur = { w: +sizeEl.value, color: "#f4f4f5", pts: [pos(e)] };
+  });
+  cv.addEventListener("pointermove", function (e) {
+    if (!drawing) return;
+    cur.pts.push(pos(e));
+    drawStroke(cur, true);
+  });
+  function end() {
+    if (!drawing) return;
+    drawing = false;
+    strokes.push(cur);
+    cur = null;
+    if (strokes.length > 200) strokes.shift();
+  }
+  cv.addEventListener("pointerup", end);
+  cv.addEventListener("pointercancel", end);
+
+  document.getElementById("undo").addEventListener("click", function () {
+    strokes.pop();
+    repaint();
+  });
+  document.getElementById("clear").addEventListener("click", function () {
+    strokes = [];
+    repaint();
+  });
+  document.getElementById("save").addEventListener("click", function () {
+    var a = document.createElement("a");
+    a.download = "pad.png";
+    a.href = cv.toDataURL("image/png");
+    a.click();
+  });
+
+  window.addEventListener("resize", size);
+  size();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#09090b">
+  <title>Settings — NULL</title>
+  <meta name="description" content="NULL settings — theme, accent, glow, tab presets, performance.">
+  <link rel="icon" id="favicon" href="/public/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/src/styles/global.css">
+  <script>
+    (function () {
+      try {
+        var p = JSON.parse(localStorage.getItem("null:prefs") || "{}");
+        var t = p.theme === "light" ? "light" : "dark";
+        document.documentElement.dataset.theme = t;
+        if (p.perf) document.documentElement.dataset.perf = "1";
+        if (p.glow && p.glow !== "off") document.documentElement.dataset.glow = p.glow;
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body data-page="settings">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="glow-bg" aria-hidden="true"></div>
+  <header data-mount="nav"></header>
+
+  <main id="main" class="page page-narrow">
+    <div class="page-head">
+      <span class="eyebrow"><span data-icon="settings"></span>settings</span>
+      <h1>Settings</h1>
+      <p>Appearance, tab presets and performance. Everything saves locally to this browser, instantly.</p>
+    </div>
+
+    <div class="set-grid">
+      <!-- appearance -->
+      <section class="set-card glass" aria-label="Appearance">
+        <h2 class="set-title"><span data-icon="sun"></span>Appearance</h2>
+
+        <div class="set-row">
+          <div class="lbl-txt">
+            <b>Theme</b>
+            <span>Dark is default; Light is NULL visually inverted.</span>
+          </div>
+          <div class="seg" id="themeSeg" role="group" aria-label="Theme">
+            <button type="button" data-val="dark"><span class="sw" style="background:#101014"></span>Dark</button>
+            <button type="button" data-val="light"><span class="sw" style="background:#f2f2f4"></span>Light</button>
+          </div>
+        </div>
+
+        <div class="set-row" style="display:block">
+          <div class="lbl-txt" style="margin-bottom:10px">
+            <b>Accent</b>
+            <span>A restrained accent; grayscale stays the identity.</span>
+          </div>
+          <div id="accentRow" class="accent-row"></div>
+        </div>
+
+        <div class="set-row" style="display:block">
+          <div class="lbl-txt" style="margin-bottom:10px">
+            <b>Glow border</b>
+            <span>Moving light around the hero and player surfaces. Default: Off.</span>
+          </div>
+          <div id="glowRow" class="glow-row"></div>
+        </div>
+
+        <div class="set-row">
+          <div class="lbl-txt">
+            <b>Performance mode</b>
+            <span>Reduces blur, glow, shadows and animations for weaker Chromebooks.</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="perfSwitch">
+            <span class="track"></span>
+          </label>
+        </div>
+      </section>
+
+      <!-- tab presets -->
+      <section class="set-card glass" aria-label="Browser tab">
+        <h2 class="set-title"><span data-icon="tab"></span>Browser tab presets</h2>
+        <p class="set-sub">
+          The preset overrides NULL&rsquo;s tab title and favicon everywhere — including
+          games/apps inside the player. Default is Google Slides&ndash;style.
+        </p>
+
+        <div>
+          <label class="lbl" for="tabSelect">Tab preset</label>
+          <span class="field select-field">
+            <span data-icon="chevD" style="transform:rotate(0)"></span>
+            <select id="tabSelect" aria-label="Tab preset"></select>
+          </span>
+          <div class="tab-preview" style="margin-top:10px" id="tabPrev">
+            <img src="/public/favicon.svg" alt="" width="18" height="18">
+            <span class="tp-txt">
+              <b>Untitled Slide - Google Slides</b>
+              <span>Default (Google Slides)</span>
+            </span>
+          </div>
+        </div>
+
+        <div id="gmailWrap" style="display:none">
+          <label class="lbl" for="gmailAddr">Gmail address shown in the tab</label>
+          <span class="field">
+            <input id="gmailAddr" type="email" placeholder="you@gmail.com" autocomplete="off">
+          </span>
+          <label class="lbl" for="gmailUnread" style="margin-top:12px">Unread count indicator</label>
+          <span class="field">
+            <input id="gmailUnread" type="number" min="0" max="999" placeholder="0" autocomplete="off">
+          </span>
+        </div>
+      </section>
+
+      <!-- privacy / behavior -->
+      <section class="set-card glass" aria-label="Privacy">
+        <h2 class="set-title"><span data-icon="ban"></span>Privacy &amp; behavior</h2>
+        <p class="set-sub">NULL is static and local-first — no server ever sees your data.</p>
+        <div class="set-row">
+          <div class="lbl-txt">
+            <b>Local data</b>
+            <span id="dataInfo">Reading…</span>
+          </div>
+          <span class="chip ok"><span class="dot"></span>on-device</span>
+        </div>
+        <div class="set-row" style="display:block">
+          <div class="lbl-txt">
+            <b>Cloaking &amp; popups</b>
+          </div>
+          <p class="set-sub" style="margin-top:6px">
+            about:blank and blob: modes are available from the player toolbar.
+            They need a user gesture — the browser controls its own popup prompts.
+            Games stay inside NULL and never open arbitrary destinations.
+          </p>
+        </div>
+      </section>
+
+      <!-- danger zone -->
+      <section class="set-card glass danger-zone" aria-label="Danger zone">
+        <div class="dz-head"><span data-icon="warn"></span>Danger zone</div>
+        <p class="set-sub">
+          Whole-NULL resets. Recently Played and Favorites have their own clear
+          buttons on their own pages — this is only for full resets.
+        </p>
+        <div class="toolbar" style="margin:0">
+          <button type="button" class="btn btn-outline" id="dangerReset">Reset appearance</button>
+          <button type="button" class="btn btn-outline-danger" id="dangerWipe">Wipe all NULL data</button>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer data-mount="foot"></footer>
+  <noscript>
+    <nav class="ns-nav">
+      <a href="/">Home</a><a href="/games.html">Games</a><a href="/apps.html">Apps</a><a href="/proxies.html">Proxies</a><a href="/schedule.html">Schedule</a><a href="/settings.html">Settings</a>
+    </nav>
+  </noscript>
+
+  <script src="/src/utilities/store.js"></script>
+  <script src="/src/utilities/dom.js"></script>
+  <script src="/src/utilities/modal.js"></script>
+  <script src="/src/utilities/theme.js"></script>
+  <script src="/src/utilities/scroll.js"></script>
+  <script src="/src/routing/router.js"></script>
+  <script src="/src/catalog/generated-catalog.js"></script>
+  <script src="/src/catalog/catalog.js"></script>
+  <script src="/src/content/content.js"></script>
+  <script src="/src/components/tabpresets.js"></script>
+  <script src="/src/components/schedule.js"></script>
+  <script src="/src/components/cards.js"></script>
+  <script src="/src/components/search.js"></script>
+  <script src="/src/components/shell.js"></script>
+  <script src="/src/pages/settings.js"></script>
+</body>
+</html>
