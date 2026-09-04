@@ -85,7 +85,7 @@
   function paintLive(ls) {
     if (!ls) return;
     var now = new Date();
-    var lv = S.live(blocksFor(S.weekType(chosen)), now);
+    var lv = S.live(S.blocksFor(S.weekType(chosen)), now);
     ls.paint(lv);
     var i = lv.block ? lv.i : -1;
     if (i !== lastNow && !editing) {

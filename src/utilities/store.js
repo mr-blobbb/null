@@ -50,6 +50,9 @@
   var DEFAULTS = {
     theme: "dark", // dark | light
     accent: "off", // palette id from theme.js
+    glow: "off", // glow preset id from theme.js
+    glowColor1: "#35c3f2", // custom glow color 1
+    glowColor2: "#a86bff", // custom glow color 2
     tab: "slides", // tab preset id from tabpresets.js (default: Google Slides)
     perf: false, // performance mode
     gmailAddr: "you@gmail.com",

@@ -215,8 +215,9 @@
       d.h("span", { class: "s-time" }, spanText(b)),
     ];
     if (isNow) cells.unshift(d.h("span", { class: "nowtag" }, "NOW"));
-    var el = d.h("div", { class: "sched-row" + (isNow ? " now" : ""), "data-key": b.key }, cells);
-    return el;
+    var attrs = { class: "sched-row" + (isNow ? " now" : ""), "data-key": b.key };
+    if (b.lunch) attrs.style = { background: "var(--glass-bg-2)" };
+    return d.h("div", attrs, cells);
   }
 
   /* Render the day-type chips (full page only). */

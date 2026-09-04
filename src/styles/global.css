@@ -345,6 +345,9 @@ main.sview > * {
   font-size: 13px;
 }
 .btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 40px;
   height: 40px;
   padding: 0;
@@ -355,6 +358,9 @@ main.sview > * {
   height: 19px;
 }
 .btn-icon-sm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 32px;
   height: 32px;
   border-radius: 9px;
@@ -2211,18 +2217,7 @@ body.player-page {
    minimal theme cleanup + new home / schedule components
    ============================================================ */
 
-/* legacy glow presets are gone — never render them */
-html[data-glow] .glow-el,
-html[data-glow] .glow-el::before,
-html[data-glow] .glow-el::after {
-  animation: none !important;
-  box-shadow: none !important;
-  background: none !important;
-}
-html[data-glow] .glow-el::before,
-html[data-glow] .glow-el::after {
-  display: none !important;
-}
+/* glow borders are enabled by the Glow setting in Settings (theme.js) */
 
 /* ---------- native selects: flat, with a small arrow ---------- */
 select {

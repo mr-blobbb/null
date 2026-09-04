@@ -21,6 +21,17 @@
       b.classList.toggle("on", b.dataset.val === p.accent);
     });
 
+    /* glow preset */
+    d.qsa("#glowRow .swatch-btn").forEach(function (b) {
+      b.classList.toggle("on", b.dataset.val === p.glow);
+    });
+    var gc = d.qs("#glowCustom");
+    if (gc) gc.style.display = p.glow === "custom" ? "" : "none";
+    var gc1 = d.qs("#glowColor1");
+    var gc2 = d.qs("#glowColor2");
+    if (gc1) gc1.value = p.glowColor1 || "#35c3f2";
+    if (gc2) gc2.value = p.glowColor2 || "#a86bff";
+
     /* performance switch */
     var sw = d.qs("#perfSwitch");
     if (sw) sw.checked = !!p.perf;
@@ -93,6 +104,30 @@
         refresh();
       });
     });
+
+    /* glow */
+    d.qsa("#glowRow .swatch-btn").forEach(function (b) {
+      b.addEventListener("click", function () {
+        N.prefs.set("glow", b.dataset.val);
+        N.theme.setGlow(b.dataset.val);
+        refresh();
+        d.toast("Glow: " + b.textContent);
+      });
+    });
+    var glowC1 = d.qs("#glowColor1");
+    var glowC2 = d.qs("#glowColor2");
+    if (glowC1) {
+      glowC1.addEventListener("input", function () {
+        N.prefs.set("glowColor1", glowC1.value);
+        if (N.prefs.get("glow") === "custom") N.theme.setGlow("custom");
+      });
+    }
+    if (glowC2) {
+      glowC2.addEventListener("input", function () {
+        N.prefs.set("glowColor2", glowC2.value);
+        if (N.prefs.get("glow") === "custom") N.theme.setGlow("custom");
+      });
+    }
 
     /* performance */
     var sw = d.qs("#perfSwitch");
@@ -214,6 +249,13 @@
             a.name,
           ]),
         );
+      });
+    }
+    /* build glow preset buttons */
+    var grow = d.qs("#glowRow");
+    if (grow) {
+      N.theme.GLOWS.forEach(function (g) {
+        grow.appendChild(d.h("button", { type: "button", class: "swatch-btn", "data-val": g.id }, g.name));
       });
     }
     var sel = d.qs("#tabSelect");

@@ -69,6 +69,34 @@
         </div>
       </section>
 
+      <!-- glow border -->
+      <section class="set-card glass" aria-label="Glow border">
+        <h2 class="set-title"><span data-icon="zap"></span>Glow border</h2>
+        <p class="set-sub">
+          A subtle animated border around cards and panels. Blue+green, rainbow,
+          blue+purple, or your own two colors. Off by default.
+        </p>
+        <div class="set-row" style="display:block">
+          <div id="glowRow" class="accent-row"></div>
+        </div>
+        <div id="glowCustom" style="display:none;margin-top:14px">
+          <div class="lbl-txt" style="margin-bottom:8px">
+            <b>Custom colors</b>
+            <span>Pick up to two colors for your glow.</span>
+          </div>
+          <div style="display:flex;gap:14px;flex-wrap:wrap">
+            <label style="display:inline-flex;align-items:center;gap:9px;font-size:13px;color:var(--text-2);cursor:pointer">
+              <input type="color" id="glowColor1" aria-label="Custom glow color 1" style="width:42px;height:36px;padding:2px;border:1px solid var(--line-2);border-radius:9px;background:var(--glass-bg);cursor:pointer">
+              Color 1
+            </label>
+            <label style="display:inline-flex;align-items:center;gap:9px;font-size:13px;color:var(--text-2);cursor:pointer">
+              <input type="color" id="glowColor2" aria-label="Custom glow color 2" style="width:42px;height:36px;padding:2px;border:1px solid var(--line-2);border-radius:9px;background:var(--glass-bg);cursor:pointer">
+              Color 2
+            </label>
+          </div>
+        </div>
+      </section>
+
       <!-- tab presets -->
       <section class="set-card glass" aria-label="Browser tab">
         <h2 class="set-title"><span data-icon="tab"></span>Browser tab presets</h2>
