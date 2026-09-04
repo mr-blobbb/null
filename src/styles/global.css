@@ -890,43 +890,35 @@ body.lb .site-foot {
   height: 46px;
   opacity: 0.85;
 }
-.tmedia .play-hint {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  background: color-mix(in srgb, var(--bg) 30%, transparent);
-  opacity: 0;
-  transition: opacity 0.18s;
+
+/* proxy rows — image-free list entries */
+.tcard.proxy-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  min-height: 0;
+  height: auto;
 }
-.tcard:hover .play-hint,
-.tcard:focus-visible .play-hint {
-  opacity: 1;
+.proxy-row .pr-main {
+  flex: 1;
+  min-width: 0;
 }
-.play-hint .ph {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: color-mix(in srgb, var(--text) 92%, transparent);
-  color: var(--bg);
-  transform: scale(0.92);
-  transition: transform 0.18s var(--ease);
+.proxy-row .pr-side {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
 }
-.tcard:hover .play-hint .ph {
-  transform: none;
-}
-.play-hint .ph svg {
-  width: 22px;
-  height: 22px;
-  margin-left: 2px;
-}
-.tcard .ext-hint {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 2;
+@media (max-width: 640px) {
+  .tcard.proxy-row {
+    flex-wrap: wrap;
+  }
+  .proxy-row .pr-side {
+    width: 100%;
+    justify-content: flex-end;
+  }
 }
 
 .tbody {
@@ -1636,6 +1628,27 @@ body.lb .site-foot {
   border-radius: 50%;
   border: 1.5px solid currentColor;
   flex: none;
+}
+
+.keycap {
+  min-width: 52px;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 11px;
+  font-size: 15px;
+  font-weight: 640;
+  font-family: inherit;
+  text-align: center;
+}
+.keycap.on {
+  background: var(--ac-1);
+  color: var(--bg);
+  border-color: var(--ac-1);
+  animation: keypulse 1.1s ease-in-out infinite;
+}
+@keyframes keypulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.72; }
 }
 
 .accent-row,

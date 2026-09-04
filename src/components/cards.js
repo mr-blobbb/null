@@ -15,7 +15,7 @@
 
   var KIND = { game: "game", app: "app", proxy: "proxy" };
 
-  /* ---------- thumb ---------- */
+  /* ---------- thumb (games/apps only — proxies use rows) ---------- */
   function thumbEl(entry, kind) {
     var meta = META[kind];
     var glyph = d.h("div", { class: "fallback-glyph" }, [d.icon(meta.icon)]);
@@ -33,20 +33,37 @@
       d.bindImgFallback(img, kind);
       media.appendChild(img);
     }
-    var hintIcon = kind === "proxy" ? "ext" : "play";
-    var hint = d.h("div", { class: "play-hint" }, [
-      d.h("span", { class: "ph" }, [d.icon(hintIcon)]),
-    ]);
-    media.appendChild(hint);
-    if (kind === "proxy") {
-      media.appendChild(
-        d.h("span", { class: "chip ext-hint", title: "Opens an external site" }, [
-          d.h("span", { class: "dot" }),
-          "External",
-        ]),
-      );
-    }
     return media;
+  }
+
+  /* ---------- proxy row (no images — plain list entry) ---------- */
+  function proxyRow(entry) {
+    var el = d.h("div", {
+      class: "tcard proxy-row",
+      role: "button",
+      tabindex: "0",
+      "aria-label": "Proxy: " + entry.name,
+    }, [
+      d.h("div", { class: "pr-main" }, [
+        d.h("h3", { class: "tname", title: entry.name }, entry.name),
+        d.h("p", { class: "tdesc" }, entry.desc || "External destination in the NULL proxy list."),
+      ]),
+      d.h("div", { class: "pr-side" }, [
+        statusChip(entry.status),
+        d.h("button", { type: "button", class: "btn btn-primary btn-sm", onclick: function (e) {
+            e.stopPropagation();
+            N.launch.proxy(entry);
+          } }, [d.icon("ext"), "Visit"]),
+      ]),
+    ]);
+    el.addEventListener("click", function () { N.launch.proxy(entry); });
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        N.launch.proxy(entry);
+      }
+    });
+    return el;
   }
 
   /* ---------- label pills ---------- */
@@ -95,10 +112,10 @@
 
   /* ---------- main card ---------- */
   function card(entry, kind) {
+    if (kind === KIND.proxy) return proxyRow(entry);
     var meta = META[kind];
     var open = function () {
-      if (kind === KIND.proxy) N.launch.proxy(entry);
-      else if (kind === KIND.game) N.launch.game(entry);
+      if (kind === KIND.game) N.launch.game(entry);
       else N.launch.app(entry);
     };
 

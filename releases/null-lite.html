@@ -899,43 +899,35 @@ body.lb .site-foot {
   height: 46px;
   opacity: 0.85;
 }
-.tmedia .play-hint {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  background: color-mix(in srgb, var(--bg) 30%, transparent);
-  opacity: 0;
-  transition: opacity 0.18s;
+
+/* proxy rows — image-free list entries */
+.tcard.proxy-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  min-height: 0;
+  height: auto;
 }
-.tcard:hover .play-hint,
-.tcard:focus-visible .play-hint {
-  opacity: 1;
+.proxy-row .pr-main {
+  flex: 1;
+  min-width: 0;
 }
-.play-hint .ph {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: color-mix(in srgb, var(--text) 92%, transparent);
-  color: var(--bg);
-  transform: scale(0.92);
-  transition: transform 0.18s var(--ease);
+.proxy-row .pr-side {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
 }
-.tcard:hover .play-hint .ph {
-  transform: none;
-}
-.play-hint .ph svg {
-  width: 22px;
-  height: 22px;
-  margin-left: 2px;
-}
-.tcard .ext-hint {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 2;
+@media (max-width: 640px) {
+  .tcard.proxy-row {
+    flex-wrap: wrap;
+  }
+  .proxy-row .pr-side {
+    width: 100%;
+    justify-content: flex-end;
+  }
 }
 
 .tbody {
@@ -1645,6 +1637,27 @@ body.lb .site-foot {
   border-radius: 50%;
   border: 1.5px solid currentColor;
   flex: none;
+}
+
+.keycap {
+  min-width: 52px;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 11px;
+  font-size: 15px;
+  font-weight: 640;
+  font-family: inherit;
+  text-align: center;
+}
+.keycap.on {
+  background: var(--ac-1);
+  color: var(--bg);
+  border-color: var(--ac-1);
+  animation: keypulse 1.1s ease-in-out infinite;
+}
+@keyframes keypulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.72; }
 }
 
 .accent-row,
@@ -3307,6 +3320,9 @@ window.NULL_CONTENT = {
     perf: false, // performance mode
     gmailAddr: "you@gmail.com",
     gmailUnread: 0,
+    panicKey: "`",
+    panicUrl: "https://classroom.google.com",
+    panicMode: "single", // single | double (two presses within 400 ms)
   };
 
   N.prefs = (function () {
@@ -4168,7 +4184,7 @@ window.NULL_CONTENT = {
 
   var KIND = { game: "game", app: "app", proxy: "proxy" };
 
-  /* ---------- thumb ---------- */
+  /* ---------- thumb (games/apps only — proxies use rows) ---------- */
   function thumbEl(entry, kind) {
     var meta = META[kind];
     var glyph = d.h("div", { class: "fallback-glyph" }, [d.icon(meta.icon)]);
@@ -4186,20 +4202,37 @@ window.NULL_CONTENT = {
       d.bindImgFallback(img, kind);
       media.appendChild(img);
     }
-    var hintIcon = kind === "proxy" ? "ext" : "play";
-    var hint = d.h("div", { class: "play-hint" }, [
-      d.h("span", { class: "ph" }, [d.icon(hintIcon)]),
-    ]);
-    media.appendChild(hint);
-    if (kind === "proxy") {
-      media.appendChild(
-        d.h("span", { class: "chip ext-hint", title: "Opens an external site" }, [
-          d.h("span", { class: "dot" }),
-          "External",
-        ]),
-      );
-    }
     return media;
+  }
+
+  /* ---------- proxy row (no images — plain list entry) ---------- */
+  function proxyRow(entry) {
+    var el = d.h("div", {
+      class: "tcard proxy-row",
+      role: "button",
+      tabindex: "0",
+      "aria-label": "Proxy: " + entry.name,
+    }, [
+      d.h("div", { class: "pr-main" }, [
+        d.h("h3", { class: "tname", title: entry.name }, entry.name),
+        d.h("p", { class: "tdesc" }, entry.desc || "External destination in the NULL proxy list."),
+      ]),
+      d.h("div", { class: "pr-side" }, [
+        statusChip(entry.status),
+        d.h("button", { type: "button", class: "btn btn-primary btn-sm", onclick: function (e) {
+            e.stopPropagation();
+            N.launch.proxy(entry);
+          } }, [d.icon("ext"), "Visit"]),
+      ]),
+    ]);
+    el.addEventListener("click", function () { N.launch.proxy(entry); });
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        N.launch.proxy(entry);
+      }
+    });
+    return el;
   }
 
   /* ---------- label pills ---------- */
@@ -4248,10 +4281,10 @@ window.NULL_CONTENT = {
 
   /* ---------- main card ---------- */
   function card(entry, kind) {
+    if (kind === KIND.proxy) return proxyRow(entry);
     var meta = META[kind];
     var open = function () {
-      if (kind === KIND.proxy) N.launch.proxy(entry);
-      else if (kind === KIND.game) N.launch.game(entry);
+      if (kind === KIND.game) N.launch.game(entry);
       else N.launch.app(entry);
     };
 
@@ -4712,12 +4745,14 @@ window.NULL_CONTENT = {
   }
 
   /* Current block info for a list of resolved blocks.
-     Returns { i, block|null, next|null, secLeft, secToNext }
-     secLeft = seconds left in the current block (0 if none). */
+     Returns { i, block|null, next|null, secLeft, secToNext, passing }
+     secLeft = seconds left in the current block (0 if none).
+     During a gap between blocks, passing = true and block describes the
+     passing period (ends when the next block starts). */
   function live(blocks, now) {
     now = now || new Date();
     var secs = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
-    var out = { i: -1, block: null, next: null, secLeft: 0, secToNext: 0 };
+    var out = { i: -1, block: null, next: null, secLeft: 0, secToNext: 0, passing: false };
     for (var i = 0; i < blocks.length; i++) {
       var s = parseHM(blocks[i].start) * 60;
       var e = parseHM(blocks[i].end) * 60;
@@ -4729,6 +4764,13 @@ window.NULL_CONTENT = {
         return out;
       }
       if (secs < s) {
+        /* gap between the previous block and this one — passing period */
+        if (i > 0) {
+          out.i = i;
+          out.passing = true;
+          out.block = { key: "pass", n: null, name: "Passing period", start: blocks[i - 1].end, end: blocks[i].start };
+          out.secLeft = s - secs;
+        }
         out.next = blocks[i];
         out.secToNext = s - secs;
         return out;
@@ -4787,12 +4829,18 @@ window.NULL_CONTENT = {
     return row;
   }
 
-  /* Grid of rows for a resolved block list. nowIdx = -1 to show none. */
+  /* Grid of rows for a resolved block list. nowIdx = -1 to show none.
+     In live mode a "Passing period" row is injected between blocks while
+     a passing period is actually happening (opts.passing = its index). */
   function grid(blocks, nowIdx, opts) {
     opts = opts || {};
     var g = d.h("div", { class: "sched-grid" });
     blocks.forEach(function (b, i) {
-      g.appendChild(rowEl(b, i, opts.live !== false && i === nowIdx, opts));
+      if (opts.live !== false && opts.passing === i) {
+        var pb = { key: "pass", n: null, name: "Passing period", start: blocks[i - 1] ? blocks[i - 1].end : b.start, end: b.start };
+        g.appendChild(rowEl(pb, i, opts.live !== false && nowIdx === i, opts));
+      }
+      g.appendChild(rowEl(b, i, opts.live !== false && i === nowIdx && opts.passing == null, opts));
     });
     return g;
   }
@@ -4817,6 +4865,7 @@ window.NULL_CONTENT = {
         badge.querySelector(".ls-name").textContent = b.name;
         badge.querySelector(".ls-time").textContent = spanText(b);
         count.querySelector(".ls-left").textContent = fmtClock(lv.secLeft);
+        count.querySelector(".ls-cap").textContent = b.passing || lv.passing ? "until class starts" : "left";
         count.classList.remove("idle");
       } else {
         badge.classList.remove("on");

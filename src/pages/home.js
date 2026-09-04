@@ -158,7 +158,8 @@
     /* today's blocks */
     var lv = S.live(blocks);
     var lastIdx = lv.block ? lv.i : -1;
-    var g = S.grid(blocks, lastIdx, { live: true });
+    var lastPass = lv.block && lv.passing ? lv.i : null;
+    var g = S.grid(blocks, lastIdx, { live: true, passing: lastPass });
     g.classList.add("home-grid");
     wrap.appendChild(g);
 
@@ -175,11 +176,15 @@
       var nv = S.live(blocks);
       ls.paint(nv);
       var idx = nv.block ? nv.i : -1;
-      if (idx !== lastIdx) {
+      var passIdx = nv.block && nv.passing ? nv.i : null;
+      if (idx !== lastIdx || passIdx !== lastPass) {
         lastIdx = idx;
-        g.querySelectorAll(".sched-row").forEach(function (row, i) {
-          row.classList.toggle("now", i === idx);
-        });
+        lastPass = passIdx;
+        /* rebuild so the passing-period row appears/disappears in place */
+        var ng = S.grid(blocks, idx, { live: true, passing: passIdx });
+        ng.classList.add("home-grid");
+        g.replaceWith(ng);
+        g = ng;
       }
     }, 1000);
   }

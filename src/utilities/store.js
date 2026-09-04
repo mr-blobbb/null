@@ -57,6 +57,9 @@
     perf: false, // performance mode
     gmailAddr: "you@gmail.com",
     gmailUnread: 0,
+    panicKey: "`",
+    panicUrl: "https://classroom.google.com",
+    panicMode: "single", // single | double (two presses within 400 ms)
   };
 
   N.prefs = (function () {

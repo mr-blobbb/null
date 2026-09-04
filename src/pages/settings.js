@@ -42,6 +42,9 @@
     paintTabPreview();
     paintGmail();
 
+    /* panic key */
+    paintPanic();
+
     /* local data summary */
     var di = d.qs("#dataInfo");
     if (di) {
@@ -226,6 +229,66 @@
     }
   }
 
+  /* ---------- panic key ---------- */
+  var capturing = false;
+
+  function paintPanic() {
+    var cap = d.qs("#panicKey");
+    if (cap) cap.textContent = N.prefs.get("panicKey") || "`";
+    var url = d.qs("#panicUrl");
+    if (url && document.activeElement !== url) url.value = N.prefs.get("panicUrl") || "";
+    d.qsa("#panicMode button").forEach(function (b) {
+      b.classList.toggle("on", b.dataset.val === (N.prefs.get("panicMode") || "single"));
+    });
+  }
+
+  function bindPanic() {
+    var cap = d.qs("#panicKey");
+    var hint = d.qs("#panicKeyHint");
+    if (cap) {
+      cap.addEventListener("click", function () {
+        capturing = true;
+        cap.classList.add("on");
+        if (hint) hint.textContent = "Press any key… (Esc cancels)";
+      });
+    }
+    document.addEventListener("keydown", function (e) {
+      if (!capturing) return;
+      e.preventDefault();
+      e.stopPropagation();
+      capturing = false;
+      cap.classList.remove("on");
+      if (hint) hint.textContent = "Click, then press any key";
+      if (e.key === "Escape") return;
+      N.prefs.set("panicKey", e.key);
+      paintPanic();
+      d.toast("Panic key: " + (e.key === " " ? "Space" : e.key), { icon: "check" });
+    }, true);
+
+    var url = d.qs("#panicUrl");
+    if (url) {
+      url.addEventListener("input", function () {
+        var v = url.value.trim();
+        if (!v) return;
+        if (!/^https?:\/\//i.test(v)) v = "https://" + v;
+        N.prefs.set("panicUrl", v);
+      });
+      url.addEventListener("blur", function () {
+        if (!url.value.trim()) {
+          N.prefs.set("panicUrl", "https://classroom.google.com");
+          url.value = N.prefs.get("panicUrl");
+        }
+      });
+    }
+
+    d.qsa("#panicMode button").forEach(function (b) {
+      b.addEventListener("click", function () {
+        N.prefs.set("panicMode", b.dataset.val);
+        paintPanic();
+      });
+    });
+  }
+
   function init() {
     if (inited) return;
     inited = true;
@@ -266,6 +329,7 @@
     }
 
     bind();
+    bindPanic();
     refresh();
   }
 

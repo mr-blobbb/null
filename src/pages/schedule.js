@@ -11,6 +11,7 @@
   var editing = false;
   var timer = null;
   var lastNow = -1;
+  var lastPass = null;
   var hosts = {};
 
   function init() {
@@ -81,20 +82,21 @@
     hosts.note.textContent =
       "Be sure to be on time, if you're late, it means less time to play here!";
   }
-
   function paintLive(ls) {
     if (!ls) return;
     var now = new Date();
     var lv = S.live(S.blocksFor(S.weekType(chosen)), now);
     ls.paint(lv);
     var i = lv.block ? lv.i : -1;
-    if (i !== lastNow && !editing) {
+    var pass = lv.block && lv.passing ? lv.i : null;
+    if ((i !== lastNow || pass !== lastPass) && !editing) {
       lastNow = i;
-      /* re-tag the NOW row without rebuilding the editor's inputs */
-      var rows = hosts.grid.querySelectorAll(".sched-row");
-      rows.forEach(function (r, idx) {
-        r.classList.toggle("now", idx === i);
-      });
+      lastPass = pass;
+      /* rebuild so the passing-period row appears/disappears in place */
+      var blocks = S.blocksFor(S.weekType(chosen));
+      var g = S.grid(blocks, i, { live: true, passing: pass });
+      hosts.grid.textContent = "";
+      hosts.grid.appendChild(g);
     }
   }
 
@@ -107,7 +109,8 @@
     var now = new Date();
     var lv = liveMode ? S.live(blocks, now) : null;
     lastNow = lv && lv.block ? lv.i : -1;
-    hosts.grid.appendChild(S.grid(blocks, lastNow, { live: liveMode }));
+    lastPass = lv && lv.block && lv.passing ? lv.i : null;
+    hosts.grid.appendChild(S.grid(blocks, lastNow, { live: liveMode, passing: lastPass }));
   }
 
   /* ---------- ticking ---------- */

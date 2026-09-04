@@ -154,6 +154,42 @@
         </div>
       </section>
 
+      <!-- panic key -->
+      <section class="set-card glass" aria-label="Panic key">
+        <h2 class="set-title"><span data-icon="ext"></span>Panic key</h2>
+        <p class="set-sub">
+          Press the key anywhere on NULL to jump straight to a boring-looking site.
+          Useful when someone walks up. The browser tab preset still applies, so the
+          tab already looks like work.
+        </p>
+
+        <div class="set-row" style="display:block">
+          <label class="lbl" for="panicKey">Key</label>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <button type="button" class="btn btn-outline keycap" id="panicKey" aria-label="Panic key — click to change">`</button>
+            <span class="set-sub" id="panicKeyHint" style="margin:0">Click, then press any key</span>
+          </div>
+        </div>
+
+        <div class="set-row" style="display:block">
+          <label class="lbl" for="panicUrl">Redirect site</label>
+          <span class="field">
+            <input id="panicUrl" type="url" inputmode="url" spellcheck="false" autocomplete="off" placeholder="https://classroom.google.com">
+          </span>
+        </div>
+
+        <div class="set-row">
+          <div class="lbl-txt">
+            <b>Trigger</b>
+            <span>Double press means two presses within 400 ms.</span>
+          </div>
+          <div class="seg" id="panicMode" role="group" aria-label="Panic trigger mode">
+            <button type="button" data-val="single">Single press</button>
+            <button type="button" data-val="double">Double press</button>
+          </div>
+        </div>
+      </section>
+
       <!-- danger zone -->
       <section class="set-card glass danger-zone" aria-label="Danger zone">
         <div class="dz-head"><span data-icon="warn"></span>Danger zone</div>

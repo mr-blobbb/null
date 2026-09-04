@@ -187,12 +187,14 @@
   }
 
   /* Current block info for a list of resolved blocks.
-     Returns { i, block|null, next|null, secLeft, secToNext }
-     secLeft = seconds left in the current block (0 if none). */
+     Returns { i, block|null, next|null, secLeft, secToNext, passing }
+     secLeft = seconds left in the current block (0 if none).
+     During a gap between blocks, passing = true and block describes the
+     passing period (ends when the next block starts). */
   function live(blocks, now) {
     now = now || new Date();
     var secs = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
-    var out = { i: -1, block: null, next: null, secLeft: 0, secToNext: 0 };
+    var out = { i: -1, block: null, next: null, secLeft: 0, secToNext: 0, passing: false };
     for (var i = 0; i < blocks.length; i++) {
       var s = parseHM(blocks[i].start) * 60;
       var e = parseHM(blocks[i].end) * 60;
@@ -204,6 +206,13 @@
         return out;
       }
       if (secs < s) {
+        /* gap between the previous block and this one — passing period */
+        if (i > 0) {
+          out.i = i;
+          out.passing = true;
+          out.block = { key: "pass", n: null, name: "Passing period", start: blocks[i - 1].end, end: blocks[i].start };
+          out.secLeft = s - secs;
+        }
         out.next = blocks[i];
         out.secToNext = s - secs;
         return out;
@@ -262,12 +271,18 @@
     return row;
   }
 
-  /* Grid of rows for a resolved block list. nowIdx = -1 to show none. */
+  /* Grid of rows for a resolved block list. nowIdx = -1 to show none.
+     In live mode a "Passing period" row is injected between blocks while
+     a passing period is actually happening (opts.passing = its index). */
   function grid(blocks, nowIdx, opts) {
     opts = opts || {};
     var g = d.h("div", { class: "sched-grid" });
     blocks.forEach(function (b, i) {
-      g.appendChild(rowEl(b, i, opts.live !== false && i === nowIdx, opts));
+      if (opts.live !== false && opts.passing === i) {
+        var pb = { key: "pass", n: null, name: "Passing period", start: blocks[i - 1] ? blocks[i - 1].end : b.start, end: b.start };
+        g.appendChild(rowEl(pb, i, opts.live !== false && nowIdx === i, opts));
+      }
+      g.appendChild(rowEl(b, i, opts.live !== false && i === nowIdx && opts.passing == null, opts));
     });
     return g;
   }
@@ -292,6 +307,7 @@
         badge.querySelector(".ls-name").textContent = b.name;
         badge.querySelector(".ls-time").textContent = spanText(b);
         count.querySelector(".ls-left").textContent = fmtClock(lv.secLeft);
+        count.querySelector(".ls-cap").textContent = b.passing || lv.passing ? "until class starts" : "left";
         count.classList.remove("idle");
       } else {
         badge.classList.remove("on");

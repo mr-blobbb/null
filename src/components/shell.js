@@ -232,8 +232,39 @@ return foot;
       if (e.key === "/" && !typing) {
         e.preventDefault();
         N.search.open();
+        return;
       }
+      if (typing) return;
+      panicCheck(e);
     });
+  }
+
+  /* ---------- panic key ---------- */
+  var panicLast = 0;
+  function panicCheck(e) {
+    var p = N.prefs;
+    var key = p.get("panicKey") || "`";
+    if (e.key !== key) return;
+    e.preventDefault();
+    var now = Date.now();
+    if (p.get("panicMode") === "double") {
+      if (now - panicLast <= 400) {
+        panicLast = 0;
+        run();
+      } else {
+        panicLast = now;
+      }
+    } else {
+      run();
+    }
+    function run() {
+      var url = p.get("panicUrl") || "https://classroom.google.com";
+      try {
+        window.location.replace(url);
+      } catch (err) {
+        window.location.href = url;
+      }
+    }
   }
 
   function init() {
