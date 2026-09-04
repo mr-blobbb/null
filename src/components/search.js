@@ -164,7 +164,7 @@
       }
       if (!hits.length) {
         results.appendChild(d.h("div", { class: "sr-none" }, [
-          "Nothing matches \u201c" + q + "\u201d \u2014 try \u201cgames\u201d, \u201cpulse\u201d or \u201cschedule\u201d.",
+          "Nothing matches \u201c" + q + "\u201d \u2014 but you got to see this funny guy: •𐃷•",
         ]));
         return;
       }

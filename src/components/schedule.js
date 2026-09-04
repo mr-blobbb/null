@@ -1,12 +1,13 @@
 /* NULL — schedule.js
    The school schedule component.
 
-   Two day types:
-     • reg — Monday / Wednesday / Friday: seven 46-minute class periods.
-     • win — Tuesday / Thursday: same periods with a Homeroom/WIN block
-             added after Period 2 (the following bells shift to fit it).
+   Three day types:
+     • reg  — Monday / Friday: seven 46-minute class periods, 7:45 start.
+     • win  — Tuesday / Thursday: same periods with a Homeroom/WIN block
+              added after Period 2 (the following bells shift to fit it).
+     • late — Wednesday: late arrival, first bell at 9:00.
 
-   One of periods 4/5/6 is your lunch period (settable on /schedule.html,
+   One of periods 4/5/6 is your lunch period (settable on /schedule/,
    default 5). That row reads "Lunch" instead of a class name.
 
    Times below are sample data. To match the real bell schedule, edit the
@@ -40,6 +41,16 @@
       { n: 6, start: "12:24", end: "1:10" },
       { n: 7, start: "1:14", end: "2:00" },
     ],
+    /* late arrival Wednesdays: everything shifts to a 9:00 start */
+    late: [
+      { n: 1, start: "9:00", end: "9:46" },
+      { n: 2, start: "9:50", end: "10:36" },
+      { n: 3, start: "10:40", end: "11:26" },
+      { n: 4, start: "11:30", end: "12:16" },
+      { n: 5, start: "12:20", end: "1:06" },
+      { n: 6, start: "1:10", end: "1:56" },
+      { n: 7, start: "2:00", end: "2:46" },
+    ],
   };
 
   var KIND = {
@@ -53,10 +64,15 @@
       short: "Homeroom/WIN",
       note: "Class periods run with a Homeroom/WIN block right after Period 2.",
     },
+    late: {
+      label: "Late arrival",
+      short: "Late arrival",
+      note: "Wednesday late arrival \u2014 first bell is at 9:00, everything shifts later.",
+    },
   };
 
   /* Monday(1) → Friday(5); Sun(0)/Sat(6) have no school */
-  var WEEK = { 1: "reg", 2: "win", 3: "reg", 4: "win", 5: "reg" };
+  var WEEK = { 1: "reg", 2: "win", 3: "late", 4: "win", 5: "reg" };
 
   var WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -236,7 +252,7 @@
             onclick: function () {
               onChange(wi);
             },
-          }, [WEEKDAYS[wi].slice(0, 3), " \u00b7 ", t === "win" ? KIND.win.short : "Regular"]),
+          }, [WEEKDAYS[wi].slice(0, 3), " \u00b7 ", t ? KIND[t].short : "Regular"]),
         );
       })(wi);
     }
@@ -314,8 +330,8 @@
     var card = d.h("div", { class: "today-card" });
     card.appendChild(
       d.h("span", {
-        class: "chip" + (type === "win" ? " accent" : ""),
-      }, type ? (type === "win" ? "Homeroom/WIN day" : "Regular schedule") : "No school"),
+        class: "chip" + (type && type !== "reg" ? " accent" : ""),
+      }, type ? (type === "win" ? "Homeroom/WIN day" : type === "late" ? "Late arrival day" : "Regular schedule") : "No school"),
     );
     card.appendChild(d.h("b", { class: "tc-date" }, label));
     card.appendChild(

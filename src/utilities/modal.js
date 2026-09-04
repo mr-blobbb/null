@@ -142,10 +142,10 @@
   }
   function showSgGames() {
     open({
-      title: "lol",
+      title: "lol u switched didnt u",
       icon: "zap",
-      body: "<p>we be better</p>",
-      actions: [{ label: "I agree", variant: "primary" }],
+      body: "<p>blahblahblah a bunch of yap. anyways, were better than sggames. we be cleaner, tuffer, and overall better</p>",
+      actions: [{ label: "i agree! aight bet!", variant: "primary" }],
     });
   }
 

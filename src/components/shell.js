@@ -175,7 +175,7 @@
       d.h("div", { class: "blurb" }, [
         brandEl(),
         d.h("p", null,
-          "A plain black-and-white hub for games, apps, proxies and tools. NULL is local-first: preferences, history and favorites never leave your browser."),
+          "A massive site filled with ~2,300 games, and so much more. Developed by Mr Blob and NULL Labs to bring you the best alternative to SG Games ever! (Also bro our school had like 2 games sites 😭)"),
       ]),
     );
     N.router.FOOT.forEach(function (col) {
@@ -185,14 +185,15 @@
       });
       inner.appendChild(wrap);
     });
-    var foot = d.h("footer", { class: "site-foot" }, [inner]);
-    foot.appendChild(
-      d.h("div", { class: "bottom" }, [
-        "\u00a9 " + new Date().getFullYear() + " NULL \u00b7 static-first \u00b7 no servers, no accounts",
-      ]),
-    );
-    return foot;
-  }
+var foot = d.h("footer", { class: "site-foot" }, [inner]); 
+foot.appendChild( 
+  d.h("div", { class: "bottom" }, [ 
+    "\u00a9 " + new Date().getFullYear() + " NULL Labs \u00b7 Developed by Mr Blob", 
+  ]), 
+); 
+return foot; 
+}
+
 
   /* ---------- back to top ---------- */
   function backTop() {
@@ -275,3 +276,4 @@
     init();
   }
 })();
+d
