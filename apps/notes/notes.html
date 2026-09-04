@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NOTES</title>
+<style>
+  html,body{margin:0;height:100%;background:#0b0b0d;color:#f4f4f5;font-family:system-ui,sans-serif}
+  body{display:flex;flex-direction:column}
+  .bar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.1);flex-wrap:wrap}
+  .bar h1{font-size:15px;margin:0;letter-spacing:.14em;font-weight:700}
+  .sp{flex:1}
+  .bar button{border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#f4f4f5;
+    border-radius:999px;padding:7px 16px;font-size:12.5px;letter-spacing:.04em;cursor:pointer}
+  .bar button:hover{background:rgba(255,255,255,.16)}
+  .wrap{flex:1;display:flex;min-height:0}
+  #list{width:220px;border-right:1px solid rgba(255,255,255,.1);overflow-y:auto;padding:8px}
+  .note{width:100%;text-align:left;border:1px solid transparent;background:none;color:rgba(244,244,245,.75);
+    border-radius:10px;padding:9px 11px;font:inherit;font-size:13px;cursor:pointer;margin-bottom:4px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+  .note:hover{background:rgba(255,255,255,.07)}
+  .note.sel{border-color:rgba(255,255,255,.4);background:rgba(255,255,255,.09);color:#f4f4f5}
+  .note small{color:rgba(255,255,255,.4);display:block;font-size:11px;margin-top:2px}
+  #editor{flex:1;display:flex;flex-direction:column;min-width:0}
+  #title{border:none;border-bottom:1px solid rgba(255,255,255,.1);background:none;color:#f4f4f5;
+    font:inherit;font-size:16px;font-weight:600;padding:12px 16px;outline:none}
+  #body{flex:1;border:none;background:none;color:rgba(244,244,245,.9);font:inherit;font-size:14px;
+    line-height:1.6;padding:14px 16px;outline:none;resize:none}
+  #saved{font-size:11.5px;color:rgba(255,255,255,.35);padding:6px 16px 10px;letter-spacing:.05em}
+  @media (max-width:560px){ #list{width:150px} }
+</style>
+</head>
+<body>
+  <div class="bar">
+    <h1>NOTES</h1>
+    <span class="sp"></span>
+    <button id="add">new note</button>
+    <button id="del">delete</button>
+  </div>
+  <div class="wrap">
+    <div id="list"></div>
+    <div id="editor">
+      <input id="title" placeholder="Title" value="">
+      <textarea id="body" placeholder="Start typing…"></textarea>
+      <div id="saved"></div>
+    </div>
+  </div>
+<script>
+(function () {
+  var listEl = document.getElementById("list");
+  var titleEl = document.getElementById("title");
+  var bodyEl = document.getElementById("body");
+  var savedEl = document.getElementById("saved");
+
+  var notes = [];
+  var sel = null;
+  try { notes = JSON.parse(localStorage.getItem("notes.docs") || "[]"); } catch (e) {}
+  if (!notes.length) {
+    notes = [{ title: "Welcome", body: "This is your first note.\n\nEverything is stored locally in your browser — nothing leaves this device.", at: Date.now() }];
+  }
+
+  function save() {
+    try { localStorage.setItem("notes.docs", JSON.stringify(notes)); } catch (e) {}
+    savedEl.textContent = "saved " + new Date().toLocaleTimeString();
+  }
+
+  function render() {
+    listEl.textContent = "";
+    notes.forEach(function (n, i) {
+      var b = document.createElement("button");
+      b.className = "note" + (i === sel ? " sel" : "");
+      b.textContent = n.title || "Untitled";
+      var d = document.createElement("small");
+      d.textContent = new Date(n.at).toLocaleDateString();
+      b.appendChild(d);
+      b.addEventListener("click", function () { sel = i; open(); });
+      listEl.appendChild(b);
+    });
+  }
+
+  function open() {
+    render();
+    var n = notes[sel];
+    if (!n) { titleEl.value = ""; bodyEl.value = ""; return; }
+    titleEl.value = n.title;
+    bodyEl.value = n.body;
+  }
+
+  function touch() {
+    if (sel === null) return;
+    notes[sel].title = titleEl.value;
+    notes[sel].body = bodyEl.value;
+    notes[sel].at = Date.now();
+    save();
+    render();
+  }
+
+  titleEl.addEventListener("input", touch);
+  bodyEl.addEventListener("input", touch);
+
+  document.getElementById("add").addEventListener("click", function () {
+    notes.unshift({ title: "Untitled", body: "", at: Date.now() });
+    sel = 0;
+    save();
+    open();
+    titleEl.focus();
+    titleEl.select();
+  });
+
+  document.getElementById("del").addEventListener("click", function () {
+    if (sel === null) return;
+    notes.splice(sel, 1);
+    sel = notes.length ? Math.min(sel, notes.length - 1) : null;
+    save();
+    open();
+  });
+
+  sel = 0;
+  open();
+})();
+</script>
+</body>
+</html>

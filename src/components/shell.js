@@ -276,4 +276,3 @@ return foot;
     init();
   }
 })();
-d

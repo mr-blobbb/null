@@ -79,7 +79,7 @@
 
     /* note */
     hosts.note.textContent =
-      "Times are sample bells \u2014 the real ones live in src/components/schedule.js. Period names and your lunch period are yours to edit.";
+      "Be sure to be on time, if you're late, it means less time to play here!";
   }
 
   function paintLive(ls) {

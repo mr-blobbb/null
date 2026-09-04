@@ -22,34 +22,37 @@
   var TEMPLATES = {
     /* n = period number. start/end in 12-hour clock strings. */
     reg: [
-      { n: 1, start: "7:45", end: "8:31" },
-      { n: 2, start: "8:35", end: "9:21" },
-      { n: 3, start: "9:25", end: "10:11" },
-      { n: 4, start: "10:15", end: "11:01" },
-      { n: 5, start: "11:05", end: "11:51" },
-      { n: 6, start: "11:55", end: "12:41" },
-      { n: 7, start: "12:45", end: "1:31" },
+      { n: 1, start: "7:45", end: "8:35" },
+      { n: 2, start: "8:41", end: "9:34" },
+      { n: 3, start: "9:40", end: "10:30" },
+      { n: 4, start: "10:36", end: "11:26" },
+      { n: 5, start: "11:32", end: "12:22" },
+      { n: 6, start: "12:28", end: "1:18" },
+      { n: 7, start: "1:24", end: "2:14" },
+      { n: 8, start: "2:20", end: "3:10"},
     ],
     /* win days insert Homeroom/WIN after Period 2 and push the rest back */
     win: [
-      { n: 1, start: "7:45", end: "8:31" },
-      { n: 2, start: "8:35", end: "9:21" },
-      { key: "win", start: "9:25", end: "9:50" },
-      { n: 3, start: "9:54", end: "10:40" },
-      { n: 4, start: "10:44", end: "11:30" },
-      { n: 5, start: "11:34", end: "12:20" },
-      { n: 6, start: "12:24", end: "1:10" },
-      { n: 7, start: "1:14", end: "2:00" },
+      { n: 1, start: "7:45", end: "8:30" },
+      { n: 2, start: "8:35", end: "9:20" },
+      { key: "win", start: "9:25", end: "10:10" },
+      { n: 3, start: "10:15", end: "11:00" },
+      { n: 4, start: "11:05", end: "11:50" },
+      { n: 5, start: "11:55", end: "12:40" },
+      { n: 6, start: "12:45", end: "1:30" },
+      { n: 7, start: "1:35", end: "2:20" },
+      { n: 8, start: "2:25", end: "3:10"},
     ],
     /* late arrival Wednesdays: everything shifts to a 9:00 start */
     late: [
-      { n: 1, start: "9:00", end: "9:46" },
-      { n: 2, start: "9:50", end: "10:36" },
-      { n: 3, start: "10:40", end: "11:26" },
-      { n: 4, start: "11:30", end: "12:16" },
-      { n: 5, start: "12:20", end: "1:06" },
-      { n: 6, start: "1:10", end: "1:56" },
-      { n: 7, start: "2:00", end: "2:46" },
+      { n: 1, start: "9:00", end: "9:42" },
+      { n: 2, start: "9:47", end: "10:29" },
+      { n: 3, start: "10:34", end: "11:16" },
+      { n: 4, start: "11:21", end: "12:03" },
+      { n: 5, start: "12:08", end: "12:49" },
+      { n: 6, start: "12:54", end: "1:36" },
+      { n: 7, start: "1:41", end: "2:23" },
+      { n: 8, start: "2:28", end: "3:10"}
     ],
   };
 
@@ -57,17 +60,17 @@
     reg: {
       label: "Regular schedule",
       short: "Regular",
-      note: "Seven class periods, normal bell times.",
+      note: "EASY!",
     },
     win: {
       label: "Homeroom/WIN",
       short: "Homeroom/WIN",
-      note: "Class periods run with a Homeroom/WIN block right after Period 2.",
+      note: "Okay, so homeroom is fine, but I hate WIN.",
     },
     late: {
       label: "Late arrival",
       short: "Late arrival",
-      note: "Wednesday late arrival \u2014 first bell is at 9:00, everything shifts later.",
+      note: "FINALLY I CAN SLEEP IN!!!",
     },
   };
 

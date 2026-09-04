@@ -5,7 +5,7 @@
    ============================================================ */
 window.NULL_CATALOG = {
   "site": "NULL",
-  "generatedAt": "2026-09-04T15:13:58.907Z",
+  "generatedAt": "2026-09-04T18:50:40.449Z",
   "games": [
     {
       "id": "flip",
@@ -43,6 +43,34 @@ window.NULL_CATALOG = {
       }
     },
     {
+      "id": "simon",
+      "name": "Simon",
+      "desc": "Found automatically in games/simon — part of the NULL library.",
+      "file": "/games/simon/simon.html",
+      "thumb": "/games/simon/simon.svg",
+      "labels": [
+        "Memory",
+        "Puzzle",
+        "Singleplayer",
+        "Simon"
+      ],
+      "warning": null
+    },
+    {
+      "id": "snake",
+      "name": "Snake",
+      "desc": "Found automatically in games/snake — part of the NULL library.",
+      "file": "/games/snake/snake.html",
+      "thumb": "/games/snake/snake.svg",
+      "labels": [
+        "Arcade",
+        "Singleplayer",
+        "Classic",
+        "Snake"
+      ],
+      "warning": null
+    },
+    {
       "id": "trace",
       "name": "Trace",
       "desc": "Found automatically in games/trace — part of the NULL library.",
@@ -55,9 +83,52 @@ window.NULL_CATALOG = {
         "Retro"
       ],
       "warning": null
+    },
+    {
+      "id": "void",
+      "name": "Void",
+      "desc": "Found automatically in games/void — part of the NULL library.",
+      "file": "/games/void/void.html",
+      "thumb": "/games/void/void.svg",
+      "labels": [
+        "Arcade",
+        "Singleplayer",
+        "Retro",
+        "Breakout"
+      ],
+      "warning": null
     }
   ],
   "apps": [
+    {
+      "id": "calc",
+      "name": "Calc",
+      "desc": "Found automatically in apps/calc — part of the NULL library.",
+      "file": "/apps/calc/calc.html",
+      "thumb": "/apps/calc/calc.svg",
+      "labels": [
+        "Utility",
+        "Math",
+        "Tools",
+        "Offline",
+        "Calculator"
+      ],
+      "warning": null
+    },
+    {
+      "id": "notes",
+      "name": "Notes",
+      "desc": "Found automatically in apps/notes — part of the NULL library.",
+      "file": "/apps/notes/notes.html",
+      "thumb": "/apps/notes/notes.svg",
+      "labels": [
+        "Utility",
+        "Writing",
+        "Offline",
+        "Notes"
+      ],
+      "warning": null
+    },
     {
       "id": "pad",
       "name": "Pad",
