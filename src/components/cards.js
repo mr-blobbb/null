@@ -104,10 +104,7 @@
 
     var body = d.h("div", { class: "tbody" }, [
       d.h("h3", { class: "tname", title: entry.name }, entry.name),
-      d.h("div", { class: "chips-row" }, [
-        kind === "proxy" ? statusChip(entry.status) : null,
-        kind === "proxy" ? null : chipsFor(entry),
-      ]),
+      d.h("div", { class: "chips-row" }, kind === "proxy" ? [statusChip(entry.status), null] : chipsFor(entry)),
       d.h("p", { class: "tdesc" }, entry.desc || meta.label + " in the NULL library."),
     ]);
 
