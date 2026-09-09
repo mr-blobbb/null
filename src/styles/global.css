@@ -1007,18 +1007,18 @@ label.lbl {
 }
 
 /* ============================================================
-   glow border — slim neon ring at the viewport edge: a crisp 5px
-   border with a soft blurred gradient halo bleeding inward from it.
-   The halo is a blurred, masked copy of the same rotating band
-   (@property --nga conic-gradient trick), so corners stay complete
-   and its colors stay locked under the ring. The gradient rotates in
-   a loop (--nga); comet mode adds a bright streak; .ng-near +
-   --ng-prox/--ng-cur (set by theme.js) light up only the border
-   piece near the cursor.
+   glow border — slim neon ring at the viewport edge: a 5px border
+   with a soft 5px glow hugging it. No blur filters: the glow is two
+   stepped bands, so corners stay complete and it stays GPU-cheap.
+   Corner radii are matched per layer (inner arc is always the same
+   radius) so the glow follows the ring perfectly around corners.
+   The gradient rotates in a loop (--nga); comet mode adds a bright
+   streak; .ng-near + --ng-prox/--ng-cur (set by theme.js) light up
+   only the border piece near the cursor.
    ============================================================ */
 @property --nga {
   syntax: "<angle>";
-  inherits: true;
+  inherits: false;
   initial-value: 0deg;
 }
 #null-glow-el {
@@ -1027,9 +1027,6 @@ label.lbl {
   z-index: 9997;
   pointer-events: none;
   transition: opacity 0.6s ease;
-  /* one rotation drives every layer — inherited --nga keeps ring, halo
-     and flare in perfect phase (same trick as the @property glow card) */
-  animation: nga 8s linear infinite;
 }
 #null-glow-el i {
   position: absolute;
@@ -1038,6 +1035,8 @@ label.lbl {
 }
 /* ring band shape shared by every border layer (padding = thickness) */
 #null-glow-el .ng-ring,
+#null-glow-el .ng-glow,
+#null-glow-el .ng-glow2,
 #null-glow-el .ng-comet,
 #null-glow-el .ng-flare-band {
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
@@ -1050,26 +1049,22 @@ label.lbl {
   padding: 5px;
   border-radius: 12px;
   opacity: 0.95;
+  animation: nga 8s linear infinite;
 }
-/* soft glow — blurred gradient halo bleeding inward from the ring.
-   It's a blurred, masked copy of the same rotating band (@property
-   --nga conic-gradient trick), so its colors stay locked under the
-   crisp ring. The wrapper holds the mask + blur; the band inside
-   keeps the band geometry. */
-#null-glow-el .ng-halo {
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  mask-composite: exclude;
-  padding: 26px;
-  border-radius: 40px;
-  filter: blur(13px);
-  opacity: 0.5;
+/* soft glow — inner step (7px) and outer step (10px) fall off like a blur */
+#null-glow-el .ng-glow2 {
+  padding: 7px;
+  border-radius: 14px;
+  opacity: 0.45;
+  animation: nga-rev 13s linear infinite;
 }
-#null-glow-el .ng-halo i {
-  border-radius: 40px;
+#null-glow-el .ng-glow {
+  padding: 10px;
+  border-radius: 17px;
+  opacity: 0.22;
+  animation: nga 17s linear infinite reverse;
 }
-/* comet streak — runs its own faster loop so it races the border */
+/* comet streak — same geometry as the ring so it hugs the border */
 #null-glow-el .ng-comet {
   padding: 6px;
   border-radius: 13px;
@@ -1090,6 +1085,7 @@ label.lbl {
   padding: 5px;
   border-radius: 12px;
   filter: brightness(1.45);
+  animation: nga 8s linear infinite;
 }
 #null-glow-el.ng-near .ng-flare {
   opacity: calc(0.45 + var(--ng-prox, 0) * 0.55);
@@ -1109,8 +1105,15 @@ label.lbl {
     --nga: 360deg;
   }
 }
+@keyframes nga-rev {
+  from {
+    --nga: 360deg;
+  }
+  to {
+    --nga: 0deg;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
-  #null-glow-el,
   #null-glow-el i {
     animation: none !important;
   }
