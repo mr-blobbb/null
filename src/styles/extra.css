@@ -224,3 +224,141 @@ body.player-page.fs .player-note {
     display: none !important;
   }
 }
+
+/* ============================================================
+   screensaver — dim glass overlay, drifting grayscale game art,
+   live clock. Sits under the glow border (9997) so the neon ring
+   still wraps the screen while it runs.
+   ============================================================ */
+.ss-ov {
+  position: fixed;
+  inset: 0;
+  z-index: 9995;
+  overflow: hidden;
+  background: var(--ss-bg, rgba(8, 8, 10, 0.66));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+.ss-ov.on {
+  opacity: 1;
+  visibility: visible;
+}
+html[data-theme="light"] .ss-ov {
+  --ss-bg: rgba(240, 240, 242, 0.72);
+}
+.ss-vign {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(120% 90% at 50% 40%, transparent 42%, rgba(0, 0, 0, 0.5));
+}
+html[data-theme="light"] .ss-vign {
+  background: radial-gradient(120% 90% at 50% 40%, transparent 42%, rgba(20, 20, 28, 0.16));
+}
+.ss-art {
+  position: absolute;
+  inset: 0;
+}
+.ss-tile {
+  position: absolute;
+  width: clamp(92px, 11vw, 150px);
+  aspect-ratio: 16 / 10;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  opacity: 0.5;
+  filter: grayscale(1) brightness(0.92);
+  animation: ss-drift 20s ease-in-out infinite alternate;
+  will-change: transform;
+}
+.ss-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ss-tile.slow {
+  opacity: 0.28;
+  filter: grayscale(1) brightness(0.78) blur(1.5px);
+}
+.ss-brand {
+  position: absolute;
+  top: 7%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 15px;
+  font-weight: 750;
+  letter-spacing: 0.34em;
+  color: var(--text-2);
+  opacity: 0.85;
+}
+.ss-brand .msr {
+  font-size: 22px;
+}
+.ss-clock {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -60%);
+  font-size: clamp(64px, 12vw, 150px);
+  font-weight: 750;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  text-shadow: 0 2px 34px rgba(0, 0, 0, 0.4);
+}
+.ss-date {
+  position: absolute;
+  top: calc(50% + clamp(46px, 8vw, 96px));
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 14.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+.ss-hint {
+  position: absolute;
+  bottom: 6.5%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12.5px;
+  letter-spacing: 0.14em;
+  white-space: nowrap;
+  color: var(--text-2);
+  animation: ss-pulse 3.4s ease-in-out infinite;
+}
+@keyframes ss-pulse {
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 0.62;
+  }
+}
+@keyframes ss-drift {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(-2.2deg);
+  }
+  50% {
+    transform: translate3d(var(--ss-drift, 16px), calc(var(--ss-drift, 16px) * -0.55), 0) rotate(2.4deg);
+  }
+  100% {
+    transform: translate3d(calc(var(--ss-drift, 16px) * -0.45), var(--ss-drift, 16px), 0) rotate(-1.6deg);
+  }
+}
+html[data-perf="1"] .ss-ov {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ss-tile {
+    animation: none;
+  }
+}

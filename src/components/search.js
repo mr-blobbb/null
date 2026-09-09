@@ -1,20 +1,131 @@
 /* NULL — search.js
    Global search: games, apps, proxies, announcements and site pages.
-   Opens as a plain overlay from anywhere; results reuse NULL cards/rows. */
+   Matching is fuzzy — typos up to a couple of edits on titles still hit,
+   word prefixes rank highest, and matches inside descriptions/labels
+   count too. Page bodies (About, Privacy, Terms, …) are fetched lazily
+   and indexed, so searches can find text written inside those pages. */
 (function () {
   var N = (window.N = window.N || {});
   var d = N.dom;
   var C = window.NULL_CONTENT || { announcements: [], pages: [] };
 
+  /* ---------- fuzzy matching helpers ---------- */
+  function norm(s) {
+    return String(s || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, " ");
+  }
+
+  /* Levenshtein with an early bail — returns max+1 when over the limit */
+  function editDist(a, b, max) {
+    if (a === b) return 0;
+    if (Math.abs(a.length - b.length) > max) return max + 1;
+    if (!a.length || !b.length) return Math.max(a.length, b.length);
+    var prev = new Array(b.length + 1);
+    var cur = new Array(b.length + 1);
+    for (var j = 0; j <= b.length; j++) prev[j] = j;
+    for (var i = 1; i <= a.length; i++) {
+      cur[0] = i;
+      for (j = 1; j <= b.length; j++) {
+        var cost = a[i - 1] === b[j - 1] ? 0 : 1;
+        cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + cost);
+      }
+      var t = prev;
+      prev = cur;
+      cur = t;
+    }
+    var dist = prev[b.length];
+    return dist > max ? max + 1 : dist;
+  }
+
+  /* best score for one token against one (pre-normalized) haystack string */
+  function tokScore(tok, s) {
+    if (!tok || !s) return 0;
+    if (s === tok) return 120;
+    if (s.indexOf(tok) === 0) return 108;
+    var words = s.split(" ");
+    var best = 0;
+    for (var i = 0; i < words.length; i++) {
+      var w = words[i];
+      if (!w) continue;
+      if (w === tok) return 100;
+      if (w.indexOf(tok) === 0) {
+        best = Math.max(best, 92);
+        continue;
+      }
+      if (tok.length >= 3 && w.length >= tok.length) {
+        var lim = tok.length >= 5 ? 2 : 1;
+        if (editDist(tok, w, lim) <= lim) {
+          best = Math.max(best, 70);
+          continue;
+        }
+      }
+    }
+    if (best) return best;
+    if (s.indexOf(tok) >= 0) return 62;
+    if (tok.length >= 4 && editDist(tok, s, 2) <= 2) return 50;
+    if (tok.length >= 6 && editDist(tok, s, 3) <= 3) return 42;
+    return 0;
+  }
+
+  /* every token must land somewhere; scores add up.
+     Fields are pre-normalized once per item (see buildIndex) so the
+     hot path never re-regexes the big haystacks. */
+  function scoreItem(it, toks) {
+    var total = 0;
+    for (var i = 0; i < toks.length; i++) {
+      var best = tokScore(toks[i], it._t);
+      var h = Math.floor(tokScore(toks[i], it._h) * 0.55);
+      var b = Math.floor(tokScore(toks[i], it._x) * 0.45);
+      if (h > best) best = h;
+      if (b > best) best = b;
+      if (!best) return 0;
+      total += best;
+    }
+    return total;
+  }
+
+  /* ---------- page bodies — fetched once, cached, indexed lazily ---------- */
+  var pageText = {}; // url -> text | null (null = failed)
+  var live = null; // open overlay: { input, render, rebuild }
+
+  function stripHtml(html) {
+    return html
+      .replace(/<script[\s\S]*?<\/script>/gi, " ")
+      .replace(/<style[\s\S]*?<\/style>/gi, " ")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .toLowerCase();
+  }
+
+  function fetchPageText(pg) {
+    if (pageText[pg.url] !== undefined) return;
+    pageText[pg.url] = null;
+    fetch(pg.url)
+      .then(function (r) {
+        return r.ok ? r.text() : Promise.reject();
+      })
+      .then(function (html) {
+        pageText[pg.url] = stripHtml(html);
+        if (live) live.rebuild();
+      })
+      .catch(function () {
+        pageText[pg.url] = null;
+      });
+  }
+
+  /* ---------- index ---------- */
   function buildIndex() {
     var idx = [];
     N.catalog.games().forEach(function (g) {
+      var raw = g.name + " " + g.desc + " " + (g.labels || []).join(" ") + " game play";
       idx.push({
         kind: "game",
         icon: "game",
         title: g.name,
-        sub: "Game" + (g.labels && g.labels.length ? " \u00b7 " + g.labels.slice(0, 3).join(" ") : ""),
-        hay: (g.name + " " + g.desc + " " + (g.labels || []).join(" ") + " game play").toLowerCase(),
+        _t: norm(g.name),
+        _h: norm(raw),
+        _x: "",
         run: function () {
           N.launch.game(g);
         },
@@ -22,12 +133,14 @@
       });
     });
     N.catalog.apps().forEach(function (a) {
+      var raw = a.name + " " + a.desc + " " + (a.labels || []).join(" ") + " app tool";
       idx.push({
         kind: "app",
         icon: "grid",
         title: a.name,
-        sub: "App",
-        hay: (a.name + " " + a.desc + " " + (a.labels || []).join(" ") + " app tool").toLowerCase(),
+        _t: norm(a.name),
+        _h: norm(raw),
+        _x: "",
         run: function () {
           N.launch.app(a);
         },
@@ -35,12 +148,14 @@
       });
     });
     N.catalog.proxies().forEach(function (p) {
+      var raw = p.name + " " + p.desc + " " + p.url + " proxy link external";
       idx.push({
         kind: "proxy",
         icon: "proxy",
         title: p.name,
-        sub: "Proxy \u00b7 " + (p.status || "external"),
-        hay: (p.name + " " + p.desc + " " + p.url + " proxy link external").toLowerCase(),
+        _t: norm(p.name),
+        _h: norm(raw),
+        _x: "",
         run: function () {
           N.launch.proxy(p);
         },
@@ -48,24 +163,29 @@
       });
     });
     (C.pages || []).forEach(function (pg) {
+      var raw = pg.title + " " + pg.desc + " " + pg.kw + " " + pg.grp;
       idx.push({
         kind: "page",
         icon: "list",
         title: pg.title,
-        sub: "Page",
-        hay: (pg.title + " " + pg.desc + " " + pg.kw + " " + pg.grp).toLowerCase(),
+        _t: norm(pg.title),
+        _h: norm(raw),
+        _x: norm(pageText[pg.url] || ""),
         run: function () {
           location.href = pg.url;
         },
       });
+      fetchPageText(pg);
     });
     (C.announcements || []).forEach(function (a) {
+      var raw = a.title + " " + a.desc + " " + a.category + " announcement news";
       idx.push({
         kind: "announcement",
         icon: "ann",
         title: a.title,
-        sub: "Announcement \u00b7 " + d0(a.date),
-        hay: (a.title + " " + a.desc + " " + a.category + " announcement news").toLowerCase(),
+        _t: norm(a.title),
+        _h: norm(raw),
+        _x: "",
         run: function () {
           location.href = "/announcements.html";
         },
@@ -74,28 +194,18 @@
     return idx;
   }
 
-  function d0(s) {
-    try {
-      return new Date(s).toLocaleDateString(undefined, { month: "short", day: "numeric" });
-    } catch (e) {
-      return s;
-    }
-  }
-
   function search(q, idx) {
-    q = q.trim().toLowerCase();
-    if (!q) return [];
-    var tokens = q.split(/\s+/);
+    var toks = norm(q)
+      .split(/\s+/)
+      .filter(Boolean);
+    if (!toks.length) return [];
     var out = [];
     idx.forEach(function (it) {
-      if (!tokens.every(function (t) {
-          return it.hay.indexOf(t) >= 0;
-        })) return;
-      var rank = it.title.toLowerCase().indexOf(q) === 0 ? 0 : it.title.toLowerCase().indexOf(q) >= 0 ? 1 : 2;
-      out.push({ it: it, rank: rank });
+      var score = scoreItem(it, toks);
+      if (score) out.push({ it: it, score: score });
     });
     out.sort(function (a, b) {
-      return a.rank - b.rank || a.it.title.length - b.it.title.length;
+      return b.score - a.score || a.it.title.length - b.it.title.length;
     });
     return out;
   }
@@ -164,7 +274,7 @@
       }
       if (!hits.length) {
         results.appendChild(d.h("div", { class: "sr-none" }, [
-          "Nothing matches \u201c" + q + "\u201d \u2014 but you got to see this funny guy: •𐃷•",
+          "Nothing matches \u201c" + q + "\u201d \u2014 but you got to see this funny guy: \u2022\u{103F7}\u2022",
         ]));
         return;
       }
@@ -246,6 +356,7 @@
     }, 70));
 
     function close() {
+      if (live && live.ov === ov) live = null;
       ov.classList.remove("open");
       setTimeout(function () {
         ov.remove();
@@ -255,6 +366,18 @@
     ov.addEventListener("mousedown", function (e) {
       if (e.target === ov) close();
     });
+
+    /* the active overlay: page-body fetches rebuild its index live */
+    live = {
+      ov: ov,
+      input: input,
+      render: render,
+      rebuild: function () {
+        if (!ov.isConnected) return;
+        idx = buildIndex();
+        render(input.value);
+      },
+    };
 
     document.body.appendChild(ov);
     requestAnimationFrame(function () {

@@ -311,6 +311,117 @@ return foot;
     },
   };
 
+  /* ============================================================
+     screensaver — after two idle minutes a dim glass overlay fades
+     in: drifting grayscale game art, a live clock and a wake hint.
+     Any pointer or key wakes it. Skipped on the player / 404 and
+     whenever an overlay is already open.
+     ============================================================ */
+  var SS_DELAY = 120000; // 2 minutes idle
+  var ssTimer = null;
+  var ssEl = null;
+  var ssClockInt = null;
+
+  function ssGated() {
+    return (
+      document.body.classList.contains("player-page") ||
+      document.body.classList.contains("page-404") ||
+      document.body.classList.contains("no-chrome") ||
+      !!d.qs(".modal-ov.open") ||
+      !!d.qs(".search-ov.open") ||
+      document.hidden
+    );
+  }
+
+  function ssHide() {
+    if (!ssEl) return;
+    var el = ssEl;
+    ssEl = null;
+    clearInterval(ssClockInt);
+    el.classList.remove("on");
+    setTimeout(function () {
+      if (el.parentNode) el.parentNode.removeChild(el);
+    }, 500);
+    ssArm();
+  }
+
+  function ssClock() {
+    if (!ssEl) return;
+    var el = d.qs(".ss-clock", ssEl);
+    var now = new Date();
+    var h = now.getHours() % 12 || 12;
+    var m = now.getMinutes();
+    var s = now.getSeconds();
+    var ap = now.getHours() >= 12 ? "PM" : "AM";
+    if (el) el.textContent = h + ":" + (m < 10 ? "0" : "") + m + ":" + (s < 10 ? "0" : "") + s + " " + ap;
+  }
+
+  function ssShow() {
+    if (ssEl || ssGated()) {
+      ssArm();
+      return;
+    }
+    var games = N.catalog.games().filter(function (g) {
+      return g.thumb;
+    });
+    var ov = d.h("div", { class: "ss-ov", "aria-hidden": "true" });
+    ov.appendChild(d.h("div", { class: "ss-vign" }));
+    var art = d.h("div", { class: "ss-art" });
+    var count = Math.min(18, Math.max(6, games.length));
+    for (var i = 0; i < count; i++) {
+      var g = games[Math.floor(Math.random() * games.length)];
+      var img = d.h("img", { src: g.thumb, alt: "", draggable: "false" });
+      img.addEventListener("error", function (e) {
+        if (e.target && e.target.parentNode) e.target.parentNode.removeChild(e.target);
+      });
+      var slow = i % 2 === 1;
+      var tile = d.h("div", { class: "ss-tile" + (slow ? " slow" : "") }, [img]);
+      tile.style.left = (4 + Math.random() * 82) + "%";
+      tile.style.top = (6 + Math.random() * 74) + "%";
+      tile.style.setProperty("--ss-drift", (10 + Math.random() * 26).toFixed(1) + "px");
+      tile.style.animationDuration = (slow ? 26 + Math.random() * 14 : 15 + Math.random() * 18).toFixed(1) + "s";
+      tile.style.animationDelay = (-Math.random() * 34).toFixed(1) + "s";
+      art.appendChild(tile);
+    }
+    ov.appendChild(art);
+    ov.appendChild(d.h("div", { class: "ss-brand" }, [d.icon("ban"), "NULL"]));
+    ov.appendChild(d.h("div", { class: "ss-clock" }, "\u2014:--"));
+    ov.appendChild(
+      d.h("div", { class: "ss-date" },
+        new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })),
+    );
+    ov.appendChild(d.h("div", { class: "ss-hint" }, "move mouse or press any key"));
+    document.body.appendChild(ov);
+    ssEl = ov;
+    requestAnimationFrame(function () {
+      ov.classList.add("on");
+    });
+    ssClock();
+    ssClockInt = setInterval(ssClock, 1000);
+  }
+
+  function ssArm() {
+    clearTimeout(ssTimer);
+    ssTimer = setTimeout(ssShow, SS_DELAY);
+  }
+
+  function ssWake() {
+    ssHide();
+    ssArm();
+  }
+
+  function initSs() {
+    if (ssGated()) return;
+    ["pointermove", "pointerdown", "keydown", "wheel", "touchstart"].forEach(function (ev) {
+      document.addEventListener(ev, ssWake, { passive: true });
+    });
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden) ssHide();
+      else ssArm();
+    });
+    ssArm();
+  }
+
   /* ---------- marathon mode: auto-switch games on a timer ----------
      The ticker lives here so it keeps running on any NULL page. The games
      page owns the controls; prefs hold the interval (marathonMin) and the
@@ -367,6 +478,7 @@ return foot;
     shortcuts();
     N.tab.apply();
     initMarathon();
+    initSs();
 
     /* custom scrollbar on library pages */
     if (document.body.classList.contains("lb")) {
