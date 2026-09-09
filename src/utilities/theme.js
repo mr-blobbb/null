@@ -2,9 +2,11 @@
    Applies theme / accent / glow / performance prefs to <html>.
    Accent palettes are mid-tone so they read on both dark and light surfaces.
 
-   Glow is a slim full-screen neon border: a 5px ring pinned to the
-   viewport edge with a soft 5px glow hugging it. The gradient rotates in
-   a continuous loop; optional comet mode adds a bright streak that
+   Glow is a slim full-screen neon border: a crisp 5px ring pinned to
+   the viewport edge with a soft blurred gradient halo bleeding inward
+   from it — the halo is a blurred copy of the same rotating band, so
+   its colors stay locked under the ring. The gradient rotates in a
+   continuous loop; optional comet mode adds a bright streak that
    travels the border. Moving the cursor close to an edge lights up only
    the piece of border near the cursor. Presets crossfade into each
    other instead of snapping. */
@@ -90,7 +92,7 @@
   })();
 
   /* ---------- glow element ---------- */
-  var elState = null; // { el, ring, glow, glow2, comet, flareBand }
+  var elState = null; // { el, ring, halo, haloBand, comet, flareBand }
   var curId = "off";
   var cometOn = false;
 
@@ -99,21 +101,25 @@
     i.className = "ng-" + kind;
     return i;
   }
+  /* bare band element — styled by its wrapper (e.g. .ng-halo i) */
+  function bandEl() {
+    return document.createElement("i");
+  }
 
   function ensureEl(bg) {
     if (elState && elState.el.isConnected) return elState;
     var el = document.createElement("div");
     el.id = "null-glow-el";
     el.setAttribute("aria-hidden", "true");
+    /* halo first so the blurred glow paints behind the crisp ring */
+    var halo = layerEl("halo");
+    var haloBand = bandEl();
+    if (bg) haloBand.style.background = bg;
+    halo.appendChild(haloBand);
+    el.appendChild(halo);
     var ring = layerEl("ring");
-    var glow2 = layerEl("glow2");
-    var glow = layerEl("glow");
-    [ring, glow2, glow].forEach(function (l) {
-      if (bg) l.style.background = bg;
-    });
+    if (bg) ring.style.background = bg;
     el.appendChild(ring);
-    el.appendChild(glow2);
-    el.appendChild(glow);
     var comet = null;
     if (cometOn) {
       comet = layerEl("comet");
@@ -127,7 +133,7 @@
     flare.appendChild(flareBand);
     el.appendChild(flare);
     document.body.appendChild(el);
-    elState = { el: el, ring: ring, glow: glow, glow2: glow2, comet: comet, flareBand: flareBand };
+    elState = { el: el, ring: ring, halo: halo, haloBand: haloBand, comet: comet, flareBand: flareBand };
     return elState;
   }
 
@@ -138,10 +144,11 @@
     if (!st) return;
     var old = st[kind];
     if (!old || old.style.background === bg) return;
-    var n = layerEl(kind);
+    var n = kind === "haloBand" ? bandEl() : layerEl(kind);
     n.style.background = bg;
     n.classList.add("ng-in");
-    var host = kind === "flareBand" ? st.flare : old.parentNode;
+    var host =
+      kind === "flareBand" ? st.flare : kind === "haloBand" ? st.halo : old.parentNode;
     host.insertBefore(n, old);
     old.classList.add("ng-xf");
     void n.offsetWidth;
@@ -233,8 +240,7 @@
     var bg = conic(colors);
     var st = ensureEl(bg);
     setLayerBg("ring", bg);
-    setLayerBg("glow", bg);
-    setLayerBg("glow2", bg);
+    setLayerBg("haloBand", bg);
     setLayerBg("flareBand", bg);
     if (cometOn) setLayerBg("comet", cometBg(colors));
     wireProx();
