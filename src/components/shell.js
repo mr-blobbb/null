@@ -1,20 +1,16 @@
 /* NULL — shell.js
-   Shared chrome: top navigation (with More menu + mobile drawer), search
+   Shared chrome: top navigation (icon-only links + mobile drawer), search
    trigger, theme toggle, footer, custom scrollbar attachment, back-to-top
-   and the global keyboard bits (SGGAMES, "/" to search). */
+   and the global keyboard bits (SGGAMES, panic key, "/" to search). */
 (function () {
   var N = (window.N = window.N || {});
   var d = N.dom;
 
+  /* NULL mark = the Material "block" glyph: a circle with a slash. */
   function logoMark() {
-    var el = d.h("span", { class: "brand-mark", "aria-hidden": "true" });
-    el.innerHTML =
-      '<svg viewBox="0 0 32 32" width="30" height="30" fill="none" stroke="currentColor">' +
-      '<rect x="1.6" y="1.6" width="28.8" height="28.8" rx="9.5" stroke-opacity="0.35" stroke-width="1.6"/>' +
-      '<circle cx="16" cy="16" r="7.6" stroke-width="2.6"/>' +
-      '<path d="M11.3 11.3l9.4 9.4" stroke-width="2.6" stroke-linecap="round"/>' +
-      "</svg>";
-    return el;
+    return d.h("span", { class: "brand-mark", "aria-hidden": "true" }, [
+      d.icon("ban"),
+    ]);
   }
 
   function brandEl() {
@@ -30,47 +26,19 @@
 
     bar.appendChild(brandEl());
 
-    /* primary links */
+    /* primary links — icon-only, no Home (the brand mark is home) */
     var links = d.h("nav", { class: "nav-links" });
     N.router.PRIMARY.forEach(function (l) {
       links.appendChild(
-        d.h("a", { class: "nav-link" + (N.router.isActive(l.url) ? " on" : ""), href: l.url }, [
-          d.icon(l.icon),
-          d.h("span", null, l.t),
-        ]),
+        d.h("a", {
+          class: "nav-link" + (N.router.isActive(l.url) ? " on" : ""),
+          href: l.url,
+          title: l.t,
+          "aria-label": l.t,
+        }, [d.icon(l.icon)]),
       );
     });
-
-    /* More dropdown */
-    var moreBtn = d.h("button", { type: "button", class: "nav-link", id: "moreBtn" }, [
-      d.icon("list"),
-      d.h("span", null, "More"),
-      d.icon("chevD"),
-    ]);
-    var menu = d.h("div", { class: "more-menu glass-2", id: "moreMenu" });
-    N.router.GROUPS.forEach(function (g) {
-      menu.appendChild(d.h("div", { class: "mg" }, g.name));
-      g.links.forEach(function (l) {
-        menu.appendChild(
-          d.h("a", { class: "mi" + (N.router.isActive(l.url) ? " on" : ""), href: l.url }, [
-            d.icon(l.icon),
-            d.h("span", null, l.t),
-          ]),
-        );
-      });
-    });
-    var moreWrap = d.h("div", { class: "more-wrap" }, [moreBtn, menu]);
-    moreBtn.addEventListener("click", function (e) {
-      e.stopPropagation();
-      moreWrap.classList.toggle("open");
-      drawerOv.classList.remove("open");
-    });
-    document.addEventListener("click", function (e) {
-      if (!moreWrap.contains(e.target)) moreWrap.classList.remove("open");
-    });
-
     bar.appendChild(links);
-    bar.appendChild(moreWrap);
 
     /* search trigger */
     var searchBtn = d.h("button", {
@@ -80,7 +48,7 @@
       title: "Search NULL  ( / )",
     }, [
       d.icon("search"),
-      d.h("span", { style: { color: "var(--text-2)", fontSize: "14px" } }, "Search NULL"),
+      d.h("span", { class: "sb-txt", style: { color: "var(--text-2)", fontSize: "14px" } }, "Search NULL"),
     ]);
     searchBtn.addEventListener("click", function () {
       N.search.open();
@@ -115,7 +83,6 @@
     burger.addEventListener("click", function () {
       drawerOv.classList.toggle("open");
       document.body.style.overflow = drawerOv.classList.contains("open") ? "hidden" : "";
-      moreWrap.classList.remove("open");
     });
     actions.appendChild(burger);
     bar.appendChild(actions);

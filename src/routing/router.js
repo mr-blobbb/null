@@ -5,15 +5,28 @@
 (function () {
   var N = (window.N = window.N || {});
 
+  /* top nav — icon-only destinations. Home is the NULL brand mark itself,
+     so it is not a separate link. The mobile drawer shows all of these. */
   var PRIMARY = [
-    { id: "home", t: "Home", url: "/", icon: "home" },
     { id: "games", t: "Games", url: "/games.html", icon: "game" },
     { id: "apps", t: "Apps", url: "/apps.html", icon: "grid" },
     { id: "proxies", t: "Proxies", url: "/proxies.html", icon: "proxy" },
+    { id: "schedule", t: "Schedule", url: "/schedule.html", icon: "sched" },
+    { id: "announcements", t: "Announcements", url: "/announcements.html", icon: "ann" },
+    { id: "backups", t: "Backups", url: "/backups.html", icon: "backups" },
+    { id: "settings", t: "Settings", url: "/settings.html", icon: "settings" },
   ];
 
-  /* extra pages in the More menu + mobile drawer */
+  /* grouped view used by the mobile drawer */
   var GROUPS = [
+    {
+      name: "Library",
+      links: [
+        { t: "Games", url: "/games.html", icon: "game" },
+        { t: "Apps", url: "/apps.html", icon: "grid" },
+        { t: "Proxies", url: "/proxies.html", icon: "proxy" },
+      ],
+    },
     {
       name: "More",
       links: [

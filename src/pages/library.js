@@ -15,17 +15,30 @@
   function init() {
     var kind = kindOf(document.body);
     var list = kind === "apps" ? N.catalog.apps() : kind === "proxies" ? N.catalog.proxies() : N.catalog.games();
+    var favKind = kind === "apps" ? "app" : kind === "proxies" ? "proxy" : "game";
 
     var rowHost = d.qs("#labelRow");
     var input = d.qs("#libSearch");
     var countEl = d.qs("#count");
     var grid = d.qs("#grid");
+    var favSec = d.qs("#favSec");
     var emptyBox = d.qs("#empty");
     var scroller = d.qs("#scrollview");
 
     var activeLabel = "All";
     var query = "";
+    var sortMode = "name"; // name = A–Z, id = folder label
     var gridApi = null;
+
+    function sorted(arr) {
+      var copy = arr.slice();
+      copy.sort(function (a, b) {
+        var ka = sortMode === "id" ? a.id || "" : a.name || "";
+        var kb = sortMode === "id" ? b.id || "" : b.name || "";
+        return ka.localeCompare(kb, undefined, { sensitivity: "base" });
+      });
+      return copy;
+    }
 
     function filtered() {
       var q = query.trim().toLowerCase();
@@ -38,7 +51,39 @@
           (e.labels || []).join(" ").toLowerCase().indexOf(q) >= 0;
         return okLabel && okQ;
       });
-      return out;
+      return sorted(out);
+    }
+
+    /* favorites box — sits above the grid, hides when empty */
+    function renderFavs() {
+      if (!favSec || favKind === "proxy") return;
+      var favs = N.favs
+        .list()
+        .filter(function (f) {
+          return f.k === favKind;
+        })
+        .map(function (f) {
+          return N.catalog.find(f.k, f.id);
+        })
+        .filter(Boolean);
+      if (!favs.length) {
+        favSec.hidden = true;
+        favSec.textContent = "";
+        return;
+      }
+      favSec.hidden = false;
+      favSec.textContent = "";
+      favSec.appendChild(
+        d.h("div", { class: "panel-head" }, [
+          d.h("h2", null, [d.icon("star"), "Favorites"]),
+          d.h("span", { class: "hint" }, favs.length + (favs.length === 1 ? " item" : " items")),
+        ]),
+      );
+      var g = d.h("div", { class: "fav-grid" });
+      favs.forEach(function (e) {
+        g.appendChild(N.cards.card(e, favKind));
+      });
+      favSec.appendChild(g);
     }
 
     function paint() {
@@ -99,7 +144,22 @@
       }, 90));
     }
 
+    /* sort dropdown (custom-styled via dom.upgradeSelect) */
+    var sortSel = d.qs("#sortSel");
+    if (sortSel) {
+      N.dom.upgradeSelect(sortSel);
+      sortSel.addEventListener("change", function () {
+        sortMode = sortSel.value === "id" ? "id" : "name";
+        paint();
+      });
+    }
+
     buildChips();
+    renderFavs();
+    N.bus.on("favs", function () {
+      renderFavs();
+      paint();
+    });
 
     gridApi = N.cards.vgrid(grid, {
       items: filtered(),

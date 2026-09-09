@@ -22,9 +22,11 @@
     });
 
     /* glow preset */
-    d.qsa("#glowRow .swatch-btn").forEach(function (b) {
-      b.classList.toggle("on", b.dataset.val === p.glow);
-    });
+    var gsel = d.qs("#glowSelect");
+    if (gsel) {
+      gsel.value = p.glow;
+      N.dom.selSync(gsel);
+    }
     var gc = d.qs("#glowCustom");
     if (gc) gc.style.display = p.glow === "custom" ? "" : "none";
     var gc1 = d.qs("#glowColor1");
@@ -38,7 +40,10 @@
 
     /* tab preset */
     var sel = d.qs("#tabSelect");
-    if (sel) sel.value = p.tab;
+    if (sel) {
+      sel.value = p.tab;
+      N.dom.selSync(sel);
+    }
     paintTabPreview();
     paintGmail();
 
@@ -109,14 +114,15 @@
     });
 
     /* glow */
-    d.qsa("#glowRow .swatch-btn").forEach(function (b) {
-      b.addEventListener("click", function () {
-        N.prefs.set("glow", b.dataset.val);
-        N.theme.setGlow(b.dataset.val);
+    var gsel = d.qs("#glowSelect");
+    if (gsel) {
+      gsel.addEventListener("change", function () {
+        N.prefs.set("glow", gsel.value);
+        N.theme.setGlow(gsel.value);
         refresh();
-        d.toast("Glow: " + b.textContent);
+        d.toast("Glow: " + (gsel.options[gsel.selectedIndex] || {}).textContent);
       });
-    });
+    }
     var glowC1 = d.qs("#glowColor1");
     var glowC2 = d.qs("#glowColor2");
     if (glowC1) {
@@ -237,9 +243,8 @@
     if (cap) cap.textContent = N.prefs.get("panicKey") || "`";
     var url = d.qs("#panicUrl");
     if (url && document.activeElement !== url) url.value = N.prefs.get("panicUrl") || "";
-    d.qsa("#panicMode button").forEach(function (b) {
-      b.classList.toggle("on", b.dataset.val === (N.prefs.get("panicMode") || "single"));
-    });
+    var sw = d.qs("#panicSwitch");
+    if (sw) sw.checked = (N.prefs.get("panicMode") || "single") === "double";
   }
 
   function bindPanic() {
@@ -281,12 +286,14 @@
       });
     }
 
-    d.qsa("#panicMode button").forEach(function (b) {
-      b.addEventListener("click", function () {
-        N.prefs.set("panicMode", b.dataset.val);
+    var sw = d.qs("#panicSwitch");
+    if (sw) {
+      sw.addEventListener("change", function () {
+        N.prefs.set("panicMode", sw.checked ? "double" : "single");
         paintPanic();
+        d.toast(sw.checked ? "Double press on" : "Single press on");
       });
-    });
+    }
   }
 
   function init() {
@@ -314,19 +321,16 @@
         );
       });
     }
-    /* build glow preset buttons */
-    var grow = d.qs("#glowRow");
-    if (grow) {
-      N.theme.GLOWS.forEach(function (g) {
-        grow.appendChild(d.h("button", { type: "button", class: "swatch-btn", "data-val": g.id }, g.name));
-      });
-    }
     var sel = d.qs("#tabSelect");
     if (sel) {
       N.tab.list.forEach(function (p) {
         sel.appendChild(d.h("option", { value: p.id }, p.name + " \u2014 " + N.tab.titleFor(p)));
       });
+      /* custom-styled dropdown, not the native <select> */
+      N.dom.upgradeSelect(sel);
     }
+    var gsel = d.qs("#glowSelect");
+    if (gsel) N.dom.upgradeSelect(gsel);
 
     bind();
     bindPanic();

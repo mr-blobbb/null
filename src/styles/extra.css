@@ -3,37 +3,6 @@
    global.css so these rules win when they need to. */
 
 /* ============================================================
-   glow — full-screen edge glow (simple on/off)
-   ============================================================ */
-#null-glow-el {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 9998;
-  box-shadow:
-    inset 0 0 120px 16px color-mix(in srgb, var(--ac-1, var(--text-2)) 11%, transparent),
-    inset 0 0 28px 4px color-mix(in srgb, var(--ac-1, var(--text-2)) 15%, transparent);
-  animation: ng-pulse 6s ease-in-out infinite;
-}
-@keyframes ng-pulse {
-  0%,
-  100% {
-    opacity: 0.8;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  #null-glow-el {
-    animation: none;
-  }
-}
-html[data-perf="1"] #null-glow-el {
-  animation: none;
-}
-
-/* ============================================================
    player fullscreen — the bar docks to the bottom and auto-hides
    ============================================================ */
 body.player-page.fs .player-bar {
@@ -78,9 +47,6 @@ body.player-page.fs .player-note {
    mobile chrome — no More dropdown, search is an icon
    ============================================================ */
 @media (max-width: 860px) {
-  .more-wrap {
-    display: none;
-  }
   .searchbox {
     width: 42px;
     margin-left: auto;
@@ -88,7 +54,7 @@ body.player-page.fs .player-note {
   .searchbox .field {
     justify-content: center;
   }
-  .searchbox span {
+  .searchbox .sb-txt {
     display: none;
   }
 }
@@ -109,6 +75,13 @@ body.player-page.fs .player-note {
 }
 .toolbar .sel-wrap {
   margin-left: auto;
+}
+
+/* 404 — the art piece is a Material glyph now, sized like the old svg */
+.not-found .art {
+  font-size: clamp(96px, 22vw, 170px);
+  line-height: 1;
+  color: var(--text);
 }
 
 /* settings — panic key + cloak buttons */

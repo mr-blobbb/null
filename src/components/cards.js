@@ -17,9 +17,7 @@
 
   /* ---------- thumb (games/apps only — proxies use rows) ---------- */
   function thumbEl(entry, kind) {
-    var meta = META[kind];
-    var glyph = d.h("div", { class: "fallback-glyph" }, [d.icon(meta.icon)]);
-    var media = d.h("div", { class: "tmedia" }, [glyph]);
+    var media = d.h("div", { class: "tmedia" });
     if (entry.thumb) {
       var img = d.h("img", {
         src: entry.thumb,

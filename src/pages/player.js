@@ -99,15 +99,26 @@
       }, 800);
     }
 
-    /* fullscreen */
+    /* fullscreen — the bar docks to the bottom edge and auto-hides;
+       moving the mouse (or tapping) brings it back */
     var fsBtn = d.qs("#btnFull");
-    var fsIc = d.qs("#btnFull").querySelector("svg");
-    function fsIcon() {
+    var fsIc = d.qs("#btnFull .msr");
+    var bar = d.qs(".player-bar");
+    var fsTimer = null;
+    function fsIconName() {
       return document.fullscreenElement ? "min" : "max";
     }
     function updateFsIcon() {
-      if (fsIc) fsIc.innerHTML = d.icon(fsIcon()).innerHTML;
-      fsBtn.title = document.fullscreenElement ? "Exit fullscreen" : "Fullscreen";
+      if (fsIc) fsIc.textContent = d.icon(fsIconName()).textContent;
+      if (fsBtn) fsBtn.title = document.fullscreenElement ? "Exit fullscreen" : "Fullscreen";
+    }
+    function fsPeek() {
+      if (!document.fullscreenElement) return;
+      if (bar) bar.classList.add("show");
+      clearTimeout(fsTimer);
+      fsTimer = setTimeout(function () {
+        if (bar) bar.classList.remove("show");
+      }, 2400);
     }
     if (fsBtn) {
       fsBtn.addEventListener("click", function () {
@@ -119,7 +130,14 @@
           } catch (err) {}
         }
       });
-      document.addEventListener("fullscreenchange", updateFsIcon);
+      document.addEventListener("fullscreenchange", function () {
+        document.body.classList.toggle("fs", !!document.fullscreenElement);
+        updateFsIcon();
+        if (document.fullscreenElement) fsPeek();
+        else if (bar) bar.classList.remove("show");
+      });
+      document.addEventListener("mousemove", fsPeek);
+      document.addEventListener("mousedown", fsPeek);
       updateFsIcon();
     }
 
