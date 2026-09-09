@@ -182,6 +182,22 @@
     };
   })();
 
+  /* ---------- play counts (local per browser — powers "most played") ---------- */
+  var PLAYS_KEY = "null:plays";
+  N.plays = (function () {
+    var data = read(PLAYS_KEY, {});
+    return {
+      tap: function (kind, id) {
+        var k = kind + ":" + id;
+        data[k] = (data[k] || 0) + 1;
+        write(PLAYS_KEY, data);
+      },
+      count: function (kind, id) {
+        return data[kind + ":" + id] || 0;
+      },
+    };
+  })();
+
   /* ---------- small date helpers ---------- */
   N.dt = {
     ago: function (ts) {

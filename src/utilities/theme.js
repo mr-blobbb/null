@@ -2,9 +2,9 @@
    Applies theme / accent / glow / performance prefs to <html>.
    Accent palettes are mid-tone so they read on both dark and light surfaces.
 
-   Glow borders are fully driven from here: a self-contained <style> is
-   injected so the chosen preset works regardless of page. Presets are
-   blue+green, rainbow, blue+purple and a custom two-color option. */
+   Glow is a full-screen neon border — a fixed ring pinned to the very edge
+   of the viewport, animated in a continuous loop. Presets: blue+purple,
+   purple+green, rainbow and a custom two-color option. */
 (function () {
   var N = (window.N = window.N || {});
   var root = document.documentElement;
@@ -19,27 +19,78 @@
     { id: "rose", name: "Rose", c1: "#e26f9c", c2: "#efa0bd" },
   ];
 
-  /* glow is a simple on/off full-screen edge glow — never a per-card
-     border. Enabled it paints a fixed inset glow around the whole viewport
-     using the accent color (grayscale fallback when accent is off). */
+  /* Glow border presets. Each preset paints a bright ring around the whole
+     viewport edge (theme.js injects the overlay; global.css animates it). */
   var GLOWS = [
-    { id: "off", name: "Off" },
-    { id: "on", name: "On" },
+    { id: "off", name: "Off", colors: null },
+    { id: "bp", name: "Blue + Purple", colors: ["#3d8bff", "#a86bff"] },
+    { id: "pg", name: "Purple + Green", colors: ["#a95bff", "#2fe58f"] },
+    { id: "rainbow", name: "Rainbow", colors: ["#ff3b5c", "#ffb020", "#ffe94a", "#35e88f", "#38b6ff", "#a26bff"] },
+    { id: "custom", name: "Custom", colors: null },
   ];
 
-  function setGlow(on) {
+  /* legacy ids from the old on/off + card-scan presets → blue+purple */
+  function normalize(id) {
+    if (!id || id === "off" || id === false) return "off";
+    var known = GLOWS.some(function (g) {
+      return g.id === id;
+    });
+    return known ? id : "bp";
+  }
+
+  function colorsFor(id) {
+    var g = GLOWS.find(function (x) {
+      return x.id === id;
+    });
+    if (id === "custom") {
+      var c1 = N.prefs.get("glowColor1") || "#35c3f2";
+      var c2 = N.prefs.get("glowColor2") || "#a86bff";
+      return [c1, c2];
+    }
+    return (g && g.colors) || ["#3d8bff", "#a86bff"];
+  }
+
+  /* conic-gradient string with a few equal stops around the circle */
+  function conic(colors) {
+    var stops = colors
+      .map(function (c, i) {
+        var a = Math.round((i / colors.length) * 360);
+        return c + " " + a + "deg";
+      })
+      .join(", ");
+    return "conic-gradient(from var(--nga), " + stops + ")";
+  }
+
+  function build() {
     var cur = document.getElementById("null-glow-el");
-    if (!on || on === "off" || on === false) {
+    if (cur) return cur;
+    var el = document.createElement("div");
+    el.id = "null-glow-el";
+    el.setAttribute("aria-hidden", "true");
+    var ring = document.createElement("i");
+    ring.className = "ng-ring";
+    var halo = document.createElement("i");
+    halo.className = "ng-halo";
+    el.appendChild(ring);
+    el.appendChild(halo);
+    document.body.appendChild(el);
+    return el;
+  }
+
+  function setGlow(raw) {
+    var id = normalize(raw);
+    var on = id !== "off";
+    var cur = document.getElementById("null-glow-el");
+    if (!on) {
       delete root.dataset.glow;
       if (cur) cur.remove();
       return;
     }
-    root.dataset.glow = "on";
-    if (cur) return;
-    var el = document.createElement("div");
-    el.id = "null-glow-el";
-    el.setAttribute("aria-hidden", "true");
-    document.body.appendChild(el);
+    root.dataset.glow = id;
+    var el = build();
+    var bg = conic(colorsFor(id));
+    el.querySelector(".ng-ring").style.background = bg;
+    el.querySelector(".ng-halo").style.background = bg;
   }
 
   function setTheme(t) {
