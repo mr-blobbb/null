@@ -959,10 +959,15 @@ label.lbl {
 }
 
 /* ============================================================
-   glow border — thin rounded neon ring at the viewport edge.
-   Three layers (crisp core, soft inner glow, wide halo) rotate at
-   different speeds for a liquid feel; comet mode adds a traveling
-   streak; --ng-prox (set by theme.js) flares the ring near the cursor.
+   glow border — slim neon ring at the viewport edge: a 5px border
+   with a soft 5px glow hugging it. No blur filters: the glow is two
+   stepped bands, so corners stay complete and it stays GPU-cheap.
+   Corner radii are matched per layer (inner arc is always the same
+   radius) so the glow follows the ring perfectly around corners.
+   The gradient rotates in a loop (--nga); comet mode adds a bright
+   streak; .ng-near + --ng-prox/--ng-cur (set by theme.js) light up
+   only the border piece near the cursor plus a soft pool of glow
+   around the cursor itself.
    ============================================================ */
 @property --nga {
   syntax: "<angle>";
@@ -975,40 +980,81 @@ label.lbl {
   z-index: 9997;
   pointer-events: none;
   transition: opacity 0.6s ease;
-  filter: brightness(calc(1 + var(--ng-prox, 0) * 0.5));
 }
 #null-glow-el i {
   position: absolute;
   inset: 0;
-  border-radius: 18px;
+  transition: opacity 0.75s ease;
+}
+/* ring band shape shared by every border layer (padding = thickness) */
+#null-glow-el .ng-ring,
+#null-glow-el .ng-glow,
+#null-glow-el .ng-glow2,
+#null-glow-el .ng-comet,
+#null-glow-el .ng-flare-band {
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   mask-composite: exclude;
-  transition: opacity 0.75s ease;
 }
+/* crisp 5px border */
 #null-glow-el .ng-ring {
-  padding: 2px;
+  padding: 5px;
+  border-radius: 12px;
   opacity: 0.95;
-  animation: nga 9s linear infinite, ngrad 11s ease-in-out infinite alternate;
+  animation: nga 8s linear infinite;
 }
-#null-glow-el .ng-core {
+/* soft glow — inner step (7px) and outer step (10px) fall off like a blur */
+#null-glow-el .ng-glow2 {
+  padding: 7px;
+  border-radius: 14px;
+  opacity: 0.45;
+  animation: nga-rev 13s linear infinite;
+}
+#null-glow-el .ng-glow {
   padding: 10px;
-  opacity: 0.5;
-  filter: blur(3.5px);
-  animation: nga-rev 14s linear infinite, ngrad 13s ease-in-out infinite alternate-reverse;
+  border-radius: 17px;
+  opacity: 0.22;
+  animation: nga 17s linear infinite reverse;
 }
-#null-glow-el .ng-halo {
-  padding: 28px;
-  opacity: 0.4;
-  filter: blur(16px);
-  animation: nga 18s linear infinite reverse;
-}
+/* comet streak — same geometry as the ring so it hugs the border */
 #null-glow-el .ng-comet {
-  padding: 12px;
-  opacity: 0.9;
-  filter: blur(6px) brightness(1.25);
+  padding: 6px;
+  border-radius: 13px;
+  opacity: 0.95;
   animation: nga 5s linear infinite;
+}
+/* proximity flare: a bright wedge of ring that follows the cursor.
+   theme.js sets --ng-cur to the cursor's angle; the wedge mask keeps
+   the reaction on just that piece of border, and the band inside keeps
+   its own geometry so it stays perfectly aligned with the viewport. */
+#null-glow-el .ng-flare {
+  opacity: 0;
+  transition: opacity 0.16s ease;
+  -webkit-mask: conic-gradient(from calc(var(--ng-cur, 0deg) - 30deg), #000 0 60deg, transparent 60deg 360deg);
+  mask: conic-gradient(from calc(var(--ng-cur, 0deg) - 30deg), #000 0 60deg, transparent 60deg 360deg);
+}
+#null-glow-el .ng-flare-band {
+  padding: 5px;
+  border-radius: 12px;
+  filter: brightness(1.45);
+  animation: nga 8s linear infinite;
+}
+#null-glow-el.ng-near .ng-flare {
+  opacity: calc(0.45 + var(--ng-prox, 0) * 0.55);
+}
+/* soft pool of glow under the cursor, only while it hugs an edge */
+#null-glow-el .ng-cursor {
+  width: 110px;
+  height: 110px;
+  margin: -55px 0 0 -55px;
+  border-radius: 50%;
+  opacity: 0;
+  transform: translate3d(var(--ng-cx, 0px), var(--ng-cy, 0px), 0);
+  transition: opacity 0.16s ease;
+}
+#null-glow-el.ng-near .ng-cursor {
+  opacity: calc(var(--ng-prox, 0) * var(--ng-prox, 0));
 }
 /* crossfade helpers — theme.js toggles these when a preset changes */
 #null-glow-el .ng-in {
@@ -1031,14 +1077,6 @@ label.lbl {
   }
   to {
     --nga: 0deg;
-  }
-}
-@keyframes ngrad {
-  from {
-    border-radius: 15px;
-  }
-  to {
-    border-radius: 25px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -1905,9 +1943,12 @@ body.lb .site-foot {
    ============================================================ */
 .set-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
   align-items: start;
+}
+.set-card--wide {
+  grid-column: 1 / -1;
 }
 .set-card {
   border-radius: var(--r-lg);
@@ -1915,6 +1956,17 @@ body.lb .site-foot {
   display: flex;
   flex-direction: column;
   gap: 18px;
+}
+.cloak-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  flex: none;
+}
+@media (max-width: 760px) {
+  .set-grid {
+    grid-template-columns: 1fr;
+  }
 }
 .set-card .set-title {
   display: flex;

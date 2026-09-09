@@ -84,6 +84,7 @@
     scale: "balance",
     cookie: "cookie",
     zap: "bolt",
+    lock: "lock",
     shuffle: "shuffle",
     list: "list",
     heart: "favorite",

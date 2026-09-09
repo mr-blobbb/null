@@ -265,31 +265,49 @@ return foot;
     );
   }
 
+  /* Popup blockers can refuse the open but still hand back a WindowProxy
+     (or kill the tab a moment later). In every failure case we make sure
+     nothing is left open — close the window, show the warning only. */
+  function cloakOpen(url, mode, shell) {
+    var w = null;
+    try {
+      w = window.open(url, "_blank");
+    } catch (err) {
+      w = null;
+    }
+    if (!w) {
+      cloakBlocked();
+      return;
+    }
+    if (mode === "blank") {
+      /* about:blank windows share the opener's origin — write the shell in */
+      try {
+        w.document.open();
+        w.document.write(shell);
+        w.document.close();
+      } catch (err) {
+        try {
+          w.close();
+        } catch (e2) {}
+        cloakBlocked();
+        return;
+      }
+    }
+    /* some blockers cancel the tab right after it opens — if the browser
+       closed it, don't leave a stray tab and don't pretend it worked */
+    setTimeout(function () {
+      if (w.closed) cloakBlocked();
+    }, 800);
+    d.toast(mode === "blank" ? "Opened NULL in about:blank" : "Opened NULL in blob:", {
+      icon: "ban",
+    });
+  }
+
   N.cloak = {
     site: function (mode) {
       var shell = cloakShell();
       var url = mode === "blob" ? URL.createObjectURL(new Blob([shell], { type: "text/html" })) : "about:blank";
-      var w = null;
-      try {
-        w = window.open(url, "_blank");
-      } catch (err) {}
-      if (!w) {
-        cloakBlocked();
-        return;
-      }
-      if (mode === "blank") {
-        /* about:blank windows share the opener's origin — write the shell in */
-        try {
-          w.document.open();
-          w.document.write(shell);
-          w.document.close();
-        } catch (err) {
-          cloakBlocked();
-        }
-      }
-      d.toast(mode === "blank" ? "Opened NULL in about:blank" : "Opened NULL in blob:", {
-        icon: "ban",
-      });
+      cloakOpen(url, mode, shell);
     },
   };
 

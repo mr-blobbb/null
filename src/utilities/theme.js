@@ -2,12 +2,12 @@
    Applies theme / accent / glow / performance prefs to <html>.
    Accent palettes are mid-tone so they read on both dark and light surfaces.
 
-   Glow is a full-screen neon border — a thin, rounded ring pinned to the
-   viewport edge. It has three neon layers (crisp core line, soft inner
-   glow, wide halo) that rotate at different speeds for a liquid feel.
-   Optional comet mode adds a bright streak that travels the border, and
-   moving the cursor close to an edge makes the glow flare slightly.
-   Presets crossfade into each other instead of switching abruptly. */
+   Glow is a slim full-screen neon border: a 5px ring pinned to the
+   viewport edge with a soft 5px glow hugging it. The gradient rotates in
+   a continuous loop; optional comet mode adds a bright streak that
+   travels the border. Moving the cursor close to an edge lights up only
+   the piece of border near the cursor and pools a soft glow around the
+   cursor itself. Presets crossfade into each other instead of snapping. */
 (function () {
   var N = (window.N = window.N || {});
   var root = document.documentElement;
@@ -77,8 +77,15 @@
     );
   }
 
+  /* soft cursor glow — blends both preset colors outward */
+  function cursorBg(colors) {
+    var c1 = colors[0] || "#3d8bff";
+    var c2 = colors[1] || colors[0] || "#7d6bff";
+    return "radial-gradient(circle, " + c1 + " 0%, " + c2 + " 45%, transparent 70%)";
+  }
+
   /* ---------- glow element ---------- */
-  var elState = null; // { el, ring, core, halo, comet }
+  var elState = null; // { el, ring, glow, glow2, comet, flareBand, cursor }
   var curId = "off";
   var cometOn = false;
 
@@ -94,22 +101,32 @@
     el.id = "null-glow-el";
     el.setAttribute("aria-hidden", "true");
     var ring = layerEl("ring");
-    var core = layerEl("core");
-    var halo = layerEl("halo");
-    [ring, core, halo].forEach(function (l) {
+    var glow2 = layerEl("glow2");
+    var glow = layerEl("glow");
+    [ring, glow2, glow].forEach(function (l) {
       if (bg) l.style.background = bg;
     });
     el.appendChild(ring);
-    el.appendChild(core);
-    el.appendChild(halo);
+    el.appendChild(glow2);
+    el.appendChild(glow);
     var comet = null;
     if (cometOn) {
       comet = layerEl("comet");
       if (bg) comet.style.background = cometBg(colorsFor(curId));
       el.appendChild(comet);
     }
+    /* proximity flare: bright wedge of ring that follows the cursor */
+    var flare = layerEl("flare");
+    var flareBand = layerEl("flare-band");
+    if (bg) flareBand.style.background = bg;
+    flare.appendChild(flareBand);
+    el.appendChild(flare);
+    /* soft pool of glow under the cursor when it hugs an edge */
+    var cursor = layerEl("cursor");
+    cursor.style.background = cursorBg(colorsFor(curId));
+    el.appendChild(cursor);
     document.body.appendChild(el);
-    elState = { el: el, ring: ring, core: core, halo: halo, comet: comet };
+    elState = { el: el, ring: ring, glow: glow, glow2: glow2, comet: comet, flareBand: flareBand, cursor: cursor };
     return elState;
   }
 
@@ -123,7 +140,8 @@
     var n = layerEl(kind);
     n.style.background = bg;
     n.classList.add("ng-in");
-    old.parentNode.insertBefore(n, old);
+    var host = kind === "flareBand" ? st.flare : old.parentNode;
+    host.insertBefore(n, old);
     old.classList.add("ng-xf");
     void n.offsetWidth;
     n.classList.remove("ng-in");
@@ -156,26 +174,33 @@
     }
   }
 
-  /* cursor-proximity flare: how close is the pointer to the nearest edge?
-     0 = far (no flare), 1 = right next to the border. Applied as a soft
-     brightness lift on the whole ring — movement keeps running underneath. */
+  /* cursor proximity: only the piece of border near the pointer reacts.
+     We track the distance to the nearest edge (0..1 flare strength) and
+     the cursor's angle around the viewport center, which aims the flare
+     wedge at the right segment. A soft glow also pools under the cursor,
+     but only while it's actually close to an edge. */
   var proxOn = false;
-  var proxVal = 0;
   var proxRaf = null;
+  var proxX = -999;
+  var proxY = -999;
   function proxMove(e) {
-    var d = Math.min(
-      e.clientX,
-      window.innerWidth - e.clientX,
-      e.clientY,
-      window.innerHeight - e.clientY,
-    );
-    proxVal = N.dom.clamp(1 - d / 90, 0, 1);
+    proxX = e.clientX;
+    proxY = e.clientY;
     if (proxRaf) return;
     proxRaf = requestAnimationFrame(function () {
       proxRaf = null;
-      if (elState && elState.el.isConnected) {
-        elState.el.style.setProperty("--ng-prox", proxVal);
-      }
+      var st = elState;
+      if (!st || !st.el.isConnected) return;
+      var w = window.innerWidth;
+      var h = window.innerHeight;
+      var d = Math.min(proxX, w - proxX, proxY, h - proxY);
+      var v = N.dom.clamp(1 - d / 80, 0, 1);
+      var deg = (Math.atan2(proxX - w / 2, -(proxY - h / 2)) * 180) / Math.PI;
+      st.el.style.setProperty("--ng-prox", v);
+      st.el.style.setProperty("--ng-cur", (deg + 360) % 360 + "deg");
+      st.el.style.setProperty("--ng-cx", proxX + "px");
+      st.el.style.setProperty("--ng-cy", proxY + "px");
+      st.el.classList.toggle("ng-near", v > 0.02);
     });
   }
   function wireProx() {
@@ -210,9 +235,11 @@
     var bg = conic(colors);
     var st = ensureEl(bg);
     setLayerBg("ring", bg);
-    setLayerBg("core", bg);
-    setLayerBg("halo", bg);
+    setLayerBg("glow", bg);
+    setLayerBg("glow2", bg);
+    setLayerBg("flareBand", bg);
     if (cometOn) setLayerBg("comet", cometBg(colors));
+    setLayerBg("cursor", cursorBg(colors));
     wireProx();
   }
 

@@ -74,9 +74,9 @@
       <section class="set-card glass" aria-label="Glow border">
         <h2 class="set-title"><span data-icon="zap"></span>Glow border</h2>
         <p class="set-sub">
-          A thin, rounded neon ring around the whole screen edge. Soft moving
-          gradients, three glow layers, and an optional comet streak. Off by
-          default.
+          A slim 5px neon border around the whole screen edge with a soft
+          glow hugging it. The colors drift in a continuous loop, and moving
+          the cursor to an edge lights up just that spot. Off by default.
         </p>
         <div class="set-row" style="display:block">
           <label class="lbl" for="glowSelect">Preset</label>
@@ -152,10 +152,9 @@
         </div>
       </section>
 
-      <!-- privacy / behavior -->
-      <section class="set-card glass" aria-label="Privacy">
-        <h2 class="set-title"><span data-icon="ban"></span>Privacy &amp; behavior</h2>
-        <p class="set-sub">NULL is static and local-first — no server ever sees your data.</p>
+      <!-- privacy / cloaking -->
+      <section class="set-card glass set-card--wide" aria-label="Privacy and cloaking">
+        <h2 class="set-title"><span data-icon="lock"></span>Privacy &amp; cloaking</h2>
         <div class="set-row">
           <div class="lbl-txt">
             <b>Local data</b>
@@ -163,20 +162,19 @@
           </div>
           <span class="chip ok"><span class="dot"></span>on-device</span>
         </div>
-      </section>
-
-      <!-- cloaking -->
-      <section class="set-card glass" aria-label="Cloaking">
-        <h2 class="set-title"><span data-icon="ban"></span>Cloaking</h2>
-        <p class="set-sub">
-          Open the whole of NULL in a blank-looking window. The address bar shows
-          <b>about:blank</b> or a <b>blob:</b> URL instead of the site, while
-          everything still runs normally inside. The browser controls its own
-          popup prompts.
-        </p>
-        <div class="toolbar" style="margin:0">
-          <button type="button" class="btn btn-outline" id="btnCloakBlank"><span data-icon="ban"></span>about:blank</button>
-          <button type="button" class="btn btn-outline" id="btnCloakBlob"><span data-icon="file"></span>blob:</button>
+        <div class="set-row">
+          <div class="lbl-txt">
+            <b>Cloak NULL</b>
+            <span>
+              Opens the whole site in a window whose address bar shows
+              <b>about:blank</b> or a <b>blob:</b> URL. If the browser blocks
+              the popup, nothing opens — NULL shows a warning instead.
+            </span>
+          </div>
+          <div class="cloak-actions">
+            <button type="button" class="btn btn-outline" id="btnCloakBlank"><span data-icon="ban"></span>about:blank</button>
+            <button type="button" class="btn btn-outline" id="btnCloakBlob"><span data-icon="file"></span>blob:</button>
+          </div>
         </div>
       </section>
 
@@ -217,7 +215,7 @@
       </section>
 
       <!-- danger zone -->
-      <section class="set-card glass danger-zone" aria-label="Danger zone">
+      <section class="set-card glass danger-zone set-card--wide" aria-label="Danger zone">
         <div class="dz-head"><span data-icon="warn"></span>Danger zone</div>
         <p class="set-sub">
           Whole-NULL resets. Recently played has its own clear button on the
