@@ -58,6 +58,91 @@
     });
   }
 
+  /* ---------- game of the day ----------
+     Deterministic pick from the date (same game all day, new one
+     tomorrow). The shuffle button overrides today's pick locally. */
+  var GOTD_KEY = "null:gotd";
+  function dayKey() {
+    var n = new Date();
+    var m = n.getMonth() + 1;
+    var d = n.getDate();
+    return n.getFullYear() + "-" + (m < 10 ? "0" : "") + m + "-" + (d < 10 ? "0" : "") + d;
+  }
+  function dayHash(s) {
+    var h = 0;
+    for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+    return h;
+  }
+  function pickGotd(reroll) {
+    var games = N.catalog.games();
+    if (!games.length) return null;
+    var key = dayKey();
+    var saved = N.store.read(GOTD_KEY, null);
+    var cur = saved && saved.d === key ? saved.id : null;
+    if (!reroll && cur) {
+      var e = N.catalog.find("game", cur);
+      if (e) return e;
+    }
+    if (reroll) {
+      var others = games.filter(function (g) {
+        return g.id !== cur;
+      });
+      var pick = others[Math.floor(Math.random() * others.length)] || games[0];
+      N.store.write(GOTD_KEY, { d: key, id: pick.id });
+      return pick;
+    }
+    var def = games[dayHash(key) % games.length];
+    N.store.write(GOTD_KEY, { d: key, id: def.id });
+    return def;
+  }
+  function renderGotd(reroll) {
+    var host = d.qs("#gotd");
+    if (!host) return;
+    var g = pickGotd(!!reroll);
+    if (!g) {
+      host.hidden = true;
+      return;
+    }
+    host.hidden = false;
+    host.textContent = "";
+
+    var thumb = d.h("div", { class: "gotd-media" });
+    if (g.thumb) {
+      var img = d.h("img", { src: g.thumb, alt: "", loading: "lazy", decoding: "async" });
+      d.bindImgFallback(img, "game");
+      thumb.appendChild(img);
+    } else {
+      thumb.appendChild(d.icon("game"));
+    }
+
+    var info = d.h("div", { class: "gotd-info" }, [
+      d.h("div", { class: "gotd-head" }, [
+        d.h("h2", null, [d.icon("calendar"), "Game of the day"]),
+        d.h("span", { class: "hint" },
+          new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })),
+      ]),
+      d.h("h3", { class: "gotd-name", title: g.name }, g.name),
+      d.h("div", { class: "chips-row" }, N.cards.chipsFor(g)),
+      d.h("p", { class: "gotd-desc" }, g.desc || "A game in the NULL library \u2014 fresh pick every day."),
+      d.h("div", { class: "gotd-actions" }, [
+        d.h("button", { type: "button", class: "btn btn-primary", onclick: function () {
+            N.launch.game(g);
+          } }, [d.icon("play"), "Play"]),
+        d.h("button", {
+          type: "button",
+          class: "btn btn-outline btn-icon",
+          title: "Pick another one for today",
+          "aria-label": "Reroll game of the day",
+          onclick: function () {
+            renderGotd(true);
+          },
+        }, [d.icon("shuffle")]),
+      ]),
+    ]);
+    host.appendChild(thumb);
+    host.appendChild(info);
+  }
+
   /* ---------- recently played ---------- */
   function renderRecents() {
     var box = d.qs("#recList");
@@ -268,6 +353,7 @@
     inited = true;
     bindSearch();
     renderFeatured();
+    renderGotd();
     renderRecents();
     renderAnn();
     renderSchedHome();

@@ -6,8 +6,8 @@
    viewport edge with a soft 5px glow hugging it. The gradient rotates in
    a continuous loop; optional comet mode adds a bright streak that
    travels the border. Moving the cursor close to an edge lights up only
-   the piece of border near the cursor and pools a soft glow around the
-   cursor itself. Presets crossfade into each other instead of snapping. */
+   the piece of border near the cursor. Presets crossfade into each
+   other instead of snapping. */
 (function () {
   var N = (window.N = window.N || {});
   var root = document.documentElement;
@@ -77,15 +77,8 @@
     );
   }
 
-  /* soft cursor glow — blends both preset colors outward */
-  function cursorBg(colors) {
-    var c1 = colors[0] || "#3d8bff";
-    var c2 = colors[1] || colors[0] || "#7d6bff";
-    return "radial-gradient(circle, " + c1 + " 0%, " + c2 + " 45%, transparent 70%)";
-  }
-
   /* ---------- glow element ---------- */
-  var elState = null; // { el, ring, glow, glow2, comet, flareBand, cursor }
+  var elState = null; // { el, ring, glow, glow2, comet, flareBand }
   var curId = "off";
   var cometOn = false;
 
@@ -121,12 +114,8 @@
     if (bg) flareBand.style.background = bg;
     flare.appendChild(flareBand);
     el.appendChild(flare);
-    /* soft pool of glow under the cursor when it hugs an edge */
-    var cursor = layerEl("cursor");
-    cursor.style.background = cursorBg(colorsFor(curId));
-    el.appendChild(cursor);
     document.body.appendChild(el);
-    elState = { el: el, ring: ring, glow: glow, glow2: glow2, comet: comet, flareBand: flareBand, cursor: cursor };
+    elState = { el: el, ring: ring, glow: glow, glow2: glow2, comet: comet, flareBand: flareBand };
     return elState;
   }
 
@@ -177,8 +166,7 @@
   /* cursor proximity: only the piece of border near the pointer reacts.
      We track the distance to the nearest edge (0..1 flare strength) and
      the cursor's angle around the viewport center, which aims the flare
-     wedge at the right segment. A soft glow also pools under the cursor,
-     but only while it's actually close to an edge. */
+     wedge at the right segment. */
   var proxOn = false;
   var proxRaf = null;
   var proxX = -999;
@@ -198,8 +186,6 @@
       var deg = (Math.atan2(proxX - w / 2, -(proxY - h / 2)) * 180) / Math.PI;
       st.el.style.setProperty("--ng-prox", v);
       st.el.style.setProperty("--ng-cur", (deg + 360) % 360 + "deg");
-      st.el.style.setProperty("--ng-cx", proxX + "px");
-      st.el.style.setProperty("--ng-cy", proxY + "px");
       st.el.classList.toggle("ng-near", v > 0.02);
     });
   }
@@ -239,7 +225,6 @@
     setLayerBg("glow2", bg);
     setLayerBg("flareBand", bg);
     if (cometOn) setLayerBg("comet", cometBg(colors));
-    setLayerBg("cursor", cursorBg(colors));
     wireProx();
   }
 

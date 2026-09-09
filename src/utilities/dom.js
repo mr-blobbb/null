@@ -93,6 +93,7 @@
     check: "check",
     calendar: "event",
     copy: "content_copy",
+    upload: "upload",
   };
 
   function icon(name, cls) {

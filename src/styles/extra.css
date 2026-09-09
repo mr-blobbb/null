@@ -99,3 +99,106 @@ body.player-page.fs .player-note {
   flex-wrap: wrap;
   margin-top: 10px;
 }
+
+/* 404 — drip particles removed; hero-style search sizing */
+.not-found .leak {
+  display: none;
+}
+.not-found .hero-search {
+  height: 50px;
+}
+.not-found .hero-search .btn {
+  height: 36px;
+}
+
+/* ============================================================
+   game of the day (home page)
+   ============================================================ */
+.gotd {
+  display: flex;
+  gap: 20px;
+  align-items: stretch;
+}
+.gotd-media {
+  flex: none;
+  width: 190px;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  display: grid;
+  place-items: center;
+  color: var(--text-2);
+}
+.gotd-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.gotd-media .msr {
+  font-size: 40px;
+  opacity: 0.7;
+}
+.gotd-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+.gotd-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 2px;
+}
+.gotd-head h2 {
+  font-size: 17px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.gotd-head h2 .msr {
+  font-size: 17px;
+  color: var(--ac-1);
+}
+.gotd-head .hint {
+  font-size: 12.5px;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+.gotd-name {
+  font-size: 21px;
+  letter-spacing: -0.02em;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gotd-desc {
+  font-size: 13.5px;
+  color: var(--text-2);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.gotd-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 10px;
+}
+@media (max-width: 640px) {
+  .gotd {
+    flex-direction: column;
+  }
+  .gotd-media {
+    width: 100%;
+    height: 180px;
+  }
+}

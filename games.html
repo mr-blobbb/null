@@ -45,9 +45,27 @@
           <option value="id">Label</option>
         </select>
       </span>
+      <span class="select-field sel-wrap" style="width:min(190px,100%)">
+        <select id="marathonSel" aria-label="Marathon mode">
+          <option value="0">Marathon: off</option>
+          <option value="2">Every 2 minutes</option>
+          <option value="3">Every 3 minutes</option>
+          <option value="4">Every 4 minutes</option>
+          <option value="5">Every 5 minutes</option>
+          <option value="custom">Custom minutes&hellip;</option>
+        </select>
+      </span>
+      <span id="marathonWrap" class="m-wrap" hidden>
+        <span class="field" style="width:96px">
+          <input id="marathonCustom" type="number" min="1" max="120" placeholder="mins" aria-label="Custom marathon minutes">
+        </span>
+        <span class="chip mar-live"><span class="dot"></span><span id="marathonCount">&mdash;</span></span>
+        <button type="button" class="btn btn-outline btn-sm" id="btnMarathonStop">Stop</button>
+      </span>
       <span id="count" class="count"></span>
     </div>
     <div id="labelRow" class="filter-row" role="group" aria-label="Filter by label"></div>
+    <div id="recSec" class="panel glass rec-sec" hidden></div>
     <div id="favSec" class="fav-sec" hidden></div>
     <div id="grid" class="lib-grid"></div>
     <div id="empty"></div>

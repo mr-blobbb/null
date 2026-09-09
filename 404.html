@@ -29,15 +29,15 @@
   <main id="main" class="not-found">
     <div class="numb">Error 404</div>
     <span class="art msr" aria-hidden="true">block</span>
-    <div style="display:flex;gap:4px">
-      <span class="leak"></span>
-      <span class="leak" style="animation-delay:.8s"></span>
-      <span class="leak" style="animation-delay:0.5s"></span>
-    </div>
     <h1>404 Error</h1>
     <p class="sub">
       Our servers looked everywhere. Even under the digital rug. They found some lint, an old taco emoji, and a lot of dust—but not the page you wanted 🌮.
     </p>
+    <form class="hero-search field" id="nfSearch" role="search" aria-label="Search NULL">
+      <span data-icon="search"></span>
+      <input id="nfSearchInput" type="text" placeholder="Search games, apps, proxies…" autocomplete="off" aria-label="Search NULL">
+      <button type="submit" class="btn btn-primary btn-sm">Search</button>
+    </form>
     <div class="actions">
       <a class="btn btn-primary" href="/">Take me home</a>
       <a class="btn btn-outline" href="/games.html">Browse games</a>
@@ -66,5 +66,20 @@
   <script src="/src/components/cards.js"></script>
   <script src="/src/components/search.js"></script>
   <script src="/src/components/shell.js"></script>
+  <script>
+    /* the 404 search bar — same behavior as the home hero field */
+    (function () {
+      var form = document.getElementById("nfSearch");
+      var input = document.getElementById("nfSearchInput");
+      if (!form || !window.N || !N.search) return;
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        N.search.open(input.value.trim());
+      });
+      form.addEventListener("click", function (e) {
+        if (e.target.tagName !== "INPUT" && e.target.tagName !== "BUTTON") input.focus();
+      });
+    })();
+  </script>
 </body>
 </html>

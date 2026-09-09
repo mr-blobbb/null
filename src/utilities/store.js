@@ -55,6 +55,9 @@
     glowColor2: "#a86bff", // custom glow color 2
     glowComet: false, // comet streak traveling around the glow border
     tab: "slides", // tab preset id from tabpresets.js (default: Google Slides)
+    tabCustom: {}, // custom tab preset: { title, icon }
+    marathonMin: 0, // marathon mode: 0 = off, else minutes between switches
+    marathonAt: 0, // timestamp of the next auto-switch (ms)
     perf: false, // performance mode
     gmailAddr: "you@gmail.com",
     gmailUnread: 0,

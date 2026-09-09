@@ -45,12 +45,20 @@
     { id: "gclass", name: "Google Classroom", title: "Home", icon: G.classroom },
     { id: "gcal", name: "Google Calendar", title: "Google Calendar", icon: G.calendar },
     { id: "gmail", name: "Gmail", title: null, icon: G.gmail },
+    /* custom preset — title/favicon come from prefs.tabCustom, edited in settings */
+    { id: "custom", name: "Custom tab", title: null, icon: null },
   ];
 
   function get(id) {
-    return PRESETS.find(function (p) {
+    var p = PRESETS.find(function (p) {
       return p.id === id;
     });
+    if (!p) return null;
+    if (p.id === "custom") {
+      var c = N.prefs.get("tabCustom") || {};
+      return { id: "custom", name: "Custom tab", title: c.title || null, icon: c.icon || null };
+    }
+    return p;
   }
 
   function titleFor(p) {
@@ -60,6 +68,7 @@
       var unread = parseInt(N.prefs.get("gmailUnread"), 10) || 0;
       return "Inbox" + (unread > 0 ? " (" + unread + ")" : "") + " - " + addr;
     }
+    if (p.id === "custom") return p.title || "NULL";
     return p.title || p.name || "NULL";
   }
 
@@ -70,6 +79,7 @@
   function apply() {
     var p = current();
     var fav = document.getElementById("favicon");
+    /* custom presets without an icon keep the existing favicon */
     if (fav && p && p.icon) fav.setAttribute("href", p.icon);
     document.title = titleFor(p);
     N.tab.applied = p;

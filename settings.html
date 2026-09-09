@@ -140,6 +140,25 @@
           </div>
         </div>
 
+        <div id="tabCustomWrap" style="display:none;margin-top:14px">
+          <div class="lbl-txt" style="margin-bottom:10px">
+            <b>Custom tab</b>
+            <span>Your own title and favicon &mdash; applied everywhere like any other preset.</span>
+          </div>
+          <label class="lbl" for="tabCustomTitle">Tab title</label>
+          <span class="field">
+            <input id="tabCustomTitle" type="text" maxlength="80" placeholder="Untitled document" autocomplete="off">
+          </span>
+          <label class="lbl" for="tabCustomIcon" style="margin-top:12px">Favicon URL</label>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <span class="field" style="flex:1;min-width:200px">
+              <input id="tabCustomIcon" type="text" placeholder="https://example.com/icon.png" autocomplete="off">
+            </span>
+            <button type="button" class="btn btn-outline" id="btnCustomIconUpload"><span data-icon="upload"></span>Upload</button>
+            <input type="file" id="tabCustomFile" accept="image/*" hidden>
+          </div>
+        </div>
+
         <div id="gmailWrap" style="display:none">
           <label class="lbl" for="gmailAddr">Gmail address shown in the tab</label>
           <span class="field">

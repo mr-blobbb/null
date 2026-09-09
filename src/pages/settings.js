@@ -50,6 +50,7 @@
     }
     paintTabPreview();
     paintGmail();
+    paintCustomTab();
 
     /* panic key */
     paintPanic();
@@ -80,11 +81,33 @@
     var b = d.qs("#tabPrev .tp-name");
     var s = d.qs("#tabPrev .tp-sub");
     if (p) {
-      img.src = p.icon;
-      img.style.display = "";
+      if (p.icon) {
+        img.src = p.icon;
+        img.style.display = "";
+      } else {
+        img.style.display = "none";
+      }
       b.textContent = N.tab.titleFor(p);
       s.textContent = p.name;
     }
+  }
+
+  function paintCustomTab() {
+    var p = N.prefs.data;
+    var wrap = d.qs("#tabCustomWrap");
+    if (wrap) wrap.style.display = p.tab === "custom" ? "" : "none";
+    var ti = d.qs("#tabCustomTitle");
+    if (ti && document.activeElement !== ti) ti.value = (p.tabCustom && p.tabCustom.title) || "";
+    var ii = d.qs("#tabCustomIcon");
+    if (ii && document.activeElement !== ii) ii.value = (p.tabCustom && p.tabCustom.icon) || "";
+  }
+
+  /* save a piece of the custom tab preset and re-apply it live */
+  function saveTabCustom(patch) {
+    var cur = N.prefs.get("tabCustom") || {};
+    N.prefs.set("tabCustom", Object.assign({}, cur, patch));
+    N.tab.apply();
+    paintTabPreview();
   }
 
   function paintGmail() {
@@ -186,6 +209,39 @@
         d.toast("Tab preset: " + (N.tab.current() || {}).name);
       });
     }
+    /* custom tab preset builder */
+    var tcTitle = d.qs("#tabCustomTitle");
+    if (tcTitle) {
+      tcTitle.addEventListener("input", function () {
+        saveTabCustom({ title: tcTitle.value });
+      });
+    }
+    var tcIcon = d.qs("#tabCustomIcon");
+    if (tcIcon) {
+      tcIcon.addEventListener("input", function () {
+        saveTabCustom({ icon: tcIcon.value });
+      });
+    }
+    var tcUpload = d.qs("#btnCustomIconUpload");
+    var tcFile = d.qs("#tabCustomFile");
+    if (tcUpload && tcFile) {
+      tcUpload.addEventListener("click", function () {
+        tcFile.click();
+      });
+      tcFile.addEventListener("change", function () {
+        var f = tcFile.files && tcFile.files[0];
+        if (!f) return;
+        var reader = new FileReader();
+        reader.onload = function () {
+          saveTabCustom({ icon: reader.result });
+          if (tcIcon) tcIcon.value = reader.result;
+          d.toast("Favicon uploaded", { icon: "check" });
+        };
+        reader.readAsDataURL(f);
+        tcFile.value = "";
+      });
+    }
+
     var addr = d.qs("#gmailAddr");
     if (addr) {
       addr.addEventListener("input", function () {

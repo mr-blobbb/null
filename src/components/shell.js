@@ -257,7 +257,7 @@ return foot;
       "<!doctype html><html><head><meta charset='utf-8'><title>" +
       N.tab.titleFor(p) +
       "</title><link rel='icon' href='" +
-      p.icon +
+      (p.icon || "/public/favicon.svg") +
       "'></head>" +
       "<body style='margin:0'><iframe src='" +
       location.origin +
@@ -311,6 +311,37 @@ return foot;
     },
   };
 
+  /* ---------- marathon mode: auto-switch games on a timer ----------
+     The ticker lives here so it keeps running on any NULL page. The games
+     page owns the controls; prefs hold the interval (marathonMin) and the
+     next-fire time (marathonAt). */
+  var marathonTimer = null;
+  function marathonTick() {
+    if (document.hidden) return;
+    var min = parseInt(N.prefs.get("marathonMin"), 10) || 0;
+    if (!min) {
+      if (marathonTimer) {
+        clearInterval(marathonTimer);
+        marathonTimer = null;
+      }
+      return;
+    }
+    var at = parseInt(N.prefs.get("marathonAt"), 10) || 0;
+    if (!at || Date.now() < at) return;
+    /* due — launch a random game directly, no warning modal mid-marathon */
+    N.prefs.set("marathonAt", Date.now() + min * 60000);
+    var g = N.catalog.games();
+    if (!g.length) return;
+    var pick = g[Math.floor(Math.random() * g.length)];
+    N.recent.add("game", pick.id);
+    location.href = N.launch.playerUrl("game", pick.id);
+  }
+  function initMarathon() {
+    if (marathonTimer) return;
+    if (parseInt(N.prefs.get("marathonMin"), 10) > 0) marathonTick();
+    marathonTimer = setInterval(marathonTick, 1000);
+  }
+
   function init() {
     /* resolve [data-icon] placeholders left in static HTML */
     d.qsa("[data-icon]").forEach(function (el) {
@@ -334,6 +365,7 @@ return foot;
     N.modal.armSgGames();
     shortcuts();
     N.tab.apply();
+    initMarathon();
 
     /* custom scrollbar on library pages */
     if (document.body.classList.contains("lb")) {

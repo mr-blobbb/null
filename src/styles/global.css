@@ -549,7 +549,7 @@ label.lbl {
   gap: 14px;
   padding: 0 max(18px, calc((100vw - var(--maxw)) / 2));
   background: var(--bg);
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid color-mix(in srgb, var(--ac-1) 12%, var(--line));
 }
 
 .brand {
@@ -601,6 +601,9 @@ label.lbl {
   color: var(--text);
   background: transparent;
   box-shadow: inset 0 -2px 0 var(--ac-1);
+}
+.nav-link.on .msr {
+  color: var(--ac-1);
 }
 .nav-link svg {
   width: 16px;
@@ -952,10 +955,55 @@ label.lbl {
 }
 
 /* ============================================================
-   library favorites box (games/apps pages)
+   library extras (games page) — "because you played", favorites,
+   marathon status, and the plain list view for proxies
    ============================================================ */
 .fav-sec {
   margin: 0 0 14px;
+}
+.rec-sec {
+  margin: 0 0 18px;
+}
+.rec-sec .panel-head {
+  margin-bottom: 14px;
+}
+.lib-sugs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: 14px;
+}
+.lib-sugs > .tcard {
+  height: 100%;
+}
+.lib-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.m-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.chip.mar-live {
+  color: var(--ac-1);
+  border-color: color-mix(in srgb, var(--ac-1) 38%, transparent);
+  background: color-mix(in srgb, var(--ac-1) 10%, transparent);
+  font-variant-numeric: tabular-nums;
+}
+.chip.mar-live .dot {
+  background: currentColor;
+  animation: mar-dot 1.6s ease-in-out infinite;
+}
+@keyframes mar-dot {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 /* ============================================================
@@ -966,8 +1014,7 @@ label.lbl {
    radius) so the glow follows the ring perfectly around corners.
    The gradient rotates in a loop (--nga); comet mode adds a bright
    streak; .ng-near + --ng-prox/--ng-cur (set by theme.js) light up
-   only the border piece near the cursor plus a soft pool of glow
-   around the cursor itself.
+   only the border piece near the cursor.
    ============================================================ */
 @property --nga {
   syntax: "<angle>";
@@ -1042,19 +1089,6 @@ label.lbl {
 }
 #null-glow-el.ng-near .ng-flare {
   opacity: calc(0.45 + var(--ng-prox, 0) * 0.55);
-}
-/* soft pool of glow under the cursor, only while it hugs an edge */
-#null-glow-el .ng-cursor {
-  width: 110px;
-  height: 110px;
-  margin: -55px 0 0 -55px;
-  border-radius: 50%;
-  opacity: 0;
-  transform: translate3d(var(--ng-cx, 0px), var(--ng-cy, 0px), 0);
-  transition: opacity 0.16s ease;
-}
-#null-glow-el.ng-near .ng-cursor {
-  opacity: calc(var(--ng-prox, 0) * var(--ng-prox, 0));
 }
 /* crossfade helpers — theme.js toggles these when a preset changes */
 #null-glow-el .ng-in {
@@ -1166,7 +1200,7 @@ html[data-perf="1"] #null-glow-el {
 
 /* footer */
 .site-foot {
-  border-top: 1px solid var(--line);
+  border-top: 1px solid color-mix(in srgb, var(--ac-1) 10%, var(--line));
   background: var(--bg-2);
 }
 body.lb .site-foot {
@@ -1255,7 +1289,7 @@ body.lb .site-foot {
 }
 .tcard:hover {
   transform: translateY(-3px);
-  border-color: var(--line-2);
+  border-color: color-mix(in srgb, var(--ac-1) 26%, var(--line-2));
   box-shadow: var(--shadow-1);
   background: var(--glass-bg-2);
 }
