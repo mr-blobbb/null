@@ -74,8 +74,9 @@
       <section class="set-card glass" aria-label="Glow border">
         <h2 class="set-title"><span data-icon="zap"></span>Glow border</h2>
         <p class="set-sub">
-          A neon ring around the whole screen edge. Blue+purple, purple+green,
-          rainbow, or your own two colors. Off by default.
+          A thin, rounded neon ring around the whole screen edge. Soft moving
+          gradients, three glow layers, and an optional comet streak. Off by
+          default.
         </p>
         <div class="set-row" style="display:block">
           <label class="lbl" for="glowSelect">Preset</label>
@@ -88,6 +89,16 @@
               <option value="custom">Custom</option>
             </select>
           </span>
+        </div>
+        <div class="set-row">
+          <div class="lbl-txt">
+            <b>Comet mode</b>
+            <span>A bright streak travels around the border. Slightly heavier on the GPU.</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="cometSwitch" aria-label="Comet mode">
+            <span class="track"></span>
+          </label>
         </div>
         <div id="glowCustom" style="display:none;margin-top:14px">
           <div class="lbl-txt" style="margin-bottom:8px">
@@ -152,15 +163,20 @@
           </div>
           <span class="chip ok"><span class="dot"></span>on-device</span>
         </div>
-        <div class="set-row" style="display:block">
-          <div class="lbl-txt">
-            <b>Cloaking &amp; popups</b>
-          </div>
-          <p class="set-sub" style="margin-top:6px">
-            about:blank and blob: modes are available from the player toolbar.
-            They need a user gesture — the browser controls its own popup prompts.
-            Games stay inside NULL and never open arbitrary destinations.
-          </p>
+      </section>
+
+      <!-- cloaking -->
+      <section class="set-card glass" aria-label="Cloaking">
+        <h2 class="set-title"><span data-icon="ban"></span>Cloaking</h2>
+        <p class="set-sub">
+          Open the whole of NULL in a blank-looking window. The address bar shows
+          <b>about:blank</b> or a <b>blob:</b> URL instead of the site, while
+          everything still runs normally inside. The browser controls its own
+          popup prompts.
+        </p>
+        <div class="toolbar" style="margin:0">
+          <button type="button" class="btn btn-outline" id="btnCloakBlank"><span data-icon="ban"></span>about:blank</button>
+          <button type="button" class="btn btn-outline" id="btnCloakBlob"><span data-icon="file"></span>blob:</button>
         </div>
       </section>
 

@@ -53,6 +53,7 @@
     glow: "off", // glow preset id from theme.js
     glowColor1: "#35c3f2", // custom glow color 1
     glowColor2: "#a86bff", // custom glow color 2
+    glowComet: false, // comet streak traveling around the glow border
     tab: "slides", // tab preset id from tabpresets.js (default: Google Slides)
     perf: false, // performance mode
     gmailAddr: "you@gmail.com",

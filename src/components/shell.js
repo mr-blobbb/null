@@ -234,6 +234,65 @@ return foot;
     }
   }
 
+  /* ---------- cloaking: open the whole site in about:blank / blob: ---------- */
+  function cloakBlocked() {
+    N.modal.open({
+      title: "Popup blocked",
+      icon: "warn",
+      iconTone: "danger",
+      body:
+        "<p>The browser blocked the popup, so the cloaked window <b>won&rsquo;t open</b>.</p>" +
+        "<p>Allow popups for NULL (usually via the icon in the address bar) and try again.</p>",
+      actions: [{ label: "Okay", variant: "primary" }],
+    });
+  }
+
+  /* A tiny shell document that frames the real site in an iframe. Used for
+     both modes: about:blank gets this written into the blank window, blob:
+     gets it served from a blob: URL. The tab title/favicon come from the
+     active tab preset either way. */
+  function cloakShell() {
+    var p = N.tab.current();
+    return (
+      "<!doctype html><html><head><meta charset='utf-8'><title>" +
+      N.tab.titleFor(p) +
+      "</title><link rel='icon' href='" +
+      p.icon +
+      "'></head>" +
+      "<body style='margin:0'><iframe src='" +
+      location.origin +
+      "/' style='width:100vw;height:100vh;border:0'></iframe></body></html>"
+    );
+  }
+
+  N.cloak = {
+    site: function (mode) {
+      var shell = cloakShell();
+      var url = mode === "blob" ? URL.createObjectURL(new Blob([shell], { type: "text/html" })) : "about:blank";
+      var w = null;
+      try {
+        w = window.open(url, "_blank");
+      } catch (err) {}
+      if (!w) {
+        cloakBlocked();
+        return;
+      }
+      if (mode === "blank") {
+        /* about:blank windows share the opener's origin — write the shell in */
+        try {
+          w.document.open();
+          w.document.write(shell);
+          w.document.close();
+        } catch (err) {
+          cloakBlocked();
+        }
+      }
+      d.toast(mode === "blank" ? "Opened NULL in about:blank" : "Opened NULL in blob:", {
+        icon: "ban",
+      });
+    },
+  };
+
   function init() {
     /* resolve [data-icon] placeholders left in static HTML */
     d.qsa("[data-icon]").forEach(function (el) {

@@ -38,6 +38,10 @@
     var sw = d.qs("#perfSwitch");
     if (sw) sw.checked = !!p.perf;
 
+    /* glow comet switch */
+    var csw = d.qs("#cometSwitch");
+    if (csw) csw.checked = !!p.glowComet;
+
     /* tab preset */
     var sel = d.qs("#tabSelect");
     if (sel) {
@@ -145,6 +149,30 @@
         N.prefs.set("perf", sw.checked);
         N.theme.setPerf(sw.checked);
         d.toast(sw.checked ? "Performance mode on" : "Performance mode off");
+      });
+    }
+
+    /* glow comet */
+    var csw = d.qs("#cometSwitch");
+    if (csw) {
+      csw.addEventListener("change", function () {
+        N.prefs.set("glowComet", csw.checked);
+        N.theme.setComet(csw.checked);
+        d.toast(csw.checked ? "Comet mode on" : "Comet mode off");
+      });
+    }
+
+    /* cloak the whole site */
+    var cBlank = d.qs("#btnCloakBlank");
+    if (cBlank) {
+      cBlank.addEventListener("click", function () {
+        if (N.cloak) N.cloak.site("blank");
+      });
+    }
+    var cBlob = d.qs("#btnCloakBlob");
+    if (cBlob) {
+      cBlob.addEventListener("click", function () {
+        if (N.cloak) N.cloak.site("blob");
       });
     }
 
