@@ -258,7 +258,6 @@
       icon: "ban",
       dismissible: false,
       body:
-"<p style='font-size:24px; font-weight:800; margin-bottom:4px; text-transform:uppercase;'>Welcome to NULL</p>" +
 "<p style='font-size:15px; color:#a3a3a3; margin-top:0; margin-bottom:16px;'>The ultimate browser-based hub \u2014 unblocked, fast, and built for you.</p>" +
 "<p style='font-size:14px; margin-bottom:16px;'>Dive into over <b>2,300 games</b>, tons of premium apps, built-in proxies, and reliable backup links. NULL constantly updates in real-time to always stay ahead.</p>" +
 "<p style='font-size:13.5px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; color:#737373; margin-bottom:8px;'>Everything runs locally in your browser:</p>" +
