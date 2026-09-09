@@ -59,9 +59,8 @@
   }
 
   /* ---------- game of the day ----------
-     Deterministic pick from the date (same game all day, new one
-     tomorrow). The shuffle button overrides today's pick locally. */
-  var GOTD_KEY = "null:gotd";
+     Deterministic pick from the date: the same game all day, a fresh
+     one tomorrow, no storage needed. */
   function dayKey() {
     var n = new Date();
     var m = n.getMonth() + 1;
@@ -73,32 +72,15 @@
     for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
     return h;
   }
-  function pickGotd(reroll) {
+  function pickGotd() {
     var games = N.catalog.games();
     if (!games.length) return null;
-    var key = dayKey();
-    var saved = N.store.read(GOTD_KEY, null);
-    var cur = saved && saved.d === key ? saved.id : null;
-    if (!reroll && cur) {
-      var e = N.catalog.find("game", cur);
-      if (e) return e;
-    }
-    if (reroll) {
-      var others = games.filter(function (g) {
-        return g.id !== cur;
-      });
-      var pick = others[Math.floor(Math.random() * others.length)] || games[0];
-      N.store.write(GOTD_KEY, { d: key, id: pick.id });
-      return pick;
-    }
-    var def = games[dayHash(key) % games.length];
-    N.store.write(GOTD_KEY, { d: key, id: def.id });
-    return def;
+    return games[dayHash(dayKey()) % games.length];
   }
-  function renderGotd(reroll) {
+  function renderGotd() {
     var host = d.qs("#gotd");
     if (!host) return;
-    var g = pickGotd(!!reroll);
+    var g = pickGotd();
     if (!g) {
       host.hidden = true;
       return;
@@ -128,15 +110,6 @@
         d.h("button", { type: "button", class: "btn btn-primary", onclick: function () {
             N.launch.game(g);
           } }, [d.icon("play"), "Play"]),
-        d.h("button", {
-          type: "button",
-          class: "btn btn-outline btn-icon",
-          title: "Pick another one for today",
-          "aria-label": "Reroll game of the day",
-          onclick: function () {
-            renderGotd(true);
-          },
-        }, [d.icon("shuffle")]),
       ]),
     ]);
     host.appendChild(thumb);
@@ -285,11 +258,14 @@
       icon: "ban",
       dismissible: false,
       body:
-        "<p><b>NULL</b> is a plain black-and-white hub \u2014 games, apps, proxies and tools in one place.</p>" +
-        "<p>Everything here runs in your browser:</p>" +
-        "<p style='font-size:13.5px'>\u2022 Recently played is saved locally<br>" +
-        "\u2022 Themes, accents &amp; tab presets are yours to tune<br>" +
-        "\u2022 NULL never uploads anything \u2014 no servers, no accounts</p>",
+"<p style='font-size:24px; font-weight:800; margin-bottom:4px; text-transform:uppercase;'>Welcome to NULL</p>" +
+"<p style='font-size:15px; color:#a3a3a3; margin-top:0; margin-bottom:16px;'>The ultimate browser-based hub \u2014 unblocked, fast, and built for you.</p>" +
+"<p style='font-size:14px; margin-bottom:16px;'>Dive into over <b>2,300 games</b>, tons of premium apps, built-in proxies, and reliable backup links. NULL constantly updates in real-time to always stay ahead.</p>" +
+"<p style='font-size:13.5px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; color:#737373; margin-bottom:8px;'>Everything runs locally in your browser:</p>" +
+"<p style='font-size:13.5px; margin-top:0; line-height:1.5;'>\u2022 Recently played games and tools save automatically to your device<br>" +
+"\u2022 Open <b>Settings</b> to toggle instant tab cloaking, custom panic keys, themes, and deep visual customization<br>" +
+"\u2022 NULL never uploads anything \u2014 no external servers, no tracking, and zero accounts required</p>"
+,
       actions: [
         {
           label: "Continue",

@@ -38,6 +38,12 @@
     var sw = d.qs("#perfSwitch");
     if (sw) sw.checked = !!p.perf;
 
+    /* library extras toggles */
+    var rsw = d.qs("#recsSwitch");
+    if (rsw) rsw.checked = p.recs !== false;
+    var msw = d.qs("#marathonSwitch");
+    if (msw) msw.checked = p.marathon !== false;
+
     /* glow comet switch */
     var csw = d.qs("#cometSwitch");
     if (csw) csw.checked = !!p.glowComet;
@@ -172,6 +178,27 @@
         N.prefs.set("perf", sw.checked);
         N.theme.setPerf(sw.checked);
         d.toast(sw.checked ? "Performance mode on" : "Performance mode off");
+      });
+    }
+
+    /* library extras */
+    var rsw = d.qs("#recsSwitch");
+    if (rsw) {
+      rsw.addEventListener("change", function () {
+        N.prefs.set("recs", rsw.checked);
+        d.toast(rsw.checked ? "Because you played: on" : "Because you played: off");
+      });
+    }
+    var msw = d.qs("#marathonSwitch");
+    if (msw) {
+      msw.addEventListener("change", function () {
+        N.prefs.set("marathon", msw.checked);
+        if (!msw.checked) {
+          /* fully disarm — the games toolbar won't show any controls */
+          N.prefs.set("marathonMin", 0);
+          N.prefs.set("marathonAt", 0);
+        }
+        d.toast(msw.checked ? "Marathon mode: on" : "Marathon mode: off");
       });
     }
 

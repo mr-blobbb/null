@@ -77,6 +77,18 @@
     );
   }
 
+  /* The ring layers are drawn with mask-composite. Browsers without it
+     would paint the full-viewport gradient over the whole screen, so the
+     glow is disabled there instead of breaking the page. */
+  var masksOK = (function () {
+    if (typeof CSS === "undefined" || !CSS.supports) return true;
+    try {
+      return CSS.supports("mask-composite", "exclude") || CSS.supports("-webkit-mask-composite", "xor");
+    } catch (err) {
+      return true;
+    }
+  })();
+
   /* ---------- glow element ---------- */
   var elState = null; // { el, ring, glow, glow2, comet, flareBand }
   var curId = "off";
@@ -202,7 +214,7 @@
 
   function setGlow(raw) {
     var id = normalize(raw);
-    if (id === "off") {
+    if (id === "off" || !masksOK) {
       delete root.dataset.glow;
       if (elState && elState.el.isConnected) {
         var st = elState;

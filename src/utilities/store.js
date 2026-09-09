@@ -56,6 +56,8 @@
     glowComet: false, // comet streak traveling around the glow border
     tab: "slides", // tab preset id from tabpresets.js (default: Google Slides)
     tabCustom: {}, // custom tab preset: { title, icon }
+    recs: true, // "Because you played" suggestions on the games page
+    marathon: true, // marathon mode feature enabled (settings toggle)
     marathonMin: 0, // marathon mode: 0 = off, else minutes between switches
     marathonAt: 0, // timestamp of the next auto-switch (ms)
     perf: false, // performance mode

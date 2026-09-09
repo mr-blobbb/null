@@ -118,10 +118,14 @@
     }
 
     /* ---------- "because you played" — games page only ---------- */
-    var recSeed = 0;
     function renderRecs() {
       var sec = d.qs("#recSec");
       if (!sec || kind !== "games") return;
+      if (N.prefs.get("recs") === false) {
+        sec.hidden = true;
+        sec.textContent = "";
+        return;
+      }
       var recent = N.recent
         .list()
         .filter(function (r) {
@@ -136,7 +140,7 @@
         sec.textContent = "";
         return;
       }
-      var seed = recent[recSeed % recent.length];
+      var seed = recent[0];
       var games = N.catalog.games();
       function shared(g) {
         var n = 0;
@@ -164,16 +168,6 @@
       sec.appendChild(
         d.h("div", { class: "panel-head" }, [
           d.h("h2", null, [d.icon("heart"), "Because you played ", d.h("b", null, seed.name)]),
-          d.h("button", {
-            type: "button",
-            class: "btn btn-outline btn-sm",
-            title: "Suggest from another recent game",
-            "aria-label": "Change suggestions",
-            onclick: function () {
-              recSeed++;
-              renderRecs();
-            },
-          }, [d.icon("shuffle"), "Other recents"]),
         ]),
       );
       var sug = d.h("div", { class: "lib-sugs" });
@@ -238,8 +232,38 @@
         icon: min ? "clock2" : "x",
       });
     }
+    /* turning marathon on asks first — Cancel keeps it off */
+    function marathonConfirm(min) {
+      N.modal.open({
+        title: "Marathon mode",
+        icon: "clock2",
+        body:
+          "<p><b>Marathon mode</b> auto-launches a random game every " +
+          min +
+          " minute" +
+          (min === 1 ? "" : "s") +
+          ", anywhere on NULL \u2014 even while you\u2019re in the middle of something.</p>" +
+          "<p>Stop it anytime from the games toolbar or in Settings.</p>",
+        actions: [
+          { label: "Cancel", variant: "outline", onClick: function () { marArm(0); } },
+          { label: "Okay, proceed", variant: "primary", onClick: function () { marArm(min); } },
+        ],
+      });
+    }
+    function marTurnOn(min) {
+      /* already running? just change the interval — no need to ask again */
+      if (parseInt(N.prefs.get("marathonMin"), 10) > 0) marArm(min);
+      else marathonConfirm(min);
+    }
     function bindMarathon() {
       if (!mSel) return;
+      /* the settings toggle can disable the feature entirely */
+      if (N.prefs.get("marathon") === false) {
+        var selWrap = d.qs("#marathonSelWrap");
+        if (selWrap) selWrap.hidden = true;
+        if (mWrap) mWrap.hidden = true;
+        return;
+      }
       N.dom.upgradeSelect(mSel);
       mSel.addEventListener("change", function () {
         var v = mSel.value;
@@ -252,17 +276,17 @@
           if (mCustom) mCustom.focus();
           return;
         }
-        marArm(parseInt(v, 10));
+        marTurnOn(parseInt(v, 10));
       });
       if (mCustom) {
         mCustom.addEventListener("change", function () {
           var n = parseInt(mCustom.value, 10);
-          if (n > 0 && mSel && mSel.value === "custom") marArm(n);
+          if (n > 0 && mSel && mSel.value === "custom") marTurnOn(n);
         });
         mCustom.addEventListener("keydown", function (e) {
           if (e.key === "Enter") {
             var n = parseInt(mCustom.value, 10);
-            if (n > 0) marArm(n);
+            if (n > 0) marTurnOn(n);
           }
         });
       }

@@ -171,8 +171,36 @@
         </div>
       </section>
 
+      <!-- library extras -->
+      <section class="set-card glass" aria-label="Library extras">
+        <h2 class="set-title"><span data-icon="game"></span>Library extras</h2>
+        <p class="set-sub">Extra discovery features on the games page.</p>
+
+        <div class="set-row">
+          <div class="lbl-txt">
+            <b>Because you played</b>
+            <span>Suggests similar games from your recent history.</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="recsSwitch">
+            <span class="track"></span>
+          </label>
+        </div>
+
+        <div class="set-row">
+          <div class="lbl-txt">
+            <b>Marathon mode</b>
+            <span>Auto-switches to a random game on a timer.</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="marathonSwitch">
+            <span class="track"></span>
+          </label>
+        </div>
+      </section>
+
       <!-- privacy / cloaking -->
-      <section class="set-card glass set-card--wide" aria-label="Privacy and cloaking">
+      <section class="set-card glass" aria-label="Privacy and cloaking">
         <h2 class="set-title"><span data-icon="lock"></span>Privacy &amp; cloaking</h2>
         <div class="set-row">
           <div class="lbl-txt">
@@ -181,7 +209,7 @@
           </div>
           <span class="chip ok"><span class="dot"></span>on-device</span>
         </div>
-        <div class="set-row">
+        <div class="set-row" style="flex-wrap:wrap">
           <div class="lbl-txt">
             <b>Cloak NULL</b>
             <span>

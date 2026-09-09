@@ -202,3 +202,25 @@ body.player-page.fs .player-note {
     height: 180px;
   }
 }
+
+/* ============================================================
+   hidden-attribute guards — display rules on these components
+   must never resurrect a box that JS explicitly hid (empty
+   game-of-the-day card, marathon controls when off)
+   ============================================================ */
+.gotd[hidden],
+.m-wrap[hidden],
+.fav-sec[hidden],
+.rec-sec[hidden] {
+  display: none !important;
+}
+
+/* The glow ring is drawn with mask-composite. In browsers without it the
+   full-viewport gradient would paint over the whole screen — disable the
+   glow entirely instead. theme.js also guards for this, so the two checks
+   agree. */
+@supports not ((mask-composite: exclude) or (-webkit-mask-composite: xor)) {
+  #null-glow-el {
+    display: none !important;
+  }
+}

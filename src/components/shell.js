@@ -318,6 +318,7 @@ return foot;
   var marathonTimer = null;
   function marathonTick() {
     if (document.hidden) return;
+    if (N.prefs.get("marathon") === false) return; // feature disabled in settings
     var min = parseInt(N.prefs.get("marathonMin"), 10) || 0;
     if (!min) {
       if (marathonTimer) {
