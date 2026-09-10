@@ -168,6 +168,18 @@
               });
               ok("popup note shown");
             } },
+          { label: "Customize prompt", icon: "pen", run: function () {
+              N.modal.open({
+                title: "Make NULL yours",
+                icon: "pen",
+                body: "<p>Would you like to customize NULL's look?</p>",
+                actions: [
+                  { label: "Not right now", variant: "outline" },
+                  { label: "Sure", variant: "primary" },
+                ],
+              });
+              ok("customize prompt shown");
+            } },
           { label: "Confirm dialog", icon: "check", run: function () {
               N.modal.confirm({ title: "Dev confirm", body: "<p>This is what a NULL confirm looks like.</p>", onOk: function () { ok("confirm accepted"); } });
               ok("confirm dialog shown");
@@ -335,7 +347,7 @@
         ],
         [
           { label: "Reset first-run flags", icon: "info", run: function () {
-              N.flags.clear(); ok("flags reset \u2014 welcome + popup modals return next visit");
+              N.flags.clear(); ok("flags reset \u2014 welcome, popup & customize modals return next visit");
             } },
           { label: "Clear search history", icon: "trash", run: function () {
               N.store.del("null:searches");

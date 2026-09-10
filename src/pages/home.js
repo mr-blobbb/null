@@ -302,13 +302,17 @@
   }
 
   function popupNote() {
-    if (N.flags.get("popup")) return;
+    if (N.flags.get("popup")) {
+      customizeNote();
+      return;
+    }
     N.modal.open({
       title: "Popups & redirects",
       icon: "ext",
       body:
         "<p>Some NULL features \u2014 cloaking, about:blank / blob: modes, and opening external proxies \u2014 ask the browser to allow <b>popups</b> and <b>redirects</b>.</p>" +
         "<p>That\u2019s NULL requesting permission for its own functionality. It is <b>not</b> malicious, and the browser stays in control of every permission prompt.</p>",
+      onClose: customizeNote,
       actions: [
         {
           label: "Please accept",
@@ -326,6 +330,38 @@
             } else {
               d.toast("Popup blocked \u2014 allow popups for NULL to enable cloaking.", { type: "err", hold: 5000 });
             }
+          },
+        },
+      ],
+    });
+  }
+
+  /* one-time nudge after the welcome + popup modals: point new users at the
+     customization features in Settings. "Sure" jumps straight there. */
+  function customizeNote() {
+    if (N.flags.get("customize")) return;
+    N.modal.open({
+      title: "Make NULL yours",
+      icon: "pen",
+      dismissible: false,
+      body:
+        "<p style='font-size:15px; color:#a3a3a3; margin-top:0; margin-bottom:14px;'>Would you like to customize NULL's look?</p>" +
+        "<p style='font-size:13.5px; margin-top:0; margin-bottom:14px; line-height:1.55;'>Pick <b>accent colors</b> and <b>glow borders</b>, flip between <b>dark &amp; light mode</b>, cloak your tab with a <b>preset</b>, and arm a <b>panic key</b> \u2014 all in Settings, saved locally on your device.</p>" +
+        "<p style='font-size:13px; color:#737373; margin:0;'>Everything can be changed anytime later.</p>",
+      actions: [
+        {
+          label: "Not right now",
+          variant: "outline",
+          onClick: function () {
+            N.flags.set("customize");
+          },
+        },
+        {
+          label: "Sure",
+          variant: "primary",
+          onClick: function () {
+            N.flags.set("customize");
+            location.href = "/settings";
           },
         },
       ],
