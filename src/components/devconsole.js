@@ -182,6 +182,10 @@
               });
               ok("customize prompt shown");
             } },
+          { label: "Weekly wrap-up", icon: "ann", run: function () {
+              if (!N.wrapup || !N.wrapup.show()) return err("no plays recorded this week yet \u2014 try \u201cSeed weekly log\u201d");
+              ok("weekly wrap-up shown (current week)");
+            } },
           { label: "Confirm dialog", icon: "check", run: function () {
               N.modal.confirm({ title: "Dev confirm", body: "<p>This is what a NULL confirm looks like.</p>", onOk: function () { ok("confirm accepted"); } });
               ok("confirm dialog shown");
@@ -388,8 +392,22 @@
             } },
         ],
         [
+          { label: "Seed weekly log", icon: "clock", run: function () {
+              if (!N.week) return err("week module missing");
+              var games = N.catalog.games().slice(0, 4);
+              var apps = N.catalog.apps().slice(0, 2);
+              if (!games.length && !apps.length) return err("library empty");
+              var pool = games
+                .map(function (g) { return { k: "game", id: g.id }; })
+                .concat(apps.map(function (a) { return { k: "app", id: a.id }; }));
+              for (var i = 0; i < 12; i++) {
+                var p = pool[Math.floor(Math.random() * pool.length)];
+                N.week.log(p.k, p.id);
+              }
+              ok("12 plays seeded into this week's log \u2014 open \u201cWeekly wrap-up\u201d to see it");
+            } },
           { label: "Reset first-run flags", icon: "info", run: function () {
-              N.flags.clear(); ok("flags reset \u2014 welcome, popup & customize modals return next visit");
+              N.flags.clear(); ok("flags reset \u2014 welcome, popup, customize & weekly wrap-up return next visit");
             } },
           { label: "Clear search history", icon: "trash", run: function () {
               N.store.del("null:searches");
@@ -400,11 +418,11 @@
                 title: "Factory reset?",
                 icon: "warn",
                 iconTone: "danger",
-                body: "<p>Wipes every NULL preference, flag, recent, favorite, play count and history from this browser. This cannot be undone.</p>",
+                body: "<p>Wipes every NULL preference, flag, recent, favorite, play count, weekly log and history from this browser. This cannot be undone.</p>",
                 okLabel: "Wipe everything",
                 okVariant: "danger",
                 onOk: function () {
-                  ["null:prefs", "null:flags", "null:recent", "null:favs", "null:plays", "null:searches", "null:sched", "null:lunch"].forEach(N.store.del);
+                  ["null:prefs", "null:flags", "null:recent", "null:favs", "null:plays", "null:searches", "null:sched", "null:lunch", "null:week"].forEach(N.store.del);
                   ok("factory reset done \u2014 reloading");
                   setTimeout(function () { location.reload(); }, 600);
                 },

@@ -511,6 +511,77 @@ return foot;
     marathonTimer = setInterval(marathonTick, 1000);
   }
 
+  /* ---------- weekly wrap-up ----------
+     Once a week (Monday-keyed), the first page load after the week rolls
+     over shows a summary of the previous week's plays. Fires on every page
+     (shell runs everywhere), ~1.2 s after load so it never fights the
+     first-run welcome chain on the home page. */
+  function wrapupModal(weekKey, s) {
+    var mon = new Date(weekKey + "T00:00:00");
+    var end = new Date(mon.getTime());
+    end.setDate(end.getDate() + 6);
+    var range =
+      mon.toLocaleDateString(undefined, { month: "short", day: "numeric" }) +
+      " \u2013 " +
+      end.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+
+    var html =
+      "<p style='margin:0 0 4px;color:#a3a3a3;font-size:14px;'>Your NULL week \u2014 <b style='color:var(--text)'>" +
+      range +
+      "</b>. Everything below is local to your browser.</p>";
+    html +=
+      "<div class='wu-stats'>" +
+      "<div class='wu-stat'><b>" + s.total + "</b><span>plays</span></div>" +
+      "<div class='wu-stat'><b>" + s.distinct + "</b><span>games &amp; apps</span></div>" +
+      "<div class='wu-stat'><b>" + (s.top.length ? s.top[0].n : 0) + "</b><span>top item</span></div>" +
+      "</div>";
+    if (s.top.length) {
+      html += "<div class='wu-top'><b>Most played</b>";
+      s.top.forEach(function (t, i) {
+        var e = N.catalog.find(t.k, t.id);
+        var name = e ? e.name : t.id;
+        html +=
+          "<div class='wu-item'><span class='wu-rank'>" +
+          (i + 1) +
+          "</span>" +
+          d.escHtml(name) +
+          "<span class='wu-count'>" + t.n + "\u00d7</span></div>";
+      });
+      html += "</div>";
+    }
+    html +=
+      "<p style='margin:14px 0 0;font-size:12.5px;color:#737373;'>New week \u2014 the log restarts today. See you next Monday.</p>";
+
+    N.modal.open({
+      title: "Your week in NULL",
+      icon: "ann",
+      body: html,
+      actions: [{ label: "Got it", variant: "primary" }],
+    });
+  }
+
+  function wrapupCheck() {
+    if (!N.week || !N.modal) return;
+    var prev = N.week.rollover();
+    if (!prev) return;
+    var key = "wrapup:" + prev.week;
+    if (N.flags.get(key)) return;
+    N.flags.set(key);
+    wrapupModal(prev.week, N.week.summary(prev.plays));
+  }
+
+  /* dev-console / debug entry: show the current week's wrap-up on demand */
+  N.wrapup = {
+    check: wrapupCheck,
+    show: function () {
+      if (!N.week || !N.modal) return false;
+      var s = N.week.summary();
+      if (!s.total) return false;
+      wrapupModal(N.week.key(), s);
+      return true;
+    },
+  };
+
   function init() {
     /* resolve [data-icon] placeholders left in static HTML */
     d.qsa("[data-icon]").forEach(function (el) {
@@ -538,6 +609,10 @@ return foot;
     initMarathon();
     initSs();
     watchPeriodEnd();
+
+    /* weekly wrap-up — slightly delayed so it stacks above (never under)
+       the first-run welcome chain on the home page */
+    setTimeout(wrapupCheck, 1200);
 
     /* custom scrollbar on library pages */
     if (document.body.classList.contains("lb")) {

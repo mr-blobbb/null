@@ -209,6 +209,76 @@
     };
   })();
 
+  /* ---------- weekly play log (games/apps launched per week) ----------
+     Powers the weekly wrap-up modal: every launch is stamped with the week
+     it happened in (Monday-keyed), so once a week rolls over the previous
+     week's log can be summarized and shown — then the log resets. */
+  function mondayOf(date) {
+    var x = new Date(date.getTime());
+    x.setHours(0, 0, 0, 0);
+    var day = x.getDay() || 7; // Sunday = 7 so the week starts on Monday
+    x.setDate(x.getDate() - day + 1);
+    return x.toISOString().slice(0, 10);
+  }
+
+  var WEEK_KEY = "null:week";
+  N.week = (function () {
+    var data = read(WEEK_KEY, { week: mondayOf(new Date()), plays: [] });
+    function save() {
+      write(WEEK_KEY, data);
+    }
+    return {
+      key: function () {
+        return data.week;
+      },
+      log: function (kind, id) {
+        var wk = mondayOf(new Date());
+        if (data.week !== wk) data = { week: wk, plays: [] };
+        data.plays.push({ k: kind, id: id, at: Date.now() });
+        save();
+      },
+      /* week changed? returns the finished week { week, plays } when it had
+         plays (caller shows the wrap-up), otherwise null. Always resets the
+         log to the current week. */
+      rollover: function () {
+        var wk = mondayOf(new Date());
+        if (data.week === wk) return null;
+        var prev = data;
+        data = { week: wk, plays: [] };
+        save();
+        return prev.plays.length ? prev : null;
+      },
+      snapshot: function () {
+        return data;
+      },
+      reset: function () {
+        data = { week: mondayOf(new Date()), plays: [] };
+        save();
+      },
+      summary: function (plays) {
+        plays = plays || data.plays;
+        var byItem = {};
+        plays.forEach(function (p) {
+          var key = p.k + ":" + p.id;
+          byItem[key] = byItem[key] || { k: p.k, id: p.id, n: 0 };
+          byItem[key].n++;
+        });
+        var items = Object.keys(byItem)
+          .map(function (k) {
+            return byItem[k];
+          })
+          .sort(function (a, b) {
+            return b.n - a.n;
+          });
+        return {
+          total: plays.length,
+          distinct: items.length,
+          top: items.slice(0, 3),
+        };
+      },
+    };
+  })();
+
   /* ---------- small date helpers ---------- */
   N.dt = {
     ago: function (ts) {

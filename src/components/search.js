@@ -296,7 +296,7 @@
       }
       if (!hits.length) {
         results.appendChild(d.h("div", { class: "sr-none" }, [
-          "Nothing matches \u201c" + q + "\u201d \u2014 but you got to see this funny guy: \u2022\u{103F7}\u2022",
+          "Nothing matches \u201c" + q + "\u201d \u2014 but you got to see this funny guy: •𐃷•",
         ]));
         return;
       }
