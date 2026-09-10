@@ -5,7 +5,7 @@
    ============================================================ */
 window.NULL_CATALOG = {
   "site": "NULL",
-  "generatedAt": "2026-09-10T16:00:00.939Z",
+  "generatedAt": "2026-09-10T19:48:56.575Z",
   "games": [
     {
       "id": "flip",
@@ -16,7 +16,8 @@ window.NULL_CATALOG = {
       "labels": [
         "Test"
       ],
-      "warning": null
+      "warning": null,
+      "at": null
     },
     {
       "id": "pulse",
@@ -30,7 +31,8 @@ window.NULL_CATALOG = {
       "warning": {
         "title": "Heads up — PULSE",
         "description": "PULSE uses the keyboard (W/S or arrows) and has sound-free retro vibes. First to 7 wins.\nSpace serves the ball. Touch devices can drag on the left/right half of the screen."
-      }
+      },
+      "at": null
     },
     {
       "id": "simon",
@@ -41,7 +43,8 @@ window.NULL_CATALOG = {
       "labels": [
         "Test"
       ],
-      "warning": null
+      "warning": null,
+      "at": null
     },
     {
       "id": "snake",
@@ -52,7 +55,8 @@ window.NULL_CATALOG = {
       "labels": [
         "Test"
       ],
-      "warning": null
+      "warning": null,
+      "at": null
     },
     {
       "id": "trace",
@@ -63,7 +67,8 @@ window.NULL_CATALOG = {
       "labels": [
         "Test"
       ],
-      "warning": null
+      "warning": null,
+      "at": null
     },
     {
       "id": "void",
@@ -74,7 +79,8 @@ window.NULL_CATALOG = {
       "labels": [
         "Test"
       ],
-      "warning": null
+      "warning": null,
+      "at": null
     }
   ],
   "apps": [
@@ -91,7 +97,8 @@ window.NULL_CATALOG = {
         "Offline",
         "Calculator"
       ],
-      "warning": null
+      "warning": null,
+      "at": null
     },
     {
       "id": "notes",
@@ -105,7 +112,8 @@ window.NULL_CATALOG = {
         "Offline",
         "Notes"
       ],
-      "warning": null
+      "warning": null,
+      "at": null
     },
     {
       "id": "pad",
@@ -120,7 +128,8 @@ window.NULL_CATALOG = {
         "Drawing",
         "Offline"
       ],
-      "warning": null
+      "warning": null,
+      "at": null
     },
     {
       "id": "stopwatch",
@@ -134,7 +143,8 @@ window.NULL_CATALOG = {
         "Tools",
         "Offline"
       ],
-      "warning": null
+      "warning": null,
+      "at": null
     }
   ],
   "proxies": [

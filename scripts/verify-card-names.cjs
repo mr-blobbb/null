@@ -86,3 +86,16 @@ games.forEach((g) => {
   console.log((ok ? "OK  " : "MISS") + " " + g.id + " -> name is first text on card: " + JSON.stringify(g.name) + (ok ? "" : " (got " + JSON.stringify(text.slice(0, 40)) + "...)"));
 });
 console.log(allOk ? "ALL GAME NAMES RENDER" : "SOME NAMES MISSING");
+
+// ---------- badge smoke test ----------
+N.plays.tap("game", games[0].id);
+N.favs.toggle("game", games[0].id);
+const bc = N.cards.card(games[0], "game");
+const badges = [];
+const walkB = (n) => {
+  if (n._cls && n._cls.has("tb")) badges.push(n);
+  (n.children || []).forEach(walkB);
+};
+walkB(bc);
+console.log("badges on first card:", badges.map((b) => b.className).join(", ") || "NONE");
+console.log(badges.length >= 2 ? "BADGES OK" : "BADGES MISSING");

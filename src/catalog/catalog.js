@@ -52,6 +52,7 @@
       return;
     }
     N.recent.add(kind, id);
+    if (kind !== "proxy" && N.plays) N.plays.tap(kind, id); /* powers card badges */
 
     if (entry.warning) {
       N.modal.open({

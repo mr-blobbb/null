@@ -15,6 +15,33 @@
 
   var KIND = { game: "game", app: "app", proxy: "proxy" };
 
+  /* ---------- badges (corner pills on the thumbnail) ----------
+     played ×N  — local play counts (null:plays), tapped on every launch
+     ★ favorite — mirrors the footer star, updates live
+     NEW        — stamped by discovery from meta.txt "Added: YYYY-MM-DD",
+                  shows for 14 days */
+  function badgeEl(b) {
+    var kids = [];
+    if (b.icon) kids.push(d.icon(b.icon));
+    if (b.txt) kids.push(b.txt);
+    return d.h("span", { class: "tb " + b.cls, title: b.title || "" }, kids);
+  }
+
+  function badgesFor(entry, kind) {
+    var out = [];
+    if (kind !== "proxy" && N.prefs.get("badges") !== false) {
+      if (N.favs.has(kind, entry.id)) out.push({ cls: "b-fav", icon: "star", title: "Favorite" });
+      var n = N.plays.count(kind, entry.id);
+      if (n > 0) {
+        out.push({ cls: "b-play", icon: "play", txt: String(n), title: "Played " + n + (n === 1 ? " time" : " times") });
+      }
+    }
+    if (entry.at && entry.at <= Date.now() && Date.now() - entry.at < 14 * 86400000) {
+      out.push({ cls: "b-new", txt: "NEW", title: "Added recently" });
+    }
+    return out;
+  }
+
   /* ---------- thumb (games/apps only — proxies use rows) ---------- */
   function thumbEl(entry, kind) {
     var media = d.h("div", { class: "tmedia" });
@@ -35,6 +62,15 @@
        squeezed out of view (the virtualized grid rows keep the body
        name hidden; featured/recs rails use the body name below) */
     media.appendChild(d.h("span", { class: "tname-badge", title: entry.name }, entry.name));
+    /* corner badges */
+    var badges = badgesFor(entry, kind);
+    if (badges.length) {
+      var host = d.h("div", { class: "tbadges" });
+      badges.forEach(function (b) {
+        host.appendChild(badgeEl(b));
+      });
+      media.appendChild(host);
+    }
     return media;
   }
 
@@ -92,8 +128,9 @@
     ]);
   }
 
-  /* ---------- favorites star ---------- */
-  function favBtn(entry, kind) {
+  /* ---------- favorites star ----------
+     onFav(now) keeps the corner badge in sync when the star is toggled. */
+  function favBtn(entry, kind, onFav) {
     if (kind === "proxy") return null;
     var on = N.favs.has(kind, entry.id);
     var btn = d.h("button", {
@@ -107,6 +144,7 @@
       var now = N.favs.toggle(kind, entry.id);
       btn.classList.toggle("on", now);
       btn.setAttribute("aria-label", now ? "Remove from favorites" : "Add to favorites");
+      if (onFav) onFav(now);
       d.toast(now ? "Added to favorites" : "Removed from favorites", { icon: "star" });
     });
     return btn;
@@ -127,9 +165,24 @@
       d.h("p", { class: "tdesc" }, entry.desc || meta.label + " in the NULL library."),
     ]);
 
+    var media = thumbEl(entry, kind);
     /* no play button — the whole card is the click target (plus a star) */
     var foot = d.h("div", { class: "tfoot tfoot-solo" }, [
-      favBtn(entry, kind),
+      favBtn(entry, kind, function (now) {
+        /* keep the corner ★ badge in sync with the footer star */
+        var host = d.qs(".tbadges", media);
+        var b = d.qs(".b-fav", media);
+        if (now && !b && N.prefs.get("badges") !== false) {
+          if (!host) {
+            host = d.h("div", { class: "tbadges" });
+            media.appendChild(host);
+          }
+          host.appendChild(badgeEl({ cls: "b-fav", icon: "star", title: "Favorite" }));
+        } else if (!now && b) {
+          b.remove();
+          if (host && !host.children.length) host.remove();
+        }
+      }),
     ]);
 
     var el = d.h("article", {
@@ -138,7 +191,7 @@
       tabindex: "0",
       "aria-label": meta.label + ": " + entry.name,
     }, [
-      thumbEl(entry, kind),
+      media,
       body,
       foot,
     ]);
