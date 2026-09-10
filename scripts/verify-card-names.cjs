@@ -87,15 +87,13 @@ games.forEach((g) => {
 });
 console.log(allOk ? "ALL GAME NAMES RENDER" : "SOME NAMES MISSING");
 
-// ---------- badge smoke test ----------
-N.plays.tap("game", games[0].id);
-N.favs.toggle("game", games[0].id);
-const bc = N.cards.card(games[0], "game");
+// ---------- NEW/HOT badge smoke test (synthetic entry) ----------
+const bc = N.cards.card({ id: "zz", name: "Badge Test", file: "/games/zz/zz.html", at: Date.now(), hot: true }, "game");
 const badges = [];
 const walkB = (n) => {
   if (n._cls && n._cls.has("tb")) badges.push(n);
   (n.children || []).forEach(walkB);
 };
 walkB(bc);
-console.log("badges on first card:", badges.map((b) => b.className).join(", ") || "NONE");
-console.log(badges.length >= 2 ? "BADGES OK" : "BADGES MISSING");
+console.log("badges on NEW+HOT card:", badges.map((b) => b.className).join(", ") || "NONE");
+console.log(badges.some((b) => b.className === "tb b-new") && badges.some((b) => b.className === "tb b-hot") ? "NEW/HOT BADGES OK" : "BADGES MISSING");

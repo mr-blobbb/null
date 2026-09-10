@@ -5,7 +5,8 @@
                    "Label: Action Puzzle Singleplayer" → Action, Puzzle, Singleplayer
      Warning.txt   Title: ... / Description: ...
      meta.txt      Name: ... / Description: ... / Added: YYYY-MM-DD (optional
-                   overrides; Added stamps a NEW badge on the card for 14 days)
+                   overrides; Added stamps a NEW badge on the card for 14 days,
+                   and a line with #hot stamps a HOT badge)
    Thumbnails: any png/jpg/jpeg/webp/gif/svg, slug-named files preferred. */
 import fs from "node:fs";
 import path from "node:path";
@@ -92,6 +93,8 @@ function parseMeta(dir) {
     else if (/^Added:\s*/i.test(line)) {
       const t = Date.parse(line.replace(/^Added:\s*/i, ""));
       if (!isNaN(t)) meta.at = t;
+    } else if (/#hot/i.test(line)) {
+      meta.hot = true;
     }
   });
   return meta;
@@ -167,6 +170,7 @@ export function scanDir(rootDir, kindBase) {
         labels: parseLabels(dir),
         warning: parseWarning(dir),
         at: meta.at || null, // added date (meta.txt "Added: YYYY-MM-DD") — NEW badge
+        hot: !!meta.hot, // meta.txt "#hot" line — HOT badge
       });
     });
 

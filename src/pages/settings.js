@@ -36,8 +36,6 @@
     /* library extras toggles */
     var rsw = d.qs("#recsSwitch");
     if (rsw) rsw.checked = p.recs !== false;
-    var bsw = d.qs("#badgesSwitch");
-    if (bsw) bsw.checked = p.badges !== false;
     var msw = d.qs("#marathonSwitch");
     if (msw) msw.checked = p.marathon !== false;
     var cfsw = d.qs("#confettiSwitch");
@@ -281,13 +279,6 @@
       rsw.addEventListener("change", function () {
         N.prefs.set("recs", rsw.checked);
         d.toast(rsw.checked ? "Because you played: on" : "Because you played: off");
-      });
-    }
-    var bsw = d.qs("#badgesSwitch");
-    if (bsw) {
-      bsw.addEventListener("change", function () {
-        N.prefs.set("badges", bsw.checked);
-        d.toast(bsw.checked ? "Card badges: on" : "Card badges: off");
       });
     }
     var msw = d.qs("#marathonSwitch");

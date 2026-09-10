@@ -5,7 +5,7 @@
    ============================================================ */
 window.NULL_CATALOG = {
   "site": "NULL",
-  "generatedAt": "2026-09-10T19:48:56.575Z",
+  "generatedAt": "2026-09-10T19:54:54.577Z",
   "games": [
     {
       "id": "flip",
@@ -17,7 +17,8 @@ window.NULL_CATALOG = {
         "Test"
       ],
       "warning": null,
-      "at": null
+      "at": null,
+      "hot": false
     },
     {
       "id": "pulse",
@@ -32,7 +33,8 @@ window.NULL_CATALOG = {
         "title": "Heads up — PULSE",
         "description": "PULSE uses the keyboard (W/S or arrows) and has sound-free retro vibes. First to 7 wins.\nSpace serves the ball. Touch devices can drag on the left/right half of the screen."
       },
-      "at": null
+      "at": null,
+      "hot": false
     },
     {
       "id": "simon",
@@ -44,7 +46,8 @@ window.NULL_CATALOG = {
         "Test"
       ],
       "warning": null,
-      "at": null
+      "at": null,
+      "hot": false
     },
     {
       "id": "snake",
@@ -56,7 +59,8 @@ window.NULL_CATALOG = {
         "Test"
       ],
       "warning": null,
-      "at": null
+      "at": null,
+      "hot": false
     },
     {
       "id": "trace",
@@ -68,7 +72,8 @@ window.NULL_CATALOG = {
         "Test"
       ],
       "warning": null,
-      "at": null
+      "at": null,
+      "hot": false
     },
     {
       "id": "void",
@@ -80,7 +85,8 @@ window.NULL_CATALOG = {
         "Test"
       ],
       "warning": null,
-      "at": null
+      "at": null,
+      "hot": false
     }
   ],
   "apps": [
@@ -98,7 +104,8 @@ window.NULL_CATALOG = {
         "Calculator"
       ],
       "warning": null,
-      "at": null
+      "at": null,
+      "hot": false
     },
     {
       "id": "notes",
@@ -113,7 +120,8 @@ window.NULL_CATALOG = {
         "Notes"
       ],
       "warning": null,
-      "at": null
+      "at": null,
+      "hot": false
     },
     {
       "id": "pad",
@@ -129,7 +137,8 @@ window.NULL_CATALOG = {
         "Offline"
       ],
       "warning": null,
-      "at": null
+      "at": null,
+      "hot": false
     },
     {
       "id": "stopwatch",
@@ -144,7 +153,8 @@ window.NULL_CATALOG = {
         "Offline"
       ],
       "warning": null,
-      "at": null
+      "at": null,
+      "hot": false
     }
   ],
   "proxies": [

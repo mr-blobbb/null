@@ -1655,7 +1655,7 @@ body.lb .site-foot {
   display: block;
 }
 
-/* corner badges on card thumbnails — played ×N, ★ favorite, NEW */
+/* corner badges on card thumbnails — NEW (added recently), HOT (meta.txt #hot) */
 .tbadges {
   position: absolute;
   top: 8px;
@@ -1677,24 +1677,17 @@ body.lb .site-foot {
   font-weight: 700;
   letter-spacing: 0.04em;
   line-height: 1.3;
-  color: var(--text-2);
-  background: color-mix(in srgb, var(--bg-2) 80%, transparent);
-  border: 1px solid var(--line-2);
+  color: var(--bg);
+  border-color: transparent;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
 }
-.tb .msr {
-  font-size: 11px;
-  color: inherit;
-}
-.tb.b-fav {
-  color: var(--ac-1);
-}
 .tb.b-new {
-  color: var(--bg);
   background: color-mix(in srgb, var(--ac-1) 84%, transparent);
-  border-color: transparent;
+}
+.tb.b-hot {
+  background: color-mix(in srgb, #e2704a 86%, transparent);
 }
 .vgrid .tname {
   display: none;

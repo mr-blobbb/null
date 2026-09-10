@@ -28,16 +28,34 @@
 
     var activeLabel = "All";
     var query = "";
-    var sortMode = "name"; // name = A–Z, id = folder label
+    var sortMode = "name"; // name = A–Z, id = folder label, plays = popularity, new = recently added
     var gridApi = null;
 
     function sorted(arr) {
       var copy = arr.slice();
-      copy.sort(function (a, b) {
-        var ka = sortMode === "id" ? a.id || "" : a.name || "";
-        var kb = sortMode === "id" ? b.id || "" : b.name || "";
-        return ka.localeCompare(kb, undefined, { sensitivity: "base" });
-      });
+      if (sortMode === "plays") {
+        /* most-played first (local counts), ties by name */
+        copy.sort(function (a, b) {
+          return (
+            N.plays.count(favKind, b.id) - N.plays.count(favKind, a.id) ||
+            a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
+          );
+        });
+      } else if (sortMode === "new") {
+        /* newest Added date first; entries without a date sink to the bottom */
+        copy.sort(function (a, b) {
+          return (
+            (b.at || 0) - (a.at || 0) ||
+            a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
+          );
+        });
+      } else {
+        copy.sort(function (a, b) {
+          var ka = sortMode === "id" ? a.id || "" : a.name || "";
+          var kb = sortMode === "id" ? b.id || "" : b.name || "";
+          return ka.localeCompare(kb, undefined, { sensitivity: "base" });
+        });
+      }
       return copy;
     }
 
@@ -341,7 +359,7 @@
     if (sortSel) {
       N.dom.upgradeSelect(sortSel);
       sortSel.addEventListener("change", function () {
-        sortMode = sortSel.value === "id" ? "id" : "name";
+        sortMode = sortSel.value || "name";
         paint();
       });
     }

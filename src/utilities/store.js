@@ -57,7 +57,6 @@
     tab: "slides", // tab preset id from tabpresets.js (default: Google Slides)
     tabCustom: {}, // custom tab preset: { title, icon }
     recs: true, // "Because you played" suggestions on the games page
-    badges: true, // card badges: played count, favorite, NEW tag
     marathon: true, // marathon mode feature enabled (settings toggle)
     confetti: true, // celebrate when a class period ends
     marathonMin: 0, // marathon mode: 0 = off, else minutes between switches
