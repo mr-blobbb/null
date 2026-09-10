@@ -1,5 +1,5 @@
 /* NULL — settings.js
-   Binds every control on /settings.html. Recently played has its own clear
+   Binds every control on /settings. Recently played has its own clear
    button on the home page — it is not duplicated here. The Danger Zone only
    holds whole-app resets. */
 (function () {
@@ -27,12 +27,7 @@
       gsel.value = p.glow;
       N.dom.selSync(gsel);
     }
-    var gc = d.qs("#glowCustom");
-    if (gc) gc.style.display = p.glow === "custom" ? "" : "none";
-    var gc1 = d.qs("#glowColor1");
-    var gc2 = d.qs("#glowColor2");
-    if (gc1) gc1.value = p.glowColor1 || "#35c3f2";
-    if (gc2) gc2.value = p.glowColor2 || "#a86bff";
+    paintGlow();
 
     /* performance switch */
     var sw = d.qs("#perfSwitch");
@@ -110,6 +105,19 @@
     if (ii && document.activeElement !== ii) ii.value = (p.tabCustom && p.tabCustom.icon) || "";
   }
 
+  /* show/hide the custom glow color pickers to match the selected preset.
+     Runs on every refresh AND immediately on dropdown change, so the
+     pickers can never lag behind the select. */
+  function paintGlow() {
+    var on = N.prefs.get("glow") === "custom";
+    var gc = d.qs("#glowCustom");
+    if (gc) gc.style.display = on ? "" : "none";
+    var gc1 = d.qs("#glowColor1");
+    var gc2 = d.qs("#glowColor2");
+    if (gc1) gc1.value = N.prefs.get("glowColor1") || "#35c3f2";
+    if (gc2) gc2.value = N.prefs.get("glowColor2") || "#a86bff";
+  }
+
   /* save a piece of the custom tab preset and re-apply it live */
   function saveTabCustom(patch) {
     var cur = N.prefs.get("tabCustom") || {};
@@ -153,7 +161,12 @@
     if (gsel) {
       gsel.addEventListener("change", function () {
         N.prefs.set("glow", gsel.value);
-        N.theme.setGlow(gsel.value);
+        paintGlow(); /* pickers follow the select no matter what */
+        try {
+          N.theme.setGlow(gsel.value);
+        } catch (err) {
+          /* never let a theme hiccup block the UI update */
+        }
         refresh();
         d.toast("Glow: " + (gsel.options[gsel.selectedIndex] || {}).textContent);
       });
@@ -443,8 +456,11 @@
     }
     var sel = d.qs("#tabSelect");
     if (sel) {
+      /* show the actual tab name the preset produces — "Untitled document -
+         Google Docs", not "Google Docs \u2014 Untitled document - Google Docs" */
       N.tab.list.forEach(function (p) {
-        sel.appendChild(d.h("option", { value: p.id }, p.name + " \u2014 " + N.tab.titleFor(p)));
+        var label = p.id === "custom" ? p.name : N.tab.titleFor(p);
+        sel.appendChild(d.h("option", { value: p.id }, label));
       });
       /* custom-styled dropdown, not the native <select> */
       N.dom.upgradeSelect(sel);

@@ -94,6 +94,8 @@
     calendar: "event",
     copy: "content_copy",
     upload: "upload",
+    download: "download",
+    save: "save",
   };
 
   function icon(name, cls) {

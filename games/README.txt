@@ -16,7 +16,7 @@ Then run:
 
   bun run catalog     (or: node scripts/build-catalog.js)
 
-The game appears automatically on /games.html — no JSON, no manual registry.
+The game appears automatically on /games — no JSON, no manual registry.
 
 Notes
 -----

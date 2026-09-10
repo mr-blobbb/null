@@ -13,7 +13,7 @@
    Times below are sample data. To match the real bell schedule, edit the
    TEMPLATES object — that is the only thing that needs to change.
 
-   Rendered compact on the home dashboard and full-size on /schedule.html,
+   Rendered compact on the home dashboard and full-size on /schedule,
    which also exposes the editor (rename periods, pick a lunch period). */
 (function () {
   var N = (window.N = window.N || {});

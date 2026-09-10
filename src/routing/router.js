@@ -8,13 +8,13 @@
   /* top nav — icon-only destinations. Home is the NULL brand mark itself,
      so it is not a separate link. The mobile drawer shows all of these. */
   var PRIMARY = [
-    { id: "games", t: "Games", url: "/games.html", icon: "game" },
-    { id: "apps", t: "Apps", url: "/apps.html", icon: "grid" },
-    { id: "proxies", t: "Proxies", url: "/proxies.html", icon: "proxy" },
-    { id: "schedule", t: "Schedule", url: "/schedule.html", icon: "sched" },
-    { id: "announcements", t: "Announcements", url: "/announcements.html", icon: "ann" },
-    { id: "backups", t: "Backups", url: "/backups.html", icon: "backups" },
-    { id: "settings", t: "Settings", url: "/settings.html", icon: "settings" },
+    { id: "games", t: "Games", url: "/games", icon: "game" },
+    { id: "apps", t: "Apps", url: "/apps", icon: "grid" },
+    { id: "proxies", t: "Proxies", url: "/proxies", icon: "proxy" },
+    { id: "schedule", t: "Schedule", url: "/schedule", icon: "sched" },
+    { id: "announcements", t: "Announcements", url: "/announcements", icon: "ann" },
+    { id: "backups", t: "Backups", url: "/backups", icon: "backups" },
+    { id: "settings", t: "Settings", url: "/settings", icon: "settings" },
   ];
 
   /* grouped view used by the mobile drawer */
@@ -22,18 +22,18 @@
     {
       name: "Library",
       links: [
-        { t: "Games", url: "/games.html", icon: "game" },
-        { t: "Apps", url: "/apps.html", icon: "grid" },
-        { t: "Proxies", url: "/proxies.html", icon: "proxy" },
+        { t: "Games", url: "/games", icon: "game" },
+        { t: "Apps", url: "/apps", icon: "grid" },
+        { t: "Proxies", url: "/proxies", icon: "proxy" },
       ],
     },
     {
       name: "More",
       links: [
-        { t: "Announcements", url: "/announcements.html", icon: "ann" },
-        { t: "Schedule", url: "/schedule.html", icon: "sched" },
-        { t: "Backups", url: "/backups.html", icon: "backups" },
-        { t: "Settings", url: "/settings.html", icon: "settings" },
+        { t: "Announcements", url: "/announcements", icon: "ann" },
+        { t: "Schedule", url: "/schedule", icon: "sched" },
+        { t: "Backups", url: "/backups", icon: "backups" },
+        { t: "Settings", url: "/settings", icon: "settings" },
       ],
     },
   ];
@@ -45,23 +45,23 @@
       name: "Explore",
       links: [
         { t: "Home", url: "/" },
-        { t: "Games", url: "/games.html" },
-        { t: "Apps", url: "/apps.html" },
-        { t: "Proxies", url: "/proxies.html" },
-        { t: "Announcements", url: "/announcements.html" },
-        { t: "Schedule", url: "/schedule.html" },
-        { t: "Settings", url: "/settings.html" },
+        { t: "Games", url: "/games" },
+        { t: "Apps", url: "/apps" },
+        { t: "Proxies", url: "/proxies" },
+        { t: "Announcements", url: "/announcements" },
+        { t: "Schedule", url: "/schedule" },
+        { t: "Settings", url: "/settings" },
       ],
     },
     {
       name: "Info",
       links: [
-        { t: "About", url: "/about.html" },
-        { t: "District", url: "/district.html" },
-        { t: "License", url: "/license.html" },
-        { t: "Privacy", url: "/privacy.html" },
-        { t: "Terms", url: "/terms.html" },
-        { t: "Cookies", url: "/cookies.html" },
+        { t: "About", url: "/about" },
+        { t: "District", url: "/district" },
+        { t: "License", url: "/license" },
+        { t: "Privacy", url: "/privacy" },
+        { t: "Terms", url: "/terms" },
+        { t: "Cookies", url: "/cookies" },
       ],
     },
   ];
@@ -69,10 +69,11 @@
   function isActive(url) {
     var p = location.pathname;
     if (url === "/") return p === "/" || p === "/index.html";
-    /* strip possible base path so /games.html always matches */
+    /* match the clean url and its .html form, so nav stays highlighted
+       whether the host serves /games or /games.html */
+    var name = url.split("/").pop();
     var tail = p.split("/").pop() || "";
-    if (url.indexOf(".html") > 0) return tail === url.split("/").pop();
-    return p === url;
+    return p === url || tail === name || tail === name + ".html";
   }
 
   N.router = {

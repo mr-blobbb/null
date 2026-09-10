@@ -101,17 +101,32 @@
   function fetchPageText(pg) {
     if (pageText[pg.url] !== undefined) return;
     pageText[pg.url] = null;
+    function got(html) {
+      pageText[pg.url] = stripHtml(html);
+      if (live) live.rebuild();
+    }
+    function miss() {
+      /* clean urls — a few static hosts only serve the .html file */
+      var alt = /\.html$/.test(pg.url) ? null : pg.url + ".html";
+      if (alt) {
+        fetch(alt)
+          .then(function (r) {
+            return r.ok ? r.text() : Promise.reject();
+          })
+          .then(got)
+          .catch(function () {
+            pageText[pg.url] = null;
+          });
+      } else {
+        pageText[pg.url] = null;
+      }
+    }
     fetch(pg.url)
       .then(function (r) {
         return r.ok ? r.text() : Promise.reject();
       })
-      .then(function (html) {
-        pageText[pg.url] = stripHtml(html);
-        if (live) live.rebuild();
-      })
-      .catch(function () {
-        pageText[pg.url] = null;
-      });
+      .then(got)
+      .catch(miss);
   }
 
   /* ---------- index ---------- */
@@ -187,7 +202,7 @@
         _h: norm(raw),
         _x: "",
         run: function () {
-          location.href = "/announcements.html";
+          location.href = "/announcements";
         },
       });
     });
@@ -252,10 +267,10 @@
         results.appendChild(d.h("div", { class: "sr-group" }, "Jump to"));
         [
           { t: "Home", u: "/", i: "home" },
-          { t: "Games", u: "/games.html", i: "game" },
-          { t: "Apps", u: "/apps.html", i: "grid" },
-          { t: "Schedule", u: "/schedule.html", i: "sched" },
-          { t: "Settings", u: "/settings.html", i: "settings" },
+          { t: "Games", u: "/games", i: "game" },
+          { t: "Apps", u: "/apps", i: "grid" },
+          { t: "Schedule", u: "/schedule", i: "sched" },
+          { t: "Settings", u: "/settings", i: "settings" },
         ].forEach(function (s) {
           var it = {
             kind: "page",

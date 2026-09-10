@@ -157,11 +157,126 @@
     var backBtn = d.qs("#btnBack");
     if (backBtn) {
       backBtn.addEventListener("click", function () {
-        var back = "/" + (p.k === "app" ? "apps" : p.k === "proxy" ? "proxies" : "games") + ".html";
+        var back = "/" + (p.k === "app" ? "apps" : p.k === "proxy" ? "proxies" : "games");
         if (history.length > 1) history.back();
         else location.href = back;
       });
     }
+
+    /* ---------- localStorage save backup ----------
+       Games that rely on localStorage instead of save files get a way to
+       back their data up / move it to another device. NULL's own settings
+       (null:* keys) are never exported or overwritten, so the .json files
+       are safe to hand to a friend. */
+    function gameLs() {
+      var out = {};
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (k && k.indexOf("null:") !== 0) out[k] = localStorage.getItem(k);
+      }
+      return out;
+    }
+
+    function fmtBytes(n) {
+      if (n >= 1048576) return (n / 1048576).toFixed(1) + " MB";
+      if (n >= 1024) return (n / 1024).toFixed(1) + " KB";
+      return n + " B";
+    }
+
+    function openSaves() {
+      var data = gameLs();
+      var keys = Object.keys(data);
+      var bytes = keys.reduce(function (t, k) {
+        return t + k.length + (data[k] || "").length * 2;
+      }, 0);
+      var what = p.k === "app" ? "app" : "game";
+
+      var dlBtn = d.h("button", { type: "button", class: "btn btn-primary" }, [
+        d.icon("download"),
+        "Download save data",
+      ]);
+      var ulBtn = d.h("button", { type: "button", class: "btn btn-outline" }, [
+        d.icon("upload"),
+        "Upload save data",
+      ]);
+      var file = d.h("input", { type: "file", accept: ".json,application/json", hidden: true });
+
+      var body = d.h("div", { class: "saves" }, [
+        d.h("p", { html: "Saves your data if the " + what + " relies on <b>localStorage</b> instead of save files." }),
+        d.h("div", { class: "saves-stats" }, [
+          d.h("span", { class: "chip ok" }, [d.h("span", { class: "dot" }), keys.length + " saved key" + (keys.length === 1 ? "" : "s")]),
+          d.h("span", { class: "chip" }, fmtBytes(bytes) + " on this device"),
+        ]),
+        d.h("div", { class: "saves-actions" }, [dlBtn, ulBtn, file]),
+        d.h("p", { class: "saves-note", html: "Downloads a plain <b>.json</b> snapshot of the localStorage keys this " + what + " uses. NULL&rsquo;s own settings are never included, so the file is safe to share \u2014 a friend can upload it and pick up right where you left off." }),
+      ]);
+
+      N.modal.open({
+        title: "Game saves \u00b7 localStorage",
+        icon: "save",
+        body: body,
+        actions: [{ label: "Done", variant: "primary" }],
+      });
+
+      dlBtn.addEventListener("click", function () {
+        if (!keys.length) {
+          d.toast("Nothing saved yet \u2014 play a bit and progress lands here automatically.", { type: "err" });
+          return;
+        }
+        var snap = {
+          app: "NULL",
+          game: entry.name,
+          id: entry.id,
+          savedAt: new Date().toISOString(),
+          data: data,
+        };
+        var url = URL.createObjectURL(new Blob([JSON.stringify(snap, null, 2)], { type: "application/json" }));
+        var a = d.h("a", { href: url, download: "null-saves-" + entry.id + ".json" });
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(function () {
+          URL.revokeObjectURL(url);
+        }, 3000);
+        d.toast("Downloaded " + keys.length + " saved key" + (keys.length === 1 ? "" : "s"), { icon: "check" });
+      });
+
+      ulBtn.addEventListener("click", function () {
+        file.click();
+      });
+      file.addEventListener("change", function () {
+        var f = file.files && file.files[0];
+        if (!f) return;
+        var reader = new FileReader();
+        reader.onload = function () {
+          try {
+            var snap = JSON.parse(reader.result);
+            var map = snap && typeof snap === "object" && snap.data && typeof snap.data === "object" ? snap.data : snap;
+            if (!map || typeof map !== "object" || Array.isArray(map)) throw new Error("bad file");
+            var n = 0;
+            Object.keys(map).forEach(function (k) {
+              if (k.indexOf("null:") === 0) return; /* never touch NULL's own settings */
+              var v = map[k];
+              if (typeof v !== "string") v = JSON.stringify(v);
+              localStorage.setItem(k, v);
+              n++;
+            });
+            file.value = "";
+            if (!n) {
+              d.toast("That file had no game save keys.", { type: "err" });
+              return;
+            }
+            d.toast("Restored " + n + " key" + (n === 1 ? "" : "s") + " \u2014 reload the game if it doesn\u2019t pick them up", { icon: "check" });
+          } catch (err) {
+            d.toast("That doesn\u2019t look like valid save data.", { type: "err" });
+          }
+        };
+        reader.readAsText(f);
+      });
+    }
+
+    var svBtn = d.qs("#btnSaves");
+    if (svBtn) svBtn.addEventListener("click", openSaves);
 
     /* cloak popover */
     var popWrap = d.qs("#cloakWrap");

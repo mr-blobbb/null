@@ -172,7 +172,7 @@
         ]),
       ]);
       card.addEventListener("click", function () {
-        location.href = a.link || "/announcements.html";
+        location.href = a.link || "/announcements";
       });
       box.appendChild(card);
     });

@@ -12,6 +12,9 @@
    Shared black-and-white / grayscale design system for every page.
    ============================================================ */
 
+/* Material Symbols — one uniform icon font for every glyph on NULL */
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200");
+
 /* ---------- tokens ---------- */
 :root {
   color-scheme: dark;
@@ -555,7 +558,7 @@ label.lbl {
   gap: 14px;
   padding: 0 max(18px, calc((100vw - var(--maxw)) / 2));
   background: var(--bg);
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid color-mix(in srgb, var(--ac-1) 12%, var(--line));
 }
 
 .brand {
@@ -607,6 +610,9 @@ label.lbl {
   color: var(--text);
   background: transparent;
   box-shadow: inset 0 -2px 0 var(--ac-1);
+}
+.nav-link.on .msr {
+  color: var(--ac-1);
 }
 .nav-link svg {
   width: 16px;
@@ -694,6 +700,437 @@ label.lbl {
   display: none;
 }
 
+/* ============================================================
+   Material Symbols — icon base + per-context sizing/colors.
+   d.icon() now returns <span class="msr">ligature</span>, so all
+   glyph styling lives here (old svg rules are inert leftovers).
+   ============================================================ */
+.msr {
+  font-family: "Material Symbols Rounded";
+  font-weight: normal;
+  font-style: normal;
+  font-size: 20px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-feature-settings: "liga";
+  -webkit-font-feature-settings: "liga";
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  -moz-osx-font-smoothing: grayscale;
+  user-select: none;
+  -webkit-user-select: none;
+  flex: none;
+  vertical-align: middle;
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+.btn .msr {
+  font-size: 17px;
+}
+.btn-icon .msr {
+  font-size: 19px;
+}
+.btn-icon-sm .msr {
+  font-size: 18px;
+}
+.nav-link .msr {
+  font-size: 19px;
+}
+.drawer a.mi .msr {
+  font-size: 18px;
+}
+.field .msr {
+  font-size: 17px;
+  color: var(--text-2);
+}
+.modal-ic .msr {
+  font-size: 19px;
+}
+.stat .msr {
+  font-size: 15px;
+  color: var(--ac-1);
+}
+.panel-head h2 .msr {
+  font-size: 17px;
+  color: var(--ac-1);
+}
+.page-head .eyebrow .msr {
+  font-size: 15px;
+}
+.set-card .set-title .msr {
+  font-size: 17px;
+  color: var(--ac-1);
+}
+.danger-zone .dz-head .msr {
+  font-size: 16px;
+}
+.ann-card .ann-link .msr {
+  font-size: 14px;
+}
+.tile .tile-ic .msr {
+  font-size: 19px;
+}
+.tile .go .msr {
+  font-size: 14px;
+}
+.empty .msr {
+  font-size: 34px;
+  opacity: 0.8;
+}
+.toast .msr {
+  font-size: 17px;
+}
+.toast.err .msr {
+  color: var(--bad);
+}
+.pop button .msr,
+.pop a .msr {
+  font-size: 17px;
+}
+.back-top .msr {
+  font-size: 18px;
+}
+.hero-search .msr {
+  font-size: 19px;
+}
+.feat-more .msr {
+  font-size: 14px;
+}
+.rec-row .ric .msr {
+  font-size: 18px;
+  color: var(--text-2);
+}
+.rec-row .fav-row .msr,
+.tfoot .fav .msr {
+  font-size: 18px;
+}
+.rec-row .fav-row.on {
+  color: var(--ac-1);
+}
+/* filled star states */
+#btnFav.on .msr,
+.tfoot .fav.on .msr,
+.fav-row.on .msr {
+  font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+/* brand mark is now a Material glyph */
+.brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  width: auto;
+  height: auto;
+  color: var(--text);
+}
+
+/* ============================================================
+   top nav — icon-only links, no Home link, no More dropdown
+   ============================================================ */
+.nav-links {
+  gap: 2px;
+  margin-left: 2px;
+}
+.nav-links .nav-link {
+  width: 42px;
+  padding: 0;
+  justify-content: center;
+}
+.nav-links .nav-link .msr {
+  font-size: 20px;
+}
+@media (max-width: 860px) {
+  .topbar .searchbox {
+    width: 42px;
+    justify-content: center;
+    padding: 0;
+    border-radius: 999px;
+  }
+  .searchbox .sb-txt {
+    display: none;
+  }
+}
+
+/* ============================================================
+   custom dropdowns (replaces native <select> everywhere)
+   ============================================================ */
+.csel {
+  position: relative;
+  display: block;
+  width: 100%;
+  flex: 1;
+}
+.csel .csel-src {
+  position: absolute !important;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  pointer-events: none;
+}
+.csel-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 42px;
+  padding: 0 14px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line-2);
+  background: var(--glass-bg);
+  color: var(--text);
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.16s, background 0.16s, box-shadow 0.16s;
+}
+.csel-btn:hover {
+  border-color: var(--thumb);
+  background: var(--glass-bg-2);
+}
+.csel.open .csel-btn {
+  border-color: var(--ac-1);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ac-1) 16%, transparent);
+}
+.csel-val {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 560;
+}
+.csel-chev {
+  font-size: 18px;
+  color: var(--text-2);
+  transition: transform 0.18s var(--ease);
+}
+.csel.open .csel-chev {
+  transform: rotate(180deg);
+}
+.csel-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 220;
+  min-width: 180px;
+  max-height: 320px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 6px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line-2);
+  background: var(--glass-bg-2);
+  box-shadow: var(--shadow-2);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition: opacity 0.15s var(--ease), transform 0.15s var(--ease), visibility 0.15s;
+}
+.csel.open .csel-list {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+}
+.csel-opt {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 9px 11px;
+  border-radius: 9px;
+  font-size: 14px;
+  color: var(--text-2);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.13s, color 0.13s;
+}
+.csel-opt:hover {
+  background: var(--glass-bg-3);
+  color: var(--text);
+}
+.csel-opt.on {
+  background: color-mix(in srgb, var(--ac-1) 12%, transparent);
+  color: var(--text);
+  font-weight: 620;
+}
+
+/* ============================================================
+   library extras (games page) — "because you played", favorites,
+   marathon status, and the plain list view for proxies
+   ============================================================ */
+.fav-sec {
+  margin: 0 0 14px;
+}
+.rec-sec {
+  margin: 0 0 18px;
+}
+.rec-sec .panel-head {
+  margin-bottom: 14px;
+}
+.lib-sugs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: 14px;
+}
+.lib-sugs > .tcard {
+  height: 100%;
+}
+.lib-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.m-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.chip.mar-live {
+  color: var(--ac-1);
+  border-color: color-mix(in srgb, var(--ac-1) 38%, transparent);
+  background: color-mix(in srgb, var(--ac-1) 10%, transparent);
+  font-variant-numeric: tabular-nums;
+}
+.chip.mar-live .dot {
+  background: currentColor;
+  animation: mar-dot 1.6s ease-in-out infinite;
+}
+@keyframes mar-dot {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ============================================================
+   glow border — slim neon ring at the viewport edge: a 5px border
+   with a soft 5px glow hugging it. No blur filters: the glow is two
+   stepped bands, so corners stay complete and it stays GPU-cheap.
+   Corner radii are matched per layer (inner arc is always the same
+   radius) so the glow follows the ring perfectly around corners.
+   The gradient rotates in a loop (--nga); comet mode adds a bright
+   streak; .ng-near + --ng-prox/--ng-cur (set by theme.js) light up
+   only the border piece near the cursor.
+   ============================================================ */
+@property --nga {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+#null-glow-el {
+  position: fixed;
+  inset: 0;
+  z-index: 9997;
+  pointer-events: none;
+  transition: opacity 0.6s ease;
+}
+#null-glow-el i {
+  position: absolute;
+  inset: 0;
+  transition: opacity 0.75s ease;
+}
+/* ring band shape shared by every border layer (padding = thickness) */
+#null-glow-el .ng-ring,
+#null-glow-el .ng-glow,
+#null-glow-el .ng-glow2,
+#null-glow-el .ng-comet,
+#null-glow-el .ng-flare-band {
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+/* crisp 5px border */
+#null-glow-el .ng-ring {
+  padding: 5px;
+  border-radius: 12px;
+  opacity: 0.95;
+  animation: nga 8s linear infinite;
+}
+/* soft glow — inner step (7px) and outer step (10px) fall off like a blur */
+#null-glow-el .ng-glow2 {
+  padding: 7px;
+  border-radius: 14px;
+  opacity: 0.45;
+  animation: nga-rev 13s linear infinite;
+}
+#null-glow-el .ng-glow {
+  padding: 10px;
+  border-radius: 17px;
+  opacity: 0.22;
+  animation: nga 17s linear infinite reverse;
+}
+/* comet streak — same geometry as the ring so it hugs the border */
+#null-glow-el .ng-comet {
+  padding: 6px;
+  border-radius: 13px;
+  opacity: 0.95;
+  animation: nga 5s linear infinite;
+}
+/* proximity flare: a bright wedge of ring that follows the cursor.
+   theme.js sets --ng-cur to the cursor's angle; the wedge mask keeps
+   the reaction on just that piece of border, and the band inside keeps
+   its own geometry so it stays perfectly aligned with the viewport. */
+#null-glow-el .ng-flare {
+  opacity: 0;
+  transition: opacity 0.16s ease;
+  -webkit-mask: conic-gradient(from calc(var(--ng-cur, 0deg) - 30deg), #000 0 60deg, transparent 60deg 360deg);
+  mask: conic-gradient(from calc(var(--ng-cur, 0deg) - 30deg), #000 0 60deg, transparent 60deg 360deg);
+}
+#null-glow-el .ng-flare-band {
+  padding: 5px;
+  border-radius: 12px;
+  filter: brightness(1.45);
+  animation: nga 8s linear infinite;
+}
+#null-glow-el.ng-near .ng-flare {
+  opacity: calc(0.45 + var(--ng-prox, 0) * 0.55);
+}
+/* crossfade helpers — theme.js toggles these when a preset changes */
+#null-glow-el .ng-in {
+  opacity: 0 !important;
+}
+#null-glow-el .ng-xf {
+  opacity: 0 !important;
+}
+#null-glow-el.ng-off {
+  opacity: 0;
+}
+@keyframes nga {
+  to {
+    --nga: 360deg;
+  }
+}
+@keyframes nga-rev {
+  from {
+    --nga: 360deg;
+  }
+  to {
+    --nga: 0deg;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #null-glow-el i {
+    animation: none !important;
+  }
+}
+html[data-perf="1"] #null-glow-el {
+  display: none;
+}
+
 /* mobile drawer */
 .drawer-ov {
   position: fixed;
@@ -772,7 +1209,7 @@ label.lbl {
 
 /* footer */
 .site-foot {
-  border-top: 1px solid var(--line);
+  border-top: 1px solid color-mix(in srgb, var(--ac-1) 10%, var(--line));
   background: var(--bg-2);
 }
 body.lb .site-foot {
@@ -861,7 +1298,7 @@ body.lb .site-foot {
 }
 .tcard:hover {
   transform: translateY(-3px);
-  border-color: var(--line-2);
+  border-color: color-mix(in srgb, var(--ac-1) 26%, var(--line-2));
   box-shadow: var(--shadow-1);
   background: var(--glass-bg-2);
 }
@@ -878,6 +1315,8 @@ body.lb .site-foot {
   flex: none;
 }
 .tmedia img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -886,18 +1325,6 @@ body.lb .site-foot {
 }
 .tmedia img.loaded {
   opacity: 1;
-}
-.tmedia .fallback-glyph {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  color: var(--text-2);
-}
-.tmedia .fallback-glyph svg {
-  width: 46px;
-  height: 46px;
-  opacity: 0.85;
 }
 
 /* proxy rows — image-free list entries */
@@ -985,6 +1412,18 @@ body.lb .site-foot {
   height: 34px;
   flex: 1;
   font-size: 13px;
+}
+/* card footer with only the star — buttonless cards, click anywhere to play */
+.tfoot-solo {
+  padding: 2px 12px 12px;
+}
+.tfoot-solo .fav {
+  width: 30px;
+  height: 30px;
+}
+.tfoot-solo .fav svg {
+  width: 16px;
+  height: 16px;
 }
 .tfoot .fav {
   flex: none;
@@ -1276,6 +1715,7 @@ body.lb .site-foot {
 }
 .panel-head .icon-btn-row {
   display: flex;
+  align-items: center;
   gap: 6px;
 }
 
@@ -1558,9 +1998,12 @@ body.lb .site-foot {
    ============================================================ */
 .set-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
   align-items: start;
+}
+.set-card--wide {
+  grid-column: 1 / -1;
 }
 .set-card {
   border-radius: var(--r-lg);
@@ -1568,6 +2011,17 @@ body.lb .site-foot {
   display: flex;
   flex-direction: column;
   gap: 18px;
+}
+.cloak-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  flex: none;
+}
+@media (max-width: 760px) {
+  .set-grid {
+    grid-template-columns: 1fr;
+  }
 }
 .set-card .set-title {
   display: flex;
@@ -3168,91 +3622,91 @@ window.NULL_CONTENT = {
     },
     {
       title: "Games",
-      url: "/games.html",
+      url: "/games",
       grp: "Library",
       desc: "Auto-discovered game library with warnings, labels and a player shell.",
       kw: "play game arcade fun library",
     },
     {
       title: "Apps",
-      url: "/apps.html",
+      url: "/apps",
       grp: "Library",
       desc: "Apps and tools that run inside the NULL player.",
       kw: "tools utilities app calculator",
     },
     {
       title: "Proxies",
-      url: "/proxies.html",
+      url: "/proxies",
       grp: "Library",
       desc: "External sites NULL links out to, with manual status markers.",
       kw: "external links sites status",
     },
     {
       title: "Announcements",
-      url: "/announcements.html",
+      url: "/announcements",
       grp: "Pages",
       desc: "What\u2019s new on NULL.",
       kw: "news updates changelog posts",
     },
     {
       title: "Schedule",
-      url: "/schedule.html",
+      url: "/schedule",
       grp: "Pages",
       desc: "The school schedule \u2014 Regular and Homeroom/WIN days, live countdown, editable period names and lunch period.",
       kw: "school bell time class period day lunch homeroom win",
     },
     {
       title: "Backups",
-      url: "/backups.html",
+      url: "/backups",
       grp: "Pages",
       desc: "Alternate places to reach NULL if this domain goes down.",
       kw: "mirror alternate domain access link",
     },
     {
       title: "Settings",
-      url: "/settings.html",
+      url: "/settings",
       grp: "Pages",
       desc: "Theme, accent, tab presets, performance mode.",
       kw: "preferences theme accent tab cloak performance",
     },
     {
       title: "About",
-      url: "/about.html",
+      url: "/about",
       grp: "Info",
       desc: "What NULL is and how it works.",
       kw: "about what is how works",
     },
     {
       title: "District",
-      url: "/district.html",
+      url: "/district",
       grp: "Info",
       desc: "District information page.",
       kw: "school district naperville 203",
     },
     {
       title: "Privacy",
-      url: "/privacy.html",
+      url: "/privacy",
       grp: "Info",
       desc: "What NULL stores (it stays on your device).",
       kw: "privacy data local storage",
     },
     {
       title: "Terms",
-      url: "/terms.html",
+      url: "/terms",
       grp: "Info",
       desc: "Terms for using NULL.",
       kw: "terms rules use",
     },
     {
       title: "Cookies",
-      url: "/cookies.html",
+      url: "/cookies",
       grp: "Info",
       desc: "How NULL handles cookies.",
       kw: "cookies storage tracking",
     },
     {
       title: "License",
-      url: "/license.html",
+      url: "/license",
       grp: "Info",
       desc: "NULL\u2019s open license.",
       kw: "license mit open source",
@@ -3316,7 +3770,14 @@ window.NULL_CONTENT = {
     glow: "off", // glow preset id from theme.js
     glowColor1: "#35c3f2", // custom glow color 1
     glowColor2: "#a86bff", // custom glow color 2
+    glowComet: false, // comet streak traveling around the glow border
     tab: "slides", // tab preset id from tabpresets.js (default: Google Slides)
+    tabCustom: {}, // custom tab preset: { title, icon }
+    recs: true, // "Because you played" suggestions on the games page
+    marathon: true, // marathon mode feature enabled (settings toggle)
+    confetti: true, // celebrate when a class period ends
+    marathonMin: 0, // marathon mode: 0 = off, else minutes between switches
+    marathonAt: 0, // timestamp of the next auto-switch (ms)
     perf: false, // performance mode
     gmailAddr: "you@gmail.com",
     gmailUnread: 0,
@@ -3445,6 +3906,22 @@ window.NULL_CONTENT = {
     };
   })();
 
+  /* ---------- play counts (local per browser — powers "most played") ---------- */
+  var PLAYS_KEY = "null:plays";
+  N.plays = (function () {
+    var data = read(PLAYS_KEY, {});
+    return {
+      tap: function (kind, id) {
+        var k = kind + ":" + id;
+        data[k] = (data[k] || 0) + 1;
+        write(PLAYS_KEY, data);
+      },
+      count: function (kind, id) {
+        return data[kind + ":" + id] || 0;
+      },
+    };
+  })();
+
   /* ---------- small date helpers ---------- */
   N.dt = {
     ago: function (ts) {
@@ -3522,89 +3999,154 @@ window.NULL_CONTENT = {
     return Array.prototype.slice.call((root || document).querySelectorAll(sel));
   }
 
-  /* ---------- icons ---------- */
+  /* ---------- icons (Google Material Symbols Rounded) ---------- */
   var P = {
-    home: '<path d="M3 11 12 3l9 8"/><path d="M5 10.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9.5"/>',
-    game:
-      '<path d="M17.32 5H6.68a4 4 0 0 0-3.98 3.59C2.6 9.42 2 14.46 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.41-1.41A2 2 0 0 1 9.83 16h4.34a2 2 0 0 1 1.41.59L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.55-.6-6.58-.69-7.41A4 4 0 0 0 17.32 5z"/><path d="M6 11h4M8 9v4"/><circle cx="16.2" cy="12.4" r="0.6" fill="currentColor" stroke="none"/><circle cx="18.4" cy="10.4" r="0.6" fill="currentColor" stroke="none"/>',
-    grid: '<rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/>',
-    proxy:
-      '<circle cx="12" cy="12" r="9"/><path d="M3.5 12h17"/><path d="M12 3a14.5 14.5 0 0 1 0 18 14.5 14.5 0 0 1 0-18z"/>',
-    ann:
-      '<path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>',
-    sched:
-      '<rect x="3" y="4" width="18" height="17" rx="2.5"/><path d="M16 2v4M8 2v4M3 9.5h18"/><path d="M8.5 14.5l2.5 2.5 4.5-5"/>',
-    backups:
-      '<rect x="2.5" y="3" width="19" height="5" rx="1.5"/><path d="M4 8v10.5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/>',
-    settings:
-      '<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3"/><path d="M1.5 14h5M9.5 8h5M17.5 16h5"/>',
-    clock:
-      '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/>',
-    star:
-      '<path d="M12 2.6l2.9 5.9 6.5.95-4.7 4.6 1.1 6.5L12 17.7l-5.8 3.05 1.1-6.5-4.7-4.6 6.5-.95z"/>',
-    search:
-      '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/>',
-    x: '<path d="M6 6l12 12M18 6 6 18"/>',
-    chevD: '<path d="m6 9 6 6 6-6"/>',
-    chevR: '<path d="m9 6 6 6-6 6"/>',
-    menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
-    back: '<path d="M19 12H5"/><path d="m12 19-7-7 7-7"/>',
-    play: '<path d="M7 4.8v14.4a1 1 0 0 0 1.5.86l12-7.2a1 1 0 0 0 0-1.72l-12-7.2A1 1 0 0 0 7 4.8z" fill="currentColor" stroke="none"/>',
-    warn:
-      '<path d="M10.3 3.86 1.82 18a2 2 0 0 0 1.72 3h17a2 2 0 0 0 1.72-3L13.7 3.86a2 2 0 0 0-3.4 0z"/><path d="M12 9v4.5"/><path d="M12 17.2h.01"/>',
-    ext:
-      '<path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 13.5V18a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4.5"/>',
-    max:
-      '<path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/>',
-    min:
-      '<path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/>',
-    refresh:
-      '<path d="M21 12a9 9 0 1 1-2.64-6.36L21 8"/><path d="M21 3v5h-5"/>',
-    sun: '<circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2M12 19.5v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2.5 12h2M19.5 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
-    moon: '<path d="M20.5 14.1A8.6 8.6 0 0 1 9.9 3.5a8.6 8.6 0 1 0 10.6 10.6z"/>',
-    info: '<circle cx="12" cy="12" r="9"/><path d="M12 11.5V16.5"/><path d="M12 7.6h.01"/>',
-    trash:
-      '<path d="M3.5 6.5h17"/><path d="M8.5 6.5V5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v1.5"/><path d="M18.5 6.5 17.6 19a2 2 0 0 1-2 1.9H8.4a2 2 0 0 1-2-1.9L5.5 6.5"/><path d="M10 11v6M14 11v6"/>',
-    up: '<path d="M12 20V5"/><path d="m5 12 7-7 7 7"/>',
-    ban: '<circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/>',
-    file:
-      '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>',
-    tab: '<rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19"/>',
-    book: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V2H6.5A2.5 2.5 0 0 0 4 4.5v15A2.5 2.5 0 0 0 6.5 22H20v-2.5H6.5A2.5 2.5 0 0 1 4 19.5z"/>',
-    school:
-      '<path d="m3 9.5 9-5.5 9 5.5"/><path d="M5.5 12v7.5M9 12v7.5M15 12v7.5M18.5 12v7.5M2.5 19.5h19"/>',
-    scale: '<path d="M12 3v18M5 7h14M7 7l-3.5 7a3 3 0 0 0 5 0L5 7M19 7l-3.5 7a3 3 0 0 0 5 0L19 7M8 21h8"/>',
-    cookie:
-      '<circle cx="12" cy="12" r="9"/><path d="M12 5.5a1.4 1.4 0 0 0 1.4-1.4A1.4 1.4 0 0 1 14.8 4.5a1.4 1.4 0 0 1-1.4 1.4A1.4 1.4 0 0 0 12 7.3a1.4 1.4 0 0 1-1.4 1.4A1.4 1.4 0 0 0 12 10a1.4 1.4 0 0 1 1.4 1.4 1.4 1.4 0 0 0 2.8 0A1.4 1.4 0 0 1 15.6 10"/><path d="M17 13a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM8.5 15.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>',
-    zap: '<path d="M13 2 3 14h7l-1 8 11-13h-7l1-7z"/>',
-    shuffle:
-      '<path d="M16 3h5v5"/><path d="M4 20 21 3"/><path d="M21 16v5h-5"/><path d="m15 15 6 6"/><path d="M4 4l5 5"/>',
-    list:
-      '<path d="M8.5 6h12M8.5 12h12M8.5 18h12"/><path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01"/>',
-    heart:
-      '<path d="M19.5 5.6a4.9 4.9 0 0 0-7-.2L12 5.9l-.5-.5a4.95 4.95 0 1 0-7 7l.5.5L12 19.9l7-7 .5-.5a4.9 4.9 0 0 0 0-6.8z"/>',
-    chrome: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5h0a10.3 10.3 0 0 1 8.6 14.5L15.7 10"/>',
-    pen: '<path d="M4 20h4L19.5 8.5a2.12 2.12 0 0 0-3-3L5 17 4 20z"/><path d="m13.5 6.5 3 3"/>',
-    check: '<path d="m4.5 12.5 5 5 10-11"/>',
-    clock2: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
-    calendar:
-      '<rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M16 2.5v4M8 2.5v4M3 9.5h18"/>',
+    home: "home",
+    game: "sports_esports",
+    grid: "apps",
+    proxy: "public",
+    ann: "campaign",
+    sched: "calendar_month",
+    backups: "archive",
+    settings: "settings",
+    clock: "schedule",
+    clock2: "timer",
+    star: "star",
+    search: "search",
+    x: "close",
+    chevD: "expand_more",
+    chevR: "chevron_right",
+    menu: "menu",
+    back: "arrow_back",
+    play: "play_arrow",
+    warn: "warning",
+    ext: "open_in_new",
+    max: "fullscreen",
+    min: "fullscreen_exit",
+    refresh: "refresh",
+    sun: "light_mode",
+    moon: "dark_mode",
+    info: "info",
+    trash: "delete",
+    up: "arrow_upward",
+    ban: "block",
+    file: "description",
+    tab: "tab",
+    book: "menu_book",
+    school: "school",
+    scale: "balance",
+    cookie: "cookie",
+    zap: "bolt",
+    lock: "lock",
+    shuffle: "shuffle",
+    list: "list",
+    heart: "favorite",
+    chrome: "language",
+    pen: "edit",
+    check: "check",
+    calendar: "event",
+    copy: "content_copy",
+    upload: "upload",
+    download: "download",
+    save: "save",
   };
 
   function icon(name, cls) {
-    var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.setAttribute("viewBox", "0 0 24 24");
-    svg.setAttribute("fill", "none");
-    svg.setAttribute("stroke", "currentColor");
-    svg.setAttribute("stroke-width", "1.9");
-    svg.setAttribute("stroke-linecap", "round");
-    svg.setAttribute("stroke-linejoin", "round");
-    svg.setAttribute("aria-hidden", "true");
-    svg.setAttribute("width", "20");
-    svg.setAttribute("height", "20");
-    if (cls) svg.setAttribute("class", cls);
-    svg.innerHTML = P[name] || P.info;
-    return svg;
+    var span = document.createElement("span");
+    span.className = "msr" + (cls ? " " + cls : "");
+    span.setAttribute("aria-hidden", "true");
+    span.textContent = P[name] || "help";
+    return span;
+  }
+
+  /* ---------- custom selects (upgrade a native <select> in place) ---------- */
+  var openSel = null;
+  function closeSel() {
+    if (!openSel) return;
+    openSel.root.classList.remove("open");
+    if (openSel.btn) openSel.btn.setAttribute("aria-expanded", "false");
+    openSel = null;
+  }
+  document.addEventListener("click", function (e) {
+    if (openSel && !openSel.root.contains(e.target)) closeSel();
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") closeSel();
+  });
+
+  /* refresh the visible label/selected state for an upgraded select */
+  function selSync(sel) {
+    if (!sel || !sel.dataset || !sel.dataset.upgraded) return;
+    var i = sel.selectedIndex;
+    var o = i >= 0 ? sel.options[i] : null;
+    if (sel._valEl) sel._valEl.textContent = o ? o.textContent : "";
+    if (!sel._listEl) return;
+    Array.prototype.forEach.call(sel._listEl.children, function (ob) {
+      var on = !!o && ob.getAttribute("data-v") === o.value;
+      ob.classList.toggle("on", on);
+      ob.setAttribute("aria-selected", on ? "true" : "false");
+    });
+  }
+
+  /* replace the native widget with a styled button + option list.
+     The original <select> stays in the DOM (hidden) and still receives
+     change events, so existing handlers keep working untouched. */
+  function upgradeSelect(sel) {
+    if (!sel || sel.dataset.upgraded) return;
+    sel.dataset.upgraded = "1";
+    sel.classList.add("csel-src");
+    sel.setAttribute("tabindex", "-1");
+    sel.setAttribute("aria-hidden", "true");
+
+    var root = h("span", { class: "csel" });
+    sel.parentNode.insertBefore(root, sel);
+    root.appendChild(sel);
+
+    var val = h("span", { class: "csel-val" });
+    var chev = icon("chevD");
+    chev.classList.add("csel-chev");
+    var btn = h(
+      "button",
+      { type: "button", class: "csel-btn", "aria-haspopup": "listbox", "aria-expanded": "false" },
+      [val, chev],
+    );
+    if (sel.getAttribute("aria-label")) btn.setAttribute("aria-label", sel.getAttribute("aria-label"));
+
+    var list = h("div", { class: "csel-list", role: "listbox" });
+    Array.prototype.forEach.call(sel.options, function (o) {
+      var ob = h(
+        "button",
+        { type: "button", role: "option", class: "csel-opt", "data-v": o.value },
+        o.textContent,
+      );
+      ob.addEventListener("click", function () {
+        if (sel.value !== o.value) {
+          sel.value = o.value;
+          sel.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+        closeSel();
+        selSync(sel);
+      });
+      list.appendChild(ob);
+    });
+    root.appendChild(btn);
+    root.appendChild(list);
+
+    btn.addEventListener("click", function () {
+      if (openSel && openSel.root === root) {
+        closeSel();
+        return;
+      }
+      closeSel();
+      root.classList.add("open");
+      btn.setAttribute("aria-expanded", "true");
+      openSel = { root: root, btn: btn };
+    });
+
+    sel._valEl = val;
+    sel._listEl = list;
+    selSync(sel);
+    return sel;
   }
 
   N.dom = {
@@ -3613,6 +4155,8 @@ window.NULL_CONTENT = {
     qsa: qsa,
     icon: icon,
     icons: P,
+    upgradeSelect: upgradeSelect,
+    selSync: selSync,
   };
 
   /* fallback thumbnails by kind */
@@ -3820,10 +4364,10 @@ window.NULL_CONTENT = {
   }
   function showSgGames() {
     open({
-      title: "lol u switched didnt u",
+      title: "You switched? Wow!",
       icon: "zap",
-      body: "<p>blahblahblah a bunch of yap. anyways, were better than sggames. we be cleaner, tuffer, and overall better</p>",
-      actions: [{ label: "i agree! aight bet!", variant: "primary" }],
+      body: "<p>Honestly, we're glad you switched. Everyone should always get their very best experience from the site they play on.</p>",
+      actions: [{ label: "I agree!", variant: "primary" }],
     });
   }
 
@@ -3831,6 +4375,7 @@ window.NULL_CONTENT = {
     open: open,
     confirm: confirm,
     armSgGames: armSgGames,
+    showSgGames: showSgGames,
     closeTop: function () {
       var top = stack[stack.length - 1];
       if (top && top._close) top._close();
@@ -3843,9 +4388,12 @@ window.NULL_CONTENT = {
    Applies theme / accent / glow / performance prefs to <html>.
    Accent palettes are mid-tone so they read on both dark and light surfaces.
 
-   Glow borders are fully driven from here: a self-contained <style> is
-   injected so the chosen preset works regardless of page. Presets are
-   blue+green, rainbow, blue+purple and a custom two-color option. */
+   Glow is a slim full-screen neon border: a 5px ring pinned to the
+   viewport edge with a soft 5px glow hugging it. The gradient rotates in
+   a continuous loop; optional comet mode adds a bright streak that
+   travels the border. Moving the cursor close to an edge lights up only
+   the piece of border near the cursor. Presets crossfade into each
+   other instead of snapping. */
 (function () {
   var N = (window.N = window.N || {});
   var root = document.documentElement;
@@ -3860,27 +4408,222 @@ window.NULL_CONTENT = {
     { id: "rose", name: "Rose", c1: "#e26f9c", c2: "#efa0bd" },
   ];
 
-  /* glow is a simple on/off full-screen edge glow — never a per-card
-     border. Enabled it paints a fixed inset glow around the whole viewport
-     using the accent color (grayscale fallback when accent is off). */
+  /* Glow presets. Colors are ordered around the ring and the gradient
+     starts + ends on the same color, so the loop is seamless and every
+     transition between colors is soft. */
   var GLOWS = [
-    { id: "off", name: "Off" },
-    { id: "on", name: "On" },
+    { id: "off", name: "Off", colors: null },
+    { id: "bp", name: "Blue + Purple", colors: ["#3d8bff", "#7d6bff", "#a86bff"] },
+    { id: "pg", name: "Purple + Green", colors: ["#a95bff", "#63e0c8", "#2fe58f"] },
+    { id: "rainbow", name: "Rainbow", colors: ["#ff4d6d", "#ffb020", "#ffe94a", "#35e88f", "#38b6ff", "#a26bff"] },
+    { id: "custom", name: "Custom", colors: null },
   ];
 
-  function setGlow(on) {
-    var cur = document.getElementById("null-glow-el");
-    if (!on || on === "off" || on === false) {
-      delete root.dataset.glow;
-      if (cur) cur.remove();
-      return;
+  /* legacy ids from the old on/off + card-scan presets → blue+purple */
+  function normalize(id) {
+    if (!id || id === "off" || id === false) return "off";
+    var known = GLOWS.some(function (g) {
+      return g.id === id;
+    });
+    return known ? id : "bp";
+  }
+
+  function colorsFor(id) {
+    var g = GLOWS.find(function (x) {
+      return x.id === id;
+    });
+    if (id === "custom") {
+      var c1 = N.prefs.get("glowColor1") || "#35c3f2";
+      var c2 = N.prefs.get("glowColor2") || "#a86bff";
+      return [c1, c2];
     }
-    root.dataset.glow = "on";
-    if (cur) return;
+    return (g && g.colors) || ["#3d8bff", "#7d6bff", "#a86bff"];
+  }
+
+  /* seamless conic gradient — equal stops around the circle, ending on the
+     first color so the wrap point is invisible */
+  function conic(colors) {
+    var stops = colors
+      .map(function (c, i) {
+        var a = Math.round((i / colors.length) * 360);
+        return c + " " + a + "deg";
+      })
+      .join(", ");
+    return "conic-gradient(from var(--nga), " + stops + ", " + colors[0] + " 360deg)";
+  }
+
+  /* comet layer: one bright head with a soft tail, the rest transparent */
+  function cometBg(colors) {
+    var c = colors[0] || "#3d8bff";
+    var bright = "color-mix(in srgb, " + c + " 75%, white 25%)";
+    return (
+      "conic-gradient(from var(--nga), transparent 0 34%, " +
+      bright +
+      " 45%, transparent 56% 100%)"
+    );
+  }
+
+  /* The ring layers are drawn with mask-composite. Browsers without it
+     would paint the full-viewport gradient over the whole screen, so the
+     glow is disabled there instead of breaking the page. */
+  var masksOK = (function () {
+    if (typeof CSS === "undefined" || !CSS.supports) return true;
+    try {
+      return CSS.supports("mask-composite", "exclude") || CSS.supports("-webkit-mask-composite", "xor");
+    } catch (err) {
+      return true;
+    }
+  })();
+
+  /* ---------- glow element ---------- */
+  var elState = null; // { el, ring, glow, glow2, comet, flareBand }
+  var curId = "off";
+  var cometOn = false;
+
+  function layerEl(kind) {
+    var i = document.createElement("i");
+    i.className = "ng-" + kind;
+    return i;
+  }
+
+  function ensureEl(bg) {
+    if (elState && elState.el.isConnected) return elState;
     var el = document.createElement("div");
     el.id = "null-glow-el";
     el.setAttribute("aria-hidden", "true");
+    var ring = layerEl("ring");
+    var glow2 = layerEl("glow2");
+    var glow = layerEl("glow");
+    [ring, glow2, glow].forEach(function (l) {
+      if (bg) l.style.background = bg;
+    });
+    el.appendChild(ring);
+    el.appendChild(glow2);
+    el.appendChild(glow);
+    var comet = null;
+    if (cometOn) {
+      comet = layerEl("comet");
+      if (bg) comet.style.background = cometBg(colorsFor(curId));
+      el.appendChild(comet);
+    }
+    /* proximity flare: bright wedge of ring that follows the cursor */
+    var flare = layerEl("flare");
+    var flareBand = layerEl("flare-band");
+    if (bg) flareBand.style.background = bg;
+    flare.appendChild(flareBand);
+    el.appendChild(flare);
     document.body.appendChild(el);
+    elState = { el: el, ring: ring, glow: glow, glow2: glow2, comet: comet, flareBand: flareBand };
+    return elState;
+  }
+
+  /* swap a layer's gradient with a crossfade: new layer fades in on top,
+     old one fades out and is removed once the transition settles */
+  function setLayerBg(kind, bg) {
+    var st = elState;
+    if (!st) return;
+    var old = st[kind];
+    if (!old || old.style.background === bg) return;
+    var n = layerEl(kind);
+    n.style.background = bg;
+    n.classList.add("ng-in");
+    var host = kind === "flareBand" ? st.flare : old.parentNode;
+    host.insertBefore(n, old);
+    old.classList.add("ng-xf");
+    void n.offsetWidth;
+    n.classList.remove("ng-in");
+    st[kind] = n;
+    setTimeout(function () {
+      if (old.parentNode) old.parentNode.removeChild(old);
+    }, 850);
+  }
+
+  function setComet(on) {
+    cometOn = !!on;
+    if (!elState || !elState.el.isConnected || !root.dataset.glow) return;
+    if (cometOn) {
+      if (!elState.comet) {
+        var c = layerEl("comet");
+        c.style.background = cometBg(colorsFor(curId));
+        c.classList.add("ng-in");
+        elState.el.appendChild(c);
+        void c.offsetWidth;
+        c.classList.remove("ng-in");
+        elState.comet = c;
+      }
+    } else if (elState.comet) {
+      var old = elState.comet;
+      old.classList.add("ng-xf");
+      elState.comet = null;
+      setTimeout(function () {
+        if (old.parentNode) old.parentNode.removeChild(old);
+      }, 850);
+    }
+  }
+
+  /* cursor proximity: only the piece of border near the pointer reacts.
+     We track the distance to the nearest edge (0..1 flare strength) and
+     the cursor's angle around the viewport center, which aims the flare
+     wedge at the right segment. */
+  var proxOn = false;
+  var proxRaf = null;
+  var proxX = -999;
+  var proxY = -999;
+  function proxMove(e) {
+    proxX = e.clientX;
+    proxY = e.clientY;
+    if (proxRaf) return;
+    proxRaf = requestAnimationFrame(function () {
+      proxRaf = null;
+      var st = elState;
+      if (!st || !st.el.isConnected) return;
+      var w = window.innerWidth;
+      var h = window.innerHeight;
+      var d = Math.min(proxX, w - proxX, proxY, h - proxY);
+      var v = N.dom.clamp(1 - d / 80, 0, 1);
+      var deg = (Math.atan2(proxX - w / 2, -(proxY - h / 2)) * 180) / Math.PI;
+      st.el.style.setProperty("--ng-prox", v);
+      st.el.style.setProperty("--ng-cur", (deg + 360) % 360 + "deg");
+      st.el.classList.toggle("ng-near", v > 0.02);
+    });
+  }
+  function wireProx() {
+    if (proxOn) return;
+    proxOn = true;
+    document.addEventListener("pointermove", proxMove, { passive: true });
+  }
+  function unwireProx() {
+    if (!proxOn) return;
+    proxOn = false;
+    document.removeEventListener("pointermove", proxMove);
+  }
+
+  function setGlow(raw) {
+    var id = normalize(raw);
+    if (id === "off" || !masksOK) {
+      delete root.dataset.glow;
+      if (elState && elState.el.isConnected) {
+        var st = elState;
+        elState = null;
+        st.el.classList.add("ng-off");
+        setTimeout(function () {
+          if (st.el.parentNode) st.el.parentNode.removeChild(st.el);
+        }, 600);
+      }
+      unwireProx();
+      return;
+    }
+    root.dataset.glow = id;
+    curId = id;
+    var colors = colorsFor(id);
+    var bg = conic(colors);
+    var st = ensureEl(bg);
+    setLayerBg("ring", bg);
+    setLayerBg("glow", bg);
+    setLayerBg("glow2", bg);
+    setLayerBg("flareBand", bg);
+    if (cometOn) setLayerBg("comet", cometBg(colors));
+    wireProx();
   }
 
   function setTheme(t) {
@@ -3913,6 +4656,7 @@ window.NULL_CONTENT = {
     setTheme(p.theme);
     setAccent(p.accent);
     setPerf(p.perf);
+    cometOn = !!p.glowComet;
     setGlow(p.glow);
   }
 
@@ -3922,12 +4666,14 @@ window.NULL_CONTENT = {
     setTheme: setTheme,
     setAccent: setAccent,
     setGlow: setGlow,
+    setComet: setComet,
     setPerf: setPerf,
     applyAll: applyAll,
   };
 
   N.theme.applyAll();
 })();
+
 ;
 /* NULL — tabpresets.js
    Configurable browser-tab presets. One preset list, hardcoded here — no
@@ -3957,7 +4703,7 @@ window.NULL_CONTENT = {
   };
 
   var PRESETS = [
-    { id: "slides", name: "Default (Google Slides)", title: "Untitled Slide - Google Slides", icon: G.slides },
+    { id: "slides", name: "", title: "Untitled Slide - Google Slides", icon: G.slides },
     { id: "null", name: "NULL", title: "NULL", icon: "/public/favicon.svg" },
     { id: "home", name: "Home", title: "Naperville Community Unit School District 203", icon: s2("naperville203.org") },
     { id: "noredink", name: "NoRedInk", title: "NoRedInk", icon: s2("noredink.com") },
@@ -3976,12 +4722,20 @@ window.NULL_CONTENT = {
     { id: "gclass", name: "Google Classroom", title: "Home", icon: G.classroom },
     { id: "gcal", name: "Google Calendar", title: "Google Calendar", icon: G.calendar },
     { id: "gmail", name: "Gmail", title: null, icon: G.gmail },
+    /* custom preset — title/favicon come from prefs.tabCustom, edited in settings */
+    { id: "custom", name: "Custom tab", title: null, icon: null },
   ];
 
   function get(id) {
-    return PRESETS.find(function (p) {
+    var p = PRESETS.find(function (p) {
       return p.id === id;
     });
+    if (!p) return null;
+    if (p.id === "custom") {
+      var c = N.prefs.get("tabCustom") || {};
+      return { id: "custom", name: "Custom tab", title: c.title || null, icon: c.icon || null };
+    }
+    return p;
   }
 
   function titleFor(p) {
@@ -3991,6 +4745,7 @@ window.NULL_CONTENT = {
       var unread = parseInt(N.prefs.get("gmailUnread"), 10) || 0;
       return "Inbox" + (unread > 0 ? " (" + unread + ")" : "") + " - " + addr;
     }
+    if (p.id === "custom") return p.title || "NULL";
     return p.title || p.name || "NULL";
   }
 
@@ -4001,6 +4756,7 @@ window.NULL_CONTENT = {
   function apply() {
     var p = current();
     var fav = document.getElementById("favicon");
+    /* custom presets without an icon keep the existing favicon */
     if (fav && p && p.icon) fav.setAttribute("href", p.icon);
     document.title = titleFor(p);
     N.tab.applied = p;
@@ -4186,9 +4942,7 @@ window.NULL_CONTENT = {
 
   /* ---------- thumb (games/apps only — proxies use rows) ---------- */
   function thumbEl(entry, kind) {
-    var meta = META[kind];
-    var glyph = d.h("div", { class: "fallback-glyph" }, [d.icon(meta.icon)]);
-    var media = d.h("div", { class: "tmedia" }, [glyph]);
+    var media = d.h("div", { class: "tmedia" });
     if (entry.thumb) {
       var img = d.h("img", {
         src: entry.thumb,
@@ -4294,11 +5048,8 @@ window.NULL_CONTENT = {
       d.h("p", { class: "tdesc" }, entry.desc || meta.label + " in the NULL library."),
     ]);
 
-    var foot = d.h("div", { class: "tfoot" }, [
-      d.h("button", { type: "button", class: "btn btn-primary", onclick: function (e) {
-          e.stopPropagation();
-          open();
-        } }, [d.icon(kind === "proxy" ? "ext" : "play"), meta.play]),
+    /* no play button — the whole card is the click target (plus a star) */
+    var foot = d.h("div", { class: "tfoot tfoot-solo" }, [
       favBtn(entry, kind),
     ]);
 
