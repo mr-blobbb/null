@@ -8,9 +8,9 @@
   /* top nav — icon-only destinations. Home is the NULL brand mark itself,
      so it is not a separate link. The mobile drawer shows all of these. */
   var PRIMARY = [
-    { id: "games", t: "Games", url: "/games", icon: "game" },
-    { id: "apps", t: "Apps", url: "/apps", icon: "grid" },
-    { id: "proxies", t: "Proxies", url: "/proxies", icon: "proxy" },
+    { id: "games", t: "Games", url: "/games/", icon: "game" },
+    { id: "apps", t: "Apps", url: "/apps/", icon: "grid" },
+    { id: "proxies", t: "Proxies", url: "/proxies/", icon: "proxy" },
     { id: "schedule", t: "Schedule", url: "/schedule", icon: "sched" },
     { id: "announcements", t: "Announcements", url: "/announcements", icon: "ann" },
     { id: "backups", t: "Backups", url: "/backups", icon: "backups" },
@@ -22,9 +22,9 @@
     {
       name: "Library",
       links: [
-        { t: "Games", url: "/games", icon: "game" },
-        { t: "Apps", url: "/apps", icon: "grid" },
-        { t: "Proxies", url: "/proxies", icon: "proxy" },
+        { t: "Games", url: "/games/", icon: "game" },
+        { t: "Apps", url: "/apps/", icon: "grid" },
+        { t: "Proxies", url: "/proxies/", icon: "proxy" },
       ],
     },
     {
@@ -45,9 +45,9 @@
       name: "Explore",
       links: [
         { t: "Home", url: "/" },
-        { t: "Games", url: "/games" },
-        { t: "Apps", url: "/apps" },
-        { t: "Proxies", url: "/proxies" },
+        { t: "Games", url: "/games/" },
+        { t: "Apps", url: "/apps/" },
+        { t: "Proxies", url: "/proxies/" },
         { t: "Announcements", url: "/announcements" },
         { t: "Schedule", url: "/schedule" },
         { t: "Settings", url: "/settings" },
@@ -69,11 +69,19 @@
   function isActive(url) {
     var p = location.pathname;
     if (url === "/") return p === "/" || p === "/index.html";
-    /* match the clean url and its .html form, so nav stays highlighted
-       whether the host serves /games or /games.html */
-    var name = url.split("/").pop();
-    var tail = p.split("/").pop() || "";
-    return p === url || tail === name || tail === name + ".html";
+    /* normalize both sides: strip the trailing slash and any /index.html
+       suffix, so /games, /games/, /games/index.html and /games.html all
+       light up the same nav item on any host */
+    function norm(s) {
+      if (s.length > 1 && s.charAt(s.length - 1) === "/") s = s.slice(0, -1);
+      if (s.slice(-11) === "/index.html") s = s.slice(0, -11);
+      return s;
+    }
+    var dir = norm(p);
+    var target = norm(url);
+    var name = target.split("/").pop();
+    var tail = dir.split("/").pop() || "";
+    return dir === target || tail === name || tail === name + ".html";
   }
 
   N.router = {

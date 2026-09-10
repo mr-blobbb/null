@@ -5,7 +5,7 @@
    ============================================================ */
 window.NULL_CATALOG = {
   "site": "NULL",
-  "generatedAt": "2026-09-10T15:15:43.448Z",
+  "generatedAt": "2026-09-10T16:00:00.939Z",
   "games": [
     {
       "id": "flip",
@@ -14,11 +14,7 @@ window.NULL_CATALOG = {
       "file": "/games/flip/flip.html",
       "thumb": "/games/flip/flip.svg",
       "labels": [
-        "Puzzle",
-        "Memory",
-        "Singleplayer",
-        "Card",
-        "Game"
+        "Test"
       ],
       "warning": null
     },
@@ -29,12 +25,7 @@ window.NULL_CATALOG = {
       "file": "/games/pulse/pulse.html",
       "thumb": "/games/pulse/pulse.svg",
       "labels": [
-        "Action",
-        "Arcade",
-        "2 Player",
-        "Local",
-        "Multiplayer",
-        "Pong"
+        "Test"
       ],
       "warning": {
         "title": "Heads up — PULSE",
@@ -48,10 +39,7 @@ window.NULL_CATALOG = {
       "file": "/games/simon/simon.html",
       "thumb": "/games/simon/simon.svg",
       "labels": [
-        "Memory",
-        "Puzzle",
-        "Singleplayer",
-        "Simon"
+        "Test"
       ],
       "warning": null
     },
@@ -62,10 +50,7 @@ window.NULL_CATALOG = {
       "file": "/games/snake/snake.html",
       "thumb": "/games/snake/snake.svg",
       "labels": [
-        "Arcade",
-        "Singleplayer",
-        "Classic",
-        "Snake"
+        "Test"
       ],
       "warning": null
     },
@@ -76,10 +61,7 @@ window.NULL_CATALOG = {
       "file": "/games/trace/trace.html",
       "thumb": "/games/trace/trace.svg",
       "labels": [
-        "Arcade",
-        "Puzzle",
-        "Singleplayer",
-        "Retro"
+        "Test"
       ],
       "warning": null
     },
@@ -90,10 +72,7 @@ window.NULL_CATALOG = {
       "file": "/games/void/void.html",
       "thumb": "/games/void/void.svg",
       "labels": [
-        "Arcade",
-        "Singleplayer",
-        "Retro",
-        "Breakout"
+        "Test"
       ],
       "warning": null
     }

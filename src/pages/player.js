@@ -157,7 +157,7 @@
     var backBtn = d.qs("#btnBack");
     if (backBtn) {
       backBtn.addEventListener("click", function () {
-        var back = "/" + (p.k === "app" ? "apps" : p.k === "proxy" ? "proxies" : "games");
+        var back = "/" + (p.k === "app" ? "apps" : p.k === "proxy" ? "proxies" : "games") + "/";
         if (history.length > 1) history.back();
         else location.href = back;
       });

@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="color-scheme" content="dark light">
   <meta name="theme-color" content="#09090b">
-  <title>Proxies — NULL</title>
-  <meta name="description" content="NULL proxies — external destinations, listed with status markers.">
+  <title>Apps — NULL</title>
+  <meta name="description" content="The NULL apps — tools that run inside the NULL player.">
   <link rel="icon" id="favicon" href="/public/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/src/styles/global.css">
   <link rel="stylesheet" href="/src/styles/extra.css">
@@ -22,35 +22,42 @@
     })();
   </script>
 </head>
-<body data-page="proxies" class="lb">
+<body data-page="apps" class="lb">
   <a class="skip-link" href="#main">Skip to content</a>
   <header data-mount="nav"></header>
 
   <main id="scrollview" class="sview">
     <div class="page-head">
-      <span class="eyebrow"><span data-icon="proxy"></span>proxies · external links</span>
-      <h1>Proxies</h1>
+      <span class="eyebrow"><span data-icon="grid"></span>apps · auto-discovered</span>
+      <h1>Apps &amp; tools</h1>
       <p>
-        Proxies are different from games and apps: selecting one opens the external
-        destination in a new tab — NULL never wraps it inside the player. Status
-        markers below are maintained by hand, not auto-verified.
+        Utilities that behave like part of NULL instead of separate websites.
+        Like games, each app folder is discovered automatically, and everything
+        opens inside the same player shell.
       </p>
     </div>
     <div class="toolbar">
       <span class="field" style="width:min(280px,100%)">
         <span data-icon="search"></span>
-        <input id="libSearch" type="text" placeholder="Filter proxies" aria-label="Filter proxies">
+        <input id="libSearch" type="text" placeholder="Filter by name or label" aria-label="Filter apps">
+      </span>
+      <span class="select-field sel-wrap" style="width:min(150px,100%)">
+        <select id="sortSel" aria-label="Sort apps">
+          <option value="name">A&ndash;Z</option>
+          <option value="id">Label</option>
+        </select>
       </span>
       <span id="count" class="count"></span>
     </div>
-    <div id="labelRow" class="filter-row" role="group" aria-label="Filter by status"></div>
+    <div id="labelRow" class="filter-row" role="group" aria-label="Filter by label"></div>
+    <div id="favSec" class="fav-sec" hidden></div>
     <div id="grid" class="lib-grid"></div>
     <div id="empty"></div>
   </main>
 
   <noscript>
     <nav class="ns-nav">
-      <a href="/">Home</a><a href="/games">Games</a><a href="/apps">Apps</a><a href="/proxies">Proxies</a><a href="/schedule">Schedule</a><a href="/settings">Settings</a>
+      <a href="/">Home</a><a href="/games/">Games</a><a href="/apps/">Apps</a><a href="/proxies/">Proxies</a><a href="/schedule">Schedule</a><a href="/settings">Settings</a>
     </nav>
   </noscript>
 
@@ -60,7 +67,7 @@
   <script src="/src/utilities/theme.js"></script>
   <script src="/src/utilities/scroll.js"></script>
   <script src="/src/routing/router.js"></script>
-  <script src="/src/catalog/generated-catalog.js?v=5736fc7765"></script>
+  <script src="/src/catalog/generated-catalog.js?v=8226390f93"></script>
   <script src="/src/catalog/catalog.js"></script>
   <script src="/src/content/content.js"></script>
   <script src="/src/components/tabpresets.js"></script>

@@ -19,11 +19,12 @@ from folders; nothing needs to be registered by hand.
 /
 ├── index.html             Home dashboard
 ├── 404.html               Custom NULL 404 (leaking barrel)
-├── games/                 One folder per game (auto-discovered)
-│   ├── pulse/ …           pulse.html + Label.txt + Warning.txt + pulse.svg
+├── games/                 Game library — index.html is the /games page
+│   ├── index.html         The /games library page
+│   ├── pulse/ …           One folder per game (auto-discovered)
 │   └── hollow-knight/     Placeholder — drop the real files in & rebuild
-├── apps/                  Apps & tools (same folder format as games)
-├── proxies/               External links — proxy.txt per entry
+├── apps/                  App library — index.html is the /apps page
+├── proxies/               Proxy list — index.html is the /proxies page
 ├── src/
 │   ├── styles/global.css  The whole design system (glass, glow, themes)
 │   ├── utilities/         store, dom, modal, theme, scroll, markdown
@@ -45,9 +46,11 @@ from folders; nothing needs to be registered by hand.
 └── vite.config.js         Dev-only (static deployment is the real build)
 ```
 
-Pages are ordinary HTML files (`games.html`, `settings.html`, `player.html`, …)
-sharing one CSS file and a handful of plain-JS modules. Normal page navigation,
-no SPA router tricks.
+Pages are ordinary HTML files. The library pages live as `games/index.html`,
+`apps/index.html` and `proxies/index.html` (served at `/games`, `/apps`,
+`/proxies`); the rest sit at the root (`settings.html`, `player.html`, …).
+All share one CSS file and a handful of plain-JS modules — normal page
+navigation, no SPA router tricks.
 
 ---
 
@@ -123,9 +126,10 @@ Push the repo and let GitHub Pages serve it from the repository root.
 `404.html`, `index.html` and all content folders live at the root on purpose,
 so no build step or special Pages config is needed.
 
-Path note: links are root-relative (`/games.html`). That matches the user-site
-root (`googleslides2026.github.io`). If you ever host under a sub-path instead,
-prefix a `<base>` tag in each HTML head.
+Path note: links are root-relative and clean (`/games`, `/apps`, …). GitHub
+Pages resolves those to the directory index files (`games/index.html`, …) and
+redirects to the trailing-slash form — the nav accounts for both. If you ever
+host under a sub-path instead, prefix a `<base>` tag in each HTML head.
 
 ## Features at a glance
 

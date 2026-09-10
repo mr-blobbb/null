@@ -41,7 +41,7 @@ const body =
    hand-maintained html files is left alone. */
 function bumpCatalogTag(rootDir, tag) {
   const htmlFiles = [
-    "index.html", "games.html", "apps.html", "proxies.html",
+    "index.html", "games/index.html", "apps/index.html", "proxies/index.html",
     "schedule.html", "announcements.html", "backups.html", "settings.html",
     "about.html", "privacy.html", "terms.html", "cookies.html",
     "license.html", "district.html", "404.html", "player.html",

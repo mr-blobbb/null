@@ -106,20 +106,27 @@
       if (live) live.rebuild();
     }
     function miss() {
-      /* clean urls — a few static hosts only serve the .html file */
-      var alt = /\.html$/.test(pg.url) ? null : pg.url + ".html";
-      if (alt) {
-        fetch(alt)
+      /* clean urls — some hosts only serve the .html file, and the
+         library pages now live at games/index.html, apps/index.html\u2026 */
+      if (/\.html$/.test(pg.url)) {
+        pageText[pg.url] = null;
+        return;
+      }
+      var base = pg.url.replace(/\/+$/, "");
+      var alts = [base + ".html", base + "/index.html"];
+      var i = 0;
+      (function tryAlt() {
+        if (i >= alts.length) {
+          pageText[pg.url] = null;
+          return;
+        }
+        fetch(alts[i++])
           .then(function (r) {
             return r.ok ? r.text() : Promise.reject();
           })
           .then(got)
-          .catch(function () {
-            pageText[pg.url] = null;
-          });
-      } else {
-        pageText[pg.url] = null;
-      }
+          .catch(tryAlt);
+      })();
     }
     fetch(pg.url)
       .then(function (r) {
@@ -267,8 +274,8 @@
         results.appendChild(d.h("div", { class: "sr-group" }, "Jump to"));
         [
           { t: "Home", u: "/", i: "home" },
-          { t: "Games", u: "/games", i: "game" },
-          { t: "Apps", u: "/apps", i: "grid" },
+          { t: "Games", u: "/games/", i: "game" },
+          { t: "Apps", u: "/apps/", i: "grid" },
           { t: "Schedule", u: "/schedule", i: "sched" },
           { t: "Settings", u: "/settings", i: "settings" },
         ].forEach(function (s) {
