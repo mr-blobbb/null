@@ -1404,6 +1404,18 @@ body.lb .site-foot {
   flex: 1;
   font-size: 13px;
 }
+/* card footer with only the star — buttonless cards, click anywhere to play */
+.tfoot-solo {
+  padding: 2px 12px 12px;
+}
+.tfoot-solo .fav {
+  width: 30px;
+  height: 30px;
+}
+.tfoot-solo .fav svg {
+  width: 16px;
+  height: 16px;
+}
 .tfoot .fav {
   flex: none;
   width: 34px;

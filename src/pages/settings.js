@@ -43,6 +43,8 @@
     if (rsw) rsw.checked = p.recs !== false;
     var msw = d.qs("#marathonSwitch");
     if (msw) msw.checked = p.marathon !== false;
+    var cfsw = d.qs("#confettiSwitch");
+    if (cfsw) cfsw.checked = p.confetti !== false;
 
     /* glow comet switch */
     var csw = d.qs("#cometSwitch");
@@ -199,6 +201,13 @@
           N.prefs.set("marathonAt", 0);
         }
         d.toast(msw.checked ? "Marathon mode: on" : "Marathon mode: off");
+      });
+    }
+    var cfsw = d.qs("#confettiSwitch");
+    if (cfsw) {
+      cfsw.addEventListener("change", function () {
+        N.prefs.set("confetti", cfsw.checked);
+        d.toast(cfsw.checked ? "Period confetti: on" : "Period confetti: off");
       });
     }
 

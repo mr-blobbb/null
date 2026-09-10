@@ -362,3 +362,57 @@ html[data-perf="1"] .ss-ov {
     animation: none;
   }
 }
+
+/* ============================================================
+   period-end confetti (grayscale) — toggle in settings
+   ============================================================ */
+.cf-ov {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 300;
+  overflow: hidden;
+}
+.cf-ov .cf-p {
+  position: absolute;
+  top: -14px;
+  width: 9px;
+  height: 14px;
+  border-radius: 2px;
+  opacity: 0;
+  animation: cf-fall linear forwards;
+}
+.cf-ov .cf-p.s {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+.cf-ov.on .cf-p {
+  animation-name: cf-drop;
+}
+@keyframes cf-drop {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0deg);
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--cf-drift, 0), 110vh) rotate(var(--cf-rot, 360deg));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cf-ov {
+    display: none;
+  }
+}
+
+/* welcome-modal Continue cooldown hint */
+.modal-cool-hint {
+  margin-right: auto;
+  font-size: 12px;
+  color: var(--text-2);
+  opacity: 0.8;
+}

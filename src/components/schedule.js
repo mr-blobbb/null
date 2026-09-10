@@ -312,11 +312,20 @@
       } else {
         badge.classList.remove("on");
         var nx = lv.next;
-        badge.querySelector(".ls-name").textContent = nx ? "Up next \u2014 " + nx.name : "School\u2019s out";
+        /* more than an hour until the next block (before school, long gap)
+           — a 437:38 countdown is noise, so just say "Before school" */
+        var early = nx && lv.secToNext > 3600;
+        badge.querySelector(".ls-name").textContent = nx
+          ? early
+            ? "Before school"
+            : "Up next \u2014 " + nx.name
+          : "School\u2019s out";
         badge.querySelector(".ls-time").textContent = nx ? spanText(nx) : "See you tomorrow";
-        count.querySelector(".ls-left").textContent = nx ? fmtClock(lv.secToNext) : "\u2014";
+        count.querySelector(".ls-left").textContent = nx && !early ? fmtClock(lv.secToNext) : "\u2014";
         count.classList.add("idle");
-        if (lv.secToNext > 0) count.querySelector(".ls-cap").textContent = "until it starts";
+        if (nx && !early && lv.secToNext > 0) count.querySelector(".ls-cap").textContent = "until it starts";
+        else if (nx && !early) count.querySelector(".ls-cap").textContent = "left";
+        else if (nx) count.querySelector(".ls-cap").textContent = "see " + nx.name;
         else count.querySelector(".ls-cap").textContent = "left";
       }
       var nb = lv.next;

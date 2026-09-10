@@ -276,6 +276,29 @@
         },
       ],
     });
+    /* 5-second cooldown on Continue — the copy is worth reading */
+    var m = Array.prototype.slice.call(document.querySelectorAll(".modal-ov")).pop();
+    var foot = m && m.querySelector(".modal-foot");
+    var btn = foot && foot.querySelector("button");
+    if (btn && foot) {
+      foot.insertBefore(
+        d.h("span", { class: "modal-cool-hint" }, "This stuff is helpful, read it!"),
+        btn,
+      );
+      var left = 5;
+      btn.disabled = true;
+      btn.textContent = "Continue (" + left + ")";
+      var iv = setInterval(function () {
+        left--;
+        if (left <= 0) {
+          clearInterval(iv);
+          btn.disabled = false;
+          btn.textContent = "Continue";
+        } else {
+          btn.textContent = "Continue (" + left + ")";
+        }
+      }, 1000);
+    }
   }
 
   function popupNote() {

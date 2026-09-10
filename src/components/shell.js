@@ -311,6 +311,56 @@ return foot;
     },
   };
 
+  /* ---------- confetti (grayscale) ----------
+     Fired when a class period ends. Toggleable via prefs.confetti. */
+  var confettiBusy = false;
+  function confetti() {
+    if (confettiBusy) return;
+    confettiBusy = true;
+    setTimeout(function () { confettiBusy = false; }, 2600);
+    var ov = d.h("div", { class: "cf-ov", "aria-hidden": "true" });
+    var cols = ["#f5f5f6", "#c9c9cf", "#a1a1aa", "#71717a", "#52525b"];
+    for (var i = 0; i < 80; i++) {
+      var p = d.h("span", { class: "cf-p" + (Math.random() < 0.5 ? " s" : "") });
+      p.style.left = Math.random() * 100 + "%";
+      p.style.background = cols[i % cols.length];
+      p.style.setProperty("--cf-drift", (Math.random() * 220 - 110).toFixed(0) + "px");
+      p.style.setProperty("--cf-rot", (Math.random() * 720 - 360).toFixed(0) + "deg");
+      p.style.animationDuration = (2 + Math.random() * 1.4).toFixed(2) + "s";
+      p.style.animationDelay = (Math.random() * 0.5).toFixed(2) + "s";
+      ov.appendChild(p);
+    }
+    document.body.appendChild(ov);
+    requestAnimationFrame(function () { ov.classList.add("on"); });
+    setTimeout(function () {
+      ov.classList.remove("on");
+      setTimeout(function () {
+        if (ov.parentNode) ov.parentNode.removeChild(ov);
+      }, 400);
+    }, 3400);
+  }
+
+  /* watch the schedule every 30s; the moment a block boundary is crossed,
+     celebrate (once per boundary). */
+  var schedWatcher = null;
+  var lastKey = "";
+  function watchPeriodEnd() {
+    if (!N.schedule || schedWatcher) return;
+    function check() {
+      if (document.hidden) return;
+      if (N.prefs.get("confetti") === false) return;
+      var info = N.schedule.todayInfo();
+      if (!info.type) return;
+      var blocks = N.schedule.blocksFor(info.type);
+      var lv = N.schedule.live(blocks);
+      var key = lv.block ? lv.i + (lv.passing ? "p" : "") : "end";
+      if (lastKey && lastKey !== key && key !== "end") confetti();
+      lastKey = key;
+    }
+    check();
+    schedWatcher = setInterval(check, 30000);
+  }
+
   /* ============================================================
      screensaver — after two idle minutes a dim glass overlay fades
      in: drifting grayscale game art, a live clock and a wake hint.
@@ -479,6 +529,7 @@ return foot;
     N.tab.apply();
     initMarathon();
     initSs();
+    watchPeriodEnd();
 
     /* custom scrollbar on library pages */
     if (document.body.classList.contains("lb")) {

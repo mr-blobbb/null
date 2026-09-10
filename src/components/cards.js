@@ -123,11 +123,8 @@
       d.h("p", { class: "tdesc" }, entry.desc || meta.label + " in the NULL library."),
     ]);
 
-    var foot = d.h("div", { class: "tfoot" }, [
-      d.h("button", { type: "button", class: "btn btn-primary", onclick: function (e) {
-          e.stopPropagation();
-          open();
-        } }, [d.icon(kind === "proxy" ? "ext" : "play"), meta.play]),
+    /* no play button — the whole card is the click target (plus a star) */
+    var foot = d.h("div", { class: "tfoot tfoot-solo" }, [
       favBtn(entry, kind),
     ]);
 
