@@ -26,7 +26,7 @@
   };
 
   var PRESETS = [
-    { id: "slides", name: "Default (Google Slides)", title: "Untitled Slide - Google Slides", icon: G.slides },
+    { id: "slides", name: "", title: "Untitled Slide - Google Slides", icon: G.slides },
     { id: "null", name: "NULL", title: "NULL", icon: "/public/favicon.svg" },
     { id: "home", name: "Home", title: "Naperville Community Unit School District 203", icon: s2("naperville203.org") },
     { id: "noredink", name: "NoRedInk", title: "NoRedInk", icon: s2("noredink.com") },

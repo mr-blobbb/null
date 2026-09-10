@@ -312,7 +312,8 @@ return foot;
   };
 
   /* ---------- confetti (grayscale) ----------
-     Fired when a class period ends. Toggleable via prefs.confetti. */
+     Fired when a class period ends. Toggleable via prefs.confetti.
+     Also exposed as N.fx.confetti for the dev console. */
   var confettiBusy = false;
   function confetti() {
     if (confettiBusy) return;
@@ -460,6 +461,12 @@ return foot;
     ssArm();
   }
 
+  /* immediate screensaver (dev console button) — bypasses the idle wait */
+  function ssNow() {
+    ssHide();
+    ssShow();
+  }
+
   function initSs() {
     if (ssGated()) return;
     ["pointermove", "pointerdown", "keydown", "wheel", "touchstart"].forEach(function (ev) {
@@ -539,7 +546,8 @@ return foot;
     if (!raw) backTop();
   }
 
-  N.shell = { init: init };
+  N.shell = { init: init, screensaverNow: ssNow };
+  N.fx = { confetti: confetti };
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);

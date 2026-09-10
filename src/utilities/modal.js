@@ -153,6 +153,7 @@
     open: open,
     confirm: confirm,
     armSgGames: armSgGames,
+    showSgGames: showSgGames,
     closeTop: function () {
       var top = stack[stack.length - 1];
       if (top && top._close) top._close();
