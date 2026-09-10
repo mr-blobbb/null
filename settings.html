@@ -118,6 +118,27 @@
         </div>
       </section>
 
+      <!-- seasonal theme -->
+      <section class="set-card glass" aria-label="Seasonal theme">
+        <h2 class="set-title"><span data-icon="leaf"></span>Seasonal theme</h2>
+        <p class="set-sub">
+          NULL quietly follows the seasons &mdash; fall leaves, winter snow, spring
+          petals, summer light &mdash; drifting behind everything. Turn it off if you
+          want the pure look back.
+        </p>
+        <div class="set-row">
+          <div class="lbl-txt">
+            <b id="seasonalLbl">Turn on Fall theme?</b>
+            <span id="seasonalHint">Leaves drift behind everything &middot; switches automatically with the seasons.</span>
+          </div>
+          <span class="chip" id="seasonalChip" style="display:none">Fall</span>
+          <label class="switch">
+            <input type="checkbox" id="seasonalSwitch" aria-label="Seasonal theme">
+            <span class="track"></span>
+          </label>
+        </div>
+      </section>
+
       <!-- tab presets -->
       <section class="set-card glass" aria-label="Browser tab">
         <h2 class="set-title"><span data-icon="tab"></span>Browser tab presets</h2>
@@ -138,6 +159,30 @@
               <span class="tp-sub">Default (Google Slides)</span>
             </span>
           </div>
+        </div>
+
+        <div class="set-row" style="margin-top:14px">
+          <div class="lbl-txt">
+            <b>Smart Tab Cloak</b>
+            <span>Cycles the tab between school presets on a timer. Pauses while this tab isn&rsquo;t open &mdash; your pick above returns when it&rsquo;s off.</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="smartTabSwitch" aria-label="Smart Tab Cloak">
+            <span class="track"></span>
+          </label>
+        </div>
+        <div id="smartTabWrap" style="display:none;margin-top:12px">
+          <label class="lbl" for="smartTabMin">Change every</label>
+          <span class="select-field">
+            <select id="smartTabMin" aria-label="Smart Tab Cloak interval">
+              <option value="1">1 minute</option>
+              <option value="2">2 minutes</option>
+              <option value="5" selected>5 minutes</option>
+              <option value="10">10 minutes</option>
+              <option value="15">15 minutes</option>
+              <option value="30">30 minutes</option>
+            </select>
+          </span>
         </div>
 
         <div id="tabCustomWrap" style="display:none;margin-top:14px">
@@ -298,6 +343,7 @@
   <script src="/src/utilities/dom.js"></script>
   <script src="/src/utilities/modal.js"></script>
   <script src="/src/utilities/theme.js"></script>
+  <script src="/src/components/seasons.js"></script>
   <script src="/src/utilities/scroll.js"></script>
   <script src="/src/routing/router.js"></script>
   <script src="/src/catalog/generated-catalog.js?v=8226390f93"></script>

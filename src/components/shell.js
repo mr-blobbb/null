@@ -534,6 +534,7 @@ return foot;
     N.modal.armSgGames();
     shortcuts();
     N.tab.apply();
+    N.tab.smartStart();
     initMarathon();
     initSs();
     watchPeriodEnd();

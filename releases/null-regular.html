@@ -172,13 +172,67 @@ textarea {
   left: 0;
 }
 
-/* old ambient-glow layer — intentionally inert (plain flat background) */
+/* old ambient-glow layer — intentionally inert (plain flat background),
+   but the seasonal theme paints its soft wash on it */
 .glow-bg {
   position: fixed;
   inset: 0;
   z-index: -1;
   pointer-events: none;
   background: transparent;
+}
+
+/* ---------- seasonal theme (fall / winter / spring / summer) ----------
+   A soft color wash at the top of the page + a drifting particle layer
+   pinned behind everything. The wash is CSS-only so it survives perf
+   mode; particles are JS (seasons.js) and skip perf/reduced-motion. */
+html[data-season="fall"] .glow-bg {
+  background: radial-gradient(120% 60% at 50% -10%, rgba(217, 142, 61, 0.13), transparent 60%);
+}
+html[data-season="winter"] .glow-bg {
+  background: radial-gradient(120% 60% at 50% -10%, rgba(127, 180, 232, 0.15), transparent 60%);
+}
+html[data-season="spring"] .glow-bg {
+  background: radial-gradient(120% 60% at 50% -10%, rgba(226, 145, 176, 0.15), transparent 60%);
+}
+html[data-season="summer"] .glow-bg {
+  background:
+    radial-gradient(130% 70% at 50% -15%, rgba(240, 217, 140, 0.26), transparent 55%),
+    radial-gradient(90% 50% at 50% 115%, rgba(240, 217, 140, 0.10), transparent 60%);
+}
+
+.season-fx {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.sf-p {
+  position: absolute;
+  top: -7vh;
+  line-height: 1;
+  user-select: none;
+  animation: sf-fall linear infinite;
+  will-change: transform;
+}
+html[data-season="summer"] .sf-p {
+  color: #e6c35c;
+  text-shadow: 0 0 8px rgba(230, 195, 92, 0.55);
+}
+.season-fx.sf-hidden .sf-p {
+  animation-play-state: paused;
+}
+html[data-perf="1"] .sf-p {
+  display: none;
+}
+@keyframes sf-fall {
+  0% {
+    transform: translate3d(0, -8vh, 0) rotate(0deg);
+  }
+  100% {
+    transform: translate3d(var(--sf-sway, 0px), 110vh, 0) rotate(var(--sf-rot, 220deg));
+  }
 }
 
 /* ---------- shared layout ---------- */
@@ -4020,6 +4074,9 @@ window.NULL_CONTENT = {
     panicKey: "`",
     panicUrl: "https://classroom.google.com",
     panicMode: "single", // single | double (two presses within 400 ms)
+    seasonal: true, // seasonal theme follows the calendar (leaves, snow, petals, light)
+    smartTab: false, // smart tab cloak: rotate tab presets on a timer
+    smartTabMin: 5, // smart tab cloak: minutes between rotations
   };
 
   N.prefs = (function () {
@@ -4285,6 +4342,7 @@ window.NULL_CONTENT = {
     upload: "upload",
     download: "download",
     save: "save",
+    leaf: "eco",
   };
 
   function icon(name, cls) {
@@ -4911,6 +4969,127 @@ window.NULL_CONTENT = {
 })();
 
 ;
+/* NULL — seasons.js
+   Seasonal theme: a light ambient pass driven by the calendar.
+   Sets html[data-season] so CSS can tint the page, and when the user's
+   accent is off, fills --ac-* with the season's colors. Also drops a
+   drifting particle layer behind everything — fall leaves, winter snow,
+   spring petals, summer light motes. Skipped on the player and 404, in
+   performance mode, and for reduced-motion users. */
+(function () {
+  var N = (window.N = window.N || {});
+  var root = document.documentElement;
+
+  var SEASONS = [
+    { id: "winter", label: "Winter", hint: "snow drifts behind everything", months: [11, 0, 1], chars: ["\u2744\ufe0f"], n: 22 },
+    { id: "spring", label: "Spring", hint: "blossom petals float behind everything", months: [2, 3, 4], chars: ["\u{1F338}"], n: 14 },
+    { id: "summer", label: "Summer", hint: "light motes drift behind everything", months: [5, 6, 7], chars: ["\u2726"], n: 12 },
+    { id: "fall", label: "Fall", hint: "leaves drift behind everything", months: [8, 9, 10], chars: ["\u{1F342}", "\u{1F341}"], n: 16 },
+  ];
+
+  /* used for --ac-* when the user hasn't picked their own accent */
+  var COLORS = {
+    fall: { c1: "#d98e3d", c2: "#e6b45f" },
+    winter: { c1: "#7fb4e8", c2: "#b9d8f5" },
+    spring: { c1: "#e291b0", c2: "#f0b8cf" },
+    summer: { c1: "#d9b64a", c2: "#f0d98c" },
+  };
+
+  function detect() {
+    var m = new Date().getMonth();
+    return (
+      SEASONS.find(function (s) {
+        return s.months.indexOf(m) >= 0;
+      }) || SEASONS[3]
+    );
+  }
+
+  /* ---------- particle layer ---------- */
+  var fx = null;
+
+  function gated() {
+    return (
+      document.body.classList.contains("player-page") ||
+      document.body.classList.contains("page-404")
+    );
+  }
+
+  function spawn() {
+    var s = detect();
+    var perf = N.prefs.get("perf");
+    var reduced =
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (N.prefs.data.seasonal === false || gated() || perf || reduced) return;
+    if (fx && fx.el.isConnected) return;
+
+    var el = document.createElement("div");
+    el.className = "season-fx";
+    el.setAttribute("aria-hidden", "true");
+    for (var i = 0; i < s.n; i++) {
+      var p = document.createElement("span");
+      p.className = "sf-p";
+      p.textContent = s.chars[i % s.chars.length];
+      p.style.left = (Math.random() * 100).toFixed(2) + "%";
+      p.style.fontSize = (10 + Math.random() * 13).toFixed(1) + "px";
+      p.style.opacity = (0.3 + Math.random() * 0.45).toFixed(2);
+      p.style.animationDelay = (-Math.random() * 18).toFixed(2) + "s";
+      p.style.animationDuration = (9 + Math.random() * 11).toFixed(2) + "s";
+      p.style.setProperty("--sf-sway", (Math.random() * 120 - 60).toFixed(0) + "px");
+      p.style.setProperty("--sf-rot", (Math.random() * 520 - 260).toFixed(0) + "deg");
+      el.appendChild(p);
+    }
+    document.body.appendChild(el);
+    fx = { el: el };
+    if (document.hidden) el.classList.add("sf-hidden");
+  }
+
+  function kill() {
+    if (!fx) return;
+    if (fx.el.parentNode) fx.el.parentNode.removeChild(fx.el);
+    fx = null;
+  }
+
+  /* ---------- accent + season flag ---------- */
+  function accentApply() {
+    var on = N.prefs.data.seasonal !== false;
+    if (!on) {
+      root.removeAttribute("data-season");
+      if (!N.prefs.data.accent || N.prefs.data.accent === "off") {
+        root.style.removeProperty("--ac-1");
+        root.style.removeProperty("--ac-2");
+      }
+      return;
+    }
+    var s = detect();
+    root.dataset.season = s.id;
+    /* seasonal colors only when the user hasn't picked their own accent */
+    if (!N.prefs.data.accent || N.prefs.data.accent === "off") {
+      var c = COLORS[s.id];
+      root.style.setProperty("--ac-1", c.c1);
+      root.style.setProperty("--ac-2", c.c2);
+    }
+  }
+
+  function refresh() {
+    accentApply();
+    kill();
+    if (!document.hidden) spawn();
+  }
+
+  /* pause particle animation while the tab is hidden */
+  document.addEventListener("visibilitychange", function () {
+    if (fx) fx.el.classList.toggle("sf-hidden", document.hidden);
+  });
+
+  refresh();
+
+  N.seasons = {
+    now: detect,
+    refresh: refresh,
+  };
+})();
+;
 /* NULL — tabpresets.js
    Configurable browser-tab presets. One preset list, hardcoded here — no
    per-preset folders. Each preset has a favicon reference and a tab title.
@@ -4989,8 +5168,8 @@ window.NULL_CONTENT = {
     return get(N.prefs.get("tab")) || get("slides");
   }
 
-  function apply() {
-    var p = current();
+  function apply(id) {
+    var p = id ? get(id) : current();
     var fav = document.getElementById("favicon");
     /* custom presets without an icon keep the existing favicon */
     if (fav && p && p.icon) fav.setAttribute("href", p.icon);
@@ -4999,12 +5178,68 @@ window.NULL_CONTENT = {
     return p;
   }
 
+  /* ---------- smart tab cloak ----------
+     When on, the tab cycles between the school presets on a timer set in
+     settings (smartTabMin minutes). The countdown pauses while the tab
+     isn't open and resumes where it left off when it comes back. The
+     user's selected preset returns the moment smart cloak is turned off. */
+  var ROTATE = PRESETS.filter(function (p) {
+    return p.id !== "null" && p.id !== "custom";
+  });
+  var smartTimer = null;
+  var smartDue = 0; // epoch ms of the next change; 0 = idle
+
+  function smartRun() {
+    smartDue = 0;
+    var cur = N.tab.applied ? N.tab.applied.id : null;
+    var pool = ROTATE.filter(function (p) {
+      return p.id !== cur;
+    });
+    if (pool.length) apply(pool[Math.floor(Math.random() * pool.length)]);
+    smartArm(parseInt(N.prefs.get("smartTabMin"), 10) * 60000 || 300000);
+  }
+
+  function smartArm(ms) {
+    smartClear();
+    if (N.prefs.get("smartTab") !== true) return;
+    smartDue = Date.now() + ms;
+    if (!document.hidden) smartTimer = setTimeout(smartRun, ms);
+  }
+
+  function smartClear() {
+    if (smartTimer) {
+      clearTimeout(smartTimer);
+      smartTimer = null;
+    }
+  }
+
+  function smartStart() {
+    smartClear();
+    smartDue = 0;
+    smartArm(parseInt(N.prefs.get("smartTabMin"), 10) * 60000 || 300000);
+  }
+
+  function smartStop() {
+    smartClear();
+    smartDue = 0;
+  }
+
+  /* pause = clear the timer but keep the due time; visible = resume with
+     whatever time is left */
+  document.addEventListener("visibilitychange", function () {
+    if (N.prefs.get("smartTab") !== true || !smartDue) return;
+    if (document.hidden) smartClear();
+    else smartTimer = setTimeout(smartRun, Math.max(1000, smartDue - Date.now()));
+  });
+
   N.tab = {
     list: PRESETS,
     get: get,
     current: current,
     titleFor: titleFor,
     apply: apply,
+    smartStart: smartStart,
+    smartStop: smartStop,
   };
 })();
 

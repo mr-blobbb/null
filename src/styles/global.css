@@ -163,13 +163,67 @@ textarea {
   left: 0;
 }
 
-/* old ambient-glow layer — intentionally inert (plain flat background) */
+/* old ambient-glow layer — intentionally inert (plain flat background),
+   but the seasonal theme paints its soft wash on it */
 .glow-bg {
   position: fixed;
   inset: 0;
   z-index: -1;
   pointer-events: none;
   background: transparent;
+}
+
+/* ---------- seasonal theme (fall / winter / spring / summer) ----------
+   A soft color wash at the top of the page + a drifting particle layer
+   pinned behind everything. The wash is CSS-only so it survives perf
+   mode; particles are JS (seasons.js) and skip perf/reduced-motion. */
+html[data-season="fall"] .glow-bg {
+  background: radial-gradient(120% 60% at 50% -10%, rgba(217, 142, 61, 0.13), transparent 60%);
+}
+html[data-season="winter"] .glow-bg {
+  background: radial-gradient(120% 60% at 50% -10%, rgba(127, 180, 232, 0.15), transparent 60%);
+}
+html[data-season="spring"] .glow-bg {
+  background: radial-gradient(120% 60% at 50% -10%, rgba(226, 145, 176, 0.15), transparent 60%);
+}
+html[data-season="summer"] .glow-bg {
+  background:
+    radial-gradient(130% 70% at 50% -15%, rgba(240, 217, 140, 0.26), transparent 55%),
+    radial-gradient(90% 50% at 50% 115%, rgba(240, 217, 140, 0.10), transparent 60%);
+}
+
+.season-fx {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.sf-p {
+  position: absolute;
+  top: -7vh;
+  line-height: 1;
+  user-select: none;
+  animation: sf-fall linear infinite;
+  will-change: transform;
+}
+html[data-season="summer"] .sf-p {
+  color: #e6c35c;
+  text-shadow: 0 0 8px rgba(230, 195, 92, 0.55);
+}
+.season-fx.sf-hidden .sf-p {
+  animation-play-state: paused;
+}
+html[data-perf="1"] .sf-p {
+  display: none;
+}
+@keyframes sf-fall {
+  0% {
+    transform: translate3d(0, -8vh, 0) rotate(0deg);
+  }
+  100% {
+    transform: translate3d(var(--sf-sway, 0px), 110vh, 0) rotate(var(--sf-rot, 220deg));
+  }
 }
 
 /* ---------- shared layout ---------- */

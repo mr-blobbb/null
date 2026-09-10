@@ -96,6 +96,7 @@
     upload: "upload",
     download: "download",
     save: "save",
+    leaf: "eco",
   };
 
   function icon(name, cls) {

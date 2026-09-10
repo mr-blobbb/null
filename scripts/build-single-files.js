@@ -137,6 +137,7 @@ const CORE_JS = [
   "src/utilities/dom.js",
   "src/utilities/modal.js",
   "src/utilities/theme.js",
+  "src/components/seasons.js",
   "src/components/tabpresets.js",
   "src/catalog/catalog.js",
   "src/components/cards.js",

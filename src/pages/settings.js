@@ -45,6 +45,12 @@
     var csw = d.qs("#cometSwitch");
     if (csw) csw.checked = !!p.glowComet;
 
+    /* seasonal theme */
+    paintSeason();
+
+    /* smart tab cloak */
+    paintSmart();
+
     /* tab preset */
     var sel = d.qs("#tabSelect");
     if (sel) {
@@ -118,6 +124,42 @@
     if (gc2) gc2.value = N.prefs.get("glowColor2") || "#a86bff";
   }
 
+  /* seasonal theme row — label reads "Turn on Fall theme?" while off and
+     "Fall theme on" while on, with the current season as a chip */
+  function paintSeason() {
+    var on = N.prefs.data.seasonal !== false;
+    var s = N.seasons ? N.seasons.now() : null;
+    var sw = d.qs("#seasonalSwitch");
+    if (sw) sw.checked = on;
+    if (s) {
+      var lbl = d.qs("#seasonalLbl");
+      if (lbl) lbl.textContent = on ? s.label + " theme on" : "Turn on " + s.label + " theme?";
+      var hint = d.qs("#seasonalHint");
+      if (hint) {
+        hint.textContent =
+          s.hint + " \u00b7 switches automatically with the seasons";
+      }
+      var chip = d.qs("#seasonalChip");
+      if (chip) {
+        chip.textContent = s.label;
+        chip.style.display = on ? "" : "none";
+      }
+    }
+  }
+
+  function paintSmart() {
+    var on = !!N.prefs.get("smartTab");
+    var sw = d.qs("#smartTabSwitch");
+    if (sw) sw.checked = on;
+    var wrap = d.qs("#smartTabWrap");
+    if (wrap) wrap.style.display = on ? "" : "none";
+    var sel = d.qs("#smartTabMin");
+    if (sel) {
+      sel.value = String(N.prefs.get("smartTabMin") || 5);
+      N.dom.selSync(sel);
+    }
+  }
+
   /* save a piece of the custom tab preset and re-apply it live */
   function saveTabCustom(patch) {
     var cur = N.prefs.get("tabCustom") || {};
@@ -152,6 +194,7 @@
       b.addEventListener("click", function () {
         N.prefs.set("accent", b.dataset.val);
         N.theme.setAccent(b.dataset.val);
+        if (N.seasons) N.seasons.refresh(); /* re-assert seasonal colors when accent = off */
         refresh();
       });
     });
@@ -192,7 +235,40 @@
       sw.addEventListener("change", function () {
         N.prefs.set("perf", sw.checked);
         N.theme.setPerf(sw.checked);
+        if (N.seasons) N.seasons.refresh(); /* particles skip perf mode */
         d.toast(sw.checked ? "Performance mode on" : "Performance mode off");
+      });
+    }
+
+    /* seasonal theme */
+    var ssw = d.qs("#seasonalSwitch");
+    if (ssw) {
+      ssw.addEventListener("change", function () {
+        N.prefs.set("seasonal", ssw.checked);
+        if (N.seasons) N.seasons.refresh();
+        paintSeason();
+        var s = N.seasons ? N.seasons.now() : null;
+        d.toast(ssw.checked && s ? s.label + " theme on" : "Seasonal theme off");
+      });
+    }
+
+    /* smart tab cloak */
+    var stsw = d.qs("#smartTabSwitch");
+    if (stsw) {
+      stsw.addEventListener("change", function () {
+        N.prefs.set("smartTab", stsw.checked);
+        if (stsw.checked) N.tab.smartStart();
+        else N.tab.smartStop();
+        refresh();
+        d.toast(stsw.checked ? "Smart Tab Cloak on" : "Smart Tab Cloak off");
+      });
+    }
+    var stm = d.qs("#smartTabMin");
+    if (stm) {
+      stm.addEventListener("change", function () {
+        N.prefs.set("smartTabMin", parseInt(stm.value, 10) || 5);
+        if (N.prefs.get("smartTab")) N.tab.smartStart();
+        d.toast("Tab rotates every " + stm.value + " min");
       });
     }
 
@@ -467,6 +543,8 @@
     }
     var gsel = d.qs("#glowSelect");
     if (gsel) N.dom.upgradeSelect(gsel);
+    var stm = d.qs("#smartTabMin");
+    if (stm) N.dom.upgradeSelect(stm);
 
     bind();
     bindPanic();

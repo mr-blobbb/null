@@ -76,8 +76,8 @@
     return get(N.prefs.get("tab")) || get("slides");
   }
 
-  function apply() {
-    var p = current();
+  function apply(id) {
+    var p = id ? get(id) : current();
     var fav = document.getElementById("favicon");
     /* custom presets without an icon keep the existing favicon */
     if (fav && p && p.icon) fav.setAttribute("href", p.icon);
@@ -86,11 +86,67 @@
     return p;
   }
 
+  /* ---------- smart tab cloak ----------
+     When on, the tab cycles between the school presets on a timer set in
+     settings (smartTabMin minutes). The countdown pauses while the tab
+     isn't open and resumes where it left off when it comes back. The
+     user's selected preset returns the moment smart cloak is turned off. */
+  var ROTATE = PRESETS.filter(function (p) {
+    return p.id !== "null" && p.id !== "custom";
+  });
+  var smartTimer = null;
+  var smartDue = 0; // epoch ms of the next change; 0 = idle
+
+  function smartRun() {
+    smartDue = 0;
+    var cur = N.tab.applied ? N.tab.applied.id : null;
+    var pool = ROTATE.filter(function (p) {
+      return p.id !== cur;
+    });
+    if (pool.length) apply(pool[Math.floor(Math.random() * pool.length)]);
+    smartArm(parseInt(N.prefs.get("smartTabMin"), 10) * 60000 || 300000);
+  }
+
+  function smartArm(ms) {
+    smartClear();
+    if (N.prefs.get("smartTab") !== true) return;
+    smartDue = Date.now() + ms;
+    if (!document.hidden) smartTimer = setTimeout(smartRun, ms);
+  }
+
+  function smartClear() {
+    if (smartTimer) {
+      clearTimeout(smartTimer);
+      smartTimer = null;
+    }
+  }
+
+  function smartStart() {
+    smartClear();
+    smartDue = 0;
+    smartArm(parseInt(N.prefs.get("smartTabMin"), 10) * 60000 || 300000);
+  }
+
+  function smartStop() {
+    smartClear();
+    smartDue = 0;
+  }
+
+  /* pause = clear the timer but keep the due time; visible = resume with
+     whatever time is left */
+  document.addEventListener("visibilitychange", function () {
+    if (N.prefs.get("smartTab") !== true || !smartDue) return;
+    if (document.hidden) smartClear();
+    else smartTimer = setTimeout(smartRun, Math.max(1000, smartDue - Date.now()));
+  });
+
   N.tab = {
     list: PRESETS,
     get: get,
     current: current,
     titleFor: titleFor,
     apply: apply,
+    smartStart: smartStart,
+    smartStop: smartStop,
   };
 })();
