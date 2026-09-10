@@ -1,2 +1,1 @@
-Label: Arcade Singleplayer Classic
-Label: Snake
+Label: Test

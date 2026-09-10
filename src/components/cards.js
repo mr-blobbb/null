@@ -31,6 +31,10 @@
       d.bindImgFallback(img, kind);
       media.appendChild(img);
     }
+    /* name badge — drawn on the thumbnail so the title can never be
+       squeezed out of view (the virtualized grid rows keep the body
+       name hidden; featured/recs rails use the body name below) */
+    media.appendChild(d.h("span", { class: "tname-badge", title: entry.name }, entry.name));
     return media;
   }
 

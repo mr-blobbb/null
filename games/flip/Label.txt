@@ -1,2 +1,1 @@
-Label: Puzzle Memory Singleplayer
-Label: Card Game
+Label: Test

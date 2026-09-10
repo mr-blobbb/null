@@ -1,2 +1,1 @@
-Label: Memory Puzzle Singleplayer
-Label: Simon
+Label: Test

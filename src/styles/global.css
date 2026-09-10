@@ -1364,6 +1364,37 @@ body.lb .site-foot {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+/* name badge — a glass title pill pinned to the thumbnail. Lives on the
+   fixed-height media block, so no grid/flex sizing can ever hide it. */
+.tname-badge {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  z-index: 2;
+  display: none;
+  max-width: calc(100% - 16px);
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text);
+  background: var(--glass-bg-2);
+  border: 1px solid var(--line-2);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+/* inside the virtualized grid the title lives on the thumbnail badge;
+   the body h3 stays hidden there so a name never renders twice. */
+.vgrid .tname-badge {
+  display: block;
+}
+.vgrid .tname {
+  display: none;
+}
 .tdesc {
   font-size: 12.8px;
   color: var(--text-2);

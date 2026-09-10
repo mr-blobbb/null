@@ -1,2 +1,2 @@
-Label: Action Metroidvania Adventure
+Label: Metroidvania
 Label: Platformer

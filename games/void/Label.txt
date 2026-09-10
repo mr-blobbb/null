@@ -1,2 +1,1 @@
-Label: Arcade Singleplayer Retro
-Label: Breakout
+Label: Test

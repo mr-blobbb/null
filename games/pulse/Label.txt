@@ -1,3 +1,1 @@
-Label: Action Arcade 2 Player
-Label: Local Multiplayer
-Label: Pong
+Label: Test
