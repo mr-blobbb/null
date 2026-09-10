@@ -13,6 +13,7 @@
     "discover": "node scripts/discover-content.js"
   },
   "dependencies": {
+    "@vly-ai/integrations": "^0.6.13",
     "@zumer/snapdom": "^2.12.2",
     "framer-motion": "^12.40.0",
     "lucide-react": "^0.555.0",
