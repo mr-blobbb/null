@@ -391,10 +391,29 @@
           title: "Copy console log", "aria-label": "Copy console log",
           onclick: function () {
             var txt = logBox ? Array.prototype.map.call(logBox.children, function (l) { return l.textContent; }).join("\n") : "";
-            try {
-              navigator.clipboard.writeText(txt);
-              d.toast("Log copied", { icon: "copy" });
-            } catch (e) { err("clipboard unavailable"); }
+            /* writeText resolves async — a rejected promise would slip past try/catch */
+            function fallback() {
+              var ok = false;
+              try {
+                var ta = document.createElement("textarea");
+                ta.value = txt;
+                ta.style.cssText = "position:fixed;opacity:0;top:0";
+                document.body.appendChild(ta);
+                ta.select();
+                ok = !!document.execCommand && document.execCommand("copy");
+                document.body.removeChild(ta);
+              } catch (e2) {}
+              if (ok) d.toast("Log copied", { icon: "copy" });
+              else err("clipboard unavailable");
+            }
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(txt).then(
+                function () { d.toast("Log copied", { icon: "copy" }); },
+                function () { fallback(); }
+              );
+            } else {
+              fallback();
+            }
           },
         }, [d.icon("copy"), "Copy log"]),
         d.h("button", {
@@ -449,7 +468,10 @@
     log("devconsole attached \u2014 type nldev to reopen");
     log("session: " + statsHtml());
 
-    requestAnimationFrame(function () { ov.classList.add("on"); });
+    function fadeIn() { ov.classList.add("on"); }
+    requestAnimationFrame(fadeIn);
+    /* rAF pauses in background tabs — never leave the console invisible */
+    setTimeout(fadeIn, 60);
   }
 
   function hide() {
