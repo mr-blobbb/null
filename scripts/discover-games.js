@@ -37,15 +37,24 @@ function readLines(abs) {
 
 export function parseLabels(dir) {
   const out = [];
+  const toks = [];
   readLines(path.join(dir, "Label.txt")).forEach(function (line) {
     let v = line;
     if (/^Label:\s*/i.test(v)) v = v.replace(/^Label:\s*/i, "");
     v.split(/\s+/)
       .filter(Boolean)
-      .forEach(function (tok) {
-        if (out.indexOf(tok) < 0) out.push(tok);
+      .forEach(function (t) {
+        toks.push(t);
       });
   });
+  /* a bare number followed by a word is one label ("2 Player"), not two */
+  for (let i = 0; i < toks.length; i++) {
+    let lab = toks[i];
+    if (/^\d+$/.test(lab) && toks[i + 1] && !/^\d+$/.test(toks[i + 1])) {
+      lab = lab + " " + toks[++i];
+    }
+    if (out.indexOf(lab) < 0) out.push(lab);
+  }
   return out;
 }
 

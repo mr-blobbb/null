@@ -5,7 +5,7 @@
    ============================================================ */
 window.NULL_CATALOG = {
   "site": "NULL",
-  "generatedAt": "2026-09-04T19:58:12.097Z",
+  "generatedAt": "2026-09-10T14:48:14.977Z",
   "games": [
     {
       "id": "flip",
@@ -31,8 +31,7 @@ window.NULL_CATALOG = {
       "labels": [
         "Action",
         "Arcade",
-        "2",
-        "Player",
+        "2 Player",
         "Local",
         "Multiplayer",
         "Pong"
