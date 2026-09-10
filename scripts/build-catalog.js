@@ -4,6 +4,7 @@
    "node scripts/build-catalog.js") after adding content. */
 import fs from "node:fs";
 import path from "node:path";
+import { createHash } from "node:crypto";
 import { discoverContent } from "./discover-content.js";
 
 const ROOT = process.cwd();
@@ -31,8 +32,40 @@ const body =
   ) +
   ";\n";
 
+/* Every page loads generated-catalog.js via a plain <script src>. Browsers
+   cache that URL happily, so after a rebuild visitors can keep seeing a
+   stale library (missing names/games) until a hard refresh. Fix: tag the
+   script src with a content hash — ?v=… changes whenever the catalog
+   content changes, which busts the cache automatically. Only the src
+   attribute of that one script tag is touched; everything else in the
+   hand-maintained html files is left alone. */
+function bumpCatalogTag(rootDir, tag) {
+  const htmlFiles = [
+    "index.html", "games.html", "apps.html", "proxies.html",
+    "schedule.html", "announcements.html", "backups.html", "settings.html",
+    "about.html", "privacy.html", "terms.html", "cookies.html",
+    "license.html", "district.html", "404.html", "player.html",
+  ];
+  const rx = /src="\/src\/catalog\/generated-catalog\.js(\?v=[a-f0-9]+)?"/;
+  let changed = 0;
+  htmlFiles.forEach(function (f) {
+    const p = path.join(rootDir, f);
+    if (!fs.existsSync(p)) return;
+    const html = fs.readFileSync(p, "utf8");
+    if (!rx.test(html)) return;
+    const next = html.replace(rx, 'src="/src/catalog/generated-catalog.js?v=' + tag + '"');
+    if (next !== html) {
+      fs.writeFileSync(p, next);
+      changed++;
+    }
+  });
+  console.log("catalog tag " + tag + " applied to " + changed + " html files");
+}
+
 fs.mkdirSync(path.dirname(OUT), { recursive: true });
 fs.writeFileSync(OUT, body);
+
+bumpCatalogTag(ROOT, createHash("md5").update(body).digest("hex").slice(0, 10));
 
 console.log("catalog written: " + path.relative(ROOT, OUT));
 console.log(
