@@ -211,14 +211,17 @@ html[data-season="summer"] .glow-bg {
 .sf-p {
   position: absolute;
   top: -7vh;
-  line-height: 1;
+  background-repeat: no-repeat;
+  background-size: contain;
   user-select: none;
   animation: sf-fall linear infinite;
   will-change: transform;
 }
 html[data-season="summer"] .sf-p {
-  color: #e6c35c;
-  text-shadow: 0 0 8px rgba(230, 195, 92, 0.55);
+  filter: drop-shadow(0 0 5px rgba(230, 195, 92, 0.65));
+}
+html[data-season="winter"] .sf-p {
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.35));
 }
 .season-fx.sf-hidden .sf-p {
   animation-play-state: paused;
@@ -4074,7 +4077,8 @@ window.NULL_CONTENT = {
     panicKey: "`",
     panicUrl: "https://classroom.google.com",
     panicMode: "single", // single | double (two presses within 400 ms)
-    seasonal: true, // seasonal theme follows the calendar (leaves, snow, petals, light)
+    seasonal: false, // seasonal theme follows the calendar (leaves, snow, petals, light)
+    seasonOverride: null, // dev-console season preview: "fall" | "winter" | ... | null = calendar
     smartTab: false, // smart tab cloak: rotate tab presets on a timer
     smartTabMin: 5, // smart tab cloak: minutes between rotations
   };
@@ -4343,6 +4347,9 @@ window.NULL_CONTENT = {
     download: "download",
     save: "save",
     leaf: "eco",
+    snow: "ac_unit",
+    petal: "local_florist",
+    sparkle: "auto_awesome",
   };
 
   function icon(name, cls) {
@@ -4974,17 +4981,19 @@ window.NULL_CONTENT = {
    Sets html[data-season] so CSS can tint the page, and when the user's
    accent is off, fills --ac-* with the season's colors. Also drops a
    drifting particle layer behind everything — fall leaves, winter snow,
-   spring petals, summer light motes. Skipped on the player and 404, in
-   performance mode, and for reduced-motion users. */
+   spring petals, summer light motes. Particles are hand-drawn inline
+   SVGs (data URIs), so no emoji and no external assets. Skipped on the
+   player and 404, in performance mode, and for reduced-motion users.
+   The dev console can force a season via prefs.seasonOverride. */
 (function () {
   var N = (window.N = window.N || {});
   var root = document.documentElement;
 
   var SEASONS = [
-    { id: "winter", label: "Winter", hint: "snow drifts behind everything", months: [11, 0, 1], chars: ["\u2744\ufe0f"], n: 22 },
-    { id: "spring", label: "Spring", hint: "blossom petals float behind everything", months: [2, 3, 4], chars: ["\u{1F338}"], n: 14 },
-    { id: "summer", label: "Summer", hint: "light motes drift behind everything", months: [5, 6, 7], chars: ["\u2726"], n: 12 },
-    { id: "fall", label: "Fall", hint: "leaves drift behind everything", months: [8, 9, 10], chars: ["\u{1F342}", "\u{1F341}"], n: 16 },
+    { id: "winter", label: "Winter", hint: "snow drifts behind everything", months: [11, 0, 1], size: [10, 18], n: 22 },
+    { id: "spring", label: "Spring", hint: "blossom petals float behind everything", months: [2, 3, 4], size: [11, 20], n: 14 },
+    { id: "summer", label: "Summer", hint: "light motes drift behind everything", months: [5, 6, 7], size: [8, 16], n: 12 },
+    { id: "fall", label: "Fall", hint: "leaves drift behind everything", months: [8, 9, 10], size: [14, 26], n: 16 },
   ];
 
   /* used for --ac-* when the user hasn't picked their own accent */
@@ -4995,7 +5004,34 @@ window.NULL_CONTENT = {
     summer: { c1: "#d9b64a", c2: "#f0d98c" },
   };
 
+  /* one SVG shape per season; {C} is swapped for a color per particle */
+  var SVG = {
+    /* leaf — Material "eco" glyph, filled */
+    fall: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="{C}" d="M6.05 8.05c-2.73 2.73-2.73 7.15-.02 9.88 1.47-3.4 4.09-6.24 7.36-7.93-2.77 2.34-4.71 5.61-5.39 9.32 2.6 1.23 5.8.78 7.95-1.37C19.43 14.47 20 4 20 4S9.53 4.57 6.05 8.05z"/></svg>',
+    /* snowflake — three crossing lines, 6-point silhouette */
+    winter: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="{C}" stroke-width="1.6" stroke-linecap="round"><path d="M12 2v20M3.3 7l17.4 10M20.7 7L3.3 17"/></svg>',
+    /* petal — a soft teardrop */
+    spring: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="{C}" d="M12 2C17 8 19.5 12.5 12 22 4.5 12.5 7 8 12 2Z"/></svg>',
+    /* sparkle — Material "auto_awesome" glyph */
+    summer: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="{C}" d="M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5z"/></svg>',
+  };
+
+  var PALETTES = {
+    fall: ["#c97b3a", "#d9a441", "#a85a32", "#e0b45f"],
+    winter: ["#eef1f6", "#d9dee8", "#ffffff"],
+    spring: ["#e291b0", "#f0b8cf", "#d97b9c", "#f3cfe0"],
+    summer: ["#e6c35c", "#f0d98c", "#f5e3a8"],
+  };
+
   function detect() {
+    /* dev-console preview wins over the calendar */
+    var ov = N.prefs.get("seasonOverride");
+    if (ov) {
+      var hit = SEASONS.find(function (s) {
+        return s.id === ov;
+      });
+      if (hit) return hit;
+    }
     var m = new Date().getMonth();
     return (
       SEASONS.find(function (s) {
@@ -5023,15 +5059,23 @@ window.NULL_CONTENT = {
     if (N.prefs.data.seasonal === false || gated() || perf || reduced) return;
     if (fx && fx.el.isConnected) return;
 
+    var svg = SVG[s.id];
+    var palette = PALETTES[s.id];
+    var size = s.size;
     var el = document.createElement("div");
     el.className = "season-fx";
     el.setAttribute("aria-hidden", "true");
     for (var i = 0; i < s.n; i++) {
       var p = document.createElement("span");
       p.className = "sf-p";
-      p.textContent = s.chars[i % s.chars.length];
+      var uri =
+        "data:image/svg+xml;utf8," +
+        encodeURIComponent(svg.replace("{C}", palette[i % palette.length]));
+      p.style.backgroundImage = "url(\"" + uri + "\")";
+      var px = (size[0] + Math.random() * (size[1] - size[0])).toFixed(1);
+      p.style.width = px + "px";
+      p.style.height = px + "px";
       p.style.left = (Math.random() * 100).toFixed(2) + "%";
-      p.style.fontSize = (10 + Math.random() * 13).toFixed(1) + "px";
       p.style.opacity = (0.3 + Math.random() * 0.45).toFixed(2);
       p.style.animationDelay = (-Math.random() * 18).toFixed(2) + "s";
       p.style.animationDuration = (9 + Math.random() * 11).toFixed(2) + "s";
@@ -5087,6 +5131,20 @@ window.NULL_CONTENT = {
   N.seasons = {
     now: detect,
     refresh: refresh,
+    /* dev console: force a season, follow the calendar, or turn it off */
+    pick: function (id) {
+      if (!id || id === "off") {
+        N.prefs.set("seasonal", false);
+        N.prefs.set("seasonOverride", null);
+      } else if (id === "auto") {
+        N.prefs.set("seasonal", true);
+        N.prefs.set("seasonOverride", null);
+      } else {
+        N.prefs.set("seasonal", true);
+        N.prefs.set("seasonOverride", id);
+      }
+      refresh();
+    },
   };
 })();
 ;

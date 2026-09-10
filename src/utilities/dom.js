@@ -97,6 +97,9 @@
     download: "download",
     save: "save",
     leaf: "eco",
+    snow: "ac_unit",
+    petal: "local_florist",
+    sparkle: "auto_awesome",
   };
 
   function icon(name, cls) {

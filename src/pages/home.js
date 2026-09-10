@@ -347,6 +347,7 @@
       body:
         "<p style='font-size:15px; color:#a3a3a3; margin-top:0; margin-bottom:14px;'>Would you like to customize NULL's look?</p>" +
         "<p style='font-size:13.5px; margin-top:0; margin-bottom:14px; line-height:1.55;'>Pick <b>accent colors</b> and <b>glow borders</b>, flip between <b>dark &amp; light mode</b>, cloak your tab with a <b>preset</b>, and arm a <b>panic key</b> \u2014 all in Settings, saved locally on your device.</p>" +
+        "<div style='margin:0 0 14px; padding:10px 12px; border-radius:12px; background: color-mix(in srgb, var(--ac-1) 9%, transparent); border:1px solid color-mix(in srgb, var(--ac-1) 26%, transparent); font-size:13.5px; line-height:1.5;'><b>Introducing seasonal mode</b> \u2014 fall leaves, winter snow, spring petals and summer light drift behind everything, following the real seasons. Flip it on or off in Settings.</div>" +
         "<p style='font-size:13px; color:#737373; margin:0;'>Everything can be changed anytime later.</p>",
       actions: [
         {

@@ -28,9 +28,8 @@ function run(file) {
 /* store must come first; N.prefs defaults get merged */
 run("src/utilities/store.js");
 
-/* prep: simulate existing user with default accent (off) */
-const s = w.localStorage.getItem("null:prefs");
-w.localStorage.setItem("null:prefs", JSON.stringify({}));
+/* fresh user: seasonal is OFF by default, accent off */
+console.log("default off  =", w.N.prefs.get("seasonal") === false ? "ok" : "FAIL");
 
 run("src/utilities/dom.js");
 
@@ -51,13 +50,19 @@ run("src/components/tabpresets.js");
 const doc = w.document;
 const html = doc.documentElement;
 
+/* seasonal must be ON for the ambient pass — mirror a user enabling it */
+w.N.prefs.set("seasonal", true);
+w.N.seasons.refresh();
+
 /* --- seasonal theme --- */
 const season = html.dataset.season;
 console.log("data-season =", season);
 console.log("accent vars  =", html.style.getPropertyValue("--ac-1"), html.style.getPropertyValue("--ac-2"));
 const fx = doc.querySelector(".season-fx");
-console.log("particles    =", fx ? fx.querySelectorAll(".sf-p").length : 0, "| class:", fx ? fx.className : "MISSING");
-console.log("fx z-index   =", fx ? fx.style.zIndex || "via CSS" : "-");
+const parts = fx ? fx.querySelectorAll(".sf-p") : [];
+console.log("particles    =", parts.length, "| class:", fx ? fx.className : "MISSING");
+const bg = parts[0] ? parts[0].style.backgroundImage : "";
+console.log("svg particle =", bg.indexOf("data:image/svg+xml") > 0 && bg.indexOf("%3Csvg") > 0 ? "ok (inline SVG, no emoji)" : "FAIL: " + bg.slice(0, 60));
 
 /* wash rule reachable? (computed style of .glow-bg uses CSS, jsdom can't resolve pseudo effects — just confirm rule text exists) */
 const css = fs.readFileSync("src/styles/global.css", "utf8");
@@ -73,6 +78,18 @@ console.log("toggled off  =", html.dataset.season === undefined && !doc.querySel
 w.N.prefs.set("seasonal", true);
 w.N.seasons.refresh();
 console.log("toggled on   =", html.dataset.season === "fall" && doc.querySelectorAll(".sf-p").length === 16 ? "ok" : "FAIL");
+
+/* --- dev-console season preview (pick) --- */
+w.N.seasons.pick("winter");
+console.log("pick winter  =", html.dataset.season === "winter" && doc.querySelectorAll(".sf-p").length === 22 ? "ok" : "FAIL");
+w.N.seasons.pick("summer");
+console.log("pick summer  =", html.dataset.season === "summer" && doc.querySelectorAll(".sf-p").length === 12 ? "ok" : "FAIL");
+w.N.seasons.pick("auto");
+console.log("pick auto    =", html.dataset.season === "fall" && w.N.prefs.get("seasonOverride") === null ? "ok" : "FAIL");
+w.N.seasons.pick("off");
+console.log("pick off     =", html.dataset.season === undefined && !doc.querySelector(".season-fx") && w.N.prefs.get("seasonal") === false ? "ok" : "FAIL");
+w.N.prefs.set("seasonal", true);
+w.N.seasons.refresh();
 
 /* --- smart tab cloak --- */
 /* shell.js runs apply() then smartStart() — mirror that */

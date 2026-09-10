@@ -67,7 +67,8 @@
     panicKey: "`",
     panicUrl: "https://classroom.google.com",
     panicMode: "single", // single | double (two presses within 400 ms)
-    seasonal: true, // seasonal theme follows the calendar (leaves, snow, petals, light)
+    seasonal: false, // seasonal theme follows the calendar (leaves, snow, petals, light)
+    seasonOverride: null, // dev-console season preview: "fall" | "winter" | ... | null = calendar
     smartTab: false, // smart tab cloak: rotate tab presets on a timer
     smartTabMin: 5, // smart tab cloak: minutes between rotations
   };

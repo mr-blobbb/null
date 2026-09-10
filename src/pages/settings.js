@@ -245,6 +245,7 @@
     if (ssw) {
       ssw.addEventListener("change", function () {
         N.prefs.set("seasonal", ssw.checked);
+        N.prefs.set("seasonOverride", null); /* settings follows the calendar */
         if (N.seasons) N.seasons.refresh();
         paintSeason();
         var s = N.seasons ? N.seasons.now() : null;

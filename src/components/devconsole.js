@@ -172,7 +172,9 @@
               N.modal.open({
                 title: "Make NULL yours",
                 icon: "pen",
-                body: "<p>Would you like to customize NULL's look?</p>",
+                body:
+                  "<p>Would you like to customize NULL's look?</p>" +
+                  "<p><b>Introducing seasonal mode</b> \u2014 leaves, snow, petals and summer light drift behind everything, following the real seasons. Flip it on or off in Settings.</p>",
                 actions: [
                   { label: "Not right now", variant: "outline" },
                   { label: "Sure", variant: "primary" },
@@ -289,6 +291,46 @@
           { label: "Calculator", icon: "tab", run: function () { applyTab("search"); } },
           { label: "NULL", icon: "tab", run: function () { applyTab("null"); } },
           { label: "Custom tab", icon: "pen", run: function () { applyTab("custom"); } },
+        ],
+      ],
+    },
+    {
+      name: "seasonal theme",
+      icon: "leaf",
+      rows: [
+        [
+          { label: "Fall", icon: "leaf", run: function () {
+              if (!N.seasons) return err("seasons module missing");
+              N.seasons.pick("fall");
+              ok("season \u2192 Fall (preview)");
+            } },
+          { label: "Winter", icon: "snow", run: function () {
+              if (!N.seasons) return err("seasons module missing");
+              N.seasons.pick("winter");
+              ok("season \u2192 Winter (preview)");
+            } },
+          { label: "Spring", icon: "petal", run: function () {
+              if (!N.seasons) return err("seasons module missing");
+              N.seasons.pick("spring");
+              ok("season \u2192 Spring (preview)");
+            } },
+          { label: "Summer", icon: "sparkle", run: function () {
+              if (!N.seasons) return err("seasons module missing");
+              N.seasons.pick("summer");
+              ok("season \u2192 Summer (preview)");
+            } },
+        ],
+        [
+          { label: "Auto (calendar)", icon: "calendar", run: function () {
+              if (!N.seasons) return err("seasons module missing");
+              N.seasons.pick("auto");
+              ok("season \u2192 follows the calendar");
+            } },
+          { label: "Seasonal off", icon: "ban", run: function () {
+              if (!N.seasons) return err("seasons module missing");
+              N.seasons.pick("off");
+              ok("seasonal theme off");
+            } },
         ],
       ],
     },

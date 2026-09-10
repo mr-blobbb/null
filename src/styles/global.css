@@ -202,14 +202,17 @@ html[data-season="summer"] .glow-bg {
 .sf-p {
   position: absolute;
   top: -7vh;
-  line-height: 1;
+  background-repeat: no-repeat;
+  background-size: contain;
   user-select: none;
   animation: sf-fall linear infinite;
   will-change: transform;
 }
 html[data-season="summer"] .sf-p {
-  color: #e6c35c;
-  text-shadow: 0 0 8px rgba(230, 195, 92, 0.55);
+  filter: drop-shadow(0 0 5px rgba(230, 195, 92, 0.65));
+}
+html[data-season="winter"] .sf-p {
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.35));
 }
 .season-fx.sf-hidden .sf-p {
   animation-play-state: paused;
