@@ -3967,6 +3967,1188 @@ noscript .ns-nav a:hover {
   }
 }
 
+/* NULL — extra.css
+   Additions kept out of global.css on purpose. Linked on every page after
+   global.css so these rules win when they need to. */
+
+/* ============================================================
+   player fullscreen — the bar docks to the bottom and auto-hides
+   ============================================================ */
+body.player-page.fs .player-bar {
+  position: absolute;
+  top: auto;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  border-bottom: 0;
+  border-top: 1px solid var(--line);
+  transform: translateY(calc(100% + 10px));
+  opacity: 0;
+  transition: transform 0.24s var(--ease), opacity 0.24s var(--ease);
+}
+body.player-page.fs .player-bar.show {
+  transform: none;
+  opacity: 1;
+}
+body.player-page.fs .player-note {
+  bottom: 14px;
+}
+.player-page .player-note {
+  position: fixed;
+  left: 50%;
+  bottom: 66px;
+  transform: translateX(-50%);
+  z-index: 5;
+  font-size: 11.5px;
+  color: var(--text-2);
+  background: var(--glass-bg);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 14px;
+  pointer-events: none;
+  white-space: nowrap;
+  max-width: calc(100vw - 24px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ============================================================
+   mobile chrome — no More dropdown, search is an icon
+   ============================================================ */
+@media (max-width: 860px) {
+  .searchbox {
+    width: 42px;
+    margin-left: auto;
+  }
+  .searchbox .field {
+    justify-content: center;
+  }
+  .searchbox .sb-txt {
+    display: none;
+  }
+}
+
+/* ============================================================
+   library pages — favorites section + sort toolbar
+   ============================================================ */
+.fav-sec {
+  margin-bottom: 28px;
+}
+.fav-sec .panel-head {
+  margin-bottom: 12px;
+}
+.fav-sec .fav-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: 18px;
+}
+.toolbar .sel-wrap {
+  margin-left: auto;
+}
+
+/* 404 — the art piece is a Material glyph now, sized like the old svg */
+.not-found .art {
+  font-size: clamp(96px, 22vw, 170px);
+  line-height: 1;
+  color: var(--text);
+}
+
+/* settings — panic key + cloak buttons */
+.keycap {
+  min-width: 74px;
+  text-align: center;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: none;
+}
+.btn-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+/* 404 — drip particles removed; hero-style search sizing */
+.not-found .leak {
+  display: none;
+}
+.not-found .hero-search {
+  height: 50px;
+}
+.not-found .hero-search .btn {
+  height: 36px;
+}
+
+/* ============================================================
+   game of the day (home page)
+   ============================================================ */
+.gotd {
+  display: flex;
+  gap: 20px;
+  align-items: stretch;
+}
+.gotd-media {
+  flex: none;
+  width: 190px;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  display: grid;
+  place-items: center;
+  color: var(--text-2);
+}
+.gotd-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.gotd-media .msr {
+  font-size: 40px;
+  opacity: 0.7;
+}
+.gotd-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+.gotd-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 2px;
+}
+.gotd-head h2 {
+  font-size: 17px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.gotd-head h2 .msr {
+  font-size: 17px;
+  color: var(--ac-1);
+}
+.gotd-head .hint {
+  font-size: 12.5px;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+.gotd-name {
+  font-size: 21px;
+  letter-spacing: -0.02em;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gotd-desc {
+  font-size: 13.5px;
+  color: var(--text-2);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.gotd-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 10px;
+}
+@media (max-width: 640px) {
+  .gotd {
+    flex-direction: column;
+  }
+  .gotd-media {
+    width: 100%;
+    height: 180px;
+  }
+}
+
+/* ============================================================
+   hidden-attribute guards — display rules on these components
+   must never resurrect a box that JS explicitly hid (empty
+   game-of-the-day card, marathon controls when off)
+   ============================================================ */
+.gotd[hidden],
+.m-wrap[hidden],
+.fav-sec[hidden],
+.rec-sec[hidden] {
+  display: none !important;
+}
+
+/* The glow ring is drawn with mask-composite. In browsers without it the
+   full-viewport gradient would paint over the whole screen — disable the
+   glow entirely instead. theme.js also guards for this, so the two checks
+   agree. */
+@supports not ((mask-composite: exclude) or (-webkit-mask-composite: xor)) {
+  #null-glow-el {
+    display: none !important;
+  }
+}
+
+/* ============================================================
+   screensaver — dim glass overlay, drifting grayscale game art,
+   live clock. Sits under the glow border (9997) so the neon ring
+   still wraps the screen while it runs.
+   ============================================================ */
+.ss-ov {
+  position: fixed;
+  inset: 0;
+  z-index: 9995;
+  overflow: hidden;
+  background: var(--ss-bg, rgba(8, 8, 10, 0.66));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+.ss-ov.on {
+  opacity: 1;
+  visibility: visible;
+}
+html[data-theme="light"] .ss-ov {
+  --ss-bg: rgba(240, 240, 242, 0.72);
+}
+.ss-vign {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(120% 90% at 50% 40%, transparent 42%, rgba(0, 0, 0, 0.5));
+}
+html[data-theme="light"] .ss-vign {
+  background: radial-gradient(120% 90% at 50% 40%, transparent 42%, rgba(20, 20, 28, 0.16));
+}
+.ss-art {
+  position: absolute;
+  inset: 0;
+}
+.ss-tile {
+  position: absolute;
+  width: clamp(92px, 11vw, 150px);
+  aspect-ratio: 16 / 10;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  opacity: 0.5;
+  filter: grayscale(1) brightness(0.92);
+  animation: ss-drift 20s ease-in-out infinite alternate;
+  will-change: transform;
+}
+.ss-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ss-tile.slow {
+  opacity: 0.28;
+  filter: grayscale(1) brightness(0.78) blur(1.5px);
+}
+.ss-brand {
+  position: absolute;
+  top: 7%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 15px;
+  font-weight: 750;
+  letter-spacing: 0.34em;
+  color: var(--text-2);
+  opacity: 0.85;
+}
+.ss-brand .msr {
+  font-size: 22px;
+}
+.ss-clock {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -60%);
+  font-size: clamp(64px, 12vw, 150px);
+  font-weight: 750;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  text-shadow: 0 2px 34px rgba(0, 0, 0, 0.4);
+}
+.ss-date {
+  position: absolute;
+  top: calc(50% + clamp(46px, 8vw, 96px));
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 14.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+.ss-hint {
+  position: absolute;
+  bottom: 6.5%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12.5px;
+  letter-spacing: 0.14em;
+  white-space: nowrap;
+  color: var(--text-2);
+  animation: ss-pulse 3.4s ease-in-out infinite;
+}
+@keyframes ss-pulse {
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 0.62;
+  }
+}
+@keyframes ss-drift {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(-2.2deg);
+  }
+  50% {
+    transform: translate3d(var(--ss-drift, 16px), calc(var(--ss-drift, 16px) * -0.55), 0) rotate(2.4deg);
+  }
+  100% {
+    transform: translate3d(calc(var(--ss-drift, 16px) * -0.45), var(--ss-drift, 16px), 0) rotate(-1.6deg);
+  }
+}
+html[data-perf="1"] .ss-ov {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ss-tile {
+    animation: none;
+  }
+}
+
+/* ============================================================
+   period-end confetti (grayscale) — toggle in settings
+   ============================================================ */
+.cf-ov {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 300;
+  overflow: hidden;
+}
+.cf-ov .cf-p {
+  position: absolute;
+  top: -14px;
+  width: 9px;
+  height: 14px;
+  border-radius: 2px;
+  opacity: 0;
+  animation: cf-fall linear forwards;
+}
+.cf-ov .cf-p.s {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+.cf-ov.on .cf-p {
+  animation-name: cf-drop;
+}
+@keyframes cf-drop {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0deg);
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--cf-drift, 0), 110vh) rotate(var(--cf-rot, 360deg));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cf-ov {
+    display: none;
+  }
+}
+
+/* welcome-modal Continue cooldown hint */
+.modal-cool-hint {
+  margin-right: auto;
+  font-size: 12px;
+  color: var(--text-2);
+  opacity: 0.8;
+}
+
+/* player save backup popup (download/upload localStorage) */
+.saves p {
+  margin: 6px 0;
+  color: var(--text-2);
+  line-height: 1.55;
+}
+.saves p:first-child {
+  margin-top: 0;
+}
+.saves-stats {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+.saves-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 14px 0;
+}
+.saves-note {
+  font-size: 12.5px;
+}
+
+/* ============================================================
+   unread announcements dot — top nav icon
+   ============================================================ */
+.nav-links .nav-link {
+  position: relative;
+}
+.nav-dot {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ok);
+  box-shadow: 0 0 0 2px var(--bg-2);
+  animation: dotPulse 2.6s var(--ease) infinite;
+}
+@keyframes dotPulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 0.7;
+  }
+}
+html[data-perf="1"] .nav-dot {
+  animation: none;
+}
+
+/* ============================================================
+   home — tip of the day
+   ============================================================ */
+.tip-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+}
+.tip-ic {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  border-radius: var(--r-md);
+  color: var(--ac-1);
+  background: var(--glass-bg-3);
+  border: 1px solid var(--line);
+}
+.tip-ic .msr {
+  font-size: 20px;
+}
+.tip-kicker {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  margin-bottom: 4px;
+}
+.tip-body p {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.55;
+}
+.tip-body b {
+  color: var(--ac-1);
+}
+
+/* ============================================================
+   home — "new since your last visit" marquee
+   ============================================================ */
+.new-strip {
+  overflow: hidden;
+  padding: 12px 0;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+}
+.new-track {
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+  white-space: nowrap;
+  animation: nsScroll var(--ns-dur, 30s) linear infinite;
+  will-change: transform;
+}
+.new-strip:hover .new-track {
+  animation-play-state: paused;
+}
+.ns-item {
+  font-size: 14.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.18s var(--ease);
+}
+.ns-item:hover {
+  color: var(--ac-1);
+}
+.ns-dot {
+  color: var(--text-2);
+  opacity: 0.55;
+}
+@keyframes nsScroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+html[data-perf="1"] .new-track {
+  animation-duration: calc(var(--ns-dur, 30s) * 2);
+}
+@media (prefers-reduced-motion: reduce) {
+  .new-track {
+    animation: none;
+  }
+  .new-strip {
+    overflow-x: auto;
+  }
+}
+
+/* ============================================================
+   player — NULL branded boot spinner
+   ============================================================ */
+.player-loading .pl-mark {
+  position: relative;
+  width: 84px;
+  height: 84px;
+  display: grid;
+  place-items: center;
+}
+.pl-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent 0 60%, var(--ac-1) 88%, transparent 100%);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 0);
+  mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 0);
+  animation: plSpin 1.15s linear infinite;
+}
+.pl-core {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  color: var(--text);
+  background: var(--glass-bg-2);
+  border: 1px solid var(--line);
+  animation: plBreathe 2.2s var(--ease) infinite;
+}
+.pl-core .msr {
+  font-size: 26px;
+}
+.pl-txt {
+  letter-spacing: 0.06em;
+}
+@keyframes plSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes plBreathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.92;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+}
+html[data-perf="1"] .pl-ring {
+  animation-duration: 2.4s;
+}
+html[data-perf="1"] .pl-core {
+  animation: none;
+}
+
+/* ============================================================
+   shop — local economy (playtime → XP → coins)
+   ============================================================ */
+.eco-bar {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex-wrap: wrap;
+  padding: 16px 18px;
+  border-radius: var(--r-lg);
+}
+.eco-coin {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.eco-coin-ic {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: #d9a441;
+  background: rgba(217, 164, 65, 0.12);
+  border: 1px solid rgba(217, 164, 65, 0.3);
+}
+.eco-coin-ic .msr {
+  font-size: 21px;
+}
+.eco-coin-num {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+.eco-coin-num b {
+  font-size: 22px;
+  font-weight: 700;
+}
+.eco-coin-num span {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+.eco-prog {
+  flex: 1 1 240px;
+  min-width: 200px;
+}
+.eco-prog-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--text-2);
+  margin-bottom: 7px;
+}
+.eco-prog-head b {
+  color: var(--text);
+  font-size: 12.5px;
+}
+.eco-track {
+  height: 8px;
+  border-radius: 99px;
+  background: var(--glass-bg-3);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.eco-track i {
+  display: block;
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--ac-1), var(--ac-2));
+  transition: width 0.5s var(--ease);
+}
+.eco-mini {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+.eco-mini b {
+  font-size: 16px;
+}
+.eco-mini span {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+.eco-note {
+  font-size: 12.5px;
+  color: var(--text-2);
+  margin: 10px 2px 26px;
+}
+.boost-chip {
+  gap: 6px;
+}
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 14px;
+}
+.shop-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  transition: transform 0.22s var(--ease), border-color 0.22s var(--ease);
+}
+.shop-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--line-2);
+}
+.shop-card.owned {
+  border-color: color-mix(in srgb, var(--ok) 34%, var(--line));
+}
+.shop-thumb {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  display: grid;
+  place-items: center;
+  background: var(--glass-bg-2);
+  border-bottom: 1px solid var(--line);
+  color: var(--text-2);
+  overflow: hidden;
+}
+.shop-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.shop-thumb .msr {
+  font-size: 30px;
+}
+.shop-swatch {
+  display: flex;
+  height: 76px;
+  border-bottom: 1px solid var(--line);
+}
+.shop-swatch span {
+  flex: 1;
+}
+.shop-info {
+  padding: 13px 14px 6px;
+  flex: 1;
+}
+.shop-info h3 {
+  margin: 0 0 5px;
+  font-size: 15px;
+}
+.shop-info p {
+  margin: 0 0 9px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+.shop-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 14px 14px;
+}
+.price-chip {
+  gap: 5px;
+}
+.price-chip .msr {
+  font-size: 15px;
+  color: #d9a441;
+}
+.shop-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.shop-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 15px;
+  border-radius: var(--r-md);
+}
+.shop-row.owned {
+  border-color: color-mix(in srgb, var(--ok) 30%, var(--line));
+}
+.shop-row-ic {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  border-radius: var(--r-sm);
+  background: var(--glass-bg-3);
+  border: 1px solid var(--line);
+  color: var(--ac-1);
+}
+.shop-row-txt {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.shop-row-txt b {
+  font-size: 14.5px;
+}
+.shop-row-txt span {
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+.shop-row .shop-foot {
+  padding: 0;
+}
+@media (max-width: 640px) {
+  .eco-bar {
+    gap: 14px;
+    padding: 14px;
+  }
+  .eco-mini {
+    display: none;
+  }
+  .shop-row {
+    flex-wrap: wrap;
+  }
+  .shop-row .shop-foot {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+/* ============================================================
+   theme packs — animated shop backdrops
+   Every pack shares one generic layer set (pf-a / pf-b / pf-c plus
+   an optional particle host), so the live full-screen layer and the
+   little preview on a shop card run the exact same rules. All art is
+   drawn from the pack's own palette vars (--pk-1..4, --pk-bg-1/2).
+   ============================================================ */
+.pack-fx,
+.pack-preview {
+  background: linear-gradient(170deg, var(--pk-bg-1, transparent), var(--pk-bg-2, transparent));
+  --pf-fall: 130vh;
+  --pf-blur: 70px;
+}
+.pack-fx {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.pack-fx > i,
+.pack-fx > span,
+.pack-preview > i,
+.pack-preview > span {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+.pf-dots b {
+  position: absolute;
+  display: block;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+html[data-theme="light"] .pack-fx {
+  opacity: 0.4;
+}
+html[data-perf="1"] .pack-fx {
+  display: none;
+}
+.pack-fx.pf-paused,
+.pack-fx.pf-paused * {
+  animation-play-state: paused !important;
+}
+
+/* ---- synthwave: perspective grid + neon sun ---- */
+[data-pack="synthwave"] .pf-a {
+  inset: auto 0 0;
+  height: 64%;
+  background:
+    radial-gradient(58% 88% at 50% 108%, color-mix(in srgb, var(--pk-1) 52%, transparent), transparent 68%),
+    radial-gradient(44% 58% at 50% 104%, color-mix(in srgb, var(--pk-3) 42%, transparent), transparent 66%);
+}
+[data-pack="synthwave"] .pf-b {
+  inset: auto 0 0;
+  height: 44%;
+  background-image:
+    repeating-linear-gradient(90deg, color-mix(in srgb, var(--pk-3) 55%, transparent) 0 1px, transparent 1px 46px),
+    repeating-linear-gradient(0deg, color-mix(in srgb, var(--pk-1) 50%, transparent) 0 1px, transparent 1px 30px);
+  transform: perspective(340px) rotateX(70deg);
+  transform-origin: 50% 100%;
+  -webkit-mask-image: linear-gradient(to top, #000 6%, transparent 86%);
+  mask-image: linear-gradient(to top, #000 6%, transparent 86%);
+  animation: pk-scroll 3.4s linear infinite;
+}
+@keyframes pk-scroll {
+  to {
+    background-position: 0 0, 0 30px;
+  }
+}
+[data-pack="synthwave"] .pf-c {
+  inset: auto auto 30% 50%;
+  width: 26%;
+  aspect-ratio: 1;
+  margin-left: -13%;
+  border-radius: 50%;
+  background: linear-gradient(180deg, var(--pk-4), var(--pk-1) 52%, var(--pk-2));
+  box-shadow: 0 0 70px color-mix(in srgb, var(--pk-1) 55%, transparent);
+  -webkit-mask-image: repeating-linear-gradient(0deg, #000 0 6px, transparent 6px 11px);
+  mask-image: repeating-linear-gradient(0deg, #000 0 6px, transparent 6px 11px);
+}
+
+/* ---- matrix: glyph rain + scanlines ---- */
+[data-pack="matrix"] .pf-a {
+  background:
+    radial-gradient(120% 82% at 50% -10%, color-mix(in srgb, var(--pk-1) 20%, transparent), transparent 62%),
+    linear-gradient(180deg, var(--pk-bg-1), var(--pk-bg-2));
+}
+[data-pack="matrix"] .pf-b {
+  background-image: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.3) 0 1px, transparent 1px 3px);
+  opacity: 0.45;
+}
+[data-pack="matrix"] .pf-dots b {
+  top: -14%;
+  width: calc(var(--s) * 0.9);
+  height: calc(var(--s) * 9);
+  border-radius: 999px;
+  background: linear-gradient(180deg, transparent, var(--pk-1));
+  box-shadow: 0 0 7px color-mix(in srgb, var(--pk-1) 60%, transparent);
+  opacity: 0.75;
+  animation-name: pk-fall;
+}
+@keyframes pk-fall {
+  to {
+    transform: translate3d(0, var(--pf-fall), 0);
+  }
+}
+
+/* ---- gold: light shafts + grain ---- */
+[data-pack="gold"] .pf-a {
+  background:
+    radial-gradient(88% 70% at 50% -12%, color-mix(in srgb, var(--pk-1) 30%, transparent), transparent 64%),
+    radial-gradient(68% 58% at 82% 112%, color-mix(in srgb, var(--pk-2) 22%, transparent), transparent 68%),
+    linear-gradient(180deg, var(--pk-bg-1), var(--pk-bg-2));
+}
+[data-pack="gold"] .pf-b {
+  inset: -40% -10% 0;
+  background: conic-gradient(
+    from 200deg at 50% 0%,
+    transparent 0 8%,
+    color-mix(in srgb, var(--pk-3) 19%, transparent) 12%,
+    transparent 18% 30%,
+    color-mix(in srgb, var(--pk-1) 15%, transparent) 34%,
+    transparent 40% 54%,
+    color-mix(in srgb, var(--pk-3) 13%, transparent) 58%,
+    transparent 64% 78%,
+    color-mix(in srgb, var(--pk-2) 17%, transparent) 82%,
+    transparent 88%
+  );
+  transform-origin: 50% 0;
+  animation: pk-sway 30s ease-in-out infinite alternate;
+}
+@keyframes pk-sway {
+  from {
+    transform: rotate(-7deg);
+  }
+  to {
+    transform: rotate(7deg);
+  }
+}
+[data-pack="gold"] .pf-c {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
+  opacity: 0.06;
+}
+
+/* ---- aurora: three drifting curtains ---- */
+[data-pack="aurora"] .pf-a {
+  background: linear-gradient(180deg, var(--pk-bg-1), var(--pk-bg-2));
+}
+[data-pack="aurora"] .pf-b,
+[data-pack="aurora"] .pf-c {
+  inset: -30% -12%;
+  filter: blur(var(--pf-blur));
+  opacity: 0.55;
+}
+[data-pack="aurora"] .pf-b {
+  background: radial-gradient(closest-side, var(--pk-1), transparent 72%);
+  animation: pk-drift-a 26s ease-in-out infinite alternate;
+}
+[data-pack="aurora"] .pf-c {
+  background: radial-gradient(closest-side, var(--pk-3), transparent 72%);
+  animation: pk-drift-b 34s ease-in-out infinite alternate;
+}
+[data-pack="aurora"] .pf-dots {
+  inset: -20% -10%;
+  border-radius: 50%;
+  filter: blur(calc(var(--pf-blur) * 1.15));
+  opacity: 0.45;
+  background: radial-gradient(closest-side, var(--pk-4), transparent 72%);
+  animation: pk-drift-c 40s ease-in-out infinite alternate;
+}
+@keyframes pk-drift-a {
+  from {
+    transform: translate3d(-14%, -6%, 0) scale(1);
+  }
+  to {
+    transform: translate3d(16%, 8%, 0) scale(1.25);
+  }
+}
+@keyframes pk-drift-b {
+  from {
+    transform: translate3d(18%, 10%, 0) scale(1.15);
+  }
+  to {
+    transform: translate3d(-16%, -8%, 0) scale(0.95);
+  }
+}
+@keyframes pk-drift-c {
+  from {
+    transform: translate3d(6%, 14%, 0) scale(0.9);
+  }
+  to {
+    transform: translate3d(-10%, -12%, 0) scale(1.2);
+  }
+}
+
+/* ---- cosmos: nebula bloom + twinkling stars ---- */
+[data-pack="cosmos"] .pf-a {
+  background:
+    radial-gradient(55% 45% at 22% 30%, color-mix(in srgb, var(--pk-1) 26%, transparent), transparent 72%),
+    radial-gradient(48% 42% at 78% 64%, color-mix(in srgb, var(--pk-2) 22%, transparent), transparent 74%),
+    linear-gradient(180deg, var(--pk-bg-1), var(--pk-bg-2));
+}
+[data-pack="cosmos"] .pf-b {
+  background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--pk-3) 42%, transparent), transparent 62%);
+  animation: pk-breathe 18s ease-in-out infinite alternate;
+}
+[data-pack="cosmos"] .pf-dots b {
+  width: var(--s);
+  height: var(--s);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 6px color-mix(in srgb, var(--pk-3) 85%, transparent);
+  animation-name: pk-twinkle;
+  animation-timing-function: ease-in-out;
+}
+@keyframes pk-twinkle {
+  0%,
+  100% {
+    opacity: 0.12;
+    transform: scale(0.6);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1);
+  }
+}
+@keyframes pk-breathe {
+  from {
+    opacity: 0.28;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0.6;
+    transform: scale(1.16);
+  }
+}
+
+/* ---- vapor: rolling gradient bands ---- */
+[data-pack="vapor"] .pf-a,
+[data-pack="vapor"] .pf-b,
+[data-pack="vapor"] .pf-c {
+  left: -20%;
+  right: -20%;
+  height: 34%;
+  border-radius: 50%;
+  filter: blur(calc(var(--pf-blur) * 0.7));
+  opacity: 0.5;
+  background: linear-gradient(96deg, transparent 6%, var(--pk-1), var(--pk-3), transparent 94%);
+  animation: pk-roll 20s ease-in-out infinite alternate;
+}
+[data-pack="vapor"] .pf-a {
+  top: 2%;
+}
+[data-pack="vapor"] .pf-b {
+  top: 33%;
+  animation-duration: 26s;
+  animation-direction: alternate-reverse;
+  background: linear-gradient(96deg, transparent 6%, var(--pk-2), var(--pk-4), transparent 94%);
+}
+[data-pack="vapor"] .pf-c {
+  top: 64%;
+  animation-duration: 32s;
+  background: linear-gradient(96deg, transparent 6%, var(--pk-3), var(--pk-1), transparent 94%);
+}
+@keyframes pk-roll {
+  from {
+    transform: translate3d(-8%, 0, 0) scaleY(1);
+  }
+  to {
+    transform: translate3d(8%, 3%, 0) scaleY(1.25);
+  }
+}
+
+/* ============================================================
+   shop — theme pack cards + settings swatches
+   ============================================================ */
+.pack-thumb {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-bottom: 1px solid var(--line);
+  background: var(--glass-bg-2);
+}
+.pack-thumb .pack-preview {
+  position: absolute;
+  inset: 0;
+  --pf-fall: 340px;
+  --pf-blur: 24px;
+}
+.pack-lock {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.34);
+  color: #fff;
+  backdrop-filter: blur(2px);
+}
+.pack-lock .msr {
+  font-size: 26px;
+}
+.pack-strip {
+  display: flex;
+  height: 7px;
+}
+.pack-strip i {
+  flex: 1;
+}
+.accent-dots {
+  display: inline-flex;
+  align-items: center;
+}
+.accent-dots i {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 1px solid var(--line-2);
+  margin-left: -5px;
+}
+.accent-dots i:first-child {
+  margin-left: 0;
+}
+.swatch-btn.on .accent-dots i {
+  border-color: rgba(0, 0, 0, 0.3);
+}
 .rel-shell{max-width:1120px;margin:0 auto;padding:14px 16px 80px}
 .rel-top{position:sticky;top:0;z-index:80;display:flex;align-items:center;gap:10px;
   padding:10px 14px;border:1px solid var(--line);border-radius:16px;
@@ -4549,11 +5731,85 @@ window.NULL_CONTENT = {
     N.store.write(KEY, data);
   }
 
-  /* ---------- shop catalog ---------- */
+  /* ---------- shop catalog ----------
+     Themes are full packs, not single accents: a multi-colour palette, the
+     accent pair that drives the UI, and an animated backdrop. theme.js reads
+     `colors` / `bg` / `tint` when applying a pack, extra.css holds the art. */
   var THEMES = [
-    { id: "synthwave", name: "Synthwave", c1: "#ff4fa8", c2: "#4fd8ff", price: 60, desc: "Pink + cyan neon accent, straight from 1986." },
-    { id: "matrix", name: "Matrix", c1: "#3dff7a", c2: "#8affb2", price: 60, desc: "Phosphor-green accent for the terminal in you." },
-    { id: "gold", name: "Gold", c1: "#ffd45e", c2: "#ffe9a8", price: 60, desc: "Warm gold accent. Flashy, but earned." },
+    {
+      id: "synthwave",
+      name: "Synthwave",
+      price: 60,
+      c1: "#ff4fa8",
+      c2: "#4fd8ff",
+      colors: ["#ff4fa8", "#a45bff", "#4fd8ff", "#ffd166"],
+      bg: "horizon",
+      tint: ["#2a1140", "#07091b"],
+      desc: "Neon '86 — perspective grid floor, glowing horizon and a magenta sun.",
+      tags: ["Grid floor", "Neon sun", "4 colors"],
+    },
+    {
+      id: "matrix",
+      name: "Matrix",
+      price: 60,
+      c1: "#3dff7a",
+      c2: "#8affb2",
+      colors: ["#39ff88", "#0aff9d", "#6fffb0", "#c8ffdd"],
+      bg: "rain",
+      dots: 34,
+      tint: ["#04180c", "#02060a"],
+      desc: "Phosphor terminal — glyph rain falls behind a faint scanline haze.",
+      tags: ["Code rain", "Scanlines", "Terminal"],
+    },
+    {
+      id: "gold",
+      name: "Gold",
+      price: 90,
+      c1: "#ffd45e",
+      c2: "#ffe9a8",
+      colors: ["#ffd45e", "#f2a93b", "#fff0bf", "#8a6a1f"],
+      bg: "rays",
+      tint: ["#1d1403", "#0a0a0b"],
+      desc: "Award-show gold — sweeping light shafts over warm film grain.",
+      tags: ["Light shafts", "Film grain", "Warm tint"],
+    },
+    {
+      id: "aurora",
+      name: "Aurora",
+      price: 90,
+      c1: "#4fe0c8",
+      c2: "#8f9dff",
+      colors: ["#4fe0c8", "#7c8cff", "#b06bff", "#3ba0ff"],
+      bg: "aurora",
+      tint: ["#06181e", "#05060f"],
+      desc: "Polar curtains — soft teal and violet blobs drifting past each other.",
+      tags: ["Drifting aurora", "Cool palette", "Calm"],
+    },
+    {
+      id: "cosmos",
+      name: "Cosmos",
+      price: 120,
+      c1: "#8f9dff",
+      c2: "#d18cff",
+      colors: ["#8f9dff", "#e06fff", "#5ac8ff", "#ffe6a8"],
+      bg: "stars",
+      dots: 70,
+      tint: ["#0b0a22", "#04040c"],
+      desc: "Deep field — a twinkling starfield wrapped around a slow nebula bloom.",
+      tags: ["Starfield", "Nebula", "70 stars"],
+    },
+    {
+      id: "vapor",
+      name: "Vapor",
+      price: 120,
+      c1: "#7ef2d0",
+      c2: "#ff9ad5",
+      colors: ["#7ef2d0", "#ff9ad5", "#a6b8ff", "#ffe07a"],
+      bg: "waves",
+      tint: ["#120f2a", "#07121a"],
+      desc: "Liquid light — pastel gradient bands roll across the background.",
+      tags: ["Wave bands", "Pastel", "Silky"],
+    },
   ];
   var BOOSTS = [
     { id: "xpboost", name: "XP boost", price: 30, desc: "Double XP for 24 hours — every 30 minutes banks 20 XP." },
@@ -4644,6 +5900,21 @@ window.NULL_CONTENT = {
     });
   }
 
+  /* dev console / debugging: unlock an item without spending coins, so a
+     backdrop can be checked without grinding 20 hours of playtime first. */
+  function grant(type, id) {
+    if (type === "boost") {
+      data.boostUntil = Date.now() + BOOST_MS;
+    } else {
+      var u = data.unlocks || (data.unlocks = { games: [], themes: [], fx: [] });
+      var key = keyFor(type);
+      var list = u[key] || (u[key] = []);
+      if (list.indexOf(id) < 0) list.push(id);
+    }
+    save();
+    return { ok: true };
+  }
+
   N.econ = {
     THEMES: THEMES,
     BOOSTS: BOOSTS,
@@ -4660,6 +5931,7 @@ window.NULL_CONTENT = {
     },
     bank: bank,
     buy: buy,
+    grant: grant,
     isUnlocked: isUnlocked,
     unlockedBetas: unlockedBetas,
   };
@@ -5139,14 +6411,110 @@ window.NULL_CONTENT = {
     { id: "ocean", name: "Ocean", c1: "#4b86e0", c2: "#84adee" },
   ];
 
-  /* shop-unlocked theme accents. econ.js owns the item catalog; theme.js
-     only needs the color data for rendering + applying. */
+  /* shop-unlocked theme packs. econ.js owns the item catalog; theme.js only
+     needs the data for rendering + applying. */
   function extraAccents() {
     if (!N.econ || !N.econ.THEMES) return [];
     return N.econ.THEMES.filter(function (t) {
       return N.econ.isUnlocked("theme", t.id);
     });
   }
+
+  /* ---------- theme packs ----------
+     A shop theme does more than recolor the accent: it sets a whole palette
+     (--pk-1..4), a page tint (--pk-bg-1/2), html[data-pack] and an animated
+     backdrop. Backdrops are generic layers — three <i> layers plus an
+     optional particle host — that extra.css styles per data-pack id. They
+     are skipped in performance mode, for reduced motion, and on the player
+     and 404 pages, same as the seasonal particles. */
+  var packEl = null;
+  var curPack = null;
+  var PK_VARS = ["--pk-1", "--pk-2", "--pk-3", "--pk-4", "--pk-bg-1", "--pk-bg-2"];
+
+  function packFor(id) {
+    return (
+      extraAccents().find(function (p) {
+        return p.id === id;
+      }) || null
+    );
+  }
+
+  function packAllowed() {
+    if (N.prefs.data.perf) return false;
+    if (
+      document.body.classList.contains("player-page") ||
+      document.body.classList.contains("page-404")
+    )
+      return false;
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return false;
+    return true;
+  }
+
+  function packDom(p) {
+    var el = document.createElement("div");
+    el.className = "pack-fx";
+    el.setAttribute("data-pack", p.id);
+    el.setAttribute("aria-hidden", "true");
+    ["a", "b", "c"].forEach(function (k) {
+      var i = document.createElement("i");
+      i.className = "pf-" + k;
+      el.appendChild(i);
+    });
+    var host = document.createElement("span");
+    host.className = "pf-dots";
+    var rain = p.bg === "rain";
+    var n = p.dots || 0;
+    for (var j = 0; j < n; j++) {
+      var s = document.createElement("b");
+      s.style.left = (Math.random() * 100).toFixed(2) + "%";
+      s.style.top = rain ? "-14%" : (Math.random() * 100).toFixed(2) + "%";
+      s.style.setProperty("--s", (1 + Math.random() * 1.8).toFixed(2) + "px");
+      s.style.animationDelay = (-Math.random() * 14).toFixed(2) + "s";
+      s.style.animationDuration = (2.4 + Math.random() * 5.5).toFixed(2) + "s";
+      host.appendChild(s);
+    }
+    el.appendChild(host);
+    return el;
+  }
+
+  function killPack() {
+    if (packEl && packEl.parentNode) packEl.parentNode.removeChild(packEl);
+    packEl = null;
+  }
+
+  function buildPack(p) {
+    if (!p || !p.bg || !packAllowed()) return;
+    if (packEl && packEl.isConnected && packEl.dataset.pack === p.id) return;
+    killPack();
+    packEl = packDom(p);
+    document.body.appendChild(packEl);
+    if (document.hidden) packEl.classList.add("pf-paused");
+  }
+
+  function applyPack(p) {
+    if (!p) {
+      PK_VARS.forEach(function (k) {
+        root.style.removeProperty(k);
+      });
+      root.removeAttribute("data-pack");
+      killPack();
+      return;
+    }
+    var colors = p.colors && p.colors.length ? p.colors : [p.c1, p.c2];
+    for (var i = 0; i < 4; i++) {
+      root.style.setProperty("--pk-" + (i + 1), colors[i] || colors[colors.length - 1]);
+    }
+    var tint = p.tint || ["#0e0e12", "#08080b"];
+    root.style.setProperty("--pk-bg-1", tint[0]);
+    root.style.setProperty("--pk-bg-2", tint[1]);
+    root.dataset.pack = p.id;
+    buildPack(p);
+  }
+
+  /* pause the backdrop while the tab is hidden */
+  document.addEventListener("visibilitychange", function () {
+    if (packEl) packEl.classList.toggle("pf-paused", document.hidden);
+  });
 
   /* Glow presets. Colors are ordered around the ring and the gradient
      starts + ends on the same color, so the loop is seamless and every
@@ -5384,18 +6752,24 @@ window.NULL_CONTENT = {
       root.style.removeProperty("--ac-1");
       root.style.removeProperty("--ac-2");
     }
+    var p = packFor(id);
+    curPack = p ? p.id : null;
+    applyPack(p);
   }
 
   function setPerf(on) {
     if (on) root.dataset.perf = "1";
     else delete root.dataset.perf;
+    /* performance mode drops the pack backdrop; leaving it restores it */
+    if (on) killPack();
+    else buildPack(packFor(curPack));
   }
 
   function applyAll() {
     var p = N.prefs.data;
     setTheme(p.theme);
-    setAccent(p.accent);
     setPerf(p.perf);
+    setAccent(p.accent);
     cometOn = !!p.glowComet;
     setGlow(p.glow);
   }
@@ -5404,6 +6778,11 @@ window.NULL_CONTENT = {
     ACCENTS: ACCENTS,
     GLOWS: GLOWS,
     extraAccents: extraAccents,
+    packFor: packFor,
+    /* rebuild the backdrop after unrelated prefs (perf, season) change */
+    refreshPack: function () {
+      applyPack(packFor(curPack));
+    },
     setTheme: setTheme,
     setAccent: setAccent,
     setGlow: setGlow,
@@ -7123,7 +8502,9 @@ window.NULL_CONTENT = {
       d.h("div", { class: "glow-row" })
     ]);
     var box = row.lastChild;
-    N.theme.ACCENTS.forEach(function (a) {
+    /* base accents first, then any shop theme packs the player unlocked */
+    var packs = N.theme.extraAccents ? N.theme.extraAccents() : [];
+    N.theme.ACCENTS.concat(packs).forEach(function (a) {
       var b = d.h("button", {
         type: "button",
         class: "chip chip-btn" + (N.prefs.get("accent") === a.id ? " on" : ""),

@@ -15,7 +15,12 @@ import { discoverContent } from "./discover-content.js";
 const ROOT = process.cwd();
 const OUT_DIR = path.join(ROOT, "releases");
 
-const css = fs.readFileSync(path.join(ROOT, "src/styles/global.css"), "utf8");
+/* both stylesheets go in, so the standalone builds carry the same look as
+   the site — including the theme-pack backdrops and shop styles */
+const css =
+  fs.readFileSync(path.join(ROOT, "src/styles/global.css"), "utf8") +
+  "\n" +
+  fs.readFileSync(path.join(ROOT, "src/styles/extra.css"), "utf8");
 const favicon = fs.readFileSync(path.join(ROOT, "public/favicon.svg"), "utf8");
 
 function read(p) {
