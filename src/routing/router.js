@@ -13,6 +13,7 @@
     { id: "proxies", t: "Proxies", url: "/proxies/", icon: "proxy" },
     { id: "schedule", t: "Schedule", url: "/schedule", icon: "sched" },
     { id: "announcements", t: "Announcements", url: "/announcements", icon: "ann" },
+    { id: "shop", t: "Shop", url: "/shop", icon: "store" },
     { id: "backups", t: "Backups", url: "/backups", icon: "backups" },
     { id: "settings", t: "Settings", url: "/settings", icon: "settings" },
   ];
