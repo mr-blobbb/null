@@ -8,6 +8,8 @@
   <title>NULL player</title>
   <meta name="description" content="The NULL player.">
   <link rel="icon" id="favicon" href="/public/favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="/public/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/public/icon-192.png">
   <link rel="stylesheet" href="/src/styles/global.css">
   <link rel="stylesheet" href="/src/styles/extra.css">
   <script>
@@ -31,6 +33,9 @@
       <div class="player-meta">
         <b id="pName">NULL</b>
         <span id="pKind">player</span>
+      </div>
+      <div class="player-coin" id="pCoin" title="NULL coins — earned by playing">
+        <span data-icon="coin"></span><b id="pCoinVal">0</b>
       </div>
       <div class="player-actions">
         <button type="button" class="btn-icon-sm btn-outline" id="btnFav" title="Favorite" aria-label="Favorite" style="width:38px;height:38px;border-radius:11px">
@@ -61,8 +66,11 @@
 
     <div class="player-frame glow-el" id="pFrameWrap">
       <div class="player-loading" id="pLoad">
-        <div class="spin" aria-hidden="true"></div>
-        <span>warming up the player…</span>
+        <div class="pl-mark" aria-hidden="true">
+          <span class="pl-ring"></span>
+          <span class="pl-core" data-icon="ban"></span>
+        </div>
+        <span class="pl-txt">warming up the player…</span>
       </div>
       <iframe id="pFrame" title="Content" allow="fullscreen"></iframe>
       <div class="empty" id="pEmpty" style="display:none;position:absolute;inset:0;place-content:center;border:0;border-radius:0">
@@ -75,6 +83,7 @@
   </div>
 
   <script src="/src/utilities/store.js"></script>
+  <script src="/src/utilities/econ.js"></script>
   <script src="/src/utilities/dom.js"></script>
   <script src="/src/utilities/modal.js"></script>
   <script src="/src/utilities/theme.js"></script>

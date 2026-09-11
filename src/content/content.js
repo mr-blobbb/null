@@ -35,6 +35,39 @@ window.NULL_CONTENT = {
     },
   ],
 
+  /* Shop-unlocked beta builds. These never appear in the auto-discovered
+     library — buying them in /shop merges them in at runtime (see
+     catalog.js). Point `file` at the real beta build whenever one exists. */
+  betas: [
+    {
+      id: "beta-simon",
+      name: "Simon: Deluxe",
+      date: "2026-09-08",
+      desc: "Beta branch of SIMON \u2014 faster rounds and double-tap combos. Beta-only, unlocked in the Shop.",
+      file: "/games/simon/simon.html",
+      labels: ["beta", "memory"],
+      price: 60,
+    },
+    {
+      id: "beta-void",
+      name: "Void: Nightshift",
+      date: "2026-09-08",
+      desc: "An experimental VOID variant with a colder palette. Beta-only, unlocked in the Shop.",
+      file: "/games/void/void.html",
+      labels: ["beta", "arcade"],
+      price: 60,
+    },
+    {
+      id: "beta-trace",
+      name: "Trace: Ghost Mode",
+      date: "2026-09-08",
+      desc: "Beta branch of TRACE \u2014 trails linger longer. Beta-only, unlocked in the Shop.",
+      file: "/games/trace/trace.html",
+      labels: ["beta", "precision"],
+      price: 60,
+    },
+  ],
+
   pages: [
     {
       title: "Home",
@@ -84,6 +117,13 @@ window.NULL_CONTENT = {
       grp: "Pages",
       desc: "Alternate places to reach NULL if this domain goes down.",
       kw: "mirror alternate domain access link",
+    },
+    {
+      title: "Shop",
+      url: "/shop",
+      grp: "Extras",
+      desc: "Spend coins earned by playing on beta games, custom themes and effects.",
+      kw: "shop store coins xp unlock buy beta theme rewards",
     },
     {
       title: "Settings",

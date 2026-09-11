@@ -8,6 +8,8 @@
   <title>Home — NULL</title>
   <meta name="description" content="NULL — a plain black-and-white hub for games, apps, proxies and tools. Local-first, no accounts.">
   <link rel="icon" id="favicon" href="/public/favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="/public/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/public/icon-192.png">
   <link rel="stylesheet" href="/src/styles/global.css">
   <link rel="stylesheet" href="/src/styles/extra.css">
   <script>
@@ -40,6 +42,22 @@
         <input id="searchInput" type="text" placeholder="Search games, apps, proxies&hellip;" autocomplete="off" aria-label="Search NULL">
         <button type="submit" class="btn btn-primary btn-sm">Search</button>
       </form>
+    </section>
+
+    <!-- daily tip -->
+    <section class="section" id="tipSec" hidden>
+      <div class="tip-card glass" id="tipCard"></div>
+    </section>
+
+    <!-- new since your last visit -->
+    <section class="section" id="newSec" hidden>
+      <div class="section-head">
+        <h2>New since your last visit</h2>
+        <span class="hint">freshly added to the library</span>
+      </div>
+      <div class="new-strip glass">
+        <div class="new-track" id="newTrack"></div>
+      </div>
     </section>
 
     <!-- featured rail -->
@@ -101,6 +119,7 @@
   </noscript>
 
   <script src="/src/utilities/store.js"></script>
+  <script src="/src/utilities/econ.js"></script>
   <script src="/src/utilities/dom.js"></script>
   <script src="/src/utilities/modal.js"></script>
   <script src="/src/utilities/theme.js"></script>

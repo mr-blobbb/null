@@ -116,6 +116,88 @@
     host.appendChild(info);
   }
 
+  /* ---------- daily tip ----------
+     One short tip a day about a real NULL feature, picked deterministically
+     from the date (same tip all day, fresh tomorrow — no storage needed). */
+  var TIPS = [
+    "Type <b>nldev</b> anywhere to open the developer console — confetti, modals, seasons and more.",
+    "The <b>panic key</b> (backtick by default) jumps you to a safe page instantly. Set it in Settings.",
+    "Tab cloaking is free: pick a Google preset in Settings and your tab title + icon change instantly.",
+    "Play 30 minutes and you earn <b>10 XP</b> — every 100 XP banks 30 coins for the Shop.",
+    "The <b>screensaver</b> kicks in after two idle minutes — move the mouse or press any key to wake it.",
+    "Star a game to favorite it; favorites show up in the drawer and are searchable.",
+    "Seasonal mode is off by default — flip it on in Settings for falling leaves, snow or petals.",
+    "Smart tab cloak rotates your tab preset on a timer while you play — pauses when the tab is hidden.",
+    "Game saves that live in localStorage can be downloaded and even shared with a friend from the player bar.",
+    "Search understands labels: try \u201carcade\u201d, \u201cmemory\u201d or \u201ccalculator\u201d to filter results.",
+    "Marathon mode auto-switches games on a timer — the games page owns the controls.",
+    "Press <b>/</b> anywhere to jump into search without touching the mouse.",
+  ];
+  function renderTip() {
+    var host = d.qs("#tipCard");
+    if (!host) return;
+    var tip = TIPS[dayHash(dayKey()) % TIPS.length];
+    host.textContent = "";
+    host.appendChild(
+      d.h("span", { class: "tip-ic" }, [d.icon("tip")]),
+    );
+    var body = d.h("div", { class: "tip-body" }, [
+      d.h("span", { class: "tip-kicker" }, "Tip of the day"),
+      d.h("p", { html: tip }),
+    ]);
+    host.appendChild(body);
+    var sec = d.qs("#tipSec");
+    if (sec) sec.hidden = false;
+  }
+
+  /* ---------- new since your last visit ----------
+     A slow auto-scrolling strip of everything added to the library since
+     the last time you opened the home page. Names + dot separators, looped
+     seamlessly; pauses on hover. */
+  function renderNewStrip() {
+    var sec = d.qs("#newSec");
+    var track = d.qs("#newTrack");
+    if (!sec || !track) return;
+    var lastVisit = N.store.read("null:lastVisit", null);
+    if (lastVisit == null) {
+      N.store.write("null:lastVisit", Date.now());
+      return; // first visit — nothing to compare against
+    }
+    var fresh = [];
+    N.catalog.games().forEach(function (g) {
+      if (g.at && g.at > lastVisit) fresh.push({ e: g, k: "game" });
+    });
+    N.catalog.apps().forEach(function (a) {
+      if (a.at && a.at > lastVisit) fresh.push({ e: a, k: "app" });
+    });
+    if (!fresh.length) return;
+
+    track.textContent = "";
+    /* build the content twice for a seamless translateX(-50%) loop */
+    for (var pass = 0; pass < 2; pass++) {
+      fresh.forEach(function (it) {
+        track.appendChild(
+          d.h(
+            "span",
+            {
+              class: "ns-item",
+              onclick: function () {
+                if (it.k === "app") N.launch.app(it.e);
+                else N.launch.game(it.e);
+              },
+            },
+            it.e.name,
+          ),
+        );
+        track.appendChild(d.h("span", { class: "ns-dot", "aria-hidden": "true" }, "\u00b7"));
+      });
+    }
+    var dur = Math.max(24, fresh.length * 7);
+    track.style.setProperty("--ns-dur", dur + "s");
+    sec.hidden = false;
+    N.store.write("null:lastVisit", Date.now());
+  }
+
   /* ---------- recently played ---------- */
   function renderRecents() {
     var box = d.qs("#recList");
@@ -389,6 +471,8 @@
     bindSearch();
     renderFeatured();
     renderGotd();
+    renderTip();
+    renderNewStrip();
     renderRecents();
     renderAnn();
     renderSchedHome();

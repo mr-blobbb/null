@@ -100,6 +100,14 @@
     snow: "ac_unit",
     petal: "local_florist",
     sparkle: "auto_awesome",
+    coin: "payments",
+    store: "storefront",
+    boost: "rocket_launch",
+    trophy: "emoji_events",
+    gift: "redeem",
+    unlock: "lock_open",
+    tip: "lightbulb",
+    trend: "trending_up",
   };
 
   function icon(name, cls) {

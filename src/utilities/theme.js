@@ -20,7 +20,21 @@
     { id: "ember", name: "Ember", c1: "#e2704a", c2: "#ef9a78" },
     { id: "violet", name: "Violet", c1: "#8f7cf0", c2: "#b3a6f5" },
     { id: "rose", name: "Rose", c1: "#e26f9c", c2: "#efa0bd" },
+    { id: "lime", name: "Lime", c1: "#9cc94e", c2: "#c0e07e" },
+    { id: "teal", name: "Teal", c1: "#2fc4b6", c2: "#6fe0d4" },
+    { id: "scarlet", name: "Scarlet", c1: "#ff0000", c2: "#f08f8f" },
+    { id: "plum", name: "Plum", c1: "#b564e0", c2: "#d19af0" },
+    { id: "ocean", name: "Ocean", c1: "#4b86e0", c2: "#84adee" },
   ];
+
+  /* shop-unlocked theme accents. econ.js owns the item catalog; theme.js
+     only needs the color data for rendering + applying. */
+  function extraAccents() {
+    if (!N.econ || !N.econ.THEMES) return [];
+    return N.econ.THEMES.filter(function (t) {
+      return N.econ.isUnlocked("theme", t.id);
+    });
+  }
 
   /* Glow presets. Colors are ordered around the ring and the gradient
      starts + ends on the same color, so the loop is seamless and every
@@ -248,7 +262,7 @@
   }
 
   function setAccent(id) {
-    var a = ACCENTS.find(function (x) {
+    var a = ACCENTS.concat(extraAccents()).find(function (x) {
       return x.id === id;
     });
     if (a && a.c1) {
@@ -277,6 +291,7 @@
   N.theme = {
     ACCENTS: ACCENTS,
     GLOWS: GLOWS,
+    extraAccents: extraAccents,
     setTheme: setTheme,
     setAccent: setAccent,
     setGlow: setGlow,

@@ -510,16 +510,20 @@
     if (inited) return;
     inited = true;
 
-    /* build accent swatches */
+    /* build accent swatches — base palettes plus any shop-unlocked themes */
     var row = d.qs("#accentRow");
     if (row) {
-      N.theme.ACCENTS.forEach(function (a) {
-        row.appendChild(
-          d.h("button", {
+      var extras = N.theme.extraAccents();
+      function swatch(a, fromShop) {
+        return d.h(
+          "button",
+          {
             type: "button",
-            class: "swatch-btn",
+            class: "swatch-btn" + (fromShop ? " shop" : ""),
             "data-val": a.id,
-          }, [
+            title: a.name + (fromShop ? " \u00b7 unlocked in the Shop" : ""),
+          },
+          [
             d.h("span", {
               class: "accent-dot",
               style: a.c1
@@ -527,8 +531,14 @@
                 : { background: document.documentElement.dataset.theme === "light" ? "#1c1d21" : "#e8eaef" },
             }),
             a.name,
-          ]),
+          ],
         );
+      }
+      N.theme.ACCENTS.forEach(function (a) {
+        row.appendChild(swatch(a, false));
+      });
+      extras.forEach(function (a) {
+        row.appendChild(swatch(a, true));
       });
     }
     var sel = d.qs("#tabSelect");

@@ -279,6 +279,34 @@
     };
   })();
 
+  /* ---------- announcements seen-state ----------
+     Powers the unread dot on the Announcements nav icon + the page dot.
+     "Seen" = the latest announcement date the visitor has viewed. */
+  var ANN_SEEN = "null:annSeen";
+  N.ann = {
+    latest: function () {
+      var list = (window.NULL_CONTENT && window.NULL_CONTENT.announcements) || [];
+      var latest = "";
+      list.forEach(function (a) {
+        if (a.date > latest) latest = a.date;
+      });
+      return latest;
+    },
+    seen: function () {
+      return N.store.read(ANN_SEEN, "");
+    },
+    unread: function () {
+      var latest = this.latest();
+      return !!latest && this.seen() < latest;
+    },
+    markSeen: function () {
+      var latest = this.latest();
+      if (!latest) return;
+      N.store.write(ANN_SEEN, latest);
+      N.bus.emit("annSeen");
+    },
+  };
+
   /* ---------- small date helpers ---------- */
   N.dt = {
     ago: function (ts) {

@@ -8,6 +8,7 @@
     "dev": "vite",
     "preview": "vite preview",
     "catalog": "node scripts/build-catalog.js",
+    "icons": "node scripts/gen-icons.js",
     "releases": "node scripts/build-single-files.js",
     "build": "node scripts/build-catalog.js && node scripts/build-single-files.js",
     "discover": "node scripts/discover-content.js"

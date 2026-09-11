@@ -10,9 +10,26 @@
     return window.NULL_CATALOG || { games: [], apps: [], proxies: [] };
   }
 
+  /* shop-unlocked beta games merge into the live library at runtime. They
+     stay out of the auto-discovered catalog until a player buys them, then
+     they behave like any other entry — library, search, featured, recents. */
+  function betaGames() {
+    if (!N.econ || !N.econ.unlockedBetas) return [];
+    return N.econ.unlockedBetas().map(function (b) {
+      return {
+        id: b.id,
+        name: b.name,
+        desc: b.desc,
+        file: b.file,
+        thumb: b.thumb || null,
+        labels: b.labels || ["beta"],
+      };
+    });
+  }
+
   N.catalog = {
     games: function () {
-      return raw().games || [];
+      return raw().games.concat(betaGames());
     },
     apps: function () {
       return raw().apps || [];

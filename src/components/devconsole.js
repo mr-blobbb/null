@@ -66,9 +66,12 @@
     var p = (N.catalog && N.catalog.proxies ? N.catalog.proxies() : []).length;
     var rec = N.recent ? N.recent.list().length : 0;
     var fav = N.favs ? N.favs.list().length : 0;
+    var eco = N.econ ? N.econ.state() : null;
     return (
-      g + " games &middot; " + a + " apps &middot; " + p + " proxies &middot; " +
-      rec + " recent &middot; " + fav + " favorites"
+      g + (eco ? "+" + (N.econ.unlockedBetas ? N.econ.unlockedBetas().length : 0) : "") + " games &middot; " +
+      a + " apps &middot; " + p + " proxies &middot; " +
+      rec + " recent &middot; " + fav + " favorites" +
+      (eco ? " &middot; " + eco.coins + " coins &middot; " + eco.xp + " xp" : "")
     );
   }
 
@@ -259,6 +262,10 @@
           { label: "Open player (blank)", icon: "file", run: function () {
               location.href = N.launch.playerUrl("game", "void");
             } },
+          { label: "Open shop", icon: "store", run: function () {
+              ok("heading to the shop");
+              setTimeout(function () { location.href = "/shop"; }, 150);
+            } },
         ],
         [
           { label: "Armed marathon +5m", icon: "clock", run: function () {
@@ -392,6 +399,18 @@
             } },
         ],
         [
+          { label: "Bank 5h playtime", icon: "coin", run: function () {
+              if (!N.econ) return err("econ module missing");
+              var got = N.econ.bank(5 * 3600);
+              var s = N.econ.state();
+              ok("banked 5h \u2192 +" + got.xp + " xp, +" + got.coins + " coins (now " + s.coins + " coins)");
+              refreshStats();
+            } },
+          { label: "Reset economy", icon: "trash", run: function () {
+              N.store.del("null:eco");
+              ok("economy wiped \u2014 reload to reset balances");
+              refreshStats();
+            } },
           { label: "Seed weekly log", icon: "clock", run: function () {
               if (!N.week) return err("week module missing");
               var games = N.catalog.games().slice(0, 4);
@@ -422,7 +441,7 @@
                 okLabel: "Wipe everything",
                 okVariant: "danger",
                 onOk: function () {
-                  ["null:prefs", "null:flags", "null:recent", "null:favs", "null:plays", "null:searches", "null:sched", "null:lunch", "null:week"].forEach(N.store.del);
+                  ["null:prefs", "null:flags", "null:recent", "null:favs", "null:plays", "null:searches", "null:sched", "null:lunch", "null:week", "null:eco", "null:annSeen", "null:lastVisit"].forEach(N.store.del);
                   ok("factory reset done \u2014 reloading");
                   setTimeout(function () { location.reload(); }, 600);
                 },

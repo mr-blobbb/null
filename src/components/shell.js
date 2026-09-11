@@ -29,14 +29,14 @@
     /* primary links — icon-only, no Home (the brand mark is home) */
     var links = d.h("nav", { class: "nav-links" });
     N.router.PRIMARY.forEach(function (l) {
-      links.appendChild(
-        d.h("a", {
-          class: "nav-link" + (N.router.isActive(l.url) ? " on" : ""),
-          href: l.url,
-          title: l.t,
-          "aria-label": l.t,
-        }, [d.icon(l.icon)]),
-      );
+      var a = d.h("a", {
+        class: "nav-link" + (N.router.isActive(l.url) ? " on" : ""),
+        href: l.url,
+        title: l.t,
+        "aria-label": l.t,
+      }, [d.icon(l.icon)]);
+      if (l.id === "announcements") a.appendChild(annDotEl());
+      links.appendChild(a);
     });
     bar.appendChild(links);
 
@@ -106,12 +106,12 @@
     N.router.GROUPS.forEach(function (g) {
       drawer.appendChild(d.h("div", { class: "mg" }, g.name));
       g.links.forEach(function (l) {
-        drawer.appendChild(
-          d.h("a", { class: "mi" + (N.router.isActive(l.url) ? " on" : ""), href: l.url }, [
-            d.icon(l.icon),
-            d.h("span", null, l.t),
-          ]),
-        );
+        var mi = d.h("a", { class: "mi" + (N.router.isActive(l.url) ? " on" : ""), href: l.url }, [
+          d.icon(l.icon),
+          d.h("span", null, l.t),
+        ]);
+        if (l.url === "/announcements") mi.appendChild(annDotEl());
+        drawer.appendChild(mi);
       });
     });
     drawer.appendChild(
@@ -128,6 +128,21 @@
     bar.appendChild(drawerOv);
     return bar;
   }
+
+  /* ---------- unread announcements dot on the nav icon ---------- */
+  function annDotEl() {
+    return d.h("span", { class: "nav-dot", "aria-hidden": "true" });
+  }
+  function paintAnnDots() {
+    if (!N.ann) return;
+    var unread = N.ann.unread();
+    d.qsa('a[href="/announcements"]').forEach(function (a) {
+      var dot = a.querySelector(".nav-dot");
+      if (unread && !dot) a.appendChild(annDotEl());
+      else if (!unread && dot) dot.remove();
+    });
+  }
+  N.bus.on("annSeen", paintAnnDots);
 
   function themeIcon() {
     return d.icon(
@@ -320,7 +335,11 @@ return foot;
     confettiBusy = true;
     setTimeout(function () { confettiBusy = false; }, 2600);
     var ov = d.h("div", { class: "cf-ov", "aria-hidden": "true" });
-    var cols = ["#f5f5f6", "#c9c9cf", "#a1a1aa", "#71717a", "#52525b"];
+    /* golden confetti is a shop unlock — otherwise stay grayscale */
+    var cols =
+      N.econ && N.econ.isUnlocked("fx", "goldconfetti")
+        ? ["#ffd45e", "#ffb020", "#ffe9a8", "#f5c542", "#ffdf8a"]
+        : ["#f5f5f6", "#c9c9cf", "#a1a1aa", "#71717a", "#52525b"];
     for (var i = 0; i < 80; i++) {
       var p = d.h("span", { class: "cf-p" + (Math.random() < 0.5 ? " s" : "") });
       p.style.left = Math.random() * 100 + "%";
@@ -511,6 +530,46 @@ return foot;
     marathonTimer = setInterval(marathonTick, 1000);
   }
 
+  /* ---------- performance-mode suggestion ----------
+     Weak devices (low device memory / few cores) get a one-time nudge to
+     turn on performance mode — plus a friendly "close some tabs" tip. */
+  function perfSuggest() {
+    if (N.prefs.get("perf")) return;
+    if (N.flags.get("perfSuggest")) return;
+    var mem = navigator.deviceMemory; // Chrome only — undefined elsewhere
+    var cores = navigator.hardwareConcurrency;
+    var weak =
+      (mem && mem <= 4) ||
+      (!mem && cores && cores <= 4) ||
+      (cores && cores <= 2);
+    if (!weak) return;
+    setTimeout(function () {
+      if (document.body.classList.contains("player-page") || document.body.classList.contains("page-404")) return;
+      if (d.qs(".modal-ov.open")) return;
+      N.flags.set("perfSuggest");
+      N.modal.open({
+        title: "Performance mode",
+        icon: "zap",
+        body:
+          "<p>NULL noticed this device looks a bit underpowered.</p>" +
+          "<p>Performance mode disables hover effects, glow and heavy shadows for a smoother experience. You can flip it anytime in Settings.</p>" +
+          "<p style='color:var(--text-2)'>Closing extra tabs and apps can also free up memory and speed things up.</p>",
+        actions: [
+          { label: "Not now", variant: "outline" },
+          {
+            label: "Turn on performance mode",
+            variant: "primary",
+            onClick: function () {
+              N.prefs.set("perf", true);
+              N.theme.setPerf(true);
+              d.toast("Performance mode on", { icon: "zap" });
+            },
+          },
+        ],
+      });
+    }, 2600);
+  }
+
   /* ---------- weekly wrap-up ----------
      Once a week (Monday-keyed), the first page load after the week rolls
      over shows a summary of the previous week's plays. Fires on every page
@@ -613,6 +672,17 @@ return foot;
     /* weekly wrap-up — slightly delayed so it stacks above (never under)
        the first-run welcome chain on the home page */
     setTimeout(wrapupCheck, 1200);
+    perfSuggest();
+    paintAnnDots();
+
+    /* PWA: register the root service worker so NULL is installable and the
+       shell works offline. Skipped on localhost so the dev preview never
+       serves stale cached files. */
+    if ("serviceWorker" in navigator && !/^localhost|127\.0\.0\.1/.test(location.hostname)) {
+      window.addEventListener("load", function () {
+        navigator.serviceWorker.register("/sw.js").catch(function () {});
+      });
+    }
 
     /* custom scrollbar on library pages */
     if (document.body.classList.contains("lb")) {

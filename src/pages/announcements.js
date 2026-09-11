@@ -9,16 +9,10 @@
   /* Unread dot — a small green pulse sits at the top-left (before the
      eyebrow) when an announcement is newer than the last one seen. Being
      on this page means it's been seen, so after a moment it's recorded
-     and the dot fades out; it won't come back until a new one lands. */
+     (which also clears the nav icon dot via the annSeen bus event) and the
+     page dot fades out. */
   function unreadDot() {
-    var list = C.announcements || [];
-    var latest = "";
-    list.forEach(function (a) {
-      if (a.date > latest) latest = a.date;
-    });
-    if (!latest) return;
-    var seen = N.store.read("null:annSeen", "");
-    if (seen >= latest) return;
+    if (!N.ann || !N.ann.unread()) return;
     var eye = d.qs(".page-head .eyebrow");
     if (!eye) return;
     var dot = d.h("span", {
@@ -28,7 +22,7 @@
     });
     eye.insertBefore(dot, eye.firstChild);
     setTimeout(function () {
-      N.store.write("null:annSeen", latest);
+      N.ann.markSeen();
       dot.classList.add("gone");
       setTimeout(function () {
         if (dot.parentNode) dot.parentNode.removeChild(dot);

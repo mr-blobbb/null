@@ -32,6 +32,7 @@
       links: [
         { t: "Announcements", url: "/announcements", icon: "ann" },
         { t: "Schedule", url: "/schedule", icon: "sched" },
+        { t: "Shop", url: "/shop", icon: "store" },
         { t: "Backups", url: "/backups", icon: "backups" },
         { t: "Settings", url: "/settings", icon: "settings" },
       ],
@@ -50,6 +51,7 @@
         { t: "Proxies", url: "/proxies/" },
         { t: "Announcements", url: "/announcements" },
         { t: "Schedule", url: "/schedule" },
+        { t: "Shop", url: "/shop" },
         { t: "Settings", url: "/settings" },
       ],
     },

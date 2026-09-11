@@ -57,6 +57,40 @@
       });
     }
 
+    /* ---------- playtime → XP → coins ----------
+       Only visible time counts. Every 30s of play is banked; coin
+       milestones are celebrated right away so earning feels immediate. */
+    function paintCoins() {
+      var el = d.qs("#pCoinVal");
+      if (el && N.econ) el.textContent = N.econ.state().coins;
+    }
+    function trackTime() {
+      if (!N.econ) return;
+      var acc = 0;
+      var iv = setInterval(function () {
+        if (document.hidden) return;
+        acc += 5;
+        if (acc >= 30) {
+          var got = N.econ.bank(acc);
+          acc = 0;
+          if (got.coins) {
+            paintCoins();
+            d.toast("+" + got.coins + " coins \u2014 spend them in the Shop", { icon: "coin" });
+            if (N.fx && N.fx.confetti) N.fx.confetti();
+          }
+        }
+      }, 5000);
+      window.addEventListener("beforeunload", function () {
+        if (acc > 0) {
+          N.econ.bank(acc);
+          acc = 0;
+        }
+        clearInterval(iv);
+      });
+    }
+    paintCoins();
+    trackTime();
+
     /* frame */
     function hideLoad() {
       if (loadEl) loadEl.remove();

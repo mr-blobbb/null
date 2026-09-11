@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="color-scheme" content="dark light">
   <meta name="theme-color" content="#09090b">
-  <title>Announcements — NULL</title>
-  <meta name="description" content="What's new on NULL.">
+  <title>Shop — NULL</title>
+  <meta name="description" content="Spend coins earned by playing on beta games, custom themes and effects. Local, no real money.">
   <link rel="icon" id="favicon" href="/public/favicon.svg" type="image/svg+xml">
   <link rel="manifest" href="/public/manifest.webmanifest">
   <link rel="apple-touch-icon" href="/public/icon-192.png">
@@ -24,18 +24,24 @@
     })();
   </script>
 </head>
-<body data-page="announcements">
+<body data-page="shop">
   <a class="skip-link" href="#main">Skip to content</a>
   <div class="glow-bg" aria-hidden="true"></div>
   <header data-mount="nav"></header>
 
-  <main id="main" class="page page-narrow">
+  <main id="main" class="page">
     <div class="page-head">
-      <span class="eyebrow"><span data-icon="ann"></span>announcements</span>
-      <h1>What&rsquo;s new</h1>
-      <p>Updates, notices and releases — the latest first.</p>
+      <span class="eyebrow"><span data-icon="store"></span>shop · earned, never bought</span>
+      <h1>Shop</h1>
+      <p>
+        Play games to bank XP and coins &mdash; then spend them here. Beta games,
+        custom themes and effects, all unlocked with local progress. No real
+        money, no accounts, nothing leaves this browser.
+      </p>
     </div>
-    <div id="annList" class="ann-grid"></div>
+
+    <div id="ecoBar"></div>
+    <div id="shopBody"></div>
   </main>
 
   <footer data-mount="foot"></footer>
@@ -62,6 +68,6 @@
   <script src="/src/components/search.js"></script>
   <script src="/src/components/shell.js"></script>
   <script src="/src/components/devconsole.js"></script>
-  <script src="/src/pages/announcements.js"></script>
+  <script src="/src/pages/shop.js"></script>
 </body>
 </html>
