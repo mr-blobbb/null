@@ -80,16 +80,6 @@
         </div>
       </section>
 
-      <!-- theme packs -->
-      <section class="set-card glass" aria-label="Theme packs" id="packSection">
-        <h2 class="set-title"><span data-icon="pen"></span>Theme packs</h2>
-        <p class="set-sub">
-          Full themes: a whole palette plus a drifting backdrop behind everything.
-          Free packs are always available — the louder ones unlock in the Shop.
-        </p>
-        <div id="packGrid" class="shop-grid"></div>
-      </section>
-
       <!-- glow border -->
       <section class="set-card glass" aria-label="Glow border">
         <h2 class="set-title"><span data-icon="zap"></span>Glow border</h2>
@@ -138,6 +128,27 @@
         </div>
       </section>
 
+      <!-- theme packs -->
+      <section class="set-card glass set-card--wide" aria-label="Theme packs" id="packSection">
+        <h2 class="set-title"><span data-icon="pen"></span>Theme packs</h2>
+        <p class="set-sub">
+          Full themes: a whole palette plus a drifting backdrop behind everything.
+          Free packs are always available — the louder ones unlock in the Shop.
+        </p>
+        <div id="packGrid" class="shop-grid"></div>
+      </section>
+
+      <!-- background particles -->
+      <section class="set-card glass set-card--wide" aria-label="Background particles">
+        <h2 class="set-title"><span data-icon="sparkle"></span>Background particles</h2>
+        <p class="set-sub">
+          A layer of drifting motion behind every page, on its own or over a theme
+          pack. The three basics are free &mdash; the loud ones unlock in the Shop.
+          Click the applied card to switch particles off.
+        </p>
+        <div id="partGrid" class="shop-grid"></div>
+      </section>
+
       <!-- seasonal theme -->
       <section class="set-card glass" aria-label="Seasonal theme">
         <h2 class="set-title"><span data-icon="leaf"></span>Seasonal theme</h2>
@@ -159,8 +170,27 @@
         </div>
       </section>
 
+      <!-- install as an app -->
+      <section class="set-card glass" aria-label="Install NULL">
+        <h2 class="set-title"><span data-icon="download"></span>Install NULL</h2>
+        <p class="set-sub">
+          NULL installs as its own app in Chrome &mdash; its own window and icon
+          in your launcher, and the shell keeps working offline.
+        </p>
+        <div class="set-row">
+          <div class="lbl-txt">
+            <b>Install as an app</b>
+            <span id="installHint">Checking whether this browser can install NULL&hellip;</span>
+          </div>
+          <div class="toolbar" style="margin:0">
+            <button type="button" class="btn btn-outline btn-sm" id="installHelp">How?</button>
+            <button type="button" class="btn btn-primary btn-sm" id="installBtn" hidden>Install</button>
+          </div>
+        </div>
+      </section>
+
       <!-- tab presets -->
-      <section class="set-card glass" aria-label="Browser tab">
+      <section class="set-card glass set-card--wide" aria-label="Browser tab">
         <h2 class="set-title"><span data-icon="tab"></span>Browser tab presets</h2>
         <p class="set-sub">
           The preset overrides NULL&rsquo;s tab title and favicon everywhere — including
@@ -236,25 +266,6 @@
         </div>
       </section>
 
-      <!-- install as an app -->
-      <section class="set-card glass" aria-label="Install NULL">
-        <h2 class="set-title"><span data-icon="download"></span>Install NULL</h2>
-        <p class="set-sub">
-          NULL installs as its own app in Chrome &mdash; its own window and icon
-          in your launcher, and the shell keeps working offline.
-        </p>
-        <div class="set-row">
-          <div class="lbl-txt">
-            <b>Install as an app</b>
-            <span id="installHint">Checking whether this browser can install NULL&hellip;</span>
-          </div>
-          <div class="toolbar" style="margin:0">
-            <button type="button" class="btn btn-outline btn-sm" id="installHelp">How?</button>
-            <button type="button" class="btn btn-primary btn-sm" id="installBtn" hidden>Install</button>
-          </div>
-        </div>
-      </section>
-
       <!-- library extras -->
       <section class="set-card glass" aria-label="Library extras">
         <h2 class="set-title"><span data-icon="game"></span>Library extras</h2>
@@ -321,7 +332,7 @@
       </section>
 
       <!-- panic key -->
-      <section class="set-card glass" aria-label="Panic key">
+      <section class="set-card glass set-card--wide" aria-label="Panic key">
         <h2 class="set-title"><span data-icon="ext"></span>Panic key</h2>
         <p class="set-sub">
           Press the key anywhere on NULL to jump straight to a boring-looking site.

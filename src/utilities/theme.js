@@ -202,6 +202,130 @@
     buildPack(p);
   }
 
+  /* ---------- ambient particles ----------
+     A layer of drifting motion that sits behind the page on its own, or on
+     top of a theme pack. econ.js owns the catalog (free + Shop); this file
+     builds the DOM from a particle's `parts` list and extra.css draws each
+     kind. Same gating as a backdrop: no particles in performance mode, for
+     reduced-motion users, or on the player / 404 pages. */
+  var partEl = null;
+  var curPart = null;
+
+  function allParticles() {
+    if (!N.econ) return [];
+    return (N.econ.FREE_PARTICLES || []).concat(N.econ.PARTICLES || []);
+  }
+
+  function particleFor(id) {
+    return (
+      allParticles().find(function (p) {
+        return p.id === id;
+      }) || null
+    );
+  }
+
+  /* free particles are everyone's; the rest must be unlocked in the Shop */
+  function partOwned(p) {
+    return !!p && (p.free || (N.econ && N.econ.isUnlocked("particle", p.id)));
+  }
+
+  function partHost(part, scale) {
+    var host = document.createElement("span");
+    host.className = "pt-p pt-p-" + part.k;
+    var n = Math.max(1, Math.round((part.n || 0) * scale));
+    var center = part.sp === "center";
+    for (var i = 0; i < n; i++) {
+      var b = document.createElement("b");
+      b.style.left = center ? "50%" : rnd(-4, 104).toFixed(1) + "%";
+      b.style.top = center
+        ? "50%"
+        : part.sp === "bottom"
+          ? rnd(74, 112).toFixed(1) + "%"
+          : rnd(-8, 100).toFixed(1) + "%";
+      b.style.setProperty("--s", rnd(1, 3.2).toFixed(2) + "px");
+      b.style.setProperty("--dx", (Math.random() < 0.5 ? -1 : 1) * rnd(18, 140).toFixed(0) + "px");
+      b.style.setProperty("--o", rnd(0.25, 0.85).toFixed(2));
+      b.style.setProperty("--rot", rnd(-30, 30).toFixed(0) + "deg");
+      b.style.setProperty("--dur", rnd(3, 9).toFixed(2));
+      b.style.setProperty("--delay", rnd(0, 18).toFixed(2));
+      /* warp streams outward from the middle, so it needs an angle + a
+         distance instead of a left/top start point */
+      if (part.k === "warp") {
+        b.style.setProperty("--ang", rnd(0, 360).toFixed(0) + "deg");
+        b.style.setProperty("--dist", rnd(45, 130).toFixed(0) + "vh");
+        b.style.setProperty("--dur", rnd(1.6, 4).toFixed(2));
+      }
+      host.appendChild(b);
+    }
+    return host;
+  }
+
+  function partArt(p, cls, opts) {
+    opts = opts || {};
+    var el = document.createElement("div");
+    el.className = cls;
+    el.setAttribute("data-part", p.id);
+    el.setAttribute("aria-hidden", "true");
+    var scale = opts.scale || 1;
+    (p.parts || []).forEach(function (part) {
+      el.appendChild(partHost(part, scale));
+    });
+    /* mono particles get their colors from CSS so they follow dark/light;
+       the rest are fed their own palette inline */
+    if (!p.mono && p.colors) {
+      var colors = p.colors;
+      for (var i = 0; i < 4; i++) {
+        el.style.setProperty("--pt-" + (i + 1), colors[i] || colors[colors.length - 1]);
+      }
+    }
+    return el;
+  }
+
+  function partPreview(p, opts) {
+    return partArt(p, "part-preview", { scale: (opts && opts.scale) || 0.3 });
+  }
+
+  function partThumb(p, opts) {
+    var thumb = document.createElement("div");
+    thumb.className = "part-thumb";
+    thumb.appendChild(partPreview(p));
+    if (opts && opts.lock) {
+      var veil = document.createElement("div");
+      veil.className = "part-lock";
+      veil.appendChild(N.dom.icon("lock"));
+      thumb.appendChild(veil);
+    }
+    return thumb;
+  }
+
+  function killPart() {
+    if (partEl && partEl.parentNode) partEl.parentNode.removeChild(partEl);
+    partEl = null;
+  }
+
+  function buildPart(p) {
+    if (!p || !partOwned(p) || !(p.parts || []).length || !packAllowed()) return;
+    if (partEl && partEl.isConnected && partEl.dataset.part === p.id) return;
+    killPart();
+    partEl = partArt(p, "part-fx");
+    document.body.appendChild(partEl);
+    if (document.hidden) partEl.classList.add("pt-paused");
+  }
+
+  function applyPart(p) {
+    if (!p) {
+      killPart();
+      return;
+    }
+    buildPart(p);
+  }
+
+  function setParticles(id) {
+    var p = particleFor(id);
+    curPart = p ? p.id : null;
+    applyPart(partOwned(p) ? p : null);
+  }
+
   /* ---------- custom accent ----------
      A Shop unlock (econ fx "customaccent"): the accent can be any color, and
      the second tone is derived from it so gradients keep working. */
@@ -224,9 +348,10 @@
     return !!(N.econ && N.econ.isUnlocked("fx", "customaccent"));
   }
 
-  /* pause the backdrop while the tab is hidden */
+  /* pause the backdrop + particles while the tab is hidden */
   document.addEventListener("visibilitychange", function () {
     if (packEl) packEl.classList.toggle("pf-paused", document.hidden);
+    if (partEl) partEl.classList.toggle("pt-paused", document.hidden);
   });
 
   /* Glow presets. Colors are ordered around the ring and the gradient
@@ -477,9 +602,15 @@
   function setPerf(on) {
     if (on) root.dataset.perf = "1";
     else delete root.dataset.perf;
-    /* performance mode drops the pack backdrop; leaving it restores it */
-    if (on) killPack();
-    else buildPack(packFor(curPack));
+    /* performance mode drops the pack backdrop and particles; leaving it
+       restores whichever ones were on */
+    if (on) {
+      killPack();
+      killPart();
+    } else {
+      buildPack(packFor(curPack));
+      buildPart(particleFor(curPart));
+    }
   }
 
   function applyAll() {
@@ -487,6 +618,7 @@
     setTheme(p.theme);
     setPerf(p.perf);
     setAccent(p.accent);
+    setParticles(p.particles);
     cometOn = !!p.glowComet;
     setGlow(p.glow);
   }
@@ -501,6 +633,16 @@
     packThumb: packThumb,
     allPacks: allPacks,
     packVars: packVars,
+    /* particles — same builder-and-preview deal as packs */
+    partPreview: partPreview,
+    partThumb: partThumb,
+    allParticles: allParticles,
+    particleFor: particleFor,
+    setParticles: setParticles,
+    /* rebuild particles after perf / season / reduced-motion changes */
+    refreshParts: function () {
+      applyPart(particleFor(curPart));
+    },
     customOn: customOn,
     setCustomAccent: function (hex) {
       N.prefs.set("accentColor", hex);

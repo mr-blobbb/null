@@ -23,7 +23,7 @@
     next: COIN_EVERY,
     pend: 0,
     boostUntil: 0,
-    unlocks: { games: [], themes: [], fx: [] },
+    unlocks: { games: [], themes: [], particles: [], fx: [] },
   });
 
   function save() {
@@ -163,6 +163,101 @@
       tags: ["Free", "Haze", "Slow"],
     },
   ];
+  /* Ambient background particles — a layer of motion that runs behind every
+     page, on its own or over a theme pack. `parts` lists the kinds and how
+     many: theme.js turns that into DOM and extra.css draws each kind. Free
+     particles are monochrome (mono) so they read in both site themes; shop
+     particles carry their own little palette. */
+  var FREE_PARTICLES = [
+    {
+      id: "motes",
+      name: "Motes",
+      free: true,
+      price: 0,
+      mono: true,
+      desc: "A few slow specks drifting upward. Barely there, on purpose.",
+      tags: ["Free", "Subtle", "Slow"],
+      parts: [{ k: "mote", n: 22, sp: "bottom" }],
+    },
+    {
+      id: "haze",
+      name: "Haze",
+      free: true,
+      price: 0,
+      mono: true,
+      desc: "Soft grey clouds sliding across the page behind everything.",
+      tags: ["Free", "Clouds"],
+      parts: [{ k: "haze", n: 4 }],
+    },
+    {
+      id: "twinkle",
+      name: "Twinkle",
+      free: true,
+      price: 0,
+      mono: true,
+      desc: "Pin-prick lights that fade in and out without moving.",
+      tags: ["Free", "Twinkle"],
+      parts: [{ k: "spark", n: 18 }],
+    },
+  ];
+
+  var PARTICLES = [
+    {
+      id: "fireflies",
+      name: "Fireflies",
+      price: 70,
+      colors: ["#ffe98a", "#ffd45e", "#fff6c9", "#f2a93b"],
+      desc: "Warm glowing orbs that wander and pulse like a summer field.",
+      tags: ["Glow", "Wandering"],
+      parts: [{ k: "firefly", n: 16 }],
+    },
+    {
+      id: "embers",
+      name: "Embers",
+      price: 80,
+      colors: ["#ff8a3d", "#ffb020", "#ff4d2e", "#ffe0a3"],
+      desc: "Sparks rise from the bottom of the page, flickering as they cool.",
+      tags: ["Rising", "Flicker"],
+      parts: [{ k: "ember", n: 26, sp: "bottom" }],
+    },
+    {
+      id: "bubbles",
+      name: "Bubbles",
+      price: 80,
+      colors: ["#9fe6ff", "#c9f2ff", "#7cc4ff", "#ffffff"],
+      desc: "Glass bubbles wobble upward, catching the light as they go.",
+      tags: ["Rising", "Glass"],
+      parts: [{ k: "bubble", n: 14, sp: "bottom" }],
+    },
+    {
+      id: "starlight",
+      name: "Starlight",
+      price: 90,
+      colors: ["#ffffff", "#dceaff", "#bcd4ff", "#ffffff"],
+      desc: "Four-point sparkles bloom and vanish across the whole page.",
+      tags: ["Sparkle", "Twinkle"],
+      parts: [{ k: "sparkle", n: 18 }],
+    },
+    {
+      id: "plasma",
+      name: "Plasma",
+      price: 110,
+      colors: ["#a86bff", "#3d8bff", "#ff4fa8", "#4fe0c8"],
+      desc: "Huge blurred colour fields bleed into each other, endlessly.",
+      tags: ["Colour", "Blur", "Slow"],
+      parts: [{ k: "plasma", n: 6 }],
+    },
+    {
+      id: "warp",
+      name: "Warp",
+      price: 120,
+      colors: ["#ffffff", "#9fe6ff", "#c9c2ff", "#ffffff"],
+      desc: "Stars stream past from the middle of the screen \u2014 lightspeed.",
+      tags: ["Speed", "Radial"],
+      parts: [{ k: "warp", n: 40, sp: "center" }],
+    },
+  ];
+
   var BOOSTS = [
     { id: "xpboost", name: "XP boost", price: 30, desc: "Double XP for 24 hours — every 30 minutes banks 20 XP." },
   ];
@@ -201,26 +296,38 @@
      hand-maintained content.js list — the same list the Shop page renders. */
   function listFor(type) {
     if (type === "theme") return THEMES;
+    if (type === "particle") return PARTICLES;
     if (type === "boost") return BOOSTS;
     if (type === "fx") return FX;
     if (type === "game") return (window.NULL_CONTENT && window.NULL_CONTENT.betas) || [];
     return [];
   }
   function keyFor(type) {
-    return type === "game" ? "games" : type;
+    if (type === "game") return "games";
+    if (type === "particle") return "particles";
+    return type;
   }
   function ownedList(type) {
     var u = data.unlocks || {};
     return u[keyFor(type)] || [];
   }
-  function isFreePack(id) {
-    return FREE_PACKS.some(function (p) {
-      return p.id === id;
-    });
+  /* free theme packs + free particles are owned by everyone */
+  function isFree(type, id) {
+    if (type === "theme") {
+      return FREE_PACKS.some(function (p) {
+        return p.id === id;
+      });
+    }
+    if (type === "particle") {
+      return FREE_PARTICLES.some(function (p) {
+        return p.id === id;
+      });
+    }
+    return false;
   }
   function isUnlocked(type, id) {
     if (type === "boost") return boosted();
-    if (type === "theme" && isFreePack(id)) return true;
+    if (isFree(type, id)) return true;
     return ownedList(type).indexOf(id) >= 0;
   }
   function priceFor(type, id) {
@@ -235,14 +342,14 @@
   /* Buy an item. Returns { ok, reason } — no partial state on failure. */
   function buy(type, id) {
     var price = priceFor(type, id);
-    if (!price) return { ok: false, reason: isFreePack(id) ? "free" : "unknown item" };
+    if (!price) return { ok: false, reason: isFree(type, id) ? "free" : "unknown item" };
     if (isUnlocked(type, id)) return { ok: false, reason: "already owned" };
     if (data.coins < price) return { ok: false, reason: "not enough coins" };
     data.coins -= price;
     if (type === "boost") {
       data.boostUntil = Date.now() + BOOST_MS;
     } else {
-      var u = data.unlocks || (data.unlocks = { games: [], themes: [], fx: [] });
+      var u = data.unlocks || (data.unlocks = { games: [], themes: [], particles: [], fx: [] });
       var key = keyFor(type);
       (u[key] = u[key] || []).push(id);
     }
@@ -262,11 +369,11 @@
   /* dev console / debugging: unlock an item without spending coins, so a
      backdrop can be checked without grinding 20 hours of playtime first. */
   function grant(type, id) {
-    if (type === "theme" && isFreePack(id)) return { ok: true };
+    if (isFree(type, id)) return { ok: true };
     if (type === "boost") {
       data.boostUntil = Date.now() + BOOST_MS;
     } else {
-      var u = data.unlocks || (data.unlocks = { games: [], themes: [], fx: [] });
+      var u = data.unlocks || (data.unlocks = { games: [], themes: [], particles: [], fx: [] });
       var key = keyFor(type);
       var list = u[key] || (u[key] = []);
       if (list.indexOf(id) < 0) list.push(id);
@@ -278,6 +385,8 @@
   N.econ = {
     THEMES: THEMES,
     FREE_PACKS: FREE_PACKS,
+    PARTICLES: PARTICLES,
+    FREE_PARTICLES: FREE_PARTICLES,
     BOOSTS: BOOSTS,
     FX: FX,
     state: function () {

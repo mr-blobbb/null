@@ -235,6 +235,58 @@
     ]);
   }
 
+  /* ---------- background particles ----------
+     Motion only, no palette: each card previews the real layer through
+     theme.js, so a preview can never drift from what the site becomes. */
+  function partCard(p) {
+    var owned = N.econ.isUnlocked("particle", p.id);
+    var applied = N.prefs.get("particles") === p.id;
+    var foot = d.h("div", { class: "shop-foot" });
+    if (owned) {
+      foot.appendChild(ownedChip("Unlocked"));
+      foot.appendChild(
+        d.h(
+          "button",
+          {
+            type: "button",
+            class: "btn " + (applied ? "btn-primary" : "btn-outline") + " btn-sm",
+            onclick: function () {
+              setParts(applied ? "none" : p.id);
+            },
+          },
+          applied ? [d.icon("check"), "Applied"] : [d.icon("pen"), "Apply"],
+        ),
+      );
+    } else {
+      foot.appendChild(priceChip(p.price));
+      foot.appendChild(buyBtn("particle", p.id, p.name, p.price));
+    }
+
+    return d.h("article", { class: "shop-card pack-card glass" + (owned ? " owned" : "") + (applied ? " playing" : "") }, [
+      N.theme.partThumb(p, { lock: !owned }),
+      d.h("div", { class: "pack-strip" }, (p.colors || []).map(function (c) {
+        return d.h("i", { style: { background: c } });
+      })),
+      d.h("div", { class: "shop-info" }, [
+        d.h("h3", null, p.name),
+        d.h("p", null, p.desc || ""),
+        d.h("div", { class: "chips-row" }, (p.tags || []).map(function (t) {
+          return d.h("span", { class: "chip" }, t);
+        })),
+      ]),
+      foot,
+    ]);
+  }
+
+  /* apply a particle (or "none" to clear it) and refresh the page */
+  function setParts(id) {
+    N.theme.setParticles(id);
+    N.prefs.set("particles", id);
+    var p = N.theme.particleFor(id);
+    d.toast(p ? "Particles: " + p.name : "Background particles off", { icon: "sparkle" });
+    render();
+  }
+
   function row(item, type) {
     var owned = N.econ.isUnlocked(type, item.id);
     var foot = d.h("div", { class: "shop-foot" });
@@ -278,6 +330,19 @@
     });
     themeSec.appendChild(themeGrid);
     body.appendChild(themeSec);
+
+    var partSec = section("Background particles", "sparkle", "ambient motion on every page");
+    var partGrid = d.h("div", { class: "shop-grid" });
+    N.econ.PARTICLES.forEach(function (p) {
+      partGrid.appendChild(partCard(p));
+    });
+    partSec.appendChild(partGrid);
+    partSec.appendChild(
+      d.h("p", { class: "eco-note" }, [
+        "Motes, Haze and Twinkle are free in Settings \u2014 these ones are the loud stuff.",
+      ]),
+    );
+    body.appendChild(partSec);
 
     var boostSec = section("Boosts", "boost", "speed up earning");
     var boostBox = d.h("div", { class: "shop-rows" });

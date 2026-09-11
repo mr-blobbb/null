@@ -83,8 +83,9 @@
         " KB stored locally";
     }
 
-    /* theme packs + the custom picker follow the accent pref */
+    /* theme packs, particles + the custom picker follow their prefs */
     paintPacks();
+    paintParts();
     paintCustom();
   }
 
@@ -640,6 +641,84 @@
     grid.textContent = "";
     N.theme.allPacks().forEach(function (p) {
       grid.appendChild(packCard(p));
+    });
+  }
+
+  /* ---------- background particles ----------
+     The free ones are always wearable; the rest preview veiled and point at
+     the Shop. Clicking the applied card switches particles back off. */
+  function applyParts(p) {
+    var id = p ? p.id : "none";
+    N.theme.setParticles(id);
+    N.prefs.set("particles", id);
+    d.toast(p ? "Particles: " + p.name : "Background particles off", { icon: "sparkle" });
+    refresh();
+  }
+
+  function partCard(p) {
+    var owned = !!(p.free || N.econ.isUnlocked("particle", p.id));
+    var applied = N.prefs.get("particles") === p.id;
+    var foot = d.h("div", { class: "shop-foot" });
+    if (owned) {
+      foot.appendChild(
+        d.h("span", { class: "chip ok" }, [d.h("span", { class: "dot" }), p.free ? "Free" : "Unlocked"]),
+      );
+      foot.appendChild(
+        d.h(
+          "button",
+          {
+            type: "button",
+            class: "btn " + (applied ? "btn-primary" : "btn-outline") + " btn-sm",
+            onclick: function () {
+              applyParts(applied ? null : p);
+            },
+          },
+          applied ? [d.icon("check"), "Applied"] : [d.icon("pen"), "Apply"],
+        ),
+      );
+    } else {
+      foot.appendChild(d.h("span", { class: "chip price-chip" }, [d.icon("coin"), String(p.price)]));
+      foot.appendChild(d.h("a", { class: "btn btn-outline btn-sm", href: "/shop" }, [d.icon("store"), "Shop"]));
+    }
+
+    return d.h(
+      "article",
+      {
+        class: "shop-card pack-card glass" + (owned ? " owned" : " locked") + (applied ? " playing" : ""),
+      },
+      [
+        N.theme.partThumb(p, { lock: !owned }),
+        p.colors
+          ? d.h(
+              "div",
+              { class: "pack-strip" },
+              p.colors.map(function (c) {
+                return d.h("i", { style: { background: c } });
+              }),
+            )
+          : null,
+        d.h("div", { class: "shop-info" }, [
+          d.h("h3", null, p.name),
+          d.h("p", null, p.desc || ""),
+          d.h(
+            "div",
+            { class: "chips-row" },
+            (p.tags || []).map(function (t) {
+              return d.h("span", { class: "chip" }, t);
+            }),
+          ),
+        ]),
+        foot,
+      ],
+    );
+  }
+
+  function paintParts() {
+    var grid = d.qs("#partGrid");
+    if (!grid || !N.theme.allParticles) return;
+    grid.textContent = "";
+    N.theme.allParticles().forEach(function (p) {
+      grid.appendChild(partCard(p));
     });
   }
 

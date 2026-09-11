@@ -535,17 +535,34 @@ html[data-perf="1"] .nav-dot {
   animation-play-state: paused;
 }
 .ns-item {
-  font-size: 14.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 13.5px;
   font-weight: 600;
+  white-space: nowrap;
   cursor: pointer;
-  transition: color 0.18s var(--ease);
+  background: var(--glass-bg-2);
+  border: 1px solid var(--line);
+  transition:
+    color 0.18s var(--ease),
+    border-color 0.18s var(--ease),
+    transform 0.18s var(--ease);
 }
 .ns-item:hover {
   color: var(--ac-1);
+  border-color: var(--ac-1);
+  transform: translateY(-1px);
 }
 .ns-dot {
-  color: var(--text-2);
-  opacity: 0.55;
+  flex: none;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--text-2);
+  opacity: 0.5;
 }
 @keyframes nsScroll {
   from {
@@ -1298,6 +1315,286 @@ html[data-perf="1"] .pack-fx {
 }
 
 /* ============================================================
+   ambient particles — NULL's standalone background motion
+   One layer, one family of shapes. theme.js writes the random
+   numbers inline; every kind here turns them into motion. Mono
+   particles read their colour from CSS so they follow the site
+   theme; Shop particles get --pt-1..4 set inline from their palette.
+   ============================================================ */
+.part-fx,
+.part-preview {
+  --pt-1: var(--text);
+  --pt-2: var(--text-2);
+  --pt-3: var(--ac-1);
+  --pt-4: var(--text-2);
+}
+.part-fx {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.part-fx > span,
+.part-preview > span {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+.pt-p b {
+  position: absolute;
+  display: block;
+  opacity: var(--o, 0.6);
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+  animation-duration: calc(var(--dur, 5) * 1s);
+  animation-delay: calc(var(--delay, 0) * -1s);
+}
+html[data-perf="1"] .part-fx {
+  display: none;
+}
+.part-fx.pt-paused,
+.part-fx.pt-paused * {
+  animation-play-state: paused !important;
+}
+
+/* ---- free: motes — slow specks rising ---- */
+.pt-p-mote b {
+  width: var(--s);
+  height: var(--s);
+  border-radius: 50%;
+  background: var(--pt-1);
+  filter: blur(0.4px);
+  animation-name: pt-rise;
+  animation-duration: calc(var(--dur, 5) * 3.4s);
+}
+/* ---- free: haze — wide slow clouds ---- */
+.pt-p-haze b {
+  width: calc(var(--s) * 44);
+  height: calc(var(--s) * 26);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--pt-2) 34%, transparent), transparent 74%);
+  filter: blur(30px);
+  animation-name: pt-cloud;
+  animation-duration: calc(var(--dur, 5) * 6s);
+  animation-direction: alternate;
+  animation-timing-function: ease-in-out;
+}
+/* ---- free: twinkle — pin-prick lights ---- */
+.pt-p-spark b {
+  width: calc(var(--s) * 1.4);
+  height: calc(var(--s) * 1.4);
+  border-radius: 50%;
+  background: var(--pt-1);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--pt-1) 70%, transparent);
+  animation-name: pt-twinkle;
+  animation-duration: calc(var(--dur, 5) * 2.2s);
+  animation-timing-function: ease-in-out;
+}
+/* ---- fireflies — glowing orbs that wander and pulse ---- */
+.pt-p-firefly b {
+  width: calc(var(--s) * 2.6);
+  height: calc(var(--s) * 2.6);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, #fff, var(--pt-1) 45%, transparent 74%);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--pt-1) 70%, transparent);
+  animation:
+    pt-wander calc(var(--dur, 5) * 4s) ease-in-out infinite alternate,
+    pt-glow calc(var(--dur, 5) * 0.7s) ease-in-out infinite;
+  animation-delay: calc(var(--delay, 0) * -1s);
+}
+/* ---- embers — rising sparks that flicker as they cool ---- */
+.pt-p-ember b {
+  width: calc(var(--s) * 1.7);
+  height: calc(var(--s) * 1.7);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, #fff3c4, var(--pt-1) 52%, transparent 78%);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--pt-1) 75%, transparent);
+  animation:
+    pt-rise calc(var(--dur, 5) * 3.2s) linear infinite,
+    pt-flicker calc(var(--dur, 5) * 0.5s) ease-in-out infinite;
+  animation-delay: calc(var(--delay, 0) * -1s);
+}
+/* ---- bubbles — glass spheres wobbling upward ---- */
+.pt-p-bubble b {
+  width: calc(var(--s) * 6);
+  height: calc(var(--s) * 6);
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--pt-2) 65%, transparent);
+  background: radial-gradient(circle at 32% 26%, color-mix(in srgb, #fff 55%, transparent), transparent 46%);
+  box-shadow: inset 0 0 14px color-mix(in srgb, var(--pt-3) 40%, transparent);
+  animation:
+    pt-rise calc(var(--dur, 5) * 4.6s) linear infinite,
+    pt-wobble calc(var(--dur, 5) * 1.2s) ease-in-out infinite;
+  animation-delay: calc(var(--delay, 0) * -1s);
+}
+/* ---- starlight — four-point sparkles ---- */
+.pt-p-sparkle b {
+  width: calc(var(--s) * 8);
+  height: calc(var(--s) * 8);
+  background:
+    linear-gradient(var(--pt-1), var(--pt-1)) 50% 0 / 1.5px 100% no-repeat,
+    linear-gradient(var(--pt-1), var(--pt-1)) 0 50% / 100% 1.5px no-repeat;
+  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--pt-3) 85%, transparent));
+  animation-name: pt-sparkle;
+  animation-duration: calc(var(--dur, 5) * 1.6s);
+  animation-timing-function: ease-in-out;
+}
+/* ---- plasma — huge blurred colour fields bleeding together ---- */
+.pt-p-plasma b {
+  width: calc(var(--s) * 56);
+  height: calc(var(--s) * 56);
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in srgb, var(--pt-1) 55%, transparent),
+    color-mix(in srgb, var(--pt-3) 26%, transparent) 54%,
+    transparent 76%
+  );
+  filter: blur(44px);
+  mix-blend-mode: screen;
+  animation-name: pt-cloud;
+  animation-duration: calc(var(--dur, 5) * 9s);
+  animation-direction: alternate;
+  animation-timing-function: ease-in-out;
+}
+/* ---- warp — stars streaming out from the middle ---- */
+.pt-p-warp b {
+  width: calc(var(--s) * 1.5);
+  height: calc(var(--s) * 1.5);
+  border-radius: 50%;
+  background: var(--pt-1);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--pt-1) 80%, transparent);
+  animation-name: pt-warp;
+  animation-timing-function: linear;
+}
+
+@keyframes pt-rise {
+  from {
+    transform: translate3d(0, 0, 0);
+    opacity: 0;
+  }
+  12% {
+    opacity: var(--o, 0.6);
+  }
+  85% {
+    opacity: var(--o, 0.6);
+  }
+  to {
+    transform: translate3d(var(--dx, 40px), -112vh, 0);
+    opacity: 0;
+  }
+}
+@keyframes pt-cloud {
+  from {
+    transform: translate3d(calc(var(--dx, 40px) * -1), 0, 0) scale(1);
+    opacity: 0.1;
+  }
+  50% {
+    opacity: var(--o, 0.6);
+  }
+  to {
+    transform: translate3d(var(--dx, 40px), -3%, 0) scale(1.12);
+    opacity: 0.14;
+  }
+}
+@keyframes pt-twinkle {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  50% {
+    opacity: var(--o, 0.6);
+    transform: scale(1);
+  }
+}
+@keyframes pt-wander {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(var(--dx, 40px), calc(var(--dx, 40px) * -0.55), 0);
+  }
+}
+@keyframes pt-glow {
+  0%,
+  100% {
+    opacity: calc(var(--o, 0.6) * 0.35);
+  }
+  50% {
+    opacity: var(--o, 0.6);
+  }
+}
+@keyframes pt-flicker {
+  0%,
+  100% {
+    opacity: calc(var(--o, 0.6) * 0.4);
+  }
+  40% {
+    opacity: var(--o, 0.6);
+  }
+  70% {
+    opacity: calc(var(--o, 0.6) * 0.7);
+  }
+}
+/* margin, not transform — so a wobbling bubble can still rise */
+@keyframes pt-wobble {
+  from {
+    margin-left: calc(var(--dx, 40px) * -0.3);
+  }
+  to {
+    margin-left: calc(var(--dx, 40px) * 0.3);
+  }
+}
+@keyframes pt-sparkle {
+  0% {
+    opacity: 0;
+    transform: rotate(0deg) scale(0.3);
+  }
+  40% {
+    opacity: var(--o, 0.6);
+    transform: rotate(30deg) scale(1);
+  }
+  60% {
+    opacity: var(--o, 0.6);
+    transform: rotate(45deg) scale(0.9);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(90deg) scale(0.3);
+  }
+}
+@keyframes pt-warp {
+  from {
+    transform: rotate(var(--ang, 0deg)) translateX(0);
+    opacity: 0;
+  }
+  12% {
+    opacity: var(--o, 0.9);
+  }
+  to {
+    transform: rotate(var(--ang, 0deg)) translateX(var(--dist, 80vh));
+    opacity: 0;
+  }
+}
+
+/* ---- particle cards (settings + shop) ---- */
+.part-thumb {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-bottom: 1px solid var(--line);
+  background:
+    radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--text) 7%, transparent), transparent 72%),
+    var(--glass-bg-2);
+}
+.part-thumb .part-preview {
+  position: absolute;
+  inset: 0;
+}
+
+/* ============================================================
    shop — theme pack cards + settings swatches
    ============================================================ */
 .pack-thumb {
@@ -1314,7 +1611,8 @@ html[data-perf="1"] .pack-fx {
   --pf-rise: 200px;
   --pf-blur: 24px;
 }
-.pack-lock {
+.pack-lock,
+.part-lock {
   position: absolute;
   inset: 0;
   display: grid;
@@ -1323,7 +1621,8 @@ html[data-perf="1"] .pack-fx {
   color: #fff;
   backdrop-filter: blur(2px);
 }
-.pack-lock .msr {
+.pack-lock .msr,
+.part-lock .msr {
   font-size: 26px;
 }
 .pack-strip {

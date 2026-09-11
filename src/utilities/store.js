@@ -50,6 +50,7 @@
   var DEFAULTS = {
     theme: "dark", // dark | light
     accent: "off", // palette id from theme.js
+    particles: "none", // ambient background particle id from econ.js
     glow: "off", // glow preset id from theme.js
     glowColor1: "#35c3f2", // custom glow color 1
     glowColor2: "#a86bff", // custom glow color 2
