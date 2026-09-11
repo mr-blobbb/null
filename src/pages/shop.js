@@ -180,8 +180,56 @@
     ]);
   }
 
+  /* ---------- theme packs ----------
+     A pack card previews the real thing: the same layer markup the live
+     backdrop uses, scoped to the card and fed the pack's palette inline,
+     so what you see here is what the site looks like once it's applied. */
+  function packVars(t) {
+    var colors = t.colors && t.colors.length ? t.colors : [t.c1, t.c2];
+    var tint = t.tint || ["#121218", "#08080b"];
+    var vars = {};
+    for (var i = 0; i < 4; i++) vars["--pk-" + (i + 1)] = colors[i] || colors[colors.length - 1];
+    vars["--pk-bg-1"] = tint[0];
+    vars["--pk-bg-2"] = tint[1];
+    return vars;
+  }
+
+  function packPreview(t) {
+    var host = d.h("span", { class: "pf-dots" });
+    var rain = t.bg === "rain";
+    var n = Math.min(t.dots || 0, 14);
+    for (var i = 0; i < n; i++) {
+      var s = d.h("b", {
+        style: {
+          left: (Math.random() * 100).toFixed(1) + "%",
+          top: rain ? "-14%" : (Math.random() * 100).toFixed(1) + "%",
+          animationDelay: (-Math.random() * 10).toFixed(2) + "s",
+          animationDuration: (2.6 + Math.random() * 4).toFixed(2) + "s",
+        },
+      });
+      s.style.setProperty("--s", (1 + Math.random() * 1.4).toFixed(2) + "px");
+      host.appendChild(s);
+    }
+
+    var box = d.h("div", { class: "pack-preview", "data-pack": t.id }, [
+      d.h("i", { class: "pf-a" }),
+      d.h("i", { class: "pf-b" }),
+      d.h("i", { class: "pf-c" }),
+      host,
+    ]);
+    var vars = packVars(t);
+    for (var k in vars) box.style.setProperty(k, vars[k]);
+
+    var thumb = d.h("div", { class: "pack-thumb" }, [box]);
+    if (!N.econ.isUnlocked("theme", t.id)) {
+      thumb.appendChild(d.h("div", { class: "pack-lock" }, [d.icon("lock")]));
+    }
+    return thumb;
+  }
+
   function themeCard(t) {
     var owned = N.econ.isUnlocked("theme", t.id);
+    var applied = N.prefs.get("accent") === t.id;
     var foot = d.h("div", { class: "shop-foot" });
     if (owned) {
       foot.appendChild(ownedChip("Unlocked"));
@@ -195,10 +243,11 @@
               N.theme.setAccent(t.id);
               N.prefs.set("accent", t.id);
               if (N.seasons) N.seasons.refresh();
-              d.toast("Accent set to " + t.name, { icon: "pen" });
+              d.toast((applied ? "Re-applied " : "Theme set to ") + t.name, { icon: "pen" });
+              render();
             },
           },
-          [d.icon("pen"), "Apply"],
+          applied ? [d.icon("check"), "Applied"] : [d.icon("pen"), "Apply"],
         ),
       );
     } else {
@@ -206,17 +255,20 @@
       foot.appendChild(buyBtn("theme", t.id, t.name, t.price));
     }
 
+    var tags = d.h("div", { class: "chips-row" });
+    (t.tags || []).forEach(function (x) {
+      tags.appendChild(d.h("span", { class: "chip" }, x));
+    });
+
     return d.h("article", { class: "shop-card glass" + (owned ? " owned" : "") }, [
-      d.h("div", { class: "shop-swatch" }, [
-        d.h("span", { style: { background: t.c1 } }),
-        d.h("span", { style: { background: t.c2 } }),
-      ]),
+      packPreview(t),
+      d.h("div", { class: "pack-strip" }, (t.colors || [t.c1, t.c2]).map(function (c) {
+        return d.h("i", { style: { background: c } });
+      })),
       d.h("div", { class: "shop-info" }, [
         d.h("h3", null, t.name),
         d.h("p", null, t.desc || ""),
-        d.h("div", { class: "chips-row" }, [
-          d.h("span", { class: "chip" }, owned ? "In Settings" : "Theme accent"),
-        ]),
+        tags,
       ]),
       foot,
     ]);
@@ -258,7 +310,7 @@
     betaSec.appendChild(betaGrid);
     body.appendChild(betaSec);
 
-    var themeSec = section("Custom themes", "pen", "extra accent colors for Settings");
+    var themeSec = section("Theme packs", "pen", "a palette *and* a live backdrop");
     var themeGrid = d.h("div", { class: "shop-grid" });
     N.econ.THEMES.forEach(function (t) {
       themeGrid.appendChild(themeCard(t));

@@ -556,6 +556,25 @@
     var row = d.qs("#accentRow");
     if (row) {
       var extras = N.theme.extraAccents();
+      function dot(a) {
+        /* a plain accent is one dot; a shop pack shows its whole palette */
+        if (a.colors && a.colors.length > 1) {
+          return d.h(
+            "span",
+            { class: "accent-dots" },
+            a.colors.slice(0, 3).map(function (c) {
+              return d.h("i", { style: { background: c } });
+            }),
+          );
+        }
+        return d.h("span", {
+          class: "accent-dot",
+          style: a.c1
+            ? { background: a.c1 }
+            : { background: document.documentElement.dataset.theme === "light" ? "#1c1d21" : "#e8eaef" },
+        });
+      }
+
       function swatch(a, fromShop) {
         return d.h(
           "button",
@@ -563,17 +582,9 @@
             type: "button",
             class: "swatch-btn" + (fromShop ? " shop" : ""),
             "data-val": a.id,
-            title: a.name + (fromShop ? " \u00b7 unlocked in the Shop" : ""),
+            title: a.name + (fromShop ? " \u00b7 theme pack, unlocked in the Shop" : ""),
           },
-          [
-            d.h("span", {
-              class: "accent-dot",
-              style: a.c1
-                ? { background: a.c1 }
-                : { background: document.documentElement.dataset.theme === "light" ? "#1c1d21" : "#e8eaef" },
-            }),
-            a.name,
-          ],
+          [dot(a), a.name + (fromShop ? " pack" : "")],
         );
       }
       N.theme.ACCENTS.forEach(function (a) {

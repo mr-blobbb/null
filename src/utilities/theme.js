@@ -27,14 +27,110 @@
     { id: "ocean", name: "Ocean", c1: "#4b86e0", c2: "#84adee" },
   ];
 
-  /* shop-unlocked theme accents. econ.js owns the item catalog; theme.js
-     only needs the color data for rendering + applying. */
+  /* shop-unlocked theme packs. econ.js owns the item catalog; theme.js only
+     needs the data for rendering + applying. */
   function extraAccents() {
     if (!N.econ || !N.econ.THEMES) return [];
     return N.econ.THEMES.filter(function (t) {
       return N.econ.isUnlocked("theme", t.id);
     });
   }
+
+  /* ---------- theme packs ----------
+     A shop theme does more than recolor the accent: it sets a whole palette
+     (--pk-1..4), a page tint (--pk-bg-1/2), html[data-pack] and an animated
+     backdrop. Backdrops are generic layers — three <i> layers plus an
+     optional particle host — that extra.css styles per data-pack id. They
+     are skipped in performance mode, for reduced motion, and on the player
+     and 404 pages, same as the seasonal particles. */
+  var packEl = null;
+  var curPack = null;
+  var PK_VARS = ["--pk-1", "--pk-2", "--pk-3", "--pk-4", "--pk-bg-1", "--pk-bg-2"];
+
+  function packFor(id) {
+    return (
+      extraAccents().find(function (p) {
+        return p.id === id;
+      }) || null
+    );
+  }
+
+  function packAllowed() {
+    if (N.prefs.data.perf) return false;
+    if (
+      document.body.classList.contains("player-page") ||
+      document.body.classList.contains("page-404")
+    )
+      return false;
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return false;
+    return true;
+  }
+
+  function packDom(p) {
+    var el = document.createElement("div");
+    el.className = "pack-fx";
+    el.setAttribute("data-pack", p.id);
+    el.setAttribute("aria-hidden", "true");
+    ["a", "b", "c"].forEach(function (k) {
+      var i = document.createElement("i");
+      i.className = "pf-" + k;
+      el.appendChild(i);
+    });
+    var host = document.createElement("span");
+    host.className = "pf-dots";
+    var rain = p.bg === "rain";
+    var n = p.dots || 0;
+    for (var j = 0; j < n; j++) {
+      var s = document.createElement("b");
+      s.style.left = (Math.random() * 100).toFixed(2) + "%";
+      s.style.top = rain ? "-14%" : (Math.random() * 100).toFixed(2) + "%";
+      s.style.setProperty("--s", (1 + Math.random() * 1.8).toFixed(2) + "px");
+      s.style.animationDelay = (-Math.random() * 14).toFixed(2) + "s";
+      s.style.animationDuration = (2.4 + Math.random() * 5.5).toFixed(2) + "s";
+      host.appendChild(s);
+    }
+    el.appendChild(host);
+    return el;
+  }
+
+  function killPack() {
+    if (packEl && packEl.parentNode) packEl.parentNode.removeChild(packEl);
+    packEl = null;
+  }
+
+  function buildPack(p) {
+    if (!p || !p.bg || !packAllowed()) return;
+    if (packEl && packEl.isConnected && packEl.dataset.pack === p.id) return;
+    killPack();
+    packEl = packDom(p);
+    document.body.appendChild(packEl);
+    if (document.hidden) packEl.classList.add("pf-paused");
+  }
+
+  function applyPack(p) {
+    if (!p) {
+      PK_VARS.forEach(function (k) {
+        root.style.removeProperty(k);
+      });
+      root.removeAttribute("data-pack");
+      killPack();
+      return;
+    }
+    var colors = p.colors && p.colors.length ? p.colors : [p.c1, p.c2];
+    for (var i = 0; i < 4; i++) {
+      root.style.setProperty("--pk-" + (i + 1), colors[i] || colors[colors.length - 1]);
+    }
+    var tint = p.tint || ["#0e0e12", "#08080b"];
+    root.style.setProperty("--pk-bg-1", tint[0]);
+    root.style.setProperty("--pk-bg-2", tint[1]);
+    root.dataset.pack = p.id;
+    buildPack(p);
+  }
+
+  /* pause the backdrop while the tab is hidden */
+  document.addEventListener("visibilitychange", function () {
+    if (packEl) packEl.classList.toggle("pf-paused", document.hidden);
+  });
 
   /* Glow presets. Colors are ordered around the ring and the gradient
      starts + ends on the same color, so the loop is seamless and every
@@ -272,18 +368,24 @@
       root.style.removeProperty("--ac-1");
       root.style.removeProperty("--ac-2");
     }
+    var p = packFor(id);
+    curPack = p ? p.id : null;
+    applyPack(p);
   }
 
   function setPerf(on) {
     if (on) root.dataset.perf = "1";
     else delete root.dataset.perf;
+    /* performance mode drops the pack backdrop; leaving it restores it */
+    if (on) killPack();
+    else buildPack(packFor(curPack));
   }
 
   function applyAll() {
     var p = N.prefs.data;
     setTheme(p.theme);
-    setAccent(p.accent);
     setPerf(p.perf);
+    setAccent(p.accent);
     cometOn = !!p.glowComet;
     setGlow(p.glow);
   }
@@ -292,6 +394,11 @@
     ACCENTS: ACCENTS,
     GLOWS: GLOWS,
     extraAccents: extraAccents,
+    packFor: packFor,
+    /* rebuild the backdrop after unrelated prefs (perf, season) change */
+    refreshPack: function () {
+      applyPack(packFor(curPack));
+    },
     setTheme: setTheme,
     setAccent: setAccent,
     setGlow: setGlow,

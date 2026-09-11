@@ -105,6 +105,16 @@
     N.prefs.set("glow", id);
   }
 
+  /* theme packs are shop items; the console grants them so a backdrop can be
+     previewed without buying it first */
+  function setPack(id) {
+    if (!N.theme) return err("theme module missing");
+    if (N.econ) N.econ.grant("theme", id);
+    N.theme.setAccent(id);
+    N.prefs.set("accent", id);
+    if (N.seasons) N.seasons.refresh();
+  }
+
   function applyTab(id) {
     var p = N.tab.get(id);
     if (!p) return err("unknown preset: " + id);
@@ -145,6 +155,17 @@
           { label: "Accent: Violet", icon: "pen", run: function () { setAccent("violet"); ok("accent \u2192 Violet"); } },
           { label: "Accent: Ember", icon: "pen", run: function () { setAccent("ember"); ok("accent \u2192 Ember"); } },
           { label: "Accent: Off", icon: "ban", run: function () { setAccent("off"); ok("accent \u2192 off"); } },
+        ],
+        [
+          { label: "Pack: Synthwave", icon: "pen", run: function () { setPack("synthwave"); ok("theme \u2192 Synthwave"); } },
+          { label: "Pack: Matrix", icon: "pen", run: function () { setPack("matrix"); ok("theme \u2192 Matrix"); } },
+          { label: "Pack: Gold", icon: "pen", run: function () { setPack("gold"); ok("theme \u2192 Gold"); } },
+          { label: "Pack: Aurora", icon: "pen", run: function () { setPack("aurora"); ok("theme \u2192 Aurora"); } },
+        ],
+        [
+          { label: "Pack: Cosmos", icon: "pen", run: function () { setPack("cosmos"); ok("theme \u2192 Cosmos"); } },
+          { label: "Pack: Vapor", icon: "pen", run: function () { setPack("vapor"); ok("theme \u2192 Vapor"); } },
+          { label: "Pack: Clear", icon: "ban", run: function () { setAccent("off"); ok("theme pack cleared"); } },
         ],
       ],
     },

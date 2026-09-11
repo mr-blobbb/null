@@ -30,11 +30,85 @@
     N.store.write(KEY, data);
   }
 
-  /* ---------- shop catalog ---------- */
+  /* ---------- shop catalog ----------
+     Themes are full packs, not single accents: a multi-colour palette, the
+     accent pair that drives the UI, and an animated backdrop. theme.js reads
+     `colors` / `bg` / `tint` when applying a pack, extra.css holds the art. */
   var THEMES = [
-    { id: "synthwave", name: "Synthwave", c1: "#ff4fa8", c2: "#4fd8ff", price: 60, desc: "Pink + cyan neon accent, straight from 1986." },
-    { id: "matrix", name: "Matrix", c1: "#3dff7a", c2: "#8affb2", price: 60, desc: "Phosphor-green accent for the terminal in you." },
-    { id: "gold", name: "Gold", c1: "#ffd45e", c2: "#ffe9a8", price: 60, desc: "Warm gold accent. Flashy, but earned." },
+    {
+      id: "synthwave",
+      name: "Synthwave",
+      price: 60,
+      c1: "#ff4fa8",
+      c2: "#4fd8ff",
+      colors: ["#ff4fa8", "#a45bff", "#4fd8ff", "#ffd166"],
+      bg: "horizon",
+      tint: ["#2a1140", "#07091b"],
+      desc: "Neon '86 — perspective grid floor, glowing horizon and a magenta sun.",
+      tags: ["Grid floor", "Neon sun", "4 colors"],
+    },
+    {
+      id: "matrix",
+      name: "Matrix",
+      price: 60,
+      c1: "#3dff7a",
+      c2: "#8affb2",
+      colors: ["#39ff88", "#0aff9d", "#6fffb0", "#c8ffdd"],
+      bg: "rain",
+      dots: 34,
+      tint: ["#04180c", "#02060a"],
+      desc: "Phosphor terminal — glyph rain falls behind a faint scanline haze.",
+      tags: ["Code rain", "Scanlines", "Terminal"],
+    },
+    {
+      id: "gold",
+      name: "Gold",
+      price: 90,
+      c1: "#ffd45e",
+      c2: "#ffe9a8",
+      colors: ["#ffd45e", "#f2a93b", "#fff0bf", "#8a6a1f"],
+      bg: "rays",
+      tint: ["#1d1403", "#0a0a0b"],
+      desc: "Award-show gold — sweeping light shafts over warm film grain.",
+      tags: ["Light shafts", "Film grain", "Warm tint"],
+    },
+    {
+      id: "aurora",
+      name: "Aurora",
+      price: 90,
+      c1: "#4fe0c8",
+      c2: "#8f9dff",
+      colors: ["#4fe0c8", "#7c8cff", "#b06bff", "#3ba0ff"],
+      bg: "aurora",
+      tint: ["#06181e", "#05060f"],
+      desc: "Polar curtains — soft teal and violet blobs drifting past each other.",
+      tags: ["Drifting aurora", "Cool palette", "Calm"],
+    },
+    {
+      id: "cosmos",
+      name: "Cosmos",
+      price: 120,
+      c1: "#8f9dff",
+      c2: "#d18cff",
+      colors: ["#8f9dff", "#e06fff", "#5ac8ff", "#ffe6a8"],
+      bg: "stars",
+      dots: 70,
+      tint: ["#0b0a22", "#04040c"],
+      desc: "Deep field — a twinkling starfield wrapped around a slow nebula bloom.",
+      tags: ["Starfield", "Nebula", "70 stars"],
+    },
+    {
+      id: "vapor",
+      name: "Vapor",
+      price: 120,
+      c1: "#7ef2d0",
+      c2: "#ff9ad5",
+      colors: ["#7ef2d0", "#ff9ad5", "#a6b8ff", "#ffe07a"],
+      bg: "waves",
+      tint: ["#120f2a", "#07121a"],
+      desc: "Liquid light — pastel gradient bands roll across the background.",
+      tags: ["Wave bands", "Pastel", "Silky"],
+    },
   ];
   var BOOSTS = [
     { id: "xpboost", name: "XP boost", price: 30, desc: "Double XP for 24 hours — every 30 minutes banks 20 XP." },
@@ -125,6 +199,21 @@
     });
   }
 
+  /* dev console / debugging: unlock an item without spending coins, so a
+     backdrop can be checked without grinding 20 hours of playtime first. */
+  function grant(type, id) {
+    if (type === "boost") {
+      data.boostUntil = Date.now() + BOOST_MS;
+    } else {
+      var u = data.unlocks || (data.unlocks = { games: [], themes: [], fx: [] });
+      var key = keyFor(type);
+      var list = u[key] || (u[key] = []);
+      if (list.indexOf(id) < 0) list.push(id);
+    }
+    save();
+    return { ok: true };
+  }
+
   N.econ = {
     THEMES: THEMES,
     BOOSTS: BOOSTS,
@@ -141,6 +230,7 @@
     },
     bank: bank,
     buy: buy,
+    grant: grant,
     isUnlocked: isUnlocked,
     unlockedBetas: unlockedBetas,
   };

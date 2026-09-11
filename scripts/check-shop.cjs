@@ -75,6 +75,12 @@ function partA() {
   check("locked beta starts locked", N.econ.isUnlocked("game", "beta-simon") === false);
   check("unlockedBetas hides locked betas", N.econ.unlockedBetas().length === 0);
 
+  /* the dev console grants unlocks without charging — backdrops stay testable */
+  N.econ.grant("theme", "cosmos");
+  N.econ.grant("theme", "cosmos");
+  check("dev grant unlocks a pack", N.econ.isUnlocked("theme", "cosmos") === true);
+  check("grant does not charge coins", N.econ.state().coins === 0);
+
   /* Part B — unlocked beta merges into the live library */
   const b = makeDom("<!doctype html><body><p>lib</p>", "http://localhost:5173/shop");
   b.run("src/utilities/store.js");
@@ -151,10 +157,17 @@ async function partC() {
   check("balance bar shows time played", /time played/.test(d.querySelector("#ecoBar").textContent));
 
   const cards = d.querySelectorAll("#shopBody .shop-card");
-  check("3 beta games + 3 custom themes render", cards.length === 6);
+  check("3 beta games + 6 theme packs render", cards.length === 9);
   check("rows rendered for boosts + effects", d.querySelectorAll("#shopBody .shop-row").length === 2);
-  check("locked items show a price chip", d.querySelectorAll("#shopBody .price-chip").length === 8);
+  check("locked items show a price chip", d.querySelectorAll("#shopBody .price-chip").length === 11);
   check("beta game names render", /Simon: Deluxe/.test(d.querySelector("#shopBody").textContent));
+
+  /* theme packs are real themes: live preview, palette strip, locked veil */
+  check("every theme card previews the real backdrop", d.querySelectorAll("#shopBody .pack-preview").length === 6);
+  check("preview carries the pack id", !!d.querySelector('#shopBody .pack-preview[data-pack="cosmos"]'));
+  check("locked packs are veiled", d.querySelectorAll("#shopBody .pack-lock").length === 6);
+  check("palette strip shows all four colors", d.querySelectorAll("#shopBody .pack-strip i").length === 24);
+  check("packs list their features", /Starfield/.test(d.querySelector("#shopBody").textContent));
 
   /* buy the first beta game through the real modal flow */
   const btn = d.querySelector("#shopBody .shop-card .btn-primary");
@@ -172,10 +185,25 @@ async function partC() {
   check("coins spent (120 → 60)", st.coins === 60);
   check("beta unlocked in storage", w.N.econ.isUnlocked("game", "beta-simon") === true);
   check("card re-rendered as owned", d.querySelectorAll("#shopBody .shop-card.owned").length === 1);
-  check("price chips drop to 7", d.querySelectorAll("#shopBody .price-chip").length === 7);
+  check("price chips drop to 10", d.querySelectorAll("#shopBody .price-chip").length === 10);
   const owned = d.querySelector("#shopBody .shop-card.owned");
   check("owned card offers Play", !!owned && /Play/.test(owned.textContent));
   check("no window errors after buying", errs.length === 0);
+
+  /* a bought theme applies a whole pack: palette, tint and a live backdrop */
+  const pack = w.N.econ.buy("theme", "synthwave");
+  check("theme pack purchasable", pack.ok === true);
+  w.N.theme.setAccent("synthwave");
+  const root = d.documentElement;
+  check("pack flags html[data-pack]", root.dataset.pack === "synthwave");
+  check("pack writes its palette vars", /#ff4fa8/.test(root.style.getPropertyValue("--pk-1")));
+  check("pack writes its tint vars", !!root.style.getPropertyValue("--pk-bg-1"));
+  const fx = d.querySelector("body > .pack-fx");
+  check("pack renders the backdrop layer", !!fx && fx.dataset.pack === "synthwave");
+  check("backdrop has three art layers + particle host", !!fx && fx.querySelectorAll("i").length === 3 && !!fx.querySelector(".pf-dots"));
+  w.N.theme.setAccent("ice");
+  check("plain accent clears the pack", !root.dataset.pack && !d.querySelector("body > .pack-fx"));
+  check("plain accent leaves no pack vars", root.style.getPropertyValue("--pk-1") === "");
 }
 
 /* ---------------------------------------------------------------- *
@@ -323,6 +351,12 @@ function partF() {
   check("shop styles exist", /\.shop-grid \{/.test(extra) && /\.eco-track i \{/.test(extra));
   check("nav dot styles exist", /\.nav-dot \{/.test(extra) && /@keyframes dotPulse/.test(extra));
   check("tip + strip styles exist", /\.tip-card \{/.test(extra) && /@keyframes nsScroll/.test(extra));
+  /* every pack id must have backdrop art, or the layer renders empty */
+  ["synthwave", "matrix", "gold", "aurora", "cosmos", "vapor"].forEach((id) => {
+    check("pack art exists: " + id, extra.indexOf('[data-pack="' + id + '"]') >= 0);
+  });
+  check("pack layer base styles exist", /\.pack-fx \{/.test(extra) && /\.pack-fx\.pf-paused/.test(extra));
+  check("pack preview + swatch styles exist", /\.pack-thumb \{/.test(extra) && /\.accent-dots i \{/.test(extra));
   files.forEach(() => {});
   const shop = fs.readFileSync("shop.html", "utf8");
   check("manifest linked on shop page", /manifest\.webmanifest/.test(shop));

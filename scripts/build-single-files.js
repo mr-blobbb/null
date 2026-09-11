@@ -550,7 +550,9 @@ const APP_JS = String.raw`
       d.h("div", { class: "glow-row" })
     ]);
     var box = row.lastChild;
-    N.theme.ACCENTS.forEach(function (a) {
+    /* base accents first, then any shop theme packs the player unlocked */
+    var packs = N.theme.extraAccents ? N.theme.extraAccents() : [];
+    N.theme.ACCENTS.concat(packs).forEach(function (a) {
       var b = d.h("button", {
         type: "button",
         class: "chip chip-btn" + (N.prefs.get("accent") === a.id ? " on" : ""),

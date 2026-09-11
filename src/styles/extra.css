@@ -853,3 +853,330 @@ html[data-perf="1"] .pl-core {
     justify-content: flex-end;
   }
 }
+
+/* ============================================================
+   theme packs — animated shop backdrops
+   Every pack shares one generic layer set (pf-a / pf-b / pf-c plus
+   an optional particle host), so the live full-screen layer and the
+   little preview on a shop card run the exact same rules. All art is
+   drawn from the pack's own palette vars (--pk-1..4, --pk-bg-1/2).
+   ============================================================ */
+.pack-fx,
+.pack-preview {
+  background: linear-gradient(170deg, var(--pk-bg-1, transparent), var(--pk-bg-2, transparent));
+  --pf-fall: 130vh;
+  --pf-blur: 70px;
+}
+.pack-fx {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.pack-fx > i,
+.pack-fx > span,
+.pack-preview > i,
+.pack-preview > span {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+.pf-dots b {
+  position: absolute;
+  display: block;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+html[data-theme="light"] .pack-fx {
+  opacity: 0.4;
+}
+html[data-perf="1"] .pack-fx {
+  display: none;
+}
+.pack-fx.pf-paused,
+.pack-fx.pf-paused * {
+  animation-play-state: paused !important;
+}
+
+/* ---- synthwave: perspective grid + neon sun ---- */
+[data-pack="synthwave"] .pf-a {
+  inset: auto 0 0;
+  height: 64%;
+  background:
+    radial-gradient(58% 88% at 50% 108%, color-mix(in srgb, var(--pk-1) 52%, transparent), transparent 68%),
+    radial-gradient(44% 58% at 50% 104%, color-mix(in srgb, var(--pk-3) 42%, transparent), transparent 66%);
+}
+[data-pack="synthwave"] .pf-b {
+  inset: auto 0 0;
+  height: 44%;
+  background-image:
+    repeating-linear-gradient(90deg, color-mix(in srgb, var(--pk-3) 55%, transparent) 0 1px, transparent 1px 46px),
+    repeating-linear-gradient(0deg, color-mix(in srgb, var(--pk-1) 50%, transparent) 0 1px, transparent 1px 30px);
+  transform: perspective(340px) rotateX(70deg);
+  transform-origin: 50% 100%;
+  -webkit-mask-image: linear-gradient(to top, #000 6%, transparent 86%);
+  mask-image: linear-gradient(to top, #000 6%, transparent 86%);
+  animation: pk-scroll 3.4s linear infinite;
+}
+@keyframes pk-scroll {
+  to {
+    background-position: 0 0, 0 30px;
+  }
+}
+[data-pack="synthwave"] .pf-c {
+  inset: auto auto 30% 50%;
+  width: 26%;
+  aspect-ratio: 1;
+  margin-left: -13%;
+  border-radius: 50%;
+  background: linear-gradient(180deg, var(--pk-4), var(--pk-1) 52%, var(--pk-2));
+  box-shadow: 0 0 70px color-mix(in srgb, var(--pk-1) 55%, transparent);
+  -webkit-mask-image: repeating-linear-gradient(0deg, #000 0 6px, transparent 6px 11px);
+  mask-image: repeating-linear-gradient(0deg, #000 0 6px, transparent 6px 11px);
+}
+
+/* ---- matrix: glyph rain + scanlines ---- */
+[data-pack="matrix"] .pf-a {
+  background:
+    radial-gradient(120% 82% at 50% -10%, color-mix(in srgb, var(--pk-1) 20%, transparent), transparent 62%),
+    linear-gradient(180deg, var(--pk-bg-1), var(--pk-bg-2));
+}
+[data-pack="matrix"] .pf-b {
+  background-image: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.3) 0 1px, transparent 1px 3px);
+  opacity: 0.45;
+}
+[data-pack="matrix"] .pf-dots b {
+  top: -14%;
+  width: calc(var(--s) * 0.9);
+  height: calc(var(--s) * 9);
+  border-radius: 999px;
+  background: linear-gradient(180deg, transparent, var(--pk-1));
+  box-shadow: 0 0 7px color-mix(in srgb, var(--pk-1) 60%, transparent);
+  opacity: 0.75;
+  animation-name: pk-fall;
+}
+@keyframes pk-fall {
+  to {
+    transform: translate3d(0, var(--pf-fall), 0);
+  }
+}
+
+/* ---- gold: light shafts + grain ---- */
+[data-pack="gold"] .pf-a {
+  background:
+    radial-gradient(88% 70% at 50% -12%, color-mix(in srgb, var(--pk-1) 30%, transparent), transparent 64%),
+    radial-gradient(68% 58% at 82% 112%, color-mix(in srgb, var(--pk-2) 22%, transparent), transparent 68%),
+    linear-gradient(180deg, var(--pk-bg-1), var(--pk-bg-2));
+}
+[data-pack="gold"] .pf-b {
+  inset: -40% -10% 0;
+  background: conic-gradient(
+    from 200deg at 50% 0%,
+    transparent 0 8%,
+    color-mix(in srgb, var(--pk-3) 19%, transparent) 12%,
+    transparent 18% 30%,
+    color-mix(in srgb, var(--pk-1) 15%, transparent) 34%,
+    transparent 40% 54%,
+    color-mix(in srgb, var(--pk-3) 13%, transparent) 58%,
+    transparent 64% 78%,
+    color-mix(in srgb, var(--pk-2) 17%, transparent) 82%,
+    transparent 88%
+  );
+  transform-origin: 50% 0;
+  animation: pk-sway 30s ease-in-out infinite alternate;
+}
+@keyframes pk-sway {
+  from {
+    transform: rotate(-7deg);
+  }
+  to {
+    transform: rotate(7deg);
+  }
+}
+[data-pack="gold"] .pf-c {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
+  opacity: 0.06;
+}
+
+/* ---- aurora: three drifting curtains ---- */
+[data-pack="aurora"] .pf-a {
+  background: linear-gradient(180deg, var(--pk-bg-1), var(--pk-bg-2));
+}
+[data-pack="aurora"] .pf-b,
+[data-pack="aurora"] .pf-c {
+  inset: -30% -12%;
+  filter: blur(var(--pf-blur));
+  opacity: 0.55;
+}
+[data-pack="aurora"] .pf-b {
+  background: radial-gradient(closest-side, var(--pk-1), transparent 72%);
+  animation: pk-drift-a 26s ease-in-out infinite alternate;
+}
+[data-pack="aurora"] .pf-c {
+  background: radial-gradient(closest-side, var(--pk-3), transparent 72%);
+  animation: pk-drift-b 34s ease-in-out infinite alternate;
+}
+[data-pack="aurora"] .pf-dots {
+  inset: -20% -10%;
+  border-radius: 50%;
+  filter: blur(calc(var(--pf-blur) * 1.15));
+  opacity: 0.45;
+  background: radial-gradient(closest-side, var(--pk-4), transparent 72%);
+  animation: pk-drift-c 40s ease-in-out infinite alternate;
+}
+@keyframes pk-drift-a {
+  from {
+    transform: translate3d(-14%, -6%, 0) scale(1);
+  }
+  to {
+    transform: translate3d(16%, 8%, 0) scale(1.25);
+  }
+}
+@keyframes pk-drift-b {
+  from {
+    transform: translate3d(18%, 10%, 0) scale(1.15);
+  }
+  to {
+    transform: translate3d(-16%, -8%, 0) scale(0.95);
+  }
+}
+@keyframes pk-drift-c {
+  from {
+    transform: translate3d(6%, 14%, 0) scale(0.9);
+  }
+  to {
+    transform: translate3d(-10%, -12%, 0) scale(1.2);
+  }
+}
+
+/* ---- cosmos: nebula bloom + twinkling stars ---- */
+[data-pack="cosmos"] .pf-a {
+  background:
+    radial-gradient(55% 45% at 22% 30%, color-mix(in srgb, var(--pk-1) 26%, transparent), transparent 72%),
+    radial-gradient(48% 42% at 78% 64%, color-mix(in srgb, var(--pk-2) 22%, transparent), transparent 74%),
+    linear-gradient(180deg, var(--pk-bg-1), var(--pk-bg-2));
+}
+[data-pack="cosmos"] .pf-b {
+  background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--pk-3) 42%, transparent), transparent 62%);
+  animation: pk-breathe 18s ease-in-out infinite alternate;
+}
+[data-pack="cosmos"] .pf-dots b {
+  width: var(--s);
+  height: var(--s);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 6px color-mix(in srgb, var(--pk-3) 85%, transparent);
+  animation-name: pk-twinkle;
+  animation-timing-function: ease-in-out;
+}
+@keyframes pk-twinkle {
+  0%,
+  100% {
+    opacity: 0.12;
+    transform: scale(0.6);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1);
+  }
+}
+@keyframes pk-breathe {
+  from {
+    opacity: 0.28;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0.6;
+    transform: scale(1.16);
+  }
+}
+
+/* ---- vapor: rolling gradient bands ---- */
+[data-pack="vapor"] .pf-a,
+[data-pack="vapor"] .pf-b,
+[data-pack="vapor"] .pf-c {
+  left: -20%;
+  right: -20%;
+  height: 34%;
+  border-radius: 50%;
+  filter: blur(calc(var(--pf-blur) * 0.7));
+  opacity: 0.5;
+  background: linear-gradient(96deg, transparent 6%, var(--pk-1), var(--pk-3), transparent 94%);
+  animation: pk-roll 20s ease-in-out infinite alternate;
+}
+[data-pack="vapor"] .pf-a {
+  top: 2%;
+}
+[data-pack="vapor"] .pf-b {
+  top: 33%;
+  animation-duration: 26s;
+  animation-direction: alternate-reverse;
+  background: linear-gradient(96deg, transparent 6%, var(--pk-2), var(--pk-4), transparent 94%);
+}
+[data-pack="vapor"] .pf-c {
+  top: 64%;
+  animation-duration: 32s;
+  background: linear-gradient(96deg, transparent 6%, var(--pk-3), var(--pk-1), transparent 94%);
+}
+@keyframes pk-roll {
+  from {
+    transform: translate3d(-8%, 0, 0) scaleY(1);
+  }
+  to {
+    transform: translate3d(8%, 3%, 0) scaleY(1.25);
+  }
+}
+
+/* ============================================================
+   shop — theme pack cards + settings swatches
+   ============================================================ */
+.pack-thumb {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-bottom: 1px solid var(--line);
+  background: var(--glass-bg-2);
+}
+.pack-thumb .pack-preview {
+  position: absolute;
+  inset: 0;
+  --pf-fall: 340px;
+  --pf-blur: 24px;
+}
+.pack-lock {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.34);
+  color: #fff;
+  backdrop-filter: blur(2px);
+}
+.pack-lock .msr {
+  font-size: 26px;
+}
+.pack-strip {
+  display: flex;
+  height: 7px;
+}
+.pack-strip i {
+  flex: 1;
+}
+.accent-dots {
+  display: inline-flex;
+  align-items: center;
+}
+.accent-dots i {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 1px solid var(--line-2);
+  margin-left: -5px;
+}
+.accent-dots i:first-child {
+  margin-left: 0;
+}
+.swatch-btn.on .accent-dots i {
+  border-color: rgba(0, 0, 0, 0.3);
+}
