@@ -5,13 +5,18 @@
    Strategy:
      · navigations  — network first, so updates always land; cached page on
                       failure, falling back to the cached home shell.
-     · same-origin  — cache first (games/css/js are static), filling the
-       GET assets     runtime cache on first fetch; network fallback, then
-                      cache, when offline.
+     · same-origin  — network first too (dev servers transform /src/*.css and
+       GET assets     /src/*.js on the fly, so a cached copy is only ever a
+                      fallback), filling the runtime cache on success.
 
-   Bump CACHE when the core file list changes so old caches are dropped. */
-const CACHE = "null-v1";
-const RUNTIME = "null-runtime-v1";
+   Cache writes are type-checked: a stylesheet URL may only be stored when the
+   response really is text/css. Without that guard a dev server's JS-wrapped
+   CSS gets cached and then served to <link> tags, which browsers reject —
+   leaving every page unstyled.
+
+   Bump CACHE/RUNTIME when the core file list changes so old caches are dropped. */
+const CACHE = "null-v2";
+const RUNTIME = "null-runtime-v2";
 
 const CORE = [
   "/",
@@ -57,14 +62,47 @@ const CORE = [
   "/src/pages/shop.js",
 ];
 
-self.addEventListener("install", (e) => {
-  e.waitUntil(
-    caches
-      .open(CACHE)
-      .then((c) => c.addAll(CORE))
-      .then(() => self.skipWaiting())
-      .catch(() => {}),
+/* ---------- cache hygiene ----------
+   Only store a response under a URL when its type matches what that URL is
+   supposed to be. Keeps transformed (JS-as-CSS) dev responses out of the
+   cache. Shared by the precache and the runtime fetch handler. */
+function typeOk(path, res) {
+  const ct = (res.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
+  if (/\.css$/i.test(path)) return ct === "text/css";
+  if (/\.m?js$/i.test(path)) return ct === "text/javascript" || ct === "application/javascript";
+  if (/\.webmanifest$/i.test(path)) return ct === "application/manifest+json" || ct === "application/json";
+  return true;
+}
+
+function storable(path, res) {
+  if (!res || !res.ok || res.type === "opaque" || res.status !== 200) return false;
+  return typeOk(path, res);
+}
+
+function keep(cache, url, res) {
+  try {
+    if (storable(new URL(url, self.location.origin).pathname, res)) cache.put(url, res.clone());
+  } catch (err) {
+    /* a failed cache write should never break the page */
+  }
+}
+
+/* Precache one URL at a time so a single bad response can't abort the rest,
+   and so the type guard applies (addAll() would store whatever came back). */
+function precache() {
+  return caches.open(CACHE).then((cache) =>
+    Promise.all(
+      CORE.map((url) =>
+        fetch(url, { cache: "reload" })
+          .then((res) => keep(cache, url, res))
+          .catch(() => {}),
+      ),
+    ),
   );
+}
+
+self.addEventListener("install", (e) => {
+  e.waitUntil(precache().then(() => self.skipWaiting()));
 });
 
 self.addEventListener("activate", (e) => {
@@ -88,6 +126,7 @@ function isAsset(req) {
 
 self.addEventListener("fetch", (e) => {
   const req = e.request;
+  if (!isAsset(req)) return;
 
   if (req.mode === "navigate") {
     e.respondWith(
@@ -107,21 +146,22 @@ self.addEventListener("fetch", (e) => {
     return;
   }
 
-  if (!isAsset(req)) return;
-
+  /* network first — fresh, correctly-typed files always win; the cache is
+     only a fallback for offline use */
   e.respondWith(
-    caches.match(req).then(
-      (hit) =>
-        hit ||
-        fetch(req)
-          .then((res) => {
-            if (res && res.ok) {
-              const copy = res.clone();
-              caches.open(RUNTIME).then((c) => c.put(req, copy)).catch(() => {});
-            }
-            return res;
-          })
-          .catch(() => caches.match(req).then((c) => c || Response.error())),
-    ),
+    fetch(req)
+      .then((res) => {
+        if (storable(new URL(req.url).pathname, res)) {
+          const copy = res.clone();
+          caches.open(RUNTIME).then((c) => c.put(req, copy)).catch(() => {});
+        }
+        return res;
+      })
+      .catch(() =>
+        caches
+          .match(req)
+          .then((hit) => hit || fetch(req))
+          .catch(() => Response.error()),
+      ),
   );
 });

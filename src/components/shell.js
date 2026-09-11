@@ -676,12 +676,41 @@ return foot;
     paintAnnDots();
 
     /* PWA: register the root service worker so NULL is installable and the
-       shell works offline. Skipped on localhost so the dev preview never
-       serves stale cached files. */
-    if ("serviceWorker" in navigator && !/^localhost|127\.0\.0\.1/.test(location.hostname)) {
-      window.addEventListener("load", function () {
-        navigator.serviceWorker.register("/sw.js").catch(function () {});
-      });
+       shell works offline. Dev/preview hosts skip it *and* clean up after
+       themselves — a cached shell there means stale assets (a cached
+       JS-wrapped stylesheet leaves every page unstyled). */
+    if ("serviceWorker" in navigator) {
+      var host = location.hostname;
+      var devHost =
+        host === "localhost" ||
+        host === "127.0.0.1" ||
+        host === "::1" ||
+        /(^|\.)(freebuff|daytona|vly|preview|local)\./.test(host) ||
+        /daytona|freebuff|preview/.test(host);
+      if (devHost) {
+        navigator.serviceWorker
+          .getRegistrations()
+          .then(function (rs) {
+            rs.forEach(function (r) {
+              r.unregister();
+            });
+          })
+          .catch(function () {});
+        if (window.caches) {
+          caches
+            .keys()
+            .then(function (keys) {
+              keys.forEach(function (k) {
+                caches.delete(k);
+              });
+            })
+            .catch(function () {});
+        }
+      } else {
+        window.addEventListener("load", function () {
+          navigator.serviceWorker.register("/sw.js").catch(function () {});
+        });
+      }
     }
 
     /* custom scrollbar on library pages */
