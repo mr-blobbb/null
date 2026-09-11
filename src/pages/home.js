@@ -172,8 +172,13 @@
     if (!fresh.length) return;
 
     track.textContent = "";
-    /* build the content twice for a seamless translateX(-50%) loop */
-    for (var pass = 0; pass < 2; pass++) {
+    /* Repeat the list until the loop always fills the screen. The animation
+       slides by exactly one copy, so the copies left behind stay wider than
+       the viewport and there is never an empty stretch. */
+    var oneCopy = Math.max(1, fresh.length * 130); // rough pill + gap width
+    var want = Math.ceil(1 + (window.innerWidth || 1200) / oneCopy);
+    var copies = Math.min(8, Math.max(2, want));
+    for (var pass = 0; pass < copies; pass++) {
       fresh.forEach(function (it) {
         track.appendChild(
           d.h(
@@ -191,8 +196,10 @@
         track.appendChild(d.h("span", { class: "ns-dot", "aria-hidden": "true" }, "\u00b7"));
       });
     }
+    /* duration is per copy, so speed stays the same however many we add */
     var dur = Math.max(24, fresh.length * 7);
     track.style.setProperty("--ns-dur", dur + "s");
+    track.style.setProperty("--ns-copies", String(copies));
     sec.hidden = false;
     N.store.write("null:lastVisit", Date.now());
   }

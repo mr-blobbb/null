@@ -569,7 +569,7 @@ html[data-perf="1"] .nav-dot {
     transform: translateX(0);
   }
   to {
-    transform: translateX(-50%);
+    transform: translateX(calc(-100% / var(--ns-copies, 2)));
   }
 }
 html[data-perf="1"] .new-track {

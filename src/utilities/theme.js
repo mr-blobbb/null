@@ -229,7 +229,9 @@
     return !!p && (p.free || (N.econ && N.econ.isUnlocked("particle", p.id)));
   }
 
-  function partHost(part, scale) {
+  /* NB: named ptHost, not partHost — the theme-pack builder above owns that
+     name, and a second declaration would shadow it for the whole file. */
+  function ptHost(part, scale) {
     var host = document.createElement("span");
     host.className = "pt-p pt-p-" + part.k;
     var n = Math.max(1, Math.round((part.n || 0) * scale));
@@ -268,7 +270,7 @@
     el.setAttribute("aria-hidden", "true");
     var scale = opts.scale || 1;
     (p.parts || []).forEach(function (part) {
-      el.appendChild(partHost(part, scale));
+      el.appendChild(ptHost(part, scale));
     });
     /* mono particles get their colors from CSS so they follow dark/light;
        the rest are fed their own palette inline */

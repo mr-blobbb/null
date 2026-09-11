@@ -162,9 +162,9 @@ async function partC() {
   check("balance bar shows time played", /time played/.test(d.querySelector("#ecoBar").textContent));
 
   const cards = d.querySelectorAll("#shopBody .shop-card");
-  check("3 beta games + 6 theme packs render", cards.length === 9);
+  check("3 beta + 6 theme + 6 particle cards render", cards.length === 15);
   check("rows rendered for boosts + effects", d.querySelectorAll("#shopBody .shop-row").length === 3);
-  check("locked items show a price chip", d.querySelectorAll("#shopBody .price-chip").length === 12);
+  check("locked items show a price chip", d.querySelectorAll("#shopBody .price-chip").length === 18);
   check("custom accent is a shop unlock", /Custom accent color/.test(d.querySelector("#shopBody").textContent));
   check("beta game names render", /Simon: Deluxe/.test(d.querySelector("#shopBody").textContent));
 
@@ -172,8 +172,13 @@ async function partC() {
   check("every theme card previews the real backdrop", d.querySelectorAll("#shopBody .pack-preview").length === 6);
   check("preview carries the pack id", !!d.querySelector('#shopBody .pack-preview[data-pack="cosmos"]'));
   check("locked packs are veiled", d.querySelectorAll("#shopBody .pack-lock").length === 6);
-  check("palette strip shows all four colors", d.querySelectorAll("#shopBody .pack-strip i").length === 24);
+  check("palette strips show all four colors (themes + particles)", d.querySelectorAll("#shopBody .pack-strip i").length === 48);
   check("packs list their features", /Starfield/.test(d.querySelector("#shopBody").textContent));
+
+  /* background particles are a shop section of their own */
+  check("particle cards preview the real layer", d.querySelectorAll("#shopBody .part-preview").length === 6);
+  check("locked particles are veiled", d.querySelectorAll("#shopBody .part-lock").length === 6);
+  check("particle names render", /Fireflies/.test(d.querySelector("#shopBody").textContent));
 
   /* buy the first beta game through the real modal flow */
   const btn = d.querySelector("#shopBody .shop-card .btn-primary");
@@ -191,7 +196,7 @@ async function partC() {
   check("coins spent (120 → 60)", st.coins === 60);
   check("beta unlocked in storage", w.N.econ.isUnlocked("game", "beta-simon") === true);
   check("card re-rendered as owned", d.querySelectorAll("#shopBody .shop-card.owned").length === 1);
-  check("price chips drop to 11", d.querySelectorAll("#shopBody .price-chip").length === 11);
+  check("price chips drop to 17", d.querySelectorAll("#shopBody .price-chip").length === 17);
   const owned = d.querySelector("#shopBody .shop-card.owned");
   check("owned card offers Play", !!owned && /Play/.test(owned.textContent));
   check("no window errors after buying", errs.length === 0);
@@ -312,10 +317,12 @@ async function partE() {
   const sec = d.querySelector("#newSec");
   check("new-since strip is shown", sec && sec.hidden === false);
   const items = d.querySelectorAll("#newTrack .ns-item");
-  check("strip lists the 5 new items twice (seamless loop)", items.length === 10);
+  const copies = parseInt(d.querySelector("#newTrack").style.getPropertyValue("--ns-copies"), 10) || 2;
+  check("strip repeats the list enough to fill the screen", copies >= 2 && items.length === 5 * copies);
+  check("strip repeats whole copies (seamless loop)", items.length % 5 === 0);
   check("strip names the new games", /Snake/.test(d.querySelector("#newTrack").textContent));
-  check("strip has dot separators", d.querySelectorAll("#newTrack .ns-dot").length === 10);
-  check("strip duration variable set", /--ns-dur/.test(d.querySelector("#newTrack").getAttribute("style") || "") || /--ns-dur/.test(d.querySelector("#newTrack").style.cssText || ""));
+  check("strip has dot separators", d.querySelectorAll("#newTrack .ns-dot").length === items.length);
+  check("strip duration + copy-count variables set", /--ns-dur/.test(d.querySelector("#newTrack").style.cssText || "") && /--ns-copies/.test(d.querySelector("#newTrack").style.cssText || ""));
   check("no window errors on home", errs.length === 0);
   w.close();
 
@@ -376,6 +383,13 @@ async function partG() {
   check("accent row keeps only plain accents", d.querySelectorAll("#accentRow .swatch-btn").length === w.N.theme.ACCENTS.length);
   check("custom accent row waits for the unlock", d.querySelector("#accentCustomRow").style.display === "none");
 
+  /* settings owns the free particles too, with the shop's veiled */
+  const partGrid = d.querySelector("#partGrid");
+  check("settings has a Background particles card", !!partGrid);
+  check("free particles are listed + usable", d.querySelectorAll("#partGrid .pack-card.owned").length === 3);
+  check("shop particles are veiled in settings", d.querySelectorAll("#partGrid .part-lock").length === 6);
+  check("settings previews real particle layers", d.querySelectorAll("#partGrid .part-preview").length === 9);
+
   const applyBtn = d.querySelector("#packGrid .pack-card.owned .shop-foot .btn");
   check("free pack card offers Apply", applyBtn && /Apply/.test(applyBtn.textContent));
   applyBtn.click();
@@ -406,6 +420,7 @@ function partF() {
   check("shop styles exist", /\.shop-grid \{/.test(extra) && /\.eco-track i \{/.test(extra));
   check("nav dot styles exist", /\.nav-dot \{/.test(extra) && /@keyframes dotPulse/.test(extra));
   check("tip + strip styles exist", /\.tip-card \{/.test(extra) && /@keyframes nsScroll/.test(extra));
+  check("strip loop divides by the copy count", /100% \/ var\(--ns-copies/.test(extra));
   /* every pack id must have backdrop art, or the layer renders empty */
   ["synthwave", "matrix", "gold", "aurora", "cosmos", "vapor", "graphite", "dawn", "mist"].forEach((id) => {
     check("pack art exists: " + id, extra.indexOf('[data-pack="' + id + '"]') >= 0);
