@@ -1,9 +1,9 @@
-/* Diagnostic: run games.html in jsdom (real CSS, real scripts) and report
+/* Diagnostic: run the library page in jsdom (real CSS, real scripts) and report
    the computed style of every .tname — proves whether any CSS hides names. */
 const fs = require("fs");
 const { JSDOM } = require("jsdom");
 
-let html = fs.readFileSync("games.html", "utf8");
+let html = fs.readFileSync("games/index.html", "utf8");
 const css =
   fs.readFileSync("src/styles/global.css", "utf8") +
   "\n" +

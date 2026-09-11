@@ -68,21 +68,34 @@
     return { xp: xp, coins: coins };
   }
 
-  /* ---------- unlocks ---------- */
+  /* ---------- unlocks ----------
+     "game" unlocks are the shop's beta builds, which come from the
+     hand-maintained content.js list — the same list the Shop page renders. */
+  function listFor(type) {
+    if (type === "theme") return THEMES;
+    if (type === "boost") return BOOSTS;
+    if (type === "fx") return FX;
+    if (type === "game") return (window.NULL_CONTENT && window.NULL_CONTENT.betas) || [];
+    return [];
+  }
+  function keyFor(type) {
+    return type === "game" ? "games" : type;
+  }
   function ownedList(type) {
     var u = data.unlocks || {};
-    return u[type] || [];
+    return u[keyFor(type)] || [];
   }
   function isUnlocked(type, id) {
     if (type === "boost") return boosted();
     return ownedList(type).indexOf(id) >= 0;
   }
   function priceFor(type, id) {
-    var list = type === "theme" ? THEMES : type === "boost" ? BOOSTS : FX;
+    var list = listFor(type);
     var item = list.find(function (x) {
       return x.id === id;
     });
-    return item ? item.price : 0;
+    if (!item) return 0;
+    return item.price || (type === "game" ? 60 : 0);
   }
 
   /* Buy an item. Returns { ok, reason } — no partial state on failure. */
@@ -96,7 +109,8 @@
       data.boostUntil = Date.now() + BOOST_MS;
     } else {
       var u = data.unlocks || (data.unlocks = { games: [], themes: [], fx: [] });
-      (u[type] = u[type] || []).push(id);
+      var key = keyFor(type);
+      (u[key] = u[key] || []).push(id);
     }
     save();
     return { ok: true };

@@ -692,6 +692,43 @@ return foot;
     if (!raw) backTop();
   }
 
+  /* ---------- install as an app (PWA) ----------
+     Chrome fires beforeinstallprompt once the manifest + service worker
+     requirements are met. We stash the event so Settings can trigger the
+     real browser prompt on demand instead of relying on the address-bar
+     icon alone. */
+  var installEvt = null;
+  window.addEventListener("beforeinstallprompt", function (e) {
+    e.preventDefault();
+    installEvt = e;
+    N.bus.emit("installReady");
+  });
+  window.addEventListener("appinstalled", function () {
+    installEvt = null;
+    N.bus.emit("installReady");
+  });
+  N.install = {
+    installed: function () {
+      return (
+        window.matchMedia("(display-mode: standalone)").matches ||
+        window.navigator.standalone === true
+      );
+    },
+    ready: function () {
+      return !!installEvt;
+    },
+    prompt: function () {
+      if (!installEvt) return Promise.resolve("unavailable");
+      var evt = installEvt;
+      installEvt = null;
+      evt.prompt();
+      return evt.userChoice.then(function (r) {
+        N.bus.emit("installReady");
+        return (r && r.outcome) || "dismissed";
+      });
+    },
+  };
+
   N.shell = { init: init, screensaverNow: ssNow };
   N.fx = { confetti: confetti };
 

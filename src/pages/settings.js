@@ -273,6 +273,48 @@
       });
     }
 
+    /* install as an app */
+    var inBtn = d.qs("#installBtn");
+    var inHint = d.qs("#installHint");
+    if (inBtn && N.install) {
+      var paintInstall = function () {
+        inBtn.hidden = true;
+        if (N.install.installed()) {
+          inHint.textContent = "Installed \u2014 NULL is running as its own app.";
+        } else if (N.install.ready()) {
+          inBtn.hidden = false;
+          inHint.textContent = "This browser can install NULL right now.";
+        } else {
+          inHint.textContent =
+            "Not offered by the browser yet \u2014 it appears once NULL is served over https, or use \"How?\".";
+        }
+      };
+      N.bus.on("installReady", paintInstall);
+      inBtn.addEventListener("click", function () {
+        N.install.prompt().then(function (outcome) {
+          if (outcome === "accepted") d.toast("Installing NULL\u2026", { icon: "check" });
+          paintInstall();
+        });
+      });
+      var inHelp = d.qs("#installHelp");
+      if (inHelp) {
+        inHelp.addEventListener("click", function () {
+          N.modal.open({
+            title: "Install NULL in Chrome",
+            icon: "download",
+            body:
+              "<p>Chrome can turn NULL into its own app window with its own icon:</p>" +
+              "<p>1. Open the <b>\u22ee</b> menu in the top-right.<br>" +
+              "2. Pick <b>Cast, save and share \u2192 Install page as app</b> (newer builds call it <b>Install NULL</b>).<br>" +
+              "3. Confirm \u2014 NULL opens in a clean window, no tabs or address bar.</p>" +
+              "<p style='color:var(--text-2)'>Once the browser has offered its install prompt, an <b>Install</b> button shows up here instead.</p>",
+            actions: [{ label: "Got it", variant: "primary" }],
+          });
+        });
+      }
+      paintInstall();
+    }
+
     /* library extras */
     var rsw = d.qs("#recsSwitch");
     if (rsw) {

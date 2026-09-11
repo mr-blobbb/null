@@ -134,6 +134,7 @@ const RELEASE_CSS = `
 
 const CORE_JS = [
   "src/utilities/store.js",
+  "src/utilities/econ.js",
   "src/utilities/dom.js",
   "src/utilities/modal.js",
   "src/utilities/theme.js",

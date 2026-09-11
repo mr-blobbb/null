@@ -5,7 +5,7 @@
    ============================================================ */
 window.NULL_CATALOG = {
   "site": "NULL",
-  "generatedAt": "2026-09-10T19:54:54.577Z",
+  "generatedAt": "2026-09-11T12:45:41.614Z",
   "games": [
     {
       "id": "flip",
@@ -34,7 +34,7 @@ window.NULL_CATALOG = {
         "description": "PULSE uses the keyboard (W/S or arrows) and has sound-free retro vibes. First to 7 wins.\nSpace serves the ball. Touch devices can drag on the left/right half of the screen."
       },
       "at": null,
-      "hot": false
+      "hot": true
     },
     {
       "id": "simon",
@@ -46,7 +46,7 @@ window.NULL_CATALOG = {
         "Test"
       ],
       "warning": null,
-      "at": null,
+      "at": 1788480000000,
       "hot": false
     },
     {
@@ -59,8 +59,8 @@ window.NULL_CATALOG = {
         "Test"
       ],
       "warning": null,
-      "at": null,
-      "hot": false
+      "at": 1788480000000,
+      "hot": true
     },
     {
       "id": "trace",
@@ -85,14 +85,14 @@ window.NULL_CATALOG = {
         "Test"
       ],
       "warning": null,
-      "at": null,
+      "at": 1788480000000,
       "hot": false
     }
   ],
   "apps": [
     {
       "id": "calc",
-      "name": "Calc",
+      "name": "Calculator",
       "desc": "Found automatically in apps/calc — part of the NULL library.",
       "file": "/apps/calc/calc.html",
       "thumb": "/apps/calc/calc.svg",
@@ -104,7 +104,7 @@ window.NULL_CATALOG = {
         "Calculator"
       ],
       "warning": null,
-      "at": null,
+      "at": 1788480000000,
       "hot": false
     },
     {
@@ -120,7 +120,7 @@ window.NULL_CATALOG = {
         "Notes"
       ],
       "warning": null,
-      "at": null,
+      "at": 1788480000000,
       "hot": false
     },
     {

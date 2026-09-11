@@ -441,3 +441,415 @@ html[data-perf="1"] .ss-ov {
 .saves-note {
   font-size: 12.5px;
 }
+
+/* ============================================================
+   unread announcements dot — top nav icon
+   ============================================================ */
+.nav-links .nav-link {
+  position: relative;
+}
+.nav-dot {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ok);
+  box-shadow: 0 0 0 2px var(--bg-2);
+  animation: dotPulse 2.6s var(--ease) infinite;
+}
+@keyframes dotPulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 0.7;
+  }
+}
+html[data-perf="1"] .nav-dot {
+  animation: none;
+}
+
+/* ============================================================
+   home — tip of the day
+   ============================================================ */
+.tip-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+}
+.tip-ic {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  border-radius: var(--r-md);
+  color: var(--ac-1);
+  background: var(--glass-bg-3);
+  border: 1px solid var(--line);
+}
+.tip-ic .msr {
+  font-size: 20px;
+}
+.tip-kicker {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  margin-bottom: 4px;
+}
+.tip-body p {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.55;
+}
+.tip-body b {
+  color: var(--ac-1);
+}
+
+/* ============================================================
+   home — "new since your last visit" marquee
+   ============================================================ */
+.new-strip {
+  overflow: hidden;
+  padding: 12px 0;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+}
+.new-track {
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+  white-space: nowrap;
+  animation: nsScroll var(--ns-dur, 30s) linear infinite;
+  will-change: transform;
+}
+.new-strip:hover .new-track {
+  animation-play-state: paused;
+}
+.ns-item {
+  font-size: 14.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.18s var(--ease);
+}
+.ns-item:hover {
+  color: var(--ac-1);
+}
+.ns-dot {
+  color: var(--text-2);
+  opacity: 0.55;
+}
+@keyframes nsScroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+html[data-perf="1"] .new-track {
+  animation-duration: calc(var(--ns-dur, 30s) * 2);
+}
+@media (prefers-reduced-motion: reduce) {
+  .new-track {
+    animation: none;
+  }
+  .new-strip {
+    overflow-x: auto;
+  }
+}
+
+/* ============================================================
+   player — NULL branded boot spinner
+   ============================================================ */
+.player-loading .pl-mark {
+  position: relative;
+  width: 84px;
+  height: 84px;
+  display: grid;
+  place-items: center;
+}
+.pl-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent 0 60%, var(--ac-1) 88%, transparent 100%);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 0);
+  mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 0);
+  animation: plSpin 1.15s linear infinite;
+}
+.pl-core {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  color: var(--text);
+  background: var(--glass-bg-2);
+  border: 1px solid var(--line);
+  animation: plBreathe 2.2s var(--ease) infinite;
+}
+.pl-core .msr {
+  font-size: 26px;
+}
+.pl-txt {
+  letter-spacing: 0.06em;
+}
+@keyframes plSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes plBreathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.92;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+}
+html[data-perf="1"] .pl-ring {
+  animation-duration: 2.4s;
+}
+html[data-perf="1"] .pl-core {
+  animation: none;
+}
+
+/* ============================================================
+   shop — local economy (playtime → XP → coins)
+   ============================================================ */
+.eco-bar {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex-wrap: wrap;
+  padding: 16px 18px;
+  border-radius: var(--r-lg);
+}
+.eco-coin {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.eco-coin-ic {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: #d9a441;
+  background: rgba(217, 164, 65, 0.12);
+  border: 1px solid rgba(217, 164, 65, 0.3);
+}
+.eco-coin-ic .msr {
+  font-size: 21px;
+}
+.eco-coin-num {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+.eco-coin-num b {
+  font-size: 22px;
+  font-weight: 700;
+}
+.eco-coin-num span {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+.eco-prog {
+  flex: 1 1 240px;
+  min-width: 200px;
+}
+.eco-prog-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--text-2);
+  margin-bottom: 7px;
+}
+.eco-prog-head b {
+  color: var(--text);
+  font-size: 12.5px;
+}
+.eco-track {
+  height: 8px;
+  border-radius: 99px;
+  background: var(--glass-bg-3);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.eco-track i {
+  display: block;
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--ac-1), var(--ac-2));
+  transition: width 0.5s var(--ease);
+}
+.eco-mini {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+.eco-mini b {
+  font-size: 16px;
+}
+.eco-mini span {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+.eco-note {
+  font-size: 12.5px;
+  color: var(--text-2);
+  margin: 10px 2px 26px;
+}
+.boost-chip {
+  gap: 6px;
+}
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 14px;
+}
+.shop-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  transition: transform 0.22s var(--ease), border-color 0.22s var(--ease);
+}
+.shop-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--line-2);
+}
+.shop-card.owned {
+  border-color: color-mix(in srgb, var(--ok) 34%, var(--line));
+}
+.shop-thumb {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  display: grid;
+  place-items: center;
+  background: var(--glass-bg-2);
+  border-bottom: 1px solid var(--line);
+  color: var(--text-2);
+  overflow: hidden;
+}
+.shop-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.shop-thumb .msr {
+  font-size: 30px;
+}
+.shop-swatch {
+  display: flex;
+  height: 76px;
+  border-bottom: 1px solid var(--line);
+}
+.shop-swatch span {
+  flex: 1;
+}
+.shop-info {
+  padding: 13px 14px 6px;
+  flex: 1;
+}
+.shop-info h3 {
+  margin: 0 0 5px;
+  font-size: 15px;
+}
+.shop-info p {
+  margin: 0 0 9px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+.shop-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 14px 14px;
+}
+.price-chip {
+  gap: 5px;
+}
+.price-chip .msr {
+  font-size: 15px;
+  color: #d9a441;
+}
+.shop-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.shop-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 15px;
+  border-radius: var(--r-md);
+}
+.shop-row.owned {
+  border-color: color-mix(in srgb, var(--ok) 30%, var(--line));
+}
+.shop-row-ic {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  border-radius: var(--r-sm);
+  background: var(--glass-bg-3);
+  border: 1px solid var(--line);
+  color: var(--ac-1);
+}
+.shop-row-txt {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.shop-row-txt b {
+  font-size: 14.5px;
+}
+.shop-row-txt span {
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+.shop-row .shop-foot {
+  padding: 0;
+}
+@media (max-width: 640px) {
+  .eco-bar {
+    gap: 14px;
+    padding: 14px;
+  }
+  .eco-mini {
+    display: none;
+  }
+  .shop-row {
+    flex-wrap: wrap;
+  }
+  .shop-row .shop-foot {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}

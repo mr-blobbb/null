@@ -159,16 +159,15 @@
     var track = d.qs("#newTrack");
     if (!sec || !track) return;
     var lastVisit = N.store.read("null:lastVisit", null);
-    if (lastVisit == null) {
-      N.store.write("null:lastVisit", Date.now());
-      return; // first visit — nothing to compare against
-    }
+    /* no baseline yet (first visit) → show everything still wearing a NEW
+       badge (14 days), so a brand-new visitor still gets the "what's new" tour */
+    var base = lastVisit == null ? Date.now() - 14 * 86400000 : lastVisit;
     var fresh = [];
     N.catalog.games().forEach(function (g) {
-      if (g.at && g.at > lastVisit) fresh.push({ e: g, k: "game" });
+      if (g.at && g.at > base) fresh.push({ e: g, k: "game" });
     });
     N.catalog.apps().forEach(function (a) {
-      if (a.at && a.at > lastVisit) fresh.push({ e: a, k: "app" });
+      if (a.at && a.at > base) fresh.push({ e: a, k: "app" });
     });
     if (!fresh.length) return;
 
