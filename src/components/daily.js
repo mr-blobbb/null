@@ -14,6 +14,17 @@
     return h + "h" + (rm ? " " + rm + "m" : "");
   }
 
+  /* claimable first, then still-in-progress, then already paid out, so the
+     next thing to do is always at the top of the list */
+  function order(list) {
+    function rank(x) {
+      return x.claimed ? 2 : x.done ? 0 : 1;
+    }
+    return list.slice().sort(function (a, b) {
+      return rank(a) - rank(b);
+    });
+  }
+
   /* ---------- shared progress row ----------
      Used by both the quests list and the achievements list: icon, name,
      hint, a bar, and either a Claim button, a "Claimed" chip or the prize. */
@@ -53,7 +64,18 @@
             d.h("span", { class: "pg-meta" }, opts.label(item)),
           ]),
           d.h("div", { class: "pg-sub" }, item.hint),
-          d.h("div", { class: "pg-bar" }, [d.h("i", { style: { width: pct + "%" } })]),
+          d.h(
+            "div",
+            {
+              class: "pg-bar",
+              role: "progressbar",
+              "aria-label": item.name + " progress",
+              "aria-valuemin": 0,
+              "aria-valuemax": item.goal,
+              "aria-valuenow": item.prog,
+            },
+            [d.h("i", { style: { width: pct + "%" } })],
+          ),
         ]),
         d.h("div", { class: "pg-side" }, [side]),
       ],
@@ -63,7 +85,7 @@
   /* ---------- quests ---------- */
   function questList(after) {
     var box = d.h("div", { class: "pg-list" });
-    N.econ.quests().forEach(function (q) {
+    order(N.econ.quests()).forEach(function (q) {
       box.appendChild(
         progRow(q, "zap", {
           claim: N.econ.claimQuest,
@@ -81,7 +103,7 @@
   /* ---------- achievements ---------- */
   function achList(after) {
     var box = d.h("div", { class: "pg-list" });
-    N.econ.achievements().forEach(function (a) {
+    order(N.econ.achievements()).forEach(function (a) {
       box.appendChild(
         progRow(a, "trophy", {
           claim: N.econ.claimAch,

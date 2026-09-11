@@ -87,7 +87,7 @@ const sw = fs.readFileSync("sw.js", "utf8");
 check("sw.js guards cached response types", /function storable/.test(sw) && /text\/css/.test(sw));
 check("sw.js doesn't bulk-precache blindly (no cache.addAll)", !/\.addAll\(/.test(sw));
 check("sw.js runs the asset cache network-first", /network first/i.test(sw));
-check("sw.js cache names were bumped past the poisoned v1", /null-v2/.test(sw) && !/null-v1/.test(sw));
+check("sw.js cache names were bumped past the poisoned v1", /const CACHE = "null-v[2-9]/.test(sw) && !/null-v1/.test(sw));
 check("sw.js drops old caches on activate", /k !== CACHE && k !== RUNTIME/.test(sw));
 
 const shell = fs.readFileSync("src/components/shell.js", "utf8");

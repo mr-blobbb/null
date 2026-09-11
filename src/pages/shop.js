@@ -352,12 +352,21 @@
     var body = d.qs("#shopBody");
     if (!body) return;
     body.textContent = "";
+    var st = N.econ.state();
+    var achs = N.econ.achievements();
+    var won = achs.filter(function (a) {
+      return a.claimed;
+    }).length;
 
-    var crateSec = section("Daily crate", "gift", "one free open every day");
+    var crateSec = section("Daily crate", "gift", st.canSpin ? "waiting for you" : "one free open every day");
     crateSec.appendChild(dailyRow());
     body.appendChild(crateSec);
 
-    var questSec = section("Daily quests", "zap", "resets at midnight");
+    var questSec = section(
+      "Daily quests",
+      "zap",
+      st.questsReady ? st.questsReady + " ready to claim" : "resets at midnight",
+    );
     questSec.appendChild(N.daily.questList(render));
     body.appendChild(questSec);
 
@@ -411,7 +420,11 @@
     fxSec.appendChild(fxBox);
     body.appendChild(fxSec);
 
-    var achSec = section("Achievements", "trophy", "permanent milestones, paid in coins");
+    var achSec = section(
+      "Achievements",
+      "trophy",
+      st.achReady ? st.achReady + " ready to claim" : won + " of " + achs.length + " unlocked",
+    );
     achSec.appendChild(N.daily.achList(render));
     body.appendChild(achSec);
   }
