@@ -173,7 +173,7 @@
         [
           { label: "Pack: Cosmos", icon: "pen", run: function () { setPack("cosmos"); ok("theme \u2192 Cosmos"); } },
           { label: "Pack: Vapor", icon: "pen", run: function () { setPack("vapor"); ok("theme \u2192 Vapor"); } },
-          { label: "Pack: Graphite", icon: "pen", run: function () { setPack("graphite"); ok("theme \u2192 Graphite (free)"); } },
+          { label: "Pack: Neon", icon: "pen", run: function () { setPack("neon"); ok("theme \u2192 Neon (shop, most expensive)"); } },
           { label: "Pack: Dawn", icon: "pen", run: function () { setPack("dawn"); ok("theme \u2192 Dawn (free)"); } },
         ],
         [

@@ -150,6 +150,7 @@
   N.bus.on("sync", function () {
     if (N.theme) N.theme.applyAll();
     if (N.tab) N.tab.apply();
+
     if (N.seasons) N.seasons.refresh();
     paintAnnDots();
   });
@@ -370,25 +371,63 @@ return foot;
     }, 3400);
   }
 
-  /* watch the schedule every 30s; the moment a block boundary is crossed,
-     celebrate (once per boundary). */
-  var schedWatcher = null;
-  var lastKey = "";
-  function watchPeriodEnd() {
-    if (!N.schedule || schedWatcher) return;
-    function check() {
-      if (document.hidden) return;
-      if (N.prefs.get("confetti") === false) return;
-      var info = N.schedule.todayInfo();
-      if (!info.type) return;
-      var blocks = N.schedule.blocksFor(info.type);
-      var lv = N.schedule.live(blocks);
-      var key = lv.block ? lv.i + (lv.passing ? "p" : "") : "end";
-      if (lastKey && lastKey !== key && key !== "end") confetti();
-      lastKey = key;
+  /* ---------- period bells ----------
+     Confetti has to land ON the bell, not within half a minute of it: the
+     schedule is read to find the seconds left in the current block (or in
+     the passing period) and a single timer is aimed at that instant. Both
+     bells fire — a period ending (which is when the passing period starts)
+     and the passing period ending (which is when class starts). The key of
+     the block we're in changes at each one, so "it changed" is the trigger. */
+  var schedTimer = null;
+  var lastKey = null;
+
+  function blockKey() {
+    if (!N.schedule) return null;
+    var info = N.schedule.todayInfo();
+    if (!info.type) return null;
+    var lv = N.schedule.live(N.schedule.blocksFor(info.type));
+    if (!lv.block) return "end";
+    return lv.i + (lv.passing ? "p" : "");
+  }
+
+  /* aim the timer at the next bell; a little past the second so the clock
+     has definitely rolled over when we look */
+  function armBell() {
+    if (schedTimer) clearTimeout(schedTimer);
+    schedTimer = null;
+    if (!N.schedule) return;
+    var info = N.schedule.todayInfo();
+    var ms = null;
+    if (info.type) {
+      var lv = N.schedule.live(N.schedule.blocksFor(info.type));
+      if (lv.block) ms = lv.secLeft * 1000 + 120;
     }
-    check();
-    schedWatcher = setInterval(check, 30000);
+    /* nothing left today (or no school): look again in a minute */
+    schedTimer = setTimeout(ring, ms == null || ms <= 0 ? 60000 : Math.min(ms, 900000));
+  }
+
+  function ring() {
+    schedTimer = null;
+    var key = blockKey();
+    /* only a real bell — never the end of the day, never a first reading */
+    if (lastKey !== null && key && key !== "end" && key !== lastKey) {
+      if (N.prefs.get("confetti") !== false && !document.hidden) confetti();
+    }
+    lastKey = key;
+    armBell();
+  }
+
+  function watchPeriodEnd() {
+    if (!N.schedule || schedTimer) return;
+    lastKey = blockKey();
+    armBell();
+    /* timers are throttled in a background tab, so never celebrate a bell
+       that went by while this window was hidden — just re-sync and re-aim */
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden) return;
+      lastKey = blockKey();
+      armBell();
+    });
   }
 
   /* ============================================================

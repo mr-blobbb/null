@@ -238,16 +238,21 @@
     var center = part.sp === "center";
     for (var i = 0; i < n; i++) {
       var b = document.createElement("b");
-      b.style.left = center ? "50%" : rnd(-4, 104).toFixed(1) + "%";
+      /* depth: far particles are smaller, dimmer and take a little blur, which
+         is what turns a flat field of dots into a space you can look into */
+      var z = rnd(0.45, 1.4);
+      b.style.left = center ? "50%" : rnd(-6, 106).toFixed(1) + "%";
       b.style.top = center
         ? "50%"
         : part.sp === "bottom"
-          ? rnd(74, 112).toFixed(1) + "%"
-          : rnd(-8, 100).toFixed(1) + "%";
-      b.style.setProperty("--s", rnd(1.6, 4.2).toFixed(2) + "px");
-      b.style.setProperty("--dx", (Math.random() < 0.5 ? -1 : 1) * rnd(18, 160).toFixed(0) + "px");
-      b.style.setProperty("--o", rnd(0.5, 1).toFixed(2));
-      b.style.setProperty("--rot", rnd(-30, 30).toFixed(0) + "deg");
+          ? rnd(72, 112).toFixed(1) + "%"
+          : rnd(-10, 100).toFixed(1) + "%";
+      b.style.setProperty("--z", z.toFixed(2));
+      b.style.setProperty("--s", (rnd(1.6, 4.2) * z).toFixed(2) + "px");
+      b.style.setProperty("--dx", (Math.random() < 0.5 ? -1 : 1) * rnd(18, 200).toFixed(0) + "px");
+      b.style.setProperty("--o", (rnd(0.5, 1) * (0.5 + z * 0.5)).toFixed(2));
+      b.style.setProperty("--rot", rnd(-40, 40).toFixed(0) + "deg");
+      b.style.setProperty("--spin", (Math.random() < 0.5 ? -1 : 1) * rnd(90, 720).toFixed(0) + "deg");
       b.style.setProperty("--dur", rnd(3, 9).toFixed(2));
       b.style.setProperty("--delay", rnd(0, 18).toFixed(2));
       /* warp streams outward from the middle, so it needs an angle + a
@@ -255,7 +260,10 @@
       if (part.k === "warp") {
         b.style.setProperty("--ang", rnd(0, 360).toFixed(0) + "deg");
         b.style.setProperty("--dist", rnd(55, 150).toFixed(0) + "vh");
-        b.style.setProperty("--dur", rnd(1.4, 3.4).toFixed(2));
+        b.style.setProperty("--dur", rnd(1.2, 3).toFixed(2));
+      }
+      if (part.k === "tunnel") {
+        b.style.setProperty("--dur", rnd(2.2, 5).toFixed(2));
       }
       host.appendChild(b);
     }
@@ -386,6 +394,28 @@
       return [c1, c2];
     }
     return (g && g.colors) || ["#3d8bff", "#7d6bff", "#a86bff"];
+  }
+
+  /* Neon's own tube colours, used whenever the glow border is off so the pack
+     still has a palette to glow with. With the border on it borrows the exact
+     colours the border is running, so page and pack glow as one. */
+  var NEON_DEFAULT = ["#00e5ff", "#b14bff", "#ff2d95", "#6cff9e"];
+
+  /* Publish the active glow palette as --glow-1..4 on <html>. Pack art reads
+     them (see the Neon backdrop in extra.css), so switching the glow preset
+     re-inks the backdrop too. Returns true when the palette actually moved. */
+  function publishGlowVars(id) {
+    var colors = id && id !== "off" ? colorsFor(id) : NEON_DEFAULT;
+    var changed = false;
+    for (var i = 0; i < 4; i++) {
+      var key = "--glow-" + (i + 1);
+      var val = colors[i] || colors[colors.length - 1];
+      if (root.style.getPropertyValue(key) !== val) changed = true;
+      root.style.setProperty(key, val);
+    }
+    if (id && id !== "off") root.dataset.glowOn = "1";
+    else delete root.dataset.glowOn;
+    return changed;
   }
 
   /* seamless conic gradient — equal stops around the circle, ending on the
@@ -546,8 +576,22 @@
     document.removeEventListener("pointermove", proxMove);
   }
 
+  /* Neon's accent pairs with the glow palette (--glow-1/-2), with Neon's own
+     tubes as the fallback for when the vars aren't published yet */
+  function paintNeonAccent() {
+    root.style.setProperty("--ac-1", root.style.getPropertyValue("--glow-1") || NEON_DEFAULT[0]);
+    root.style.setProperty("--ac-2", root.style.getPropertyValue("--glow-2") || NEON_DEFAULT[1]);
+  }
+
   function setGlow(raw) {
     var id = normalize(raw);
+    /* the Neon pack is drawn from the glow palette, so a palette change has
+       to rebuild it — no other pack cares */
+    if (publishGlowVars(id) && curPack === "neon") {
+      killPack();
+      buildPack(packFor("neon"));
+      paintNeonAccent();
+    }
     if (id === "off" || !masksOK) {
       delete root.dataset.glow;
       if (elState && elState.el.isConnected) {
@@ -598,6 +642,9 @@
     }
     var p = packFor(id);
     curPack = p ? p.id : null;
+    /* Neon takes its accent from the glow palette, so the UI can never drift
+       away from the tubes behind it */
+    if (p && p.glowAccent) paintNeonAccent();
     applyPack(p);
   }
 
@@ -619,10 +666,12 @@
     var p = N.prefs.data;
     setTheme(p.theme);
     setPerf(p.perf);
-    setAccent(p.accent);
-    setParticles(p.particles);
+    /* glow first: Neon's backdrop is built from the glow palette, so the
+       vars have to exist before the pack is built (avoids a rebuild) */
     cometOn = !!p.glowComet;
     setGlow(p.glow);
+    setAccent(p.accent);
+    setParticles(p.particles);
   }
 
   N.theme = {

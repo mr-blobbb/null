@@ -91,9 +91,16 @@ function partA() {
   check("grant does not charge coins", N.econ.state().coins === 0);
 
   /* free packs ship unlocked, and can't be bought */
-  check("3 free packs exist", N.econ.FREE_PACKS.length === 3);
-  check("free packs start unlocked", ["graphite", "dawn", "mist"].every((id) => N.econ.isUnlocked("theme", id) === true));
-  check("free packs are not purchasable", N.econ.buy("theme", "graphite").reason === "free");
+  check("2 free packs exist", N.econ.FREE_PACKS.length === 2);
+  check("free packs start unlocked", ["dawn", "mist"].every((id) => N.econ.isUnlocked("theme", id) === true));
+  check("free packs are not purchasable", N.econ.buy("theme", "dawn").reason === "free");
+  /* Graphite is gone; Neon replaced it as a shop-only pack */
+  check("graphite is gone", ![...N.econ.FREE_PACKS, ...N.econ.THEMES].some((p) => p.id === "graphite"));
+  const neon = N.econ.THEMES.find((t) => t.id === "neon");
+  check("neon is a shop pack", !!neon && !neon.free);
+  check("neon costs more than every other pack", neon.price > Math.max(...N.econ.THEMES.filter((t) => t.id !== "neon").map((t) => t.price)));
+  check("neon is not unlocked until it's bought", N.econ.isUnlocked("theme", "neon") === false);
+  check("neon is drawn from the glow palette", neon.glowAccent === true);
 
   /* Part B — unlocked beta merges into the live library */
   const b = makeDom("<!doctype html><body><p>lib</p>", "http://localhost:5173/shop");
@@ -389,9 +396,19 @@ async function partG() {
   /* settings now owns a Theme packs card, separate from plain accents */
   const packGrid = d.querySelector("#packGrid");
   check("settings has a Theme packs card", !!packGrid && /Theme packs/.test(d.querySelector("#packSection").textContent));
-  check("every pack is listed (free + shop)", d.querySelectorAll("#packGrid .pack-card").length === 9);
-  check("free packs usable, shop packs veiled", d.querySelectorAll("#packGrid .pack-card.owned").length === 3 && d.querySelectorAll("#packGrid .pack-lock").length === 6);
-  check("settings previews real backdrops", d.querySelectorAll("#packGrid .pack-preview").length === 9);
+  check(
+    "every pack is listed (free + shop)",
+    d.querySelectorAll("#packGrid .pack-card").length === w.N.econ.FREE_PACKS.length + w.N.econ.THEMES.length,
+  );
+  check(
+    "free packs usable, shop packs veiled",
+    d.querySelectorAll("#packGrid .pack-card.owned").length === w.N.econ.FREE_PACKS.length &&
+      d.querySelectorAll("#packGrid .pack-lock").length === w.N.econ.THEMES.length,
+  );
+  check(
+    "settings previews real backdrops",
+    d.querySelectorAll("#packGrid .pack-preview").length === w.N.econ.FREE_PACKS.length + w.N.econ.THEMES.length,
+  );
   check("accent row keeps only plain accents", d.querySelectorAll("#accentRow .swatch-btn").length === w.N.theme.ACCENTS.length);
   check("custom accent row waits for the unlock", d.querySelector("#accentCustomRow").style.display === "none");
 
@@ -399,13 +416,13 @@ async function partG() {
   const partGrid = d.querySelector("#partGrid");
   check("settings has a Background particles card", !!partGrid);
   check("free particles are listed + usable", d.querySelectorAll("#partGrid .pack-card.owned").length === 3);
-  check("shop particles are veiled in settings", d.querySelectorAll("#partGrid .part-lock").length === 6);
+  check("shop particles are veiled in settings", d.querySelectorAll("#partGrid .part-lock").length === w.N.econ.PARTICLES.length);
   check("settings previews real particle layers", d.querySelectorAll("#partGrid .part-preview").length === 9);
 
   const applyBtn = d.querySelector("#packGrid .pack-card.owned .shop-foot .btn");
   check("free pack card offers Apply", applyBtn && /Apply/.test(applyBtn.textContent));
   applyBtn.click();
-  check("applying from settings sets the pack", d.documentElement.dataset.pack === "graphite");
+  check("applying from settings sets the pack", d.documentElement.dataset.pack === "dawn");
   check("applied card flips to Applied", /Applied/.test(d.querySelector("#packGrid .pack-card.playing").textContent));
   d.querySelector("#packGrid .pack-card.playing .shop-foot .btn").click();
   check("clicking Applied clears the pack", !d.documentElement.dataset.pack);
@@ -460,8 +477,35 @@ async function partH() {
   });
   check("starlight is a real star shape", /clip-path: polygon\(50% 0%/.test(css));
   check("bubbles became flat rings", /border: calc\(var\(--s\) \* 0\.55\) solid/.test(css));
-  check("warp streaks instead of dots", /@keyframes pt-warp/.test(css) && /scaleX\(2\)/.test(css));
+  check("warp streaks instead of dots", /@keyframes pt-warp/.test(css) && /scaleX\(2\.6\)/.test(css));
   check("plasma has its own drift keyframe", /@keyframes pt-plasma/.test(css));
+
+  /* warp really leaves dead centre: the streaks are pinned to 50%/50%, the
+     box is centred on that point and the pivot sits on its left edge */
+  const warpStreak = rule(css, ".part-fx .pt-p-warp b,");
+  check(
+    "warp pivots on the exact centre",
+    /margin-top: calc\(var\(--s\) \* -0\.7\)/.test(warpStreak) && /transform-origin: 0 50%/.test(warpStreak),
+  );
+  check("warp core glows from the middle", /closest-side at 50% 50%/.test(rule(css, ".part-fx .pt-p-warp::before,")));
+  const tunnel = rule(css, ".pt-p-tunnel b {");
+  check("tunnel rings are centred too", /margin: calc\(var\(--s\) \* -22\) 0 0 calc\(var\(--s\) \* -22\)/.test(tunnel));
+
+  /* the layered kinds the shop particles are now built from */
+  ["bloom", "trail", "wisp", "flare", "glint", "swirl", "speck"].forEach((k) => {
+    check("layered kind styled: " + k, !!rule(css, ".pt-p-" + k + " b {"));
+    check("layered kind animates: " + k, /@keyframes pt-/.test(css) && css.indexOf("@keyframes pt-" + k) > 0);
+  });
+  check("particles carry depth", /--z/.test(css) && /calc\(\(1\.4 - var\(--z/.test(css));
+
+  /* period bells: one timer aimed at the next boundary, so confetti lands on
+     the bell instead of up to 30s after it, and both bells count */
+  const shellSrc = fs.readFileSync("src/components/shell.js", "utf8");
+  check("period bells are scheduled, not polled", !/setInterval\(check/.test(shellSrc));
+  check("a timer is aimed at the next bell", /function armBell\(/.test(shellSrc) && /lv\.secLeft \* 1000/.test(shellSrc));
+  check("the bell key changes on both boundaries", /function blockKey\(/.test(shellSrc) && /lv\.passing \? "p" : ""/.test(shellSrc));
+  check("any key change that isn't end-of-day rings", /key !== "end" && key !== lastKey/.test(shellSrc));
+  check("a hidden tab never celebrates a bell it slept through", /visibilitychange/.test(shellSrc));
 
   /* light mode: packs get a daylight tint, particles get re-inked */
   const lightPacks = rule(css, 'html[data-theme="light"] .pack-fx,\nhtml[data-theme="light"] .pack-preview {', 0);
@@ -549,12 +593,18 @@ function partF() {
   check("tip + strip styles exist", /\.tip-card \{/.test(extra) && /@keyframes nsScroll/.test(extra));
   check("strip loop divides by the copy count", /100% \/ var\(--ns-copies/.test(extra));
   /* every pack id must have backdrop art, or the layer renders empty */
-  ["synthwave", "matrix", "gold", "aurora", "cosmos", "vapor", "graphite", "dawn", "mist"].forEach((id) => {
+  ["synthwave", "matrix", "gold", "aurora", "cosmos", "vapor", "neon", "dawn", "mist"].forEach((id) => {
     check("pack art exists: " + id, extra.indexOf('[data-pack="' + id + '"]') >= 0);
   });
-  ["rain", "star", "starfar", "dust", "ribbon", "smoke", "cloud"].forEach((k) => {
+  check("graphite art is fully removed", extra.indexOf('[data-pack="graphite"]') < 0);
+  ["rain", "star", "starfar", "dust", "ribbon", "smoke", "cloud", "neontube", "neonpulse"].forEach((k) => {
     check("particle kind styled: " + k, extra.indexOf(".pf-p-" + k + " b") >= 0);
   });
+  /* the neon room is painted from --glow-*, so theme.js has to publish them */
+  check(
+    "neon glow layers use the border palette",
+    /\[data-pack="neon"\] \.pf-a \{[\s\S]*?--glow-1/.test(extra) && extra.indexOf("pk-neon-floor") > 0 && extra.indexOf("pk-neon-orbit") > 0,
+  );
   check("particle keyframes exist", /@keyframes pk-smoke/.test(extra) && /@keyframes pk-ribbon/.test(extra) && /@keyframes pk-starDrift/.test(extra));
   check("pack layer base styles exist", /\.pack-fx \{/.test(extra) && /\.pack-fx\.pf-paused/.test(extra));
   check("pack preview + swatch styles exist", /\.pack-thumb \{/.test(extra) && /\.accent-dots i \{/.test(extra));
@@ -568,6 +618,64 @@ function partF() {
   check("icon files generated", fs.existsSync("public/icon-192.png") && fs.existsSync("public/icon-512.png") && fs.existsSync("public/icon-maskable-512.png"));
 }
 
+/* ---------------------------------------------------------------- *
+ * Part I — Neon follows the glow-border palette                     *
+ * ---------------------------------------------------------------- */
+async function partI() {
+  const dom = new JSDOM(injectPage("settings.html"), {
+    url: "http://localhost:5173/settings",
+    runScripts: "dangerously",
+    pretendToBeVisual: true,
+    beforeParse(window) {
+      window.fetch = () => Promise.reject(new Error("no fetch"));
+      window.scrollTo = () => {};
+      window.matchMedia = () => ({ matches: false });
+      window.requestAnimationFrame = (fn) => setTimeout(fn, 0);
+      window.cancelAnimationFrame = (id) => clearTimeout(id);
+      window.HTMLElement.prototype.scrollIntoView = () => {};
+      window.URL.createObjectURL = () => "blob:null-backup";
+      window.URL.revokeObjectURL = () => {};
+    },
+  });
+  const w = dom.window;
+  const errs = [];
+  w.addEventListener("error", (e) => errs.push(String(e.message || e.error)));
+  await wait(400);
+  const root = w.document.documentElement;
+
+  /* with the border off, Neon's own tubes are published as the fallback */
+  const fallback = root.style.getPropertyValue("--glow-1");
+  check("the glow palette is always published", !!fallback && !!root.style.getPropertyValue("--glow-4"));
+  check("no border lit means no glowOn marker", !root.dataset.glowOn);
+
+  /* buy Neon, apply it, then flip the border preset */
+  w.N.econ.grant("theme", "neon");
+  w.N.theme.setAccent("neon");
+  w.N.prefs.set("accent", "neon");
+  check("neon applies its own backdrop", root.dataset.pack === "neon");
+  check("neon's accent starts on its own tubes", root.style.getPropertyValue("--ac-1") === fallback);
+
+  w.N.theme.setGlow("rainbow");
+  await wait(60);
+  const first = root.style.getPropertyValue("--glow-1");
+  check("a border preset republishes the palette", first === "#ff4d6d");
+  check("the border is marked as lit", root.dataset.glowOn === "1");
+  check("neon's accent re-inks with the border", root.style.getPropertyValue("--ac-1") === first);
+  check("neon's backdrop rebuilt on the new palette", root.dataset.pack === "neon" && !!w.document.querySelector('[data-pack="neon"]'));
+
+  /* a custom border colour reaches the pack too */
+  w.N.prefs.set("glowColor1", "#00ff88");
+  w.N.theme.setGlow("custom");
+  await wait(60);
+  check("custom glow colours reach the pack", root.style.getPropertyValue("--glow-1") === "#00ff88");
+
+  w.N.theme.setAccent("off");
+  await wait(60);
+  check("leaving neon keeps the palette published", !!root.style.getPropertyValue("--glow-1"));
+  check("no window errors during the glow swaps", errs.length === 0);
+  w.close();
+}
+
 (async function main() {
   partA();
   await partC();
@@ -575,6 +683,7 @@ function partF() {
   await partE();
   await partG();
   await partH();
+  await partI();
   partF();
   console.log(failures ? "FAILURES: " + failures : "ALL SHOP CHECKS PASS");
   process.exit(failures ? 1 : 0);

@@ -1028,9 +1028,14 @@ html[data-theme="light"] [data-pack="synthwave"] .pf-c {
 html[data-theme="light"] [data-pack="synthwave"] .pf-b {
   filter: saturate(1.4) brightness(0.7);
 }
-/* graphite's vignette goes light instead of blackening the corners */
-html[data-theme="light"] [data-pack="graphite"] .pf-b {
-  background-image: radial-gradient(120% 92% at 50% 45%, transparent 42%, rgba(17, 17, 19, 0.1) 100%);
+/* neon's glow lines are far too pale for a white page: deepen them so the
+   wireframe still reads as light rather than washing out */
+html[data-theme="light"] [data-pack="neon"] .pf-b,
+html[data-theme="light"] [data-pack="neon"] .pf-c {
+  filter: saturate(1.6) brightness(0.72);
+}
+html[data-theme="light"] [data-pack="neon"] .pf-b {
+  filter: saturate(1.7) brightness(0.6) drop-shadow(0 0 8px color-mix(in srgb, var(--glow-1, #00e5ff) 65%, transparent));
 }
 /* the matrix scanlines stay dark, but lighter, so they read as texture only */
 html[data-theme="light"] [data-pack="matrix"] .pf-b {
@@ -1398,17 +1403,126 @@ html[data-perf="1"] .pack-fx {
   }
 }
 
+/* ---- neon: a glowing wireframe room ----------------------------------
+   The one pack that doesn't use --pk-*: every line, tube and halo is pulled
+   from --glow-1..4, which theme.js publishes from the live glow-border
+   preset. Change the border and the room re-inks with it. */
+[data-pack="neon"] .pf-a {
+  background:
+    radial-gradient(44% 40% at 16% 20%, color-mix(in srgb, var(--glow-1, #00e5ff) 34%, transparent), transparent 70%),
+    radial-gradient(48% 44% at 84% 28%, color-mix(in srgb, var(--glow-2, #b14bff) 30%, transparent), transparent 72%),
+    radial-gradient(56% 48% at 50% 98%, color-mix(in srgb, var(--glow-3, #ff2d95) 26%, transparent), transparent 74%),
+    linear-gradient(180deg, var(--pk-bg-1), var(--pk-bg-2));
+}
+/* the floor: a perspective grid running at the viewer, drawn in glow lines */
+[data-pack="neon"] .pf-b {
+  inset: auto 0 -2%;
+  height: 46%;
+  background-image:
+    repeating-linear-gradient(90deg, color-mix(in srgb, var(--glow-1, #00e5ff) 62%, transparent) 0 1px, transparent 1px 56px),
+    repeating-linear-gradient(0deg, color-mix(in srgb, var(--glow-2, #b14bff) 55%, transparent) 0 1px, transparent 1px 36px);
+  transform: perspective(420px) rotateX(74deg);
+  transform-origin: 50% 100%;
+  filter: drop-shadow(0 0 9px color-mix(in srgb, var(--glow-1, #00e5ff) 75%, transparent));
+  -webkit-mask-image: linear-gradient(to top, #000 8%, transparent 88%);
+  mask-image: linear-gradient(to top, #000 8%, transparent 88%);
+  animation: pk-neon-floor 2.6s linear infinite;
+}
+@keyframes pk-neon-floor {
+  to {
+    background-position: 0 0, 0 36px;
+  }
+}
+/* the centrepiece: a wireframe orbit with a second ring turning against it */
+[data-pack="neon"] .pf-c {
+  inset: 10% auto auto 50%;
+  width: 40%;
+  aspect-ratio: 1;
+  margin-left: -20%;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--glow-3, #ff2d95) 70%, transparent);
+  box-shadow:
+    0 0 46px color-mix(in srgb, var(--glow-3, #ff2d95) 55%, transparent),
+    inset 0 0 70px color-mix(in srgb, var(--glow-2, #b14bff) 40%, transparent);
+  animation: pk-neon-orbit 26s linear infinite;
+}
+[data-pack="neon"] .pf-c::after {
+  content: "";
+  position: absolute;
+  inset: 14%;
+  border-radius: 50%;
+  border: 1px dashed color-mix(in srgb, var(--glow-1, #00e5ff) 55%, transparent);
+  animation: pk-neon-orbit 17s linear infinite reverse;
+}
+@keyframes pk-neon-orbit {
+  from {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.07);
+  }
+  to {
+    transform: rotate(360deg) scale(1);
+  }
+}
+/* neonTube — standing bars of light, flickering like a bad sign */
+.pf-p-neontube b {
+  width: calc(var(--s) * 1.8);
+  height: calc(var(--s) * 40);
+  border-radius: 999px;
+  background: linear-gradient(180deg, transparent, var(--glow-4, #6cff9e) 26%, #fff 74%, var(--glow-1, #00e5ff));
+  box-shadow:
+    0 0 12px color-mix(in srgb, var(--glow-1, #00e5ff) 85%, transparent),
+    0 0 40px color-mix(in srgb, var(--glow-4, #6cff9e) 55%, transparent);
+  animation:
+    pk-neon-flicker calc(var(--dur, 5) * 0.5s) steps(2, end) infinite,
+    pk-neon-bob calc(var(--dur, 5) * 6s) ease-in-out infinite alternate;
+  animation-delay: calc(var(--delay, 0) * -1s);
+}
+@keyframes pk-neon-flicker {
+  0%,
+  100% {
+    opacity: var(--o, 0.6);
+  }
+  50% {
+    opacity: calc(var(--o, 0.6) * 0.55);
+  }
+}
+@keyframes pk-neon-bob {
+  from {
+    transform: translate3d(0, 0, 0) scaleY(0.88);
+  }
+  to {
+    transform: translate3d(calc(var(--dx, 40px) * 0.35), calc(var(--dx, 40px) * -0.25), 0) scaleY(1.12);
+  }
+}
+/* neonPulse — rings of light swelling across the room */
+.pf-p-neonpulse b {
+  width: calc(var(--s) * 80);
+  height: calc(var(--s) * 80);
+  border-radius: 50%;
+  border: calc(var(--s) * 0.5) solid color-mix(in srgb, var(--glow-2, #b14bff) 60%, transparent);
+  box-shadow: 0 0 30px color-mix(in srgb, var(--glow-2, #b14bff) 55%, transparent);
+  animation-name: pk-neon-pulse;
+  animation-duration: calc(var(--dur, 5) * 4.4s);
+  animation-timing-function: ease-out;
+  animation-delay: calc(var(--delay, 0) * -1s);
+}
+@keyframes pk-neon-pulse {
+  from {
+    transform: scale(0.2);
+    opacity: 0;
+  }
+  22% {
+    opacity: var(--o, 0.6);
+  }
+  to {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
 /* ---- free packs: same engine, deliberately quieter ---- */
-[data-pack="graphite"] .pf-a {
-  background: linear-gradient(180deg, var(--pk-bg-1), var(--pk-bg-2));
-}
-[data-pack="graphite"] .pf-b {
-  background-image: radial-gradient(120% 92% at 50% 45%, transparent 42%, rgba(0, 0, 0, 0.5) 100%);
-}
-[data-pack="graphite"] .pf-c {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
-  opacity: 0.05;
-}
 [data-pack="dawn"] .pf-a {
   background:
     radial-gradient(80% 55% at 50% -8%, color-mix(in srgb, var(--pk-1) 38%, transparent), transparent 66%),
@@ -1435,6 +1549,230 @@ html[data-perf="1"] .pack-fx {
 .pack-foot-note {
   font-size: 12px;
   color: var(--text-2);
+}
+
+/* ============================================================
+   ambient particles — the extended set
+   The layered kinds the Shop's particles are built from (bloom, trail,
+   wisp, flare, glint, swirl, speck) plus the warp core. The warp rules
+   carry an extra ancestor so they beat the base kind whichever order the
+   two blocks end up in.
+   ============================================================ */
+/* warp — a bright core at dead centre. theme.js pins left/top to 50%, and
+   the negative margin centres each streak's box on that point, so with
+   transform-origin at the left edge every streak really does leave the
+   exact middle of the viewport. */
+.part-fx .pt-p-warp::before,
+.part-preview .pt-p-warp::before {
+  background: radial-gradient(
+    closest-side at 50% 50%,
+    color-mix(in srgb, #fff 60%, transparent),
+    color-mix(in srgb, var(--pt-3) 40%, transparent) 26%,
+    color-mix(in srgb, var(--pt-2) 24%, transparent) 42%,
+    transparent 64%
+  );
+}
+.part-fx .pt-p-warp b,
+.part-preview .pt-p-warp b {
+  width: calc(var(--s) * 44);
+  margin-top: calc(var(--s) * -0.7);
+  transform-origin: 0 50%;
+}
+/* tunnel — rings rushing out of the exact centre as well */
+.pt-p-tunnel b {
+  width: calc(var(--s) * 44);
+  height: calc(var(--s) * 44);
+  margin: calc(var(--s) * -22) 0 0 calc(var(--s) * -22);
+  border-radius: 50%;
+  border: calc(var(--s) * 0.4) solid color-mix(in srgb, var(--pt-2) 55%, transparent);
+  box-shadow: 0 0 22px color-mix(in srgb, var(--pt-3) 50%, transparent);
+  animation-name: pt-tunnel;
+  animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+/* bloom — wide halos that give the field depth */
+.pt-p-bloom b {
+  width: calc(var(--s) * 54);
+  height: calc(var(--s) * 54);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--pt-1) 36%, transparent), transparent 72%);
+  filter: blur(calc(var(--s) * 6));
+  animation-name: pt-bloom;
+  animation-duration: calc(var(--dur, 5) * 7s);
+  animation-direction: alternate;
+  animation-timing-function: ease-in-out;
+}
+/* trail — motion streaks with a hot head */
+.pt-p-trail b {
+  width: calc(var(--s) * 34);
+  height: calc(var(--s) * 0.9);
+  border-radius: 999px;
+  transform-origin: 0 50%;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--pt-2) 75%, transparent) 68%, #fff);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--pt-2) 55%, transparent);
+  animation-name: pt-trail;
+  animation-duration: calc(var(--dur, 5) * 3.8s);
+  animation-timing-function: ease-in-out;
+}
+/* wisp — curling ribbons of smoke */
+.pt-p-wisp b {
+  width: calc(var(--s) * 11);
+  height: calc(var(--s) * 48);
+  border-radius: 999px;
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--pt-2) 62%, transparent) 42%, transparent);
+  filter: blur(calc(var(--s) * 2.4));
+  animation-name: pt-wisp;
+  animation-duration: calc(var(--dur, 5) * 6s);
+  animation-direction: alternate;
+  animation-timing-function: ease-in-out;
+}
+/* flare — four-ray crosses that bloom and twist */
+.pt-p-flare b {
+  width: calc(var(--s) * 30);
+  height: calc(var(--s) * 30);
+  background:
+    linear-gradient(0deg, transparent 47%, color-mix(in srgb, var(--pt-1) 92%, transparent) 49% 51%, transparent 53%),
+    linear-gradient(90deg, transparent 47%, color-mix(in srgb, var(--pt-1) 92%, transparent) 49% 51%, transparent 53%),
+    radial-gradient(closest-side, #fff 5%, transparent 42%);
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--pt-3) 95%, transparent));
+  animation-name: pt-flare;
+  animation-duration: calc(var(--dur, 5) * 5s);
+  animation-timing-function: ease-in-out;
+}
+/* glint — hard little highlights */
+.pt-p-glint b {
+  width: calc(var(--s) * 1.8);
+  height: calc(var(--s) * 1.8);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 14px 3px color-mix(in srgb, var(--pt-3) 80%, transparent);
+  animation-name: pt-glint;
+  animation-duration: calc(var(--dur, 5) * 1.7s);
+  animation-timing-function: ease-out;
+}
+/* swirl — huge spinning colour fields */
+.pt-p-swirl b {
+  width: calc(var(--s) * 200);
+  height: calc(var(--s) * 200);
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    color-mix(in srgb, var(--pt-1) 72%, transparent),
+    color-mix(in srgb, var(--pt-3) 62%, transparent),
+    color-mix(in srgb, var(--pt-2) 68%, transparent),
+    color-mix(in srgb, var(--pt-1) 72%, transparent)
+  );
+  filter: blur(calc(var(--s) * 10));
+  mix-blend-mode: screen;
+  animation-name: pt-swirl;
+  animation-duration: calc(var(--dur, 5) * 16s);
+}
+/* speck — tiny depth-of-field motes */
+.pt-p-speck b {
+  width: calc(var(--s) * 1.1);
+  height: calc(var(--s) * 1.1);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--pt-1) 90%, transparent);
+  box-shadow: 0 0 9px color-mix(in srgb, var(--pt-2) 70%, transparent);
+  filter: blur(calc((1.4 - var(--z, 1)) * 1.1px));
+  animation-name: pt-speck;
+  animation-duration: calc(var(--dur, 5) * 1.5s);
+  animation-timing-function: ease-in-out;
+}
+@keyframes pt-tunnel {
+  from {
+    transform: scale(0.05);
+    opacity: 0;
+  }
+  18% {
+    opacity: var(--o, 0.6);
+  }
+  to {
+    transform: scale(3.6);
+    opacity: 0;
+  }
+}
+@keyframes pt-bloom {
+  from {
+    transform: translate3d(0, 5%, 0) scale(0.7);
+    opacity: calc(var(--o, 0.6) * 0.3);
+  }
+  50% {
+    opacity: var(--o, 0.6);
+  }
+  to {
+    transform: translate3d(calc(var(--dx, 40px) * 0.5), -7%, 0) scale(1.3);
+    opacity: calc(var(--o, 0.6) * 0.4);
+  }
+}
+@keyframes pt-trail {
+  0%,
+  100% {
+    transform: rotate(var(--rot, 0deg)) scaleX(0.1);
+    opacity: 0;
+  }
+  50% {
+    transform: rotate(var(--rot, 0deg)) scaleX(1);
+    opacity: var(--o, 0.6);
+  }
+}
+@keyframes pt-wisp {
+  from {
+    transform: translate3d(0, 0, 0) rotate(calc(var(--rot, 0deg) * 0.7)) scaleY(0.8);
+    opacity: calc(var(--o, 0.6) * 0.3);
+  }
+  50% {
+    opacity: var(--o, 0.6);
+  }
+  to {
+    transform: translate3d(calc(var(--dx, 40px) * 0.6), calc(var(--dx, 40px) * -0.7), 0)
+      rotate(calc(var(--rot, 0deg) * -0.7 + 12deg)) scaleY(1.25);
+    opacity: calc(var(--o, 0.6) * 0.35);
+  }
+}
+@keyframes pt-flare {
+  0%,
+  100% {
+    transform: rotate(var(--rot, 0deg)) scale(0.45);
+    opacity: 0;
+  }
+  50% {
+    transform: rotate(calc(var(--rot, 0deg) + 45deg)) scale(1);
+    opacity: var(--o, 0.6);
+  }
+}
+@keyframes pt-glint {
+  0%,
+  100% {
+    transform: scale(0.25);
+    opacity: 0;
+  }
+  30% {
+    transform: scale(1);
+    opacity: var(--o, 0.6);
+  }
+  60% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
+@keyframes pt-swirl {
+  from {
+    transform: rotate(0deg) scale(0.85);
+  }
+  to {
+    transform: rotate(360deg) scale(1.12);
+  }
+}
+@keyframes pt-speck {
+  0%,
+  100% {
+    transform: scale(0.7);
+    opacity: calc(var(--o, 0.6) * 0.15);
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: var(--o, 0.6);
+  }
 }
 
 /* ============================================================
@@ -1483,8 +1821,8 @@ html[data-perf="1"] .part-fx {
 
 /* ---- free: motes — soft glowing dust rising ---- */
 .pt-p-mote b {
-  width: calc(var(--s) * 3);
-  height: calc(var(--s) * 3);
+  width: calc(var(--s) * 3.4);
+  height: calc(var(--s) * 3.4);
   border-radius: 50%;
   background: radial-gradient(closest-side, color-mix(in srgb, var(--pt-1) 95%, transparent), transparent 72%);
   box-shadow: 0 0 10px color-mix(in srgb, var(--pt-1) 45%, transparent);
@@ -1494,7 +1832,7 @@ html[data-perf="1"] .part-fx {
 /* ---- free: haze — wide slow clouds ---- */
 .pt-p-haze b {
   width: calc(var(--s) * 62);
-  height: calc(var(--s) * 36);
+  height: calc(var(--s) * 40);
   border-radius: 50%;
   background: radial-gradient(closest-side, color-mix(in srgb, var(--pt-2) 62%, transparent), transparent 74%);
   filter: blur(34px);
