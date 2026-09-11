@@ -27,13 +27,18 @@
     { id: "ocean", name: "Ocean", c1: "#4b86e0", c2: "#84adee" },
   ];
 
-  /* shop-unlocked theme packs. econ.js owns the item catalog; theme.js only
-     needs the data for rendering + applying. */
+  /* every theme pack you can actually wear: the free ones plus whatever the
+     Shop has unlocked. econ.js owns the catalogs; theme.js only needs the
+     data for rendering + applying. */
   function extraAccents() {
-    if (!N.econ || !N.econ.THEMES) return [];
-    return N.econ.THEMES.filter(function (t) {
-      return N.econ.isUnlocked("theme", t.id);
-    });
+    if (!N.econ) return [];
+    var free = N.econ.FREE_PACKS || [];
+    var paid = N.econ.THEMES || [];
+    return free.concat(
+      paid.filter(function (t) {
+        return N.econ.isUnlocked("theme", t.id);
+      }),
+    );
   }
 
   /* ---------- theme packs ----------
@@ -66,9 +71,66 @@
     return true;
   }
 
-  function packDom(p) {
+  /* ---------- palette ---------- */
+  function packVars(p) {
+    var colors = p.colors && p.colors.length ? p.colors : [p.c1, p.c2];
+    var tint = p.tint || ["#0e0e12", "#08080b"];
+    var vars = {};
+    for (var i = 0; i < 4; i++) {
+      vars["--pk-" + (i + 1)] = colors[i] || colors[colors.length - 1];
+    }
+    vars["--pk-bg-1"] = tint[0];
+    vars["--pk-bg-2"] = tint[1];
+    return vars;
+  }
+
+  /* ---------- backdrop art ----------
+     Every pack draws the same three layers (pf-a/b/c, styled per pack) plus
+     one host per particle kind. Particles carry their randomness as custom
+     props, so extra.css decides the shape and motion of each kind. */
+  var CUSTOM_ID = "custom";
+
+  /* where a kind's particles start when the pack doesn't say */
+  var KIND_START = {
+    rain: "top",
+    smoke: "bottom",
+  };
+
+  function rnd(a, b) {
+    return a + Math.random() * (b - a);
+  }
+
+  function partHost(part, scale) {
+    var host = document.createElement("span");
+    host.className = "pf-p pf-p-" + part.k;
+    var start = part.sp || KIND_START[part.k] || "spread";
+    var n = Math.max(1, Math.round((part.n || 0) * scale));
+    for (var i = 0; i < n; i++) {
+      var b = document.createElement("b");
+      b.style.left = rnd(-4, 104).toFixed(1) + "%";
+      b.style.top =
+        start === "top"
+          ? rnd(-24, -6).toFixed(1) + "%"
+          : start === "bottom"
+            ? rnd(74, 112).toFixed(1) + "%"
+            : rnd(0, 100).toFixed(1) + "%";
+      b.style.setProperty("--s", rnd(1, 3.2).toFixed(2) + "px");
+      b.style.setProperty("--dx", (Math.random() < 0.5 ? -1 : 1) * rnd(18, 140).toFixed(0) + "px");
+      b.style.setProperty("--o", rnd(0.2, 0.8).toFixed(2));
+      b.style.setProperty("--rot", rnd(-30, 30).toFixed(0) + "deg");
+      b.style.setProperty("--dur", rnd(3, 9).toFixed(2));
+      b.style.setProperty("--delay", rnd(0, 18).toFixed(2));
+      host.appendChild(b);
+    }
+    return host;
+  }
+
+  /* one builder for both the live full-screen layer and the shop/settings
+     previews — same markup, same CSS, so a preview never lies */
+  function packArt(p, cls, opts) {
+    opts = opts || {};
     var el = document.createElement("div");
-    el.className = "pack-fx";
+    el.className = cls;
     el.setAttribute("data-pack", p.id);
     el.setAttribute("aria-hidden", "true");
     ["a", "b", "c"].forEach(function (k) {
@@ -76,21 +138,39 @@
       i.className = "pf-" + k;
       el.appendChild(i);
     });
-    var host = document.createElement("span");
-    host.className = "pf-dots";
-    var rain = p.bg === "rain";
-    var n = p.dots || 0;
-    for (var j = 0; j < n; j++) {
-      var s = document.createElement("b");
-      s.style.left = (Math.random() * 100).toFixed(2) + "%";
-      s.style.top = rain ? "-14%" : (Math.random() * 100).toFixed(2) + "%";
-      s.style.setProperty("--s", (1 + Math.random() * 1.8).toFixed(2) + "px");
-      s.style.animationDelay = (-Math.random() * 14).toFixed(2) + "s";
-      s.style.animationDuration = (2.4 + Math.random() * 5.5).toFixed(2) + "s";
-      host.appendChild(s);
+    var scale = opts.scale || 1;
+    (p.parts || []).forEach(function (part) {
+      el.appendChild(partHost(part, scale));
+    });
+    if (opts.vars) {
+      var vars = packVars(p);
+      for (var k in vars) el.style.setProperty(k, vars[k]);
     }
-    el.appendChild(host);
     return el;
+  }
+
+  function packPreview(p, opts) {
+    return packArt(p, "pack-preview", { vars: true, scale: (opts && opts.scale) || 0.25 });
+  }
+
+  /* a card-sized preview, optionally veiled for a pack that isn't owned yet */
+  function packThumb(p, opts) {
+    var thumb = document.createElement("div");
+    thumb.className = "pack-thumb";
+    thumb.appendChild(packPreview(p));
+    if (opts && opts.lock) {
+      var veil = document.createElement("div");
+      veil.className = "pack-lock";
+      veil.appendChild(N.dom.icon("lock"));
+      thumb.appendChild(veil);
+    }
+    return thumb;
+  }
+
+  /* every pack that exists — free first, then the Shop's */
+  function allPacks() {
+    if (!N.econ) return [];
+    return (N.econ.FREE_PACKS || []).concat(N.econ.THEMES || []);
   }
 
   function killPack() {
@@ -102,7 +182,7 @@
     if (!p || !p.bg || !packAllowed()) return;
     if (packEl && packEl.isConnected && packEl.dataset.pack === p.id) return;
     killPack();
-    packEl = packDom(p);
+    packEl = packArt(p, "pack-fx");
     document.body.appendChild(packEl);
     if (document.hidden) packEl.classList.add("pf-paused");
   }
@@ -116,15 +196,32 @@
       killPack();
       return;
     }
-    var colors = p.colors && p.colors.length ? p.colors : [p.c1, p.c2];
-    for (var i = 0; i < 4; i++) {
-      root.style.setProperty("--pk-" + (i + 1), colors[i] || colors[colors.length - 1]);
-    }
-    var tint = p.tint || ["#0e0e12", "#08080b"];
-    root.style.setProperty("--pk-bg-1", tint[0]);
-    root.style.setProperty("--pk-bg-2", tint[1]);
+    var vars = packVars(p);
+    for (var k in vars) root.style.setProperty(k, vars[k]);
     root.dataset.pack = p.id;
     buildPack(p);
+  }
+
+  /* ---------- custom accent ----------
+     A Shop unlock (econ fx "customaccent"): the accent can be any color, and
+     the second tone is derived from it so gradients keep working. */
+  function lighten(hex, amt) {
+    var m = /^#?([0-9a-f]{6})$/i.exec(String(hex || ""));
+    if (!m) return hex;
+    var v = parseInt(m[1], 16);
+    function mix(c) {
+      return Math.round(c + (255 - c) * amt);
+    }
+    return "#" + ((1 << 24) + (mix((v >> 16) & 255) << 16) + (mix((v >> 8) & 255) << 8) + mix(v & 255)).toString(16).slice(1);
+  }
+
+  function customPair(hex) {
+    var c1 = hex || N.prefs.get("accentColor") || "#6cc7ff";
+    return [c1, lighten(c1, 0.36)];
+  }
+
+  function customOn() {
+    return !!(N.econ && N.econ.isUnlocked("fx", "customaccent"));
   }
 
   /* pause the backdrop while the tab is hidden */
@@ -361,7 +458,11 @@
     var a = ACCENTS.concat(extraAccents()).find(function (x) {
       return x.id === id;
     });
-    if (a && a.c1) {
+    if (id === CUSTOM_ID && customOn()) {
+      var pair = customPair();
+      root.style.setProperty("--ac-1", pair[0]);
+      root.style.setProperty("--ac-2", pair[1]);
+    } else if (a && a.c1) {
       root.style.setProperty("--ac-1", a.c1);
       root.style.setProperty("--ac-2", a.c2 || a.c1);
     } else {
@@ -394,6 +495,18 @@
     ACCENTS: ACCENTS,
     GLOWS: GLOWS,
     extraAccents: extraAccents,
+    /* shop + settings share this so a preview can never drift from the real
+       thing — same builder, same CSS, different container class */
+    packPreview: packPreview,
+    packThumb: packThumb,
+    allPacks: allPacks,
+    packVars: packVars,
+    customOn: customOn,
+    setCustomAccent: function (hex) {
+      N.prefs.set("accentColor", hex);
+      N.prefs.set("accent", CUSTOM_ID);
+      setAccent(CUSTOM_ID);
+    },
     packFor: packFor,
     /* rebuild the backdrop after unrelated prefs (perf, season) change */
     refreshPack: function () {

@@ -181,50 +181,11 @@
   }
 
   /* ---------- theme packs ----------
-     A pack card previews the real thing: the same layer markup the live
-     backdrop uses, scoped to the card and fed the pack's palette inline,
-     so what you see here is what the site looks like once it's applied. */
-  function packVars(t) {
-    var colors = t.colors && t.colors.length ? t.colors : [t.c1, t.c2];
-    var tint = t.tint || ["#121218", "#08080b"];
-    var vars = {};
-    for (var i = 0; i < 4; i++) vars["--pk-" + (i + 1)] = colors[i] || colors[colors.length - 1];
-    vars["--pk-bg-1"] = tint[0];
-    vars["--pk-bg-2"] = tint[1];
-    return vars;
-  }
-
-  function packPreview(t) {
-    var host = d.h("span", { class: "pf-dots" });
-    var rain = t.bg === "rain";
-    var n = Math.min(t.dots || 0, 14);
-    for (var i = 0; i < n; i++) {
-      var s = d.h("b", {
-        style: {
-          left: (Math.random() * 100).toFixed(1) + "%",
-          top: rain ? "-14%" : (Math.random() * 100).toFixed(1) + "%",
-          animationDelay: (-Math.random() * 10).toFixed(2) + "s",
-          animationDuration: (2.6 + Math.random() * 4).toFixed(2) + "s",
-        },
-      });
-      s.style.setProperty("--s", (1 + Math.random() * 1.4).toFixed(2) + "px");
-      host.appendChild(s);
-    }
-
-    var box = d.h("div", { class: "pack-preview", "data-pack": t.id }, [
-      d.h("i", { class: "pf-a" }),
-      d.h("i", { class: "pf-b" }),
-      d.h("i", { class: "pf-c" }),
-      host,
-    ]);
-    var vars = packVars(t);
-    for (var k in vars) box.style.setProperty(k, vars[k]);
-
-    var thumb = d.h("div", { class: "pack-thumb" }, [box]);
-    if (!N.econ.isUnlocked("theme", t.id)) {
-      thumb.appendChild(d.h("div", { class: "pack-lock" }, [d.icon("lock")]));
-    }
-    return thumb;
+     A pack card previews the real thing: theme.js builds the same layer
+     markup the live backdrop uses, scoped to the card and fed the pack's
+     palette inline, so what you see is what the site becomes. */
+  function packThumb(t) {
+    return N.theme.packThumb(t, { lock: !N.econ.isUnlocked("theme", t.id) });
   }
 
   function themeCard(t) {
@@ -260,8 +221,8 @@
       tags.appendChild(d.h("span", { class: "chip" }, x));
     });
 
-    return d.h("article", { class: "shop-card glass" + (owned ? " owned" : "") }, [
-      packPreview(t),
+    return d.h("article", { class: "shop-card pack-card glass" + (owned ? " owned" : "") + (applied ? " playing" : "") }, [
+      packThumb(t),
       d.h("div", { class: "pack-strip" }, (t.colors || [t.c1, t.c2]).map(function (c) {
         return d.h("i", { style: { background: c } });
       })),

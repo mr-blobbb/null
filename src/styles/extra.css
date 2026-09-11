@@ -865,6 +865,7 @@ html[data-perf="1"] .pl-core {
 .pack-preview {
   background: linear-gradient(170deg, var(--pk-bg-1, transparent), var(--pk-bg-2, transparent));
   --pf-fall: 130vh;
+  --pf-rise: 70vh;
   --pf-blur: 70px;
 }
 .pack-fx {
@@ -882,11 +883,16 @@ html[data-perf="1"] .pl-core {
   inset: 0;
   display: block;
 }
-.pf-dots b {
+/* every particle kind shares this base; each kind then shapes + animates
+   its own <b> children from the random props theme.js writes inline */
+.pf-p b {
   position: absolute;
   display: block;
+  opacity: var(--o, 0.6);
   animation-iteration-count: infinite;
   animation-timing-function: linear;
+  animation-duration: calc(var(--dur, 5) * 1s);
+  animation-delay: calc(var(--delay, 0) * -1s);
 }
 html[data-theme="light"] .pack-fx {
   opacity: 0.4;
@@ -946,8 +952,8 @@ html[data-perf="1"] .pack-fx {
   background-image: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.3) 0 1px, transparent 1px 3px);
   opacity: 0.45;
 }
-[data-pack="matrix"] .pf-dots b {
-  top: -14%;
+/* rain — thin streaks of light falling */
+.pf-p-rain b {
   width: calc(var(--s) * 0.9);
   height: calc(var(--s) * 9);
   border-radius: 999px;
@@ -955,6 +961,137 @@ html[data-perf="1"] .pack-fx {
   box-shadow: 0 0 7px color-mix(in srgb, var(--pk-1) 60%, transparent);
   opacity: 0.75;
   animation-name: pk-fall;
+}
+/* star — bright twinkling points */
+.pf-p-star b {
+  width: var(--s);
+  height: var(--s);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 6px color-mix(in srgb, var(--pk-3) 80%, transparent);
+  animation-name: pk-twinkle;
+  animation-timing-function: ease-in-out;
+}
+/* starFar — dimmer stars that slowly slide across, giving the field depth */
+.pf-p-starfar b {
+  width: calc(var(--s) * 0.7);
+  height: calc(var(--s) * 0.7);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--pk-4) 60%, #fff);
+  animation-name: pk-starDrift;
+  animation-duration: calc(var(--dur, 5) * 6s);
+  animation-timing-function: ease-in-out;
+  animation-direction: alternate;
+}
+/* dust — tiny specks floating through the light */
+.pf-p-dust b {
+  width: calc(var(--s) * 0.6);
+  height: calc(var(--s) * 0.6);
+  border-radius: 50%;
+  background: var(--pk-3);
+  filter: blur(0.4px);
+  animation-name: pk-dust;
+  animation-duration: calc(var(--dur, 5) * 8s);
+  animation-direction: alternate;
+  animation-timing-function: ease-in-out;
+}
+/* ribbon — the aurora curtains themselves: tall blurred bands of light */
+.pf-p-ribbon b {
+  width: calc(var(--s) * 6);
+  height: calc(28% + var(--s) * 14);
+  border-radius: 999px;
+  filter: blur(calc(var(--s) * 3));
+  background: linear-gradient(180deg, transparent, var(--pk-1) 32%, var(--pk-3) 70%, transparent);
+  mix-blend-mode: screen;
+  animation-name: pk-ribbon;
+  animation-duration: calc(var(--dur, 5) * 5s);
+  animation-direction: alternate;
+  animation-timing-function: ease-in-out;
+}
+/* smoke — puffs rising, swelling and fading out */
+.pf-p-smoke b {
+  width: calc(var(--s) * 9);
+  height: calc(var(--s) * 9);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--pk-2) 60%, transparent), transparent 72%);
+  filter: blur(calc(var(--s) * 1.6));
+  animation-name: pk-smoke;
+  animation-duration: calc(var(--dur, 5) * 3.4s);
+  animation-timing-function: ease-out;
+}
+/* cloud — wide, slow banks of haze drifting sideways */
+.pf-p-cloud b {
+  width: calc(var(--s) * 46);
+  height: calc(var(--s) * 26);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--pk-3) 45%, transparent), transparent 74%);
+  filter: blur(calc(var(--pf-blur) * 0.8));
+  animation-name: pk-cloud;
+  animation-duration: calc(var(--dur, 5) * 7s);
+  animation-direction: alternate;
+  animation-timing-function: ease-in-out;
+}
+@keyframes pk-starDrift {
+  from {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  to {
+    transform: translate3d(var(--dx, 40px), 0, 0);
+    opacity: 0.25;
+  }
+}
+@keyframes pk-dust {
+  from {
+    transform: translate3d(0, 0, 0) scale(0.8);
+    opacity: 0.1;
+  }
+  to {
+    transform: translate3d(var(--dx, 40px), calc(var(--dx, 40px) * -0.4), 0) scale(1.2);
+    opacity: 0.5;
+  }
+}
+@keyframes pk-ribbon {
+  from {
+    transform: translate3d(0, 0, 0) rotate(var(--rot, 0deg)) scaleY(0.85);
+    opacity: 0.12;
+  }
+  50% {
+    opacity: var(--o, 0.6);
+  }
+  to {
+    transform: translate3d(var(--dx, 40px), -6%, 0) rotate(calc(var(--rot, 0deg) + 8deg)) scaleY(1.15);
+    opacity: 0.2;
+  }
+}
+@keyframes pk-smoke {
+  from {
+    transform: translate3d(0, 0, 0) scale(0.7);
+    opacity: 0;
+  }
+  18% {
+    opacity: var(--o, 0.6);
+  }
+  to {
+    transform: translate3d(var(--dx, 40px), calc(var(--pf-rise, 70vh) * -1), 0) scale(1.7);
+    opacity: 0;
+  }
+}
+@keyframes pk-cloud {
+  from {
+    transform: translate3d(calc(var(--dx, 40px) * -1), 0, 0) scale(1);
+    opacity: 0.12;
+  }
+  50% {
+    opacity: 0.45;
+  }
+  to {
+    transform: translate3d(var(--dx, 40px), -4%, 0) scale(1.15);
+    opacity: 0.18;
+  }
 }
 @keyframes pk-fall {
   to {
@@ -1017,7 +1154,9 @@ html[data-perf="1"] .pack-fx {
   background: radial-gradient(closest-side, var(--pk-3), transparent 72%);
   animation: pk-drift-b 34s ease-in-out infinite alternate;
 }
-[data-pack="aurora"] .pf-dots {
+[data-pack="aurora"] .pf-a::after {
+  content: "";
+  position: absolute;
   inset: -20% -10%;
   border-radius: 50%;
   filter: blur(calc(var(--pf-blur) * 1.15));
@@ -1060,15 +1199,6 @@ html[data-perf="1"] .pack-fx {
 [data-pack="cosmos"] .pf-b {
   background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--pk-3) 42%, transparent), transparent 62%);
   animation: pk-breathe 18s ease-in-out infinite alternate;
-}
-[data-pack="cosmos"] .pf-dots b {
-  width: var(--s);
-  height: var(--s);
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 0 6px color-mix(in srgb, var(--pk-3) 85%, transparent);
-  animation-name: pk-twinkle;
-  animation-timing-function: ease-in-out;
 }
 @keyframes pk-twinkle {
   0%,
@@ -1128,6 +1258,45 @@ html[data-perf="1"] .pack-fx {
   }
 }
 
+/* ---- free packs: same engine, deliberately quieter ---- */
+[data-pack="graphite"] .pf-a {
+  background: linear-gradient(180deg, var(--pk-bg-1), var(--pk-bg-2));
+}
+[data-pack="graphite"] .pf-b {
+  background-image: radial-gradient(120% 92% at 50% 45%, transparent 42%, rgba(0, 0, 0, 0.5) 100%);
+}
+[data-pack="graphite"] .pf-c {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
+  opacity: 0.05;
+}
+[data-pack="dawn"] .pf-a {
+  background:
+    radial-gradient(80% 55% at 50% -8%, color-mix(in srgb, var(--pk-1) 38%, transparent), transparent 66%),
+    radial-gradient(70% 46% at 22% 2%, color-mix(in srgb, var(--pk-2) 24%, transparent), transparent 68%),
+    linear-gradient(180deg, var(--pk-bg-1), var(--pk-bg-2));
+}
+[data-pack="dawn"] .pf-b {
+  background-image: linear-gradient(180deg, color-mix(in srgb, var(--pk-4) 16%, transparent), transparent 62%);
+}
+[data-pack="mist"] .pf-a {
+  background: linear-gradient(180deg, var(--pk-bg-1), var(--pk-bg-2));
+}
+[data-pack="mist"] .pf-b {
+  background: radial-gradient(64% 42% at 30% 72%, color-mix(in srgb, var(--pk-3) 22%, transparent), transparent 72%);
+}
+
+/* ---- pack cards (settings + shop share these) ---- */
+.pack-card.playing {
+  border-color: var(--ac-1);
+}
+.pack-card.locked {
+  opacity: 0.62;
+}
+.pack-foot-note {
+  font-size: 12px;
+  color: var(--text-2);
+}
+
 /* ============================================================
    shop — theme pack cards + settings swatches
    ============================================================ */
@@ -1142,6 +1311,7 @@ html[data-perf="1"] .pack-fx {
   position: absolute;
   inset: 0;
   --pf-fall: 340px;
+  --pf-rise: 200px;
   --pf-blur: 24px;
 }
 .pack-lock {

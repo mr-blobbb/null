@@ -82,6 +82,10 @@
         (size / 1024).toFixed(1) +
         " KB stored locally";
     }
+
+    /* theme packs + the custom picker follow the accent pref */
+    paintPacks();
+    paintCustom();
   }
 
   function paintTabPreview() {
@@ -548,51 +552,139 @@
     }
   }
 
+  /* ---------- custom accent (Shop unlock) ---------- */
+  function paintCustom() {
+    var rowEl = d.qs("#accentCustomRow");
+    var inp = d.qs("#accentCustom");
+    if (!rowEl || !inp) return;
+    var on = !!(N.theme.customOn && N.theme.customOn());
+    rowEl.style.display = on ? "" : "none";
+    if (on) inp.value = N.prefs.get("accentColor") || "#6cc7ff";
+  }
+
+  /* ---------- theme packs ----------
+     Free packs are always available; Shop packs show veiled until bought.
+     Each card previews the real backdrop through theme.js, so the settings
+     page and the shop can never disagree about what a pack looks like. */
+  function applyPack(p) {
+    if (!p) {
+      N.prefs.set("accent", "off");
+      N.theme.setAccent("off");
+    } else {
+      N.theme.setAccent(p.id);
+      N.prefs.set("accent", p.id);
+    }
+    if (N.seasons) N.seasons.refresh();
+    refresh();
+  }
+
+  function packCard(p) {
+    var owned = !!(p.free || N.econ.isUnlocked("theme", p.id));
+    var applied = N.prefs.get("accent") === p.id;
+    var foot = d.h("div", { class: "shop-foot" });
+    if (owned) {
+      foot.appendChild(
+        d.h("span", { class: "chip ok" }, [d.h("span", { class: "dot" }), p.free ? "Free" : "Unlocked"]),
+      );
+      foot.appendChild(
+        d.h(
+          "button",
+          {
+            type: "button",
+            class: "btn " + (applied ? "btn-primary" : "btn-outline") + " btn-sm",
+            onclick: function () {
+              applyPack(applied ? null : p);
+            },
+          },
+          applied ? [d.icon("check"), "Applied"] : [d.icon("pen"), "Apply"],
+        ),
+      );
+    } else {
+      foot.appendChild(d.h("span", { class: "chip price-chip" }, [d.icon("coin"), String(p.price)]));
+      foot.appendChild(d.h("a", { class: "btn btn-outline btn-sm", href: "/shop" }, [d.icon("store"), "Shop"]));
+    }
+
+    return d.h(
+      "article",
+      {
+        class: "shop-card pack-card glass" + (owned ? " owned" : " locked") + (applied ? " playing" : ""),
+      },
+      [
+        N.theme.packThumb(p, { lock: !owned }),
+        d.h(
+          "div",
+          { class: "pack-strip" },
+          (p.colors || [p.c1, p.c2]).map(function (c) {
+            return d.h("i", { style: { background: c } });
+          }),
+        ),
+        d.h("div", { class: "shop-info" }, [
+          d.h("h3", null, p.name),
+          d.h("p", null, p.desc || ""),
+          d.h(
+            "div",
+            { class: "chips-row" },
+            (p.tags || []).map(function (t) {
+              return d.h("span", { class: "chip" }, t);
+            }),
+          ),
+        ]),
+        foot,
+      ],
+    );
+  }
+
+  function paintPacks() {
+    var grid = d.qs("#packGrid");
+    if (!grid || !N.theme.allPacks) return;
+    grid.textContent = "";
+    N.theme.allPacks().forEach(function (p) {
+      grid.appendChild(packCard(p));
+    });
+  }
+
   function init() {
     if (inited) return;
     inited = true;
 
-    /* build accent swatches — base palettes plus any shop-unlocked themes */
+    /* accent swatches — plain single-color accents; full theme packs get
+       their own card below, with previews. */
     var row = d.qs("#accentRow");
     if (row) {
-      var extras = N.theme.extraAccents();
-      function dot(a) {
-        /* a plain accent is one dot; a shop pack shows its whole palette */
-        if (a.colors && a.colors.length > 1) {
-          return d.h(
-            "span",
-            { class: "accent-dots" },
-            a.colors.slice(0, 3).map(function (c) {
-              return d.h("i", { style: { background: c } });
-            }),
-          );
-        }
-        return d.h("span", {
-          class: "accent-dot",
-          style: a.c1
-            ? { background: a.c1 }
-            : { background: document.documentElement.dataset.theme === "light" ? "#1c1d21" : "#e8eaef" },
-        });
-      }
-
-      function swatch(a, fromShop) {
+      function swatch(a) {
         return d.h(
           "button",
-          {
-            type: "button",
-            class: "swatch-btn" + (fromShop ? " shop" : ""),
-            "data-val": a.id,
-            title: a.name + (fromShop ? " \u00b7 theme pack, unlocked in the Shop" : ""),
-          },
-          [dot(a), a.name + (fromShop ? " pack" : "")],
+          { type: "button", class: "swatch-btn", "data-val": a.id, title: a.name },
+          [
+            d.h("span", {
+              class: "accent-dot",
+              style: a.c1
+                ? { background: a.c1 }
+                : { background: document.documentElement.dataset.theme === "light" ? "#1c1d21" : "#e8eaef" },
+            }),
+            a.name,
+          ],
         );
       }
       N.theme.ACCENTS.forEach(function (a) {
-        row.appendChild(swatch(a, false));
+        row.appendChild(swatch(a));
       });
-      extras.forEach(function (a) {
-        row.appendChild(swatch(a, true));
-      });
+      /* the picker is a Shop unlock, so only offer it once it's owned */
+      if (N.theme.customOn && N.theme.customOn()) {
+        row.appendChild(
+          d.h(
+            "button",
+            { type: "button", class: "swatch-btn", "data-val": "custom", title: "Your own color" },
+            [
+              d.h("span", {
+                class: "accent-dot",
+                style: { background: N.prefs.get("accentColor") || "#6cc7ff" },
+              }),
+              "Custom",
+            ],
+          ),
+        );
+      }
     }
     var sel = d.qs("#tabSelect");
     if (sel) {
@@ -609,6 +701,14 @@
     if (gsel) N.dom.upgradeSelect(gsel);
     var stm = d.qs("#smartTabMin");
     if (stm) N.dom.upgradeSelect(stm);
+    var acc = d.qs("#accentCustom");
+    if (acc) {
+      acc.addEventListener("input", function () {
+        N.theme.setCustomAccent(acc.value);
+        if (N.seasons) N.seasons.refresh();
+        refresh();
+      });
+    }
 
     bind();
     bindPanic();

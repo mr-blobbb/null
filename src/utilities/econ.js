@@ -33,7 +33,9 @@
   /* ---------- shop catalog ----------
      Themes are full packs, not single accents: a multi-colour palette, the
      accent pair that drives the UI, and an animated backdrop. theme.js reads
-     `colors` / `bg` / `tint` when applying a pack, extra.css holds the art. */
+     `colors` / `bg` / `tint` / `parts` when applying a pack, extra.css holds
+     the art. `parts` lists the drifting particles: the key is a shape kind,
+     n is how many, sp is where they start (top / bottom / spread). */
   var THEMES = [
     {
       id: "synthwave",
@@ -43,6 +45,7 @@
       c2: "#4fd8ff",
       colors: ["#ff4fa8", "#a45bff", "#4fd8ff", "#ffd166"],
       bg: "horizon",
+      parts: [],
       tint: ["#2a1140", "#07091b"],
       desc: "Neon '86 — perspective grid floor, glowing horizon and a magenta sun.",
       tags: ["Grid floor", "Neon sun", "4 colors"],
@@ -55,7 +58,7 @@
       c2: "#8affb2",
       colors: ["#39ff88", "#0aff9d", "#6fffb0", "#c8ffdd"],
       bg: "rain",
-      dots: 34,
+      parts: [{ k: "rain", n: 34, sp: "top" }],
       tint: ["#04180c", "#02060a"],
       desc: "Phosphor terminal — glyph rain falls behind a faint scanline haze.",
       tags: ["Code rain", "Scanlines", "Terminal"],
@@ -68,6 +71,7 @@
       c2: "#ffe9a8",
       colors: ["#ffd45e", "#f2a93b", "#fff0bf", "#8a6a1f"],
       bg: "rays",
+      parts: [],
       tint: ["#1d1403", "#0a0a0b"],
       desc: "Award-show gold — sweeping light shafts over warm film grain.",
       tags: ["Light shafts", "Film grain", "Warm tint"],
@@ -80,9 +84,10 @@
       c2: "#8f9dff",
       colors: ["#4fe0c8", "#7c8cff", "#b06bff", "#3ba0ff"],
       bg: "aurora",
+      parts: [{ k: "ribbon", n: 10 }, { k: "star", n: 16 }],
       tint: ["#06181e", "#05060f"],
-      desc: "Polar curtains — soft teal and violet blobs drifting past each other.",
-      tags: ["Drifting aurora", "Cool palette", "Calm"],
+      desc: "Polar curtains — shimmering ribbons and glowing stars drift past.",
+      tags: ["Aurora ribbons", "Stars", "Calm"],
     },
     {
       id: "cosmos",
@@ -92,10 +97,10 @@
       c2: "#d18cff",
       colors: ["#8f9dff", "#e06fff", "#5ac8ff", "#ffe6a8"],
       bg: "stars",
-      dots: 70,
+      parts: [{ k: "star", n: 64 }, { k: "starfar", n: 30 }, { k: "dust", n: 10 }],
       tint: ["#0b0a22", "#04040c"],
-      desc: "Deep field — a twinkling starfield wrapped around a slow nebula bloom.",
-      tags: ["Starfield", "Nebula", "70 stars"],
+      desc: "Deep field — a dense twinkling starfield over a slow nebula bloom.",
+      tags: ["Starfield", "Drifting dust", "Nebula"],
     },
     {
       id: "vapor",
@@ -105,9 +110,57 @@
       c2: "#ff9ad5",
       colors: ["#7ef2d0", "#ff9ad5", "#a6b8ff", "#ffe07a"],
       bg: "waves",
+      parts: [{ k: "smoke", n: 14, sp: "bottom" }, { k: "cloud", n: 6 }],
       tint: ["#120f2a", "#07121a"],
-      desc: "Liquid light — pastel gradient bands roll across the background.",
-      tags: ["Wave bands", "Pastel", "Silky"],
+      desc: "Smoke lounge — soft puffs rise and drift through pastel cloud banks.",
+      tags: ["Smoke", "Cloud banks", "Silky"],
+    },
+  ];
+
+  /* Free packs — always available, deliberately quieter than the shop's.
+     They reuse the same backdrop engine with fewer particles. */
+  var FREE_PACKS = [
+    {
+      id: "graphite",
+      name: "Graphite",
+      free: true,
+      price: 0,
+      c1: "#e6e7ea",
+      c2: "#a2a6ae",
+      colors: ["#e6e7ea", "#a2a6ae", "#6e727c", "#3a3c42"],
+      bg: "vignette",
+      parts: [],
+      tint: ["#0d0d10", "#070709"],
+      desc: "NULL's own house look — a quiet vignette and a whisper of grain.",
+      tags: ["Free", "Monochrome", "Subtle"],
+    },
+    {
+      id: "dawn",
+      name: "Dawn",
+      free: true,
+      price: 0,
+      c1: "#ff9d6b",
+      c2: "#ffd0a8",
+      colors: ["#ff9d6b", "#ff8fb0", "#ffd7a8", "#8f6bd6"],
+      bg: "glow",
+      parts: [],
+      tint: ["#1a1020", "#0a0a0f"],
+      desc: "A warm sunrise glow that fades into the page. No motion, no noise.",
+      tags: ["Free", "Sunrise", "Static"],
+    },
+    {
+      id: "mist",
+      name: "Mist",
+      free: true,
+      price: 0,
+      c1: "#9fd8e8",
+      c2: "#c8c2f0",
+      colors: ["#9fd8e8", "#c8c2f0", "#8fb8d8", "#e6f0f5"],
+      bg: "mist",
+      parts: [{ k: "cloud", n: 4 }],
+      tint: ["#101820", "#080b0f"],
+      desc: "Cold morning haze — a few slow clouds, nothing else moving.",
+      tags: ["Free", "Haze", "Slow"],
     },
   ];
   var BOOSTS = [
@@ -115,6 +168,7 @@
   ];
   var FX = [
     { id: "goldconfetti", name: "Golden confetti", price: 30, desc: "Period-end confetti drops in gold instead of grayscale." },
+    { id: "customaccent", name: "Custom accent color", price: 80, desc: "Unlocks a color picker in Settings, so your accent can be any color at all." },
   ];
 
   function boosted() {
@@ -159,8 +213,14 @@
     var u = data.unlocks || {};
     return u[keyFor(type)] || [];
   }
+  function isFreePack(id) {
+    return FREE_PACKS.some(function (p) {
+      return p.id === id;
+    });
+  }
   function isUnlocked(type, id) {
     if (type === "boost") return boosted();
+    if (type === "theme" && isFreePack(id)) return true;
     return ownedList(type).indexOf(id) >= 0;
   }
   function priceFor(type, id) {
@@ -175,7 +235,7 @@
   /* Buy an item. Returns { ok, reason } — no partial state on failure. */
   function buy(type, id) {
     var price = priceFor(type, id);
-    if (!price) return { ok: false, reason: "unknown item" };
+    if (!price) return { ok: false, reason: isFreePack(id) ? "free" : "unknown item" };
     if (isUnlocked(type, id)) return { ok: false, reason: "already owned" };
     if (data.coins < price) return { ok: false, reason: "not enough coins" };
     data.coins -= price;
@@ -202,6 +262,7 @@
   /* dev console / debugging: unlock an item without spending coins, so a
      backdrop can be checked without grinding 20 hours of playtime first. */
   function grant(type, id) {
+    if (type === "theme" && isFreePack(id)) return { ok: true };
     if (type === "boost") {
       data.boostUntil = Date.now() + BOOST_MS;
     } else {
@@ -216,6 +277,7 @@
 
   N.econ = {
     THEMES: THEMES,
+    FREE_PACKS: FREE_PACKS,
     BOOSTS: BOOSTS,
     FX: FX,
     state: function () {

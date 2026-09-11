@@ -81,6 +81,11 @@ function partA() {
   check("dev grant unlocks a pack", N.econ.isUnlocked("theme", "cosmos") === true);
   check("grant does not charge coins", N.econ.state().coins === 0);
 
+  /* free packs ship unlocked, and can't be bought */
+  check("3 free packs exist", N.econ.FREE_PACKS.length === 3);
+  check("free packs start unlocked", ["graphite", "dawn", "mist"].every((id) => N.econ.isUnlocked("theme", id) === true));
+  check("free packs are not purchasable", N.econ.buy("theme", "graphite").reason === "free");
+
   /* Part B — unlocked beta merges into the live library */
   const b = makeDom("<!doctype html><body><p>lib</p>", "http://localhost:5173/shop");
   b.run("src/utilities/store.js");
@@ -158,8 +163,9 @@ async function partC() {
 
   const cards = d.querySelectorAll("#shopBody .shop-card");
   check("3 beta games + 6 theme packs render", cards.length === 9);
-  check("rows rendered for boosts + effects", d.querySelectorAll("#shopBody .shop-row").length === 2);
-  check("locked items show a price chip", d.querySelectorAll("#shopBody .price-chip").length === 11);
+  check("rows rendered for boosts + effects", d.querySelectorAll("#shopBody .shop-row").length === 3);
+  check("locked items show a price chip", d.querySelectorAll("#shopBody .price-chip").length === 12);
+  check("custom accent is a shop unlock", /Custom accent color/.test(d.querySelector("#shopBody").textContent));
   check("beta game names render", /Simon: Deluxe/.test(d.querySelector("#shopBody").textContent));
 
   /* theme packs are real themes: live preview, palette strip, locked veil */
@@ -185,7 +191,7 @@ async function partC() {
   check("coins spent (120 → 60)", st.coins === 60);
   check("beta unlocked in storage", w.N.econ.isUnlocked("game", "beta-simon") === true);
   check("card re-rendered as owned", d.querySelectorAll("#shopBody .shop-card.owned").length === 1);
-  check("price chips drop to 10", d.querySelectorAll("#shopBody .price-chip").length === 10);
+  check("price chips drop to 11", d.querySelectorAll("#shopBody .price-chip").length === 11);
   const owned = d.querySelector("#shopBody .shop-card.owned");
   check("owned card offers Play", !!owned && /Play/.test(owned.textContent));
   check("no window errors after buying", errs.length === 0);
@@ -200,7 +206,38 @@ async function partC() {
   check("pack writes its tint vars", !!root.style.getPropertyValue("--pk-bg-1"));
   const fx = d.querySelector("body > .pack-fx");
   check("pack renders the backdrop layer", !!fx && fx.dataset.pack === "synthwave");
-  check("backdrop has three art layers + particle host", !!fx && fx.querySelectorAll("i").length === 3 && !!fx.querySelector(".pf-dots"));
+  check("backdrop has three art layers", !!fx && fx.querySelectorAll("i.pf-a, i.pf-b, i.pf-c").length === 3);
+
+  /* particle kinds — each pack's backdrop is built from its own parts list */
+  const kindsFor = (id) => {
+    w.N.econ.grant("theme", id);
+    w.N.theme.setAccent(id);
+    const el = d.querySelector("body > .pack-fx");
+    return el ? Array.from(el.querySelectorAll(".pf-p")).map((h) => h.className.replace(/.*pf-p-/, "")) : [];
+  };
+  const aurora = kindsFor("aurora");
+  check("aurora drifts ribbons + stars", aurora.indexOf("ribbon") >= 0 && aurora.indexOf("star") >= 0);
+  const cosmos = kindsFor("cosmos");
+  check("cosmos has a deep starfield", cosmos.indexOf("star") >= 0 && cosmos.indexOf("starfar") >= 0 && cosmos.indexOf("dust") >= 0);
+  const vapor = kindsFor("vapor");
+  check("vapor has smoke + clouds", vapor.indexOf("smoke") >= 0 && vapor.indexOf("cloud") >= 0);
+  check("particles carry their randomness", !!d.querySelector('body > .pack-fx[data-pack="vapor"] .pf-p-smoke b'));
+  const matrix = kindsFor("matrix");
+  check("matrix still rains", matrix.indexOf("rain") >= 0);
+
+  /* free packs work the same as bought ones */
+  w.N.theme.setAccent("mist");
+  const mist = d.querySelector('body > .pack-fx[data-pack="mist"]');
+  check("free pack applies without buying", !!mist && root.dataset.pack === "mist");
+
+  /* custom accent (Shop fx unlock) — any color, second tone derived */
+  w.N.econ.grant("fx", "customaccent");
+  check("custom accent reports unlocked", w.N.theme.customOn() === true);
+  w.N.theme.setCustomAccent("#ff8800");
+  check("custom accent drives --ac-1", root.style.getPropertyValue("--ac-1") === "#ff8800");
+  check("custom accent derives a second tone", /^#[0-9a-f]{6}$/i.test(root.style.getPropertyValue("--ac-2")) && root.style.getPropertyValue("--ac-2") !== "#ff8800");
+  check("custom accent clears any pack", !root.dataset.pack && !d.querySelector("body > .pack-fx"));
+
   w.N.theme.setAccent("ice");
   check("plain accent clears the pack", !root.dataset.pack && !d.querySelector("body > .pack-fx"));
   check("plain accent leaves no pack vars", root.style.getPropertyValue("--pk-1") === "");
@@ -329,6 +366,24 @@ async function partG() {
   const hint = d.querySelector("#installHint");
   check("install row explains the browser hasn't offered it yet", hint && /Not offered/.test(hint.textContent));
   check("install button stays hidden without the prompt event", d.querySelector("#installBtn").hidden === true);
+
+  /* settings now owns a Theme packs card, separate from plain accents */
+  const packGrid = d.querySelector("#packGrid");
+  check("settings has a Theme packs card", !!packGrid && /Theme packs/.test(d.querySelector("#packSection").textContent));
+  check("every pack is listed (free + shop)", d.querySelectorAll("#packGrid .pack-card").length === 9);
+  check("free packs usable, shop packs veiled", d.querySelectorAll("#packGrid .pack-card.owned").length === 3 && d.querySelectorAll("#packGrid .pack-lock").length === 6);
+  check("settings previews real backdrops", d.querySelectorAll("#packGrid .pack-preview").length === 9);
+  check("accent row keeps only plain accents", d.querySelectorAll("#accentRow .swatch-btn").length === w.N.theme.ACCENTS.length);
+  check("custom accent row waits for the unlock", d.querySelector("#accentCustomRow").style.display === "none");
+
+  const applyBtn = d.querySelector("#packGrid .pack-card.owned .shop-foot .btn");
+  check("free pack card offers Apply", applyBtn && /Apply/.test(applyBtn.textContent));
+  applyBtn.click();
+  check("applying from settings sets the pack", d.documentElement.dataset.pack === "graphite");
+  check("applied card flips to Applied", /Applied/.test(d.querySelector("#packGrid .pack-card.playing").textContent));
+  d.querySelector("#packGrid .pack-card.playing .shop-foot .btn").click();
+  check("clicking Applied clears the pack", !d.documentElement.dataset.pack);
+  check("no window errors after pack switches", errs.length === 0);
   d.querySelector("#installHelp").click();
   await wait(400);
   const modal = d.querySelector(".modal-ov.open");
@@ -352,9 +407,13 @@ function partF() {
   check("nav dot styles exist", /\.nav-dot \{/.test(extra) && /@keyframes dotPulse/.test(extra));
   check("tip + strip styles exist", /\.tip-card \{/.test(extra) && /@keyframes nsScroll/.test(extra));
   /* every pack id must have backdrop art, or the layer renders empty */
-  ["synthwave", "matrix", "gold", "aurora", "cosmos", "vapor"].forEach((id) => {
+  ["synthwave", "matrix", "gold", "aurora", "cosmos", "vapor", "graphite", "dawn", "mist"].forEach((id) => {
     check("pack art exists: " + id, extra.indexOf('[data-pack="' + id + '"]') >= 0);
   });
+  ["rain", "star", "starfar", "dust", "ribbon", "smoke", "cloud"].forEach((k) => {
+    check("particle kind styled: " + k, extra.indexOf(".pf-p-" + k + " b") >= 0);
+  });
+  check("particle keyframes exist", /@keyframes pk-smoke/.test(extra) && /@keyframes pk-ribbon/.test(extra) && /@keyframes pk-starDrift/.test(extra));
   check("pack layer base styles exist", /\.pack-fx \{/.test(extra) && /\.pack-fx\.pf-paused/.test(extra));
   check("pack preview + swatch styles exist", /\.pack-thumb \{/.test(extra) && /\.accent-dots i \{/.test(extra));
   files.forEach(() => {});

@@ -60,6 +60,14 @@
           <div id="accentRow" class="accent-row"></div>
         </div>
 
+        <div class="set-row" id="accentCustomRow" style="display:none">
+          <div class="lbl-txt">
+            <b>Custom color</b>
+            <span>Unlocked in the Shop — make the accent any color you like.</span>
+          </div>
+          <input type="color" id="accentCustom" aria-label="Custom accent color" style="width:54px;height:38px;padding:3px;border:1px solid var(--line-2);border-radius:10px;background:var(--glass-bg);cursor:pointer">
+        </div>
+
         <div class="set-row">
           <div class="lbl-txt">
             <b>Performance mode</b>
@@ -70,6 +78,16 @@
             <span class="track"></span>
           </label>
         </div>
+      </section>
+
+      <!-- theme packs -->
+      <section class="set-card glass" aria-label="Theme packs" id="packSection">
+        <h2 class="set-title"><span data-icon="pen"></span>Theme packs</h2>
+        <p class="set-sub">
+          Full themes: a whole palette plus a drifting backdrop behind everything.
+          Free packs are always available — the louder ones unlock in the Shop.
+        </p>
+        <div id="packGrid" class="shop-grid"></div>
       </section>
 
       <!-- glow border -->

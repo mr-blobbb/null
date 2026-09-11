@@ -106,12 +106,20 @@
   }
 
   /* theme packs are shop items; the console grants them so a backdrop can be
-     previewed without buying it first */
+     previewed without buying it first. Free packs don't need the grant. */
   function setPack(id) {
     if (!N.theme) return err("theme module missing");
     if (N.econ) N.econ.grant("theme", id);
     N.theme.setAccent(id);
     N.prefs.set("accent", id);
+    if (N.seasons) N.seasons.refresh();
+  }
+
+  /* the custom accent picker is also a shop item */
+  function setCustom(hex) {
+    if (!N.theme) return err("theme module missing");
+    if (N.econ) N.econ.grant("fx", "customaccent");
+    N.theme.setCustomAccent(hex || "#6cc7ff");
     if (N.seasons) N.seasons.refresh();
   }
 
@@ -165,6 +173,13 @@
         [
           { label: "Pack: Cosmos", icon: "pen", run: function () { setPack("cosmos"); ok("theme \u2192 Cosmos"); } },
           { label: "Pack: Vapor", icon: "pen", run: function () { setPack("vapor"); ok("theme \u2192 Vapor"); } },
+          { label: "Pack: Graphite", icon: "pen", run: function () { setPack("graphite"); ok("theme \u2192 Graphite (free)"); } },
+          { label: "Pack: Dawn", icon: "pen", run: function () { setPack("dawn"); ok("theme \u2192 Dawn (free)"); } },
+        ],
+        [
+          { label: "Pack: Mist", icon: "pen", run: function () { setPack("mist"); ok("theme \u2192 Mist (free)"); } },
+          { label: "Accent: Custom", icon: "pen", run: function () { setCustom(); ok("accent \u2192 custom #6cc7ff"); } },
+          { label: "Accent: Custom amber", icon: "pen", run: function () { setCustom("#ffb347"); ok("accent \u2192 custom amber"); } },
           { label: "Pack: Clear", icon: "ban", run: function () { setAccent("off"); ok("theme pack cleared"); } },
         ],
       ],
