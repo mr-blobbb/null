@@ -79,7 +79,9 @@ setTimeout(() => {
     const gone = !wA.document.querySelector(".ann-dot");
     const seen = wA.localStorage.getItem("null:annSeen");
     check("dot removed after being seen", gone);
-    check("annSeen recorded (latest announcement date)", seen === JSON.stringify("2026-09-01"));
+    /* the newest announcement in the content file, not a hard-coded date */
+    const latest = (wA.NULL_CONTENT.announcements || []).reduce((m, a) => (a.date > m ? a.date : m), "");
+    check("annSeen recorded (latest announcement date)", !!latest && seen === JSON.stringify(latest));
     check("no window errors on announcements page", errsA.length === 0);
 
     /* returning user — dot must NOT appear */

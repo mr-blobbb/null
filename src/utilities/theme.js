@@ -505,8 +505,9 @@
     var n = layerEl(kind);
     n.style.background = bg;
     n.classList.add("ng-in");
-    var host = kind === "flareBand" ? st.flare : old.parentNode;
-    host.insertBefore(n, old);
+    /* the old layer's parent is always the right host (flareBand lives
+       inside the flare element, everything else directly inside el) */
+    old.parentNode.insertBefore(n, old);
     old.classList.add("ng-xf");
     void n.offsetWidth;
     n.classList.remove("ng-in");

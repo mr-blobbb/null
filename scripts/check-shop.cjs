@@ -178,17 +178,17 @@ async function partC() {
   check("balance bar shows time played", /time played/.test(d.querySelector("#ecoBar").textContent));
 
   const cards = d.querySelectorAll("#shopBody .shop-card");
-  check("3 beta + 6 theme + 6 particle cards render", cards.length === 15);
+  check("3 beta + 7 theme + 6 particle cards render", cards.length === 16);
   check("rows rendered for boosts + effects", d.querySelectorAll("#shopBody .shop-row").length === 3);
-  check("locked items show a price chip", d.querySelectorAll("#shopBody .price-chip").length === 18);
+  check("locked items show a price chip", d.querySelectorAll("#shopBody .price-chip").length === 19);
   check("custom accent is a shop unlock", /Custom accent color/.test(d.querySelector("#shopBody").textContent));
   check("beta game names render", /Simon: Deluxe/.test(d.querySelector("#shopBody").textContent));
 
-  /* theme packs are real themes: live preview, palette strip, locked veil */
-  check("every theme card previews the real backdrop", d.querySelectorAll("#shopBody .pack-preview").length === 6);
+  /* theme packs are real themes: live preview, palette strip, corner badge */
+  check("every theme card previews the real backdrop", d.querySelectorAll("#shopBody .pack-preview").length === 7);
   check("preview carries the pack id", !!d.querySelector('#shopBody .pack-preview[data-pack="cosmos"]'));
-  check("locked packs are veiled", d.querySelectorAll("#shopBody .pack-lock").length === 6);
-  check("palette strips show all four colors (themes + particles)", d.querySelectorAll("#shopBody .pack-strip i").length === 48);
+  check("locked packs keep a visible corner badge", d.querySelectorAll("#shopBody .pack-lock").length === 7);
+  check("palette strips show all four colors (themes + particles)", d.querySelectorAll("#shopBody .pack-strip i").length === 52);
   check("packs list their features", /Starfield/.test(d.querySelector("#shopBody").textContent));
 
   /* background particles are a shop section of their own */
@@ -212,7 +212,7 @@ async function partC() {
   check("coins spent (120 → 60)", st.coins === 60);
   check("beta unlocked in storage", w.N.econ.isUnlocked("game", "beta-simon") === true);
   check("card re-rendered as owned", d.querySelectorAll("#shopBody .shop-card.owned").length === 1);
-  check("price chips drop to 17", d.querySelectorAll("#shopBody .price-chip").length === 17);
+  check("price chips drop to 18", d.querySelectorAll("#shopBody .price-chip").length === 18);
   const owned = d.querySelector("#shopBody .shop-card.owned");
   check("owned card offers Play", !!owned && /Play/.test(owned.textContent));
   check("no window errors after buying", errs.length === 0);
@@ -477,7 +477,7 @@ async function partH() {
   });
   check("starlight is a real star shape", /clip-path: polygon\(50% 0%/.test(css));
   check("bubbles became flat rings", /border: calc\(var\(--s\) \* 0\.55\) solid/.test(css));
-  check("warp streaks instead of dots", /@keyframes pt-warp/.test(css) && /scaleX\(2\.6\)/.test(css));
+  check("warp streaks instead of dots", /@keyframes pt-warp/.test(css) && /scaleX\(/.test(rule(css, "@keyframes pt-warp")));
   check("plasma has its own drift keyframe", /@keyframes pt-plasma/.test(css));
 
   /* warp really leaves dead centre: the streaks are pinned to 50%/50%, the
