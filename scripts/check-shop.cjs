@@ -1,6 +1,6 @@
 /* Verify the shop + local economy, the unread nav dot on library pages, the
-   home tip card / "new since your last visit" strip, and the player's branded
-   boot spinner — all against the real source files, in jsdom. */
+   home tip card / daily crate strip, and the player's branded boot spinner —
+   all against the real source files, in jsdom. */
 const fs = require("fs");
 const vm = require("vm");
 const { JSDOM } = require("jsdom");
@@ -19,6 +19,12 @@ function rule(css, sel) {
   const open = css.indexOf("{", i);
   const close = css.indexOf("}", open);
   return open < 0 || close < 0 ? "" : css.slice(open, close);
+}
+
+/* price chips that belong to shop items. Quests and achievements show their
+   coin rewards in the same chip style, so they have to be excluded. */
+function shopPrices(d) {
+  return d.querySelectorAll("#shopBody .shop-card .price-chip, #shopBody .shop-row .price-chip").length;
 }
 
 function makeDom(html, url, seed) {
@@ -179,8 +185,8 @@ async function partC() {
 
   const cards = d.querySelectorAll("#shopBody .shop-card");
   check("3 beta + 7 theme + 6 particle cards render", cards.length === 16);
-  check("rows rendered for boosts + effects", d.querySelectorAll("#shopBody .shop-row").length === 3);
-  check("locked items show a price chip", d.querySelectorAll("#shopBody .price-chip").length === 19);
+  check("rows rendered for the crate, boosts + effects", d.querySelectorAll("#shopBody .shop-row").length === 4);
+  check("locked items show a price chip", shopPrices(d) === 19);
   check("custom accent is a shop unlock", /Custom accent color/.test(d.querySelector("#shopBody").textContent));
   check("beta game names render", /Simon: Deluxe/.test(d.querySelector("#shopBody").textContent));
 
@@ -212,7 +218,7 @@ async function partC() {
   check("coins spent (120 → 60)", st.coins === 60);
   check("beta unlocked in storage", w.N.econ.isUnlocked("game", "beta-simon") === true);
   check("card re-rendered as owned", d.querySelectorAll("#shopBody .shop-card.owned").length === 1);
-  check("price chips drop to 18", d.querySelectorAll("#shopBody .price-chip").length === 18);
+  check("price chips drop to 18", shopPrices(d) === 18);
   const owned = d.querySelector("#shopBody .shop-card.owned");
   check("owned card offers Play", !!owned && /Play/.test(owned.textContent));
   check("no window errors after buying", errs.length === 0);
@@ -291,17 +297,26 @@ async function partD() {
   check("unread dot painted on the nav icon", !!(link && link.querySelector(".nav-dot")));
   a.window.N.ann.markSeen();
   await wait(80);
-  check("dot removed once announcements are seen", !a.window.document.querySelector(".nav-dot"));
+  check("dot removed once announcements are seen", !link.querySelector(".nav-dot"));
+
+  /* the shop icon advertises an unopened crate / unclaimed reward */
+  const shopLink = a.window.document.querySelector('a[href="/shop"]');
+  check("nav has the shop link", !!shopLink);
+  check("shop icon shows a claim dot", !!(shopLink && shopLink.querySelector(".nav-dot")));
+  a.window.N.econ.spin();
+  await wait(80);
+  check("shop dot clears once nothing is waiting", !shopLink.querySelector(".nav-dot"));
   a.window.close();
 
   const b = mk({ "null:annSeen": JSON.stringify("2026-09-01") });
   await wait(350);
-  check("no dot for a returning (caught-up) user", !b.window.document.querySelector(".nav-dot"));
+  const bLink = b.window.document.querySelector('a[href="/announcements"]');
+  check("no dot for a returning (caught-up) user", !bLink.querySelector(".nav-dot"));
   b.window.close();
 }
 
 /* ---------------------------------------------------------------- *
- * Part E — home tip card + new-since-last-visit strip               *
+ * Part E — home: tip card, daily strip, games-only recents/random   *
  * ---------------------------------------------------------------- */
 async function partE() {
   const dom = new JSDOM(injectPage("index.html"), {
@@ -315,7 +330,14 @@ async function partE() {
       window.requestAnimationFrame = (fn) => setTimeout(fn, 0);
       window.cancelAnimationFrame = (id) => clearTimeout(id);
       window.HTMLElement.prototype.scrollIntoView = () => {};
-      window.localStorage.setItem("null:lastVisit", JSON.stringify(Date.parse("2026-09-01")));
+      /* history with one game and one app in it */
+      window.localStorage.setItem(
+        "null:recent",
+        JSON.stringify([
+          { k: "game", id: "snake", at: Date.now() },
+          { k: "app", id: "calc", at: Date.now() - 1000 },
+        ]),
+      );
     },
   });
   const w = dom.window;
@@ -330,36 +352,37 @@ async function partE() {
   check("tip card has the kicker", kicker && kicker.textContent === "Tip of the day");
   check("tip card has text", (d.querySelector("#tipCard .tip-body p") || {}).textContent.length > 20);
 
-  const sec = d.querySelector("#newSec");
-  check("new-since strip is shown", sec && sec.hidden === false);
-  const items = d.querySelectorAll("#newTrack .ns-item");
-  const copies = parseInt(d.querySelector("#newTrack").style.getPropertyValue("--ns-copies"), 10) || 2;
-  check("strip repeats the list enough to fill the screen", copies >= 2 && items.length === 5 * copies);
-  check("strip repeats whole copies (seamless loop)", items.length % 5 === 0);
-  check("strip names the new games", /Snake/.test(d.querySelector("#newTrack").textContent));
-  check("strip has dot separators", d.querySelectorAll("#newTrack .ns-dot").length === items.length);
-  check("strip duration + copy-count variables set", /--ns-dur/.test(d.querySelector("#newTrack").style.cssText || "") && /--ns-copies/.test(d.querySelector("#newTrack").style.cssText || ""));
+  /* the daily crate / quest strip replaces the old marquee */
+  const strip = d.querySelector("#dailyStrip");
+  check("daily strip renders on home", !!strip && /Daily crate/.test(strip.textContent));
+  check("daily strip offers the crate when it is unopened", !!strip.querySelector(".btn-primary"));
+  check("daily strip links into the shop", !!strip.querySelector('a[href="/shop"]'));
+  check("daily strip shows quest progress", /Quests \d\/3/.test(strip.textContent));
+  check("the old new-since marquee is gone", !d.querySelector("#newSec") && !d.querySelector(".new-track"));
+
+  /* recently played is games only */
+  const recText = d.querySelector("#recList").textContent;
+  check("recently played lists the game you opened", /Snake/.test(recText));
+  check("recently played hides apps", !/Calculator/.test(recText));
+
+  /* play random only ever lands on a game */
+  const gameIds = w.N.catalog.games().map((g) => g.id);
+  const picked = [];
+  const realAdd = w.N.recent.add;
+  w.N.recent.add = (kind, id) => picked.push({ kind, id });
+  for (let i = 0; i < 25; i++) {
+    try {
+      w.N.launch.randomGame();
+    } catch (err) {}
+  }
+  w.N.recent.add = realAdd;
+  check(
+    "play random always picks a game",
+    picked.length === 25 && picked.every((p) => p.kind === "game" && gameIds.indexOf(p.id) >= 0),
+  );
+
   check("no window errors on home", errs.length === 0);
   w.close();
-
-  /* brand-new visitor: no baseline yet → the last week of additions shows */
-  const fresh = new JSDOM(injectPage("index.html"), {
-    url: "http://localhost:5173/",
-    runScripts: "dangerously",
-    pretendToBeVisual: true,
-    beforeParse(window) {
-      window.fetch = () => Promise.reject(new Error("no fetch"));
-      window.scrollTo = () => {};
-      window.matchMedia = () => ({ matches: false });
-      window.requestAnimationFrame = (fn) => setTimeout(fn, 0);
-      window.cancelAnimationFrame = (id) => clearTimeout(id);
-      window.HTMLElement.prototype.scrollIntoView = () => {};
-    },
-  });
-  await wait(600);
-  check("first-time visitor still sees the new strip", fresh.window.document.querySelector("#newSec").hidden === false);
-  check("first visit records a last-visit timestamp", !!fresh.window.localStorage.getItem("null:lastVisit"));
-  fresh.window.close();
 }
 
 /* ---------------------------------------------------------------- *
@@ -577,6 +600,106 @@ async function partH() {
 }
 
 /* ---------------------------------------------------------------- *
+ * Part J — daily crate, quests and achievements                     *
+ * ---------------------------------------------------------------- */
+async function partJ() {
+  const dom = new JSDOM(injectPage("shop.html"), {
+    url: "http://localhost:5173/shop",
+    runScripts: "dangerously",
+    pretendToBeVisual: true,
+    beforeParse(window) {
+      window.fetch = () => Promise.reject(new Error("no fetch"));
+      window.scrollTo = () => {};
+      window.matchMedia = () => ({ matches: false });
+      window.requestAnimationFrame = (fn) => setTimeout(fn, 0);
+      window.cancelAnimationFrame = (id) => clearTimeout(id);
+      window.HTMLElement.prototype.scrollIntoView = () => {};
+      window.URL.createObjectURL = () => "blob:null-backup";
+      window.URL.revokeObjectURL = () => {};
+      /* a brand-new player: no playtime, no coins, nothing claimed */
+      window.localStorage.setItem(
+        "null:eco",
+        JSON.stringify({
+          time: 0,
+          xp: 0,
+          coins: 0,
+          next: 100,
+          pend: 0,
+          boostUntil: 0,
+          unlocks: { games: [], themes: [], particles: [], fx: [] },
+        }),
+      );
+    },
+  });
+  const w = dom.window;
+  const errs = [];
+  w.addEventListener("error", (e) => errs.push(String(e.message || e.error)));
+  await wait(350);
+  const d = w.document;
+
+  check("shop loads with the daily loop", errs.length === 0);
+  const body = d.querySelector("#shopBody").textContent;
+  check("shop renders the daily crate section", /Daily crate/.test(body));
+  check("shop renders daily quests", /Daily quests/.test(body));
+  check("shop renders achievements", /Achievements/.test(body));
+
+  const ach = w.N.econ.achievements();
+  check("achievements are a real list to chase", ach.length >= 12);
+  check(
+    "quests + achievements each draw a progress row",
+    d.querySelectorAll("#shopBody .pg-row").length === 3 + ach.length,
+  );
+
+  /* the crate: open it through the real modal */
+  const crateBtn = d.querySelector("#shopBody .shop-row .btn-primary");
+  check("crate row offers an open button", !!crateBtn);
+  crateBtn.click();
+  await wait(60);
+  const modal = d.querySelector(".modal-ov");
+  check("crate modal opens", !!modal && /Daily crate/.test(modal.textContent));
+  check("crate lists what is inside", modal.querySelectorAll(".crate-tiers .chip").length === w.N.econ.spinPool.length);
+  const open = modal.querySelector(".crate-btn");
+  check("crate can be opened once a day", open && !open.disabled);
+  open.click();
+  await wait(1700);
+  const afterSpin = w.N.econ.state();
+  check("crate pays coins", afterSpin.coins > 0);
+  check("crate locks until tomorrow", afterSpin.canSpin === false);
+  check("crate reveals the prize it paid", /coins|XP/.test(modal.querySelector(".crate-num").textContent));
+  check("crate starts a spin streak", afterSpin.spinStreak === 1);
+
+  /* quests */
+  check("three quests rotate in", w.N.econ.quests().length === 3);
+  ["snake", "simon", "pulse", "void", "trace"].forEach((id) => w.N.econ.trackPlay("game", id));
+  w.N.econ.bank(1800);
+  const q = w.N.econ.quests().find((x) => x.done && !x.claimed);
+  check("playing completes a daily quest", !!q);
+  const before = w.N.econ.state().coins;
+  const claimed = w.N.econ.claimQuest(q.id);
+  check("claiming a quest pays its reward", claimed.ok && w.N.econ.state().coins === before + claimed.reward);
+  check("a quest cannot be claimed twice", w.N.econ.claimQuest(q.id).ok === false);
+
+  /* achievements */
+  const first = w.N.econ.achievements().find((a) => a.id === "first");
+  check("playing unlocks First steps", first && first.done && !first.claimed);
+  const got = w.N.econ.claimAch("first");
+  check("claiming an achievement pays coins", got.ok && got.reward === 10);
+  check("an achievement cannot be claimed twice", w.N.econ.claimAch("first").ok === false);
+  check("the claim repaints the shop", /Claimed/.test(d.querySelector("#shopBody").textContent));
+
+  /* the glow border rule that inks the cards */
+  const extraCss = fs.readFileSync("src/styles/extra.css", "utf8");
+  const glow = rule(extraCss, "html[data-glow] :is(.glass");
+  check("glow border inks every card surface", /box-shadow/.test(glow) && /--glow-1/.test(glow));
+  const glowHover = rule(extraCss, "html[data-glow] :is(.glass, .panel, .tcard, .rec-row, .ann-card, .set-card, .shop-row):hover");
+  check("glow cards brighten on hover", /box-shadow/.test(glowHover) && /--glow-1/.test(glowHover));
+  check("the dialog glows hardest", /--glow-1/.test(rule(extraCss, "html[data-glow] .modal")));
+
+  check("no window errors across the daily loop", errs.length === 0);
+  w.close();
+}
+
+/* ---------------------------------------------------------------- *
  * Part F — player boot spinner + coin readout markup                *
  * ---------------------------------------------------------------- */
 function partF() {
@@ -590,8 +713,9 @@ function partF() {
   check("spinner styles exist", /\.pl-ring \{/.test(extra) && /@keyframes plSpin/.test(extra));
   check("shop styles exist", /\.shop-grid \{/.test(extra) && /\.eco-track i \{/.test(extra));
   check("nav dot styles exist", /\.nav-dot \{/.test(extra) && /@keyframes dotPulse/.test(extra));
-  check("tip + strip styles exist", /\.tip-card \{/.test(extra) && /@keyframes nsScroll/.test(extra));
-  check("strip loop divides by the copy count", /100% \/ var\(--ns-copies/.test(extra));
+  check("tip + daily card styles exist", /\.tip-card \{/.test(extra) && /\.crate-box \{/.test(extra));
+  check("quest + achievement styles exist", /\.daily-strip \{/.test(extra) && /\.pg-bar i \{/.test(extra));
+  check("the old marquee is fully removed", extra.indexOf("nsScroll") < 0 && extra.indexOf(".ns-item") < 0);
   /* every pack id must have backdrop art, or the layer renders empty */
   ["synthwave", "matrix", "gold", "aurora", "cosmos", "vapor", "neon", "dawn", "mist"].forEach((id) => {
     check("pack art exists: " + id, extra.indexOf('[data-pack="' + id + '"]') >= 0);
@@ -684,6 +808,7 @@ async function partI() {
   await partG();
   await partH();
   await partI();
+  await partJ();
   partF();
   console.log(failures ? "FAILURES: " + failures : "ALL SHOP CHECKS PASS");
   process.exit(failures ? 1 : 0);

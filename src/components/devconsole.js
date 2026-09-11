@@ -442,6 +442,30 @@
               ok("banked 5h \u2192 +" + got.xp + " xp, +" + got.coins + " coins (now " + s.coins + " coins)");
               refreshStats();
             } },
+          { label: "Give 200 coins", icon: "coin", run: function () {
+              if (!N.econ) return err("econ module missing");
+              N.econ.addCoins(200);
+              ok("200 coins added (now " + N.econ.state().coins + ")");
+              refreshStats();
+            } },
+          { label: "Finish today's quests", icon: "check", run: function () {
+              if (!N.econ) return err("econ module missing");
+              ["snake", "simon", "pulse", "void", "trace"].forEach(function (id) { N.econ.trackPlay("game", id); });
+              N.econ.bank(2400);
+              ok("today's quests should all be ready to claim in the Shop");
+              refreshStats();
+            } },
+          { label: "Reset daily progress", icon: "refresh", run: function () {
+              if (!N.econ) return err("econ module missing");
+              N.econ.newDay();
+              ok("day rolled over \u2014 quests and the crate are fresh");
+              refreshStats();
+            } },
+          { label: "Open the daily crate", icon: "gift", run: function () {
+              if (!N.daily) return err("the daily crate lives on Home and Shop");
+              N.daily.openCrate(function () { refreshStats(); });
+              ok("crate modal opened");
+            } },
           { label: "Reset economy", icon: "trash", run: function () {
               N.store.del("null:eco");
               ok("economy wiped \u2014 reload to reset balances");
@@ -477,7 +501,7 @@
                 okLabel: "Wipe everything",
                 okVariant: "danger",
                 onOk: function () {
-                  ["null:prefs", "null:flags", "null:recent", "null:favs", "null:plays", "null:searches", "null:sched", "null:lunch", "null:week", "null:eco", "null:annSeen", "null:lastVisit"].forEach(N.store.del);
+                  ["null:prefs", "null:flags", "null:recent", "null:favs", "null:plays", "null:searches", "null:sched", "null:lunch", "null:week", "null:eco", "null:annSeen"].forEach(N.store.del);
                   ok("factory reset done \u2014 reloading");
                   setTimeout(function () { location.reload(); }, 600);
                 },

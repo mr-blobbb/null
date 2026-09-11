@@ -5,7 +5,12 @@
    the XP boost and effects. Nothing ever leaves the browser.
 
    Unlock state lives in null:eco:
-     { time, xp, coins, next, pend, boostUntil, unlocks: { games, themes, fx } } */
+     { time, xp, coins, next, pend, boostUntil, unlocks: { games, themes, particles, fx },
+       earned, buys, plays, seen, day, dgames, dsecs, dplays, qclaim, ach, qtotal,
+       spins, spinDay, spinStreak, spinStreakDay, streak, lastPlayDay }
+
+   Also owns progress: daily quests, permanent achievements and the once-a-day
+   crate, all fed by trackPlay() / bank() and all paid out in coins. */
 (function () {
   var N = (window.N = window.N || {});
 
@@ -15,6 +20,14 @@
   var COIN_EVERY = 100; // XP per coin milestone
   var COIN_AMOUNT = 30; // coins per milestone
   var BOOST_MS = 24 * 3600000; // XP boost lasts 24h
+  var DAY = 86400000;
+
+  function dayKey(t) {
+    var n = new Date(t == null ? Date.now() : t);
+    var m = n.getMonth() + 1;
+    var d = n.getDate();
+    return n.getFullYear() + "-" + (m < 10 ? "0" : "") + m + "-" + (d < 10 ? "0" : "") + d;
+  }
 
   var data = N.store.read(KEY, {
     time: 0,
@@ -25,6 +38,46 @@
     boostUntil: 0,
     unlocks: { games: [], themes: [], particles: [], fx: [] },
   });
+
+  /* saves from before quests/achievements/crate existed get the new counters
+     filled in, so a returning player keeps every coin and unlock */
+  (function migrate() {
+    var changed = false;
+    function def(key, val) {
+      if (data[key] === undefined) {
+        data[key] = val;
+        changed = true;
+      }
+    }
+    if (!data.unlocks) {
+      data.unlocks = {};
+      changed = true;
+    }
+    ["games", "themes", "particles", "fx"].forEach(function (k) {
+      if (!Array.isArray(data.unlocks[k])) {
+        data.unlocks[k] = [];
+        changed = true;
+      }
+    });
+    def("earned", data.coins || 0); // coins banked over the account's life
+    def("buys", 0);
+    def("plays", 0);
+    def("seen", []);
+    def("day", dayKey());
+    def("dgames", []);
+    def("dsecs", 0);
+    def("dplays", 0);
+    def("qclaim", []);
+    def("ach", []);
+    def("qtotal", 0);
+    def("spins", 0);
+    def("spinDay", null);
+    def("spinStreak", 0);
+    def("spinStreakDay", null);
+    def("streak", 0);
+    def("lastPlayDay", null);
+    if (changed) N.store.write(KEY, data);
+  })();
 
   function save() {
     N.store.write(KEY, data);
@@ -315,10 +368,32 @@
     return data.boostUntil > Date.now();
   }
 
+  function addCoins(n) {
+    data.coins += n;
+    data.earned += n;
+  }
+
+  /* ---------- daily rollover ----------
+     Quest progress, playtime counters and the crate are per-day; XP, coins
+     and unlocks are permanent. */
+  function ensureDay() {
+    var t = dayKey();
+    if (data.day === t) return;
+    data.day = t;
+    data.dgames = [];
+    data.dsecs = 0;
+    data.dplays = 0;
+    data.qclaim = [];
+    save();
+    N.bus.emit("eco");
+  }
+
   /* Bank playtime. Returns { xp, coins } gained so callers can celebrate. */
   function bank(seconds) {
     if (!(seconds > 0)) return { xp: 0, coins: 0 };
+    ensureDay();
     data.time += seconds;
+    data.dsecs += seconds;
     data.pend += seconds;
     var xp = 0;
     while (data.pend >= STEP) {
@@ -328,12 +403,202 @@
     }
     var coins = 0;
     while (data.xp >= data.next) {
-      data.coins += COIN_AMOUNT;
+      addCoins(COIN_AMOUNT);
       coins += COIN_AMOUNT;
       data.next += COIN_EVERY;
     }
     save();
     return { xp: xp, coins: coins };
+  }
+
+  /* ---------- progress signals ----------
+     catalog.js calls trackPlay() once per launch, so quests, streaks and the
+     achievement counters all read from one place. Only games count. */
+  function trackPlay(kind, id) {
+    if (kind !== "game" || !id) return;
+    ensureDay();
+    data.plays += 1;
+    data.dplays += 1;
+    if (data.dgames.indexOf(id) < 0) data.dgames.push(id);
+    if (data.seen.indexOf(id) < 0) data.seen.push(id);
+    var today = dayKey();
+    if (data.lastPlayDay !== today) {
+      data.streak = data.lastPlayDay === dayKey(Date.now() - DAY) ? (data.streak || 0) + 1 : 1;
+      data.lastPlayDay = today;
+    }
+    save();
+    N.bus.emit("eco");
+  }
+
+  /* ---------- daily quests ----------
+     Three rotate in per day, picked from the date so they stay put all day
+     and change overnight without storing a schedule. Claiming pays coins. */
+  var QUEST_POOL = [
+    { id: "warmup", name: "Warm up", hint: "Play a game", metric: "plays", goal: 1, reward: 5 },
+    { id: "sprint", name: "Quick sprint", hint: "Play 2 games", metric: "plays", goal: 2, reward: 8 },
+    { id: "explorer", name: "Explorer", hint: "Play 3 different games", metric: "games", goal: 3, reward: 12 },
+    { id: "sampler", name: "Sampler", hint: "Play 4 different games", metric: "games", goal: 4, reward: 16 },
+    { id: "focus", name: "Deep focus", hint: "Play for 15 minutes", metric: "secs", goal: 900, reward: 15 },
+    { id: "haul", name: "Long haul", hint: "Play for 30 minutes", metric: "secs", goal: 1800, reward: 25 },
+  ];
+
+  function dayHash(s) {
+    var h = 0;
+    for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+    return h;
+  }
+  function metricVal(m) {
+    if (m === "plays") return data.dplays;
+    if (m === "games") return data.dgames.length;
+    if (m === "secs") return data.dsecs;
+    return 0;
+  }
+  function quests() {
+    ensureDay();
+    var h = dayHash(data.day);
+    var out = [];
+    for (var i = 0; i < 3; i++) {
+      var q = QUEST_POOL[(h + i * 2) % QUEST_POOL.length];
+      var prog = Math.min(metricVal(q.metric), q.goal);
+      out.push({
+        id: q.id,
+        name: q.name,
+        hint: q.hint,
+        metric: q.metric,
+        reward: q.reward,
+        goal: q.goal,
+        prog: prog,
+        done: prog >= q.goal,
+        claimed: data.qclaim.indexOf(q.id) >= 0,
+      });
+    }
+    return out;
+  }
+  function claimQuest(id) {
+    var q = quests().filter(function (x) {
+      return x.id === id;
+    })[0];
+    if (!q || !q.done || q.claimed) return { ok: false };
+    data.qclaim.push(id);
+    data.qtotal += 1;
+    addCoins(q.reward);
+    save();
+    N.bus.emit("eco");
+    return { ok: true, reward: q.reward };
+  }
+
+  /* ---------- achievements ----------
+     Permanent milestones. `val` reads the live counters, so bars fill as you
+     play; claiming pays coins once. */
+  function stats() {
+    return {
+      plays: data.plays,
+      diff: data.seen.length,
+      secs: data.time,
+      xp: data.xp,
+      earned: data.earned,
+      buys: data.buys,
+      themes: (data.unlocks.themes || []).length,
+      particles: (data.unlocks.particles || []).length,
+      quests: data.qtotal,
+      spins: data.spins,
+      streak: data.streak,
+    };
+  }
+  var ACHS = [
+    { id: "first", name: "First steps", hint: "Play your first game", reward: 10, goal: 1, val: function (s) { return s.plays; } },
+    { id: "sampler", name: "Sampler", hint: "Play 5 different games", reward: 25, goal: 5, val: function (s) { return s.diff; } },
+    { id: "collector", name: "Collector", hint: "Play 12 different games", reward: 60, goal: 12, val: function (s) { return s.diff; } },
+    { id: "regular", name: "Creature of habit", hint: "Launch games 25 times", reward: 30, goal: 25, val: function (s) { return s.plays; } },
+    { id: "hour", name: "One hour in", hint: "Play for 1 hour", reward: 30, goal: 3600, val: function (s) { return s.secs; } },
+    { id: "deep", name: "Five hours deep", hint: "Play for 5 hours", reward: 80, goal: 18000, val: function (s) { return s.secs; } },
+    { id: "grinder", name: "Grinder", hint: "Reach 250 XP", reward: 30, goal: 250, val: function (s) { return s.xp; } },
+    { id: "purse", name: "Coin purse", hint: "Bank 150 coins", reward: 20, goal: 150, val: function (s) { return s.earned; } },
+    { id: "spender", name: "Big spender", hint: "Buy something in the Shop", reward: 20, goal: 1, val: function (s) { return s.buys; } },
+    { id: "designer", name: "Interior designer", hint: "Own 3 theme packs", reward: 40, goal: 3, val: function (s) { return s.themes; } },
+    { id: "atmos", name: "Atmosphere", hint: "Own 2 particle sets", reward: 30, goal: 2, val: function (s) { return s.particles; } },
+    { id: "runner", name: "Quest runner", hint: "Claim 7 daily quests", reward: 50, goal: 7, val: function (s) { return s.quests; } },
+    { id: "lucky", name: "Lucky", hint: "Open the crate 5 times", reward: 25, goal: 5, val: function (s) { return s.spins; } },
+    { id: "streak3", name: "Three in a row", hint: "Play 3 days in a row", reward: 35, goal: 3, val: function (s) { return s.streak; } },
+  ];
+  function achievements() {
+    ensureDay();
+    var s = stats();
+    return ACHS.map(function (a) {
+      var v = Math.min(a.val(s), a.goal);
+      return {
+        id: a.id,
+        name: a.name,
+        hint: a.hint,
+        reward: a.reward,
+        goal: a.goal,
+        prog: v,
+        done: v >= a.goal,
+        claimed: data.ach.indexOf(a.id) >= 0,
+      };
+    });
+  }
+  function claimAch(id) {
+    var a = achievements().filter(function (x) {
+      return x.id === id;
+    })[0];
+    if (!a || !a.done || a.claimed) return { ok: false };
+    data.ach.push(id);
+    addCoins(a.reward);
+    save();
+    N.bus.emit("eco");
+    return { ok: true, reward: a.reward };
+  }
+
+  /* ---------- daily crate ----------
+     One free open per day, weighted toward small coin drops with a rare
+     jackpot, plus a +5/day streak bonus so coming back keeps paying. */
+  var SPIN_POOL = [
+    { type: "coins", amount: 5, w: 26 },
+    { type: "coins", amount: 10, w: 24 },
+    { type: "coins", amount: 15, w: 20 },
+    { type: "coins", amount: 25, w: 14 },
+    { type: "coins", amount: 40, w: 9 },
+    { type: "xp", amount: 20, w: 5 },
+    { type: "coins", amount: 75, w: 2 },
+  ];
+  function canSpin() {
+    ensureDay();
+    return data.spinDay !== data.day;
+  }
+  /* what the streak *would* be if you opened the crate today */
+  function spinStreak() {
+    ensureDay();
+    if (data.spinStreakDay === data.day) return data.spinStreak || 1;
+    return data.spinStreakDay === dayKey(Date.now() - DAY) ? (data.spinStreak || 0) + 1 : 1;
+  }
+  function spin() {
+    ensureDay();
+    if (data.spinDay === data.day) return { ok: false, reason: "already" };
+    var total = SPIN_POOL.reduce(function (n, p) {
+      return n + p.w;
+    }, 0);
+    var r = Math.random() * total;
+    var acc = 0;
+    var prize = SPIN_POOL[SPIN_POOL.length - 1];
+    for (var i = 0; i < SPIN_POOL.length; i++) {
+      acc += SPIN_POOL[i].w;
+      if (r < acc) {
+        prize = SPIN_POOL[i];
+        break;
+      }
+    }
+    data.spinStreak = spinStreak();
+    data.spinStreakDay = data.day;
+    data.spinDay = data.day;
+    data.spins += 1;
+    var bonus = Math.min(25, (data.spinStreak - 1) * 5);
+    if (prize.type === "xp") data.xp += prize.amount;
+    else addCoins(prize.amount);
+    if (bonus) addCoins(bonus);
+    save();
+    N.bus.emit("eco");
+    return { ok: true, type: prize.type, amount: prize.amount, bonus: bonus, streak: data.spinStreak };
   }
 
   /* ---------- unlocks ----------
@@ -391,6 +656,7 @@
     if (isUnlocked(type, id)) return { ok: false, reason: "already owned" };
     if (data.coins < price) return { ok: false, reason: "not enough coins" };
     data.coins -= price;
+    data.buys += 1;
     if (type === "boost") {
       data.boostUntil = Date.now() + BOOST_MS;
     } else {
@@ -399,6 +665,7 @@
       (u[key] = u[key] || []).push(id);
     }
     save();
+    N.bus.emit("eco");
     return { ok: true };
   }
 
@@ -435,6 +702,7 @@
     BOOSTS: BOOSTS,
     FX: FX,
     state: function () {
+      ensureDay();
       return {
         time: data.time,
         xp: data.xp,
@@ -442,6 +710,17 @@
         next: data.next,
         boosted: boosted(),
         boostUntil: data.boostUntil,
+        streak: data.streak,
+        plays: data.plays,
+        earned: data.earned,
+        canSpin: canSpin(),
+        spinStreak: spinStreak(),
+        questsReady: quests().filter(function (q) {
+          return q.done && !q.claimed;
+        }).length,
+        achReady: achievements().filter(function (a) {
+          return a.done && !a.claimed;
+        }).length,
       };
     },
     bank: bank,
@@ -450,5 +729,23 @@
     reload: reload,
     isUnlocked: isUnlocked,
     unlockedBetas: unlockedBetas,
+    /* progress: quests, achievements and the daily crate */
+    trackPlay: trackPlay,
+    quests: quests,
+    claimQuest: claimQuest,
+    achievements: achievements,
+    claimAch: claimAch,
+    canSpin: canSpin,
+    spin: spin,
+    spinStreak: spinStreak,
+    spinPool: SPIN_POOL,
+    stats: stats,
+    /* dev console: hand out coins / reset daily progress */
+    addCoins: addCoins,
+    newDay: function () {
+      data.day = "";
+      data.spinDay = null;
+      ensureDay();
+    },
   };
 })();

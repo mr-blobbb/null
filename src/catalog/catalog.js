@@ -71,6 +71,7 @@
     N.recent.add(kind, id);
     if (kind !== "proxy" && N.plays) N.plays.tap(kind, id); /* powers card badges */
     if (kind !== "proxy" && N.week) N.week.log(kind, id); /* weekly wrap-up log */
+    if (N.econ && N.econ.trackPlay) N.econ.trackPlay(kind, id); /* quests + achievements */
 
     if (entry.warning) {
       N.modal.open({
@@ -148,7 +149,10 @@
     },
     openExternal: openExternal,
     randomGame: function () {
-      var g = N.catalog.games();
+      /* games only — a beta build labelled "app" must never turn up here */
+      var g = N.catalog.games().filter(function (e) {
+        return !e.labels || e.labels[0] !== "app";
+      });
       if (!g.length) {
         d.toast("No games in the library yet.", { type: "err" });
         return;

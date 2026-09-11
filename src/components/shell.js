@@ -144,6 +144,22 @@
   }
   N.bus.on("annSeen", paintAnnDots);
 
+  /* ---------- "something to claim" dot on the Shop icon ----------
+     Lights while the daily crate is unopened or a quest / achievement is
+     waiting to be paid out, so the loop is visible from any page. */
+  function paintShopDot() {
+    if (!N.econ) return;
+    var st = N.econ.state();
+    var ready = st.canSpin || st.questsReady > 0 || st.achReady > 0;
+    d.qsa('a[href="/shop"]').forEach(function (a) {
+      var dot = a.querySelector(".nav-dot");
+      if (ready && !dot) a.appendChild(d.h("span", { class: "nav-dot", "aria-hidden": "true" }));
+      else if (!ready && dot) dot.remove();
+    });
+  }
+  N.bus.on("eco", paintShopDot);
+  N.bus.on("daily", paintShopDot);
+
   /* another NULL window sharing this origin (a second tab, the installed app,
      a cloaked about:blank / blob: copy) just changed the stored settings —
      adopt them here instead of looking stale until the next reload */
@@ -153,6 +169,7 @@
 
     if (N.seasons) N.seasons.refresh();
     paintAnnDots();
+    paintShopDot();
   });
 
   function themeIcon() {
@@ -723,6 +740,7 @@ return foot;
     setTimeout(wrapupCheck, 1200);
     perfSuggest();
     paintAnnDots();
+    paintShopDot();
 
     /* PWA: register the root service worker so NULL is installable and the
        shell works offline. Dev/preview hosts skip it *and* clean up after

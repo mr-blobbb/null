@@ -536,72 +536,290 @@ html[data-perf="1"] .nav-dot {
 }
 
 /* ============================================================
-   home — "new since your last visit" marquee
+   glow border — the whole page glows with the ring
+   Every card surface picks up a soft edge glow in the live border
+   palette (theme.js publishes --glow-1..4), so changing the glow
+   preset re-inks the cards, not just the viewport edge.
    ============================================================ */
-.new-strip {
-  overflow: hidden;
-  padding: 12px 0;
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
-  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
-}
-.new-track {
-  display: inline-flex;
-  align-items: center;
-  gap: 18px;
-  white-space: nowrap;
-  animation: nsScroll var(--ns-dur, 30s) linear infinite;
-  will-change: transform;
-}
-.new-strip:hover .new-track {
-  animation-play-state: paused;
-}
-.ns-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 7px 14px;
-  border-radius: 999px;
-  font-size: 13.5px;
-  font-weight: 600;
-  white-space: nowrap;
-  cursor: pointer;
-  background: var(--glass-bg-2);
-  border: 1px solid var(--line);
+html[data-glow] :is(.glass, .panel, .tcard, .rec-row, .ann-card, .set-card, .shop-row),
+html[data-pack="neon"] :is(.glass, .panel, .tcard, .rec-row, .ann-card, .set-card, .shop-row) {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--glow-1, #35c3f2) 22%, transparent),
+    0 0 18px -6px color-mix(in srgb, var(--glow-2, #a86bff) 42%, transparent);
   transition:
-    color 0.18s var(--ease),
-    border-color 0.18s var(--ease),
-    transform 0.18s var(--ease);
+    box-shadow 0.2s var(--ease),
+    border-color 0.2s var(--ease),
+    background 0.18s var(--ease);
 }
-.ns-item:hover {
+html[data-glow] :is(.glass, .panel, .tcard, .rec-row, .ann-card, .set-card, .shop-row):hover,
+html[data-pack="neon"] :is(.glass, .panel, .tcard, .rec-row, .ann-card, .set-card, .shop-row):hover {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--glow-1, #35c3f2) 40%, transparent),
+    0 0 26px -4px color-mix(in srgb, var(--glow-2, #a86bff) 62%, transparent);
+}
+/* the dialog is the one surface allowed to glow hard */
+html[data-glow] .modal,
+html[data-pack="neon"] .modal {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--glow-1, #35c3f2) 34%, transparent),
+    0 0 44px -10px color-mix(in srgb, var(--glow-2, #a86bff) 70%, transparent);
+}
+
+/* ============================================================
+   daily — crate strip, quests, achievements
+   ============================================================ */
+.daily-strip {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: var(--r-lg);
+}
+.daily-strip.ready {
+  background:
+    linear-gradient(112deg, color-mix(in srgb, var(--ac-1) 12%, transparent), transparent 58%),
+    var(--glass-bg);
+  border-color: color-mix(in srgb, var(--ac-1) 32%, var(--line));
+}
+.daily-ic {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  border-radius: var(--r-md);
   color: var(--ac-1);
-  border-color: var(--ac-1);
-  transform: translateY(-1px);
+  background: var(--glass-bg-3);
+  border: 1px solid var(--line);
 }
-.ns-dot {
+.daily-ic .msr {
+  font-size: 21px;
+}
+.daily-strip.ready .daily-ic {
+  box-shadow: 0 0 18px -5px color-mix(in srgb, var(--ac-1) 70%, transparent);
+}
+.daily-txt {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.daily-txt b {
+  font-size: 15px;
+}
+.daily-txt span {
+  font-size: 13px;
+  color: var(--text-2);
+}
+.daily-chips {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+.daily-acts {
+  display: flex;
+  gap: 8px;
   flex: none;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--text-2);
-  opacity: 0.5;
 }
-@keyframes nsScroll {
-  from {
-    transform: translateX(0);
+
+/* the crate itself — a box that shakes while opening, then pops */
+.crate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+.crate-box {
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 96px;
+  border-radius: var(--r-lg);
+  background:
+    radial-gradient(62% 62% at 50% 28%, color-mix(in srgb, var(--ac-1) 26%, transparent), transparent 72%),
+    var(--glass-bg-2);
+  border: 1px solid color-mix(in srgb, var(--ac-1) 32%, var(--line));
+}
+.crate-box .crate-ic {
+  color: var(--ac-1);
+}
+.crate-box .msr {
+  font-size: 46px;
+}
+.crate-box.rolling {
+  animation: crateShake 0.42s ease-in-out infinite;
+}
+.crate-box.open {
+  animation: cratePop 0.55s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+@keyframes crateShake {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg);
   }
-  to {
-    transform: translateX(calc(-100% / var(--ns-copies, 2)));
+  50% {
+    transform: translateY(-4px) rotate(2deg);
   }
 }
-html[data-perf="1"] .new-track {
-  animation-duration: calc(var(--ns-dur, 30s) * 2);
-}
-@media (prefers-reduced-motion: reduce) {
-  .new-track {
-    animation: none;
+@keyframes cratePop {
+  0% {
+    transform: scale(0.86);
   }
-  .new-strip {
-    overflow-x: auto;
+  60% {
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.crate-num {
+  min-height: 38px;
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  transition: color 0.2s var(--ease), opacity 0.2s var(--ease);
+}
+.crate-num.rolling {
+  opacity: 0.55;
+}
+.crate-num.won {
+  color: var(--ac-1);
+  text-shadow: 0 0 24px color-mix(in srgb, var(--ac-1) 60%, transparent);
+}
+.crate-note {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--text-2);
+}
+.crate-cap {
+  margin: 6px 0 0;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+.crate-tiers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+/* progress rows — shared by daily quests and achievements */
+.pg-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pg-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: var(--r-lg);
+  background: var(--glass-bg);
+  border: 1px solid var(--line);
+}
+.pg-row.ready {
+  background:
+    linear-gradient(112deg, color-mix(in srgb, var(--ac-1) 10%, transparent), transparent 62%),
+    var(--glass-bg);
+  border-color: color-mix(in srgb, var(--ac-1) 38%, var(--line));
+}
+.pg-row.done {
+  opacity: 0.62;
+}
+.pg-ic {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  border-radius: var(--r-md);
+  color: var(--ac-1);
+  background: var(--glass-bg-3);
+  border: 1px solid var(--line);
+}
+.pg-ic .msr {
+  font-size: 20px;
+}
+.pg-row.done .pg-ic {
+  color: var(--text-2);
+}
+.pg-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.pg-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.pg-top b {
+  font-size: 14.5px;
+}
+.pg-meta {
+  flex: none;
+  font-size: 12px;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+.pg-sub {
+  font-size: 13px;
+  color: var(--text-2);
+}
+.pg-bar {
+  height: 6px;
+  margin-top: 5px;
+  border-radius: 999px;
+  background: var(--glass-bg-3);
+  overflow: hidden;
+}
+.pg-bar i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--ac-1), var(--ac-2, var(--ac-1)));
+  transition: width 0.45s var(--ease);
+}
+.pg-row.ready .pg-bar i {
+  box-shadow: 0 0 12px color-mix(in srgb, var(--ac-1) 70%, transparent);
+}
+.pg-side {
+  flex: none;
+}
+.shop-row.ready {
+  background:
+    linear-gradient(112deg, color-mix(in srgb, var(--ac-1) 10%, transparent), transparent 62%),
+    var(--glass-bg);
+  border-color: color-mix(in srgb, var(--ac-1) 38%, var(--line));
+}
+@media (max-width: 760px) {
+  .daily-strip {
+    flex-wrap: wrap;
+  }
+  .daily-chips {
+    margin-left: 0;
+  }
+  .daily-acts {
+    width: 100%;
+  }
+}
+@media (max-width: 620px) {
+  .pg-row {
+    flex-wrap: wrap;
+  }
+  .pg-side,
+  .pg-claim {
+    width: 100%;
   }
 }
 

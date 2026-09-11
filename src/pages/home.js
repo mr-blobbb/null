@@ -1,7 +1,8 @@
 /* NULL — home.js
-   Dashboard logic: the featured rail (first 10 library items), recently
-   played with random/clear, a live "today" schedule card, announcements,
-   the first-launch welcome modal and the popup/redirect explanation. */
+   Dashboard logic: the featured rail (first 10 library items), the daily
+   crate strip, recently played games with random/clear, a live "today"
+   schedule card, announcements, the first-launch welcome modal and the
+   popup/redirect explanation. */
 (function () {
   var N = (window.N = window.N || {});
   var d = N.dom;
@@ -131,6 +132,8 @@
     "Game saves that live in localStorage can be downloaded and even shared with a friend from the player bar.",
     "Search understands labels: try \u201carcade\u201d, \u201cmemory\u201d or \u201ccalculator\u201d to filter results.",
     "Marathon mode auto-switches games on a timer — the games page owns the controls.",
+    "Open the <b>daily crate</b> for free coins — the streak bonus grows every day you come back.",
+    "Daily quests and achievements pay coins in the <b>Shop</b> — a dot on its icon means something is waiting.",
     "Press <b>/</b> anywhere to jump into search without touching the mouse.",
   ];
   function renderTip() {
@@ -150,76 +153,27 @@
     if (sec) sec.hidden = false;
   }
 
-  /* ---------- new since your last visit ----------
-     A slow auto-scrolling strip of everything added to the library since
-     the last time you opened the home page. Names + dot separators, looped
-     seamlessly; pauses on hover. */
-  function renderNewStrip() {
-    var sec = d.qs("#newSec");
-    var track = d.qs("#newTrack");
-    if (!sec || !track) return;
-    var lastVisit = N.store.read("null:lastVisit", null);
-    /* no baseline yet (first visit) → show everything still wearing a NEW
-       badge (14 days), so a brand-new visitor still gets the "what's new" tour */
-    var base = lastVisit == null ? Date.now() - 14 * 86400000 : lastVisit;
-    var fresh = [];
-    N.catalog.games().forEach(function (g) {
-      if (g.at && g.at > base) fresh.push({ e: g, k: "game" });
-    });
-    N.catalog.apps().forEach(function (a) {
-      if (a.at && a.at > base) fresh.push({ e: a, k: "app" });
-    });
-    if (!fresh.length) return;
-
-    track.textContent = "";
-    /* Repeat the list until the loop always fills the screen. The animation
-       slides by exactly one copy, so the copies left behind stay wider than
-       the viewport and there is never an empty stretch. */
-    var oneCopy = Math.max(1, fresh.length * 130); // rough pill + gap width
-    var want = Math.ceil(1 + (window.innerWidth || 1200) / oneCopy);
-    var copies = Math.min(8, Math.max(2, want));
-    for (var pass = 0; pass < copies; pass++) {
-      fresh.forEach(function (it) {
-        track.appendChild(
-          d.h(
-            "span",
-            {
-              class: "ns-item",
-              onclick: function () {
-                if (it.k === "app") N.launch.app(it.e);
-                else N.launch.game(it.e);
-              },
-            },
-            it.e.name,
-          ),
-        );
-        track.appendChild(d.h("span", { class: "ns-dot", "aria-hidden": "true" }, "\u00b7"));
-      });
-    }
-    /* duration is per copy, so speed stays the same however many we add */
-    var dur = Math.max(24, fresh.length * 7);
-    track.style.setProperty("--ns-dur", dur + "s");
-    track.style.setProperty("--ns-copies", String(copies));
-    sec.hidden = false;
-    N.store.write("null:lastVisit", Date.now());
-  }
-
-  /* ---------- recently played ---------- */
+  /* ---------- recently played ----------
+     Games only: apps and proxies opened from the library are not "played"
+     and would otherwise crowd out the games you actually want back. */
   function renderRecents() {
     var box = d.qs("#recList");
     if (!box) return;
     box.textContent = "";
     var items = N.recent
       .list()
+      .filter(function (r) {
+        return r.k === "game";
+      })
       .map(function (r) {
-        var e = N.catalog.find(r.k, r.id);
-        return e ? { e: e, k: r.k, at: r.at } : null;
+        var e = N.catalog.find("game", r.id);
+        return e ? { e: e, k: "game", at: r.at } : null;
       })
       .filter(Boolean)
       .slice(0, 8);
     if (!items.length) {
       box.appendChild(
-        N.cards.empty("Nothing played yet", "Open something from Games or Apps and it will show up here."),
+        N.cards.empty("Nothing played yet", "Open a game and it will show up here."),
       );
       return;
     }
@@ -478,7 +432,7 @@
     renderFeatured();
     renderGotd();
     renderTip();
-    renderNewStrip();
+    if (N.daily) N.daily.homeStrip();
     renderRecents();
     renderAnn();
     renderSchedHome();

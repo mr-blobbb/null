@@ -120,6 +120,10 @@
         ]),
       );
     }
+    if (st.streak > 0) {
+      bar.appendChild(d.h("span", { class: "chip" }, [d.icon("star"), st.streak + " day streak"]));
+    }
+
     host.appendChild(bar);
 
     var note = d.h("p", { class: "eco-note" }, [
@@ -303,12 +307,59 @@
     ]);
   }
 
+  /* ---------- daily loop ---------- */
+  function dailyRow() {
+    var st = N.econ.state();
+    var box = d.h("div", { class: "shop-rows" });
+    var foot = d.h("div", { class: "shop-foot" });
+    if (st.canSpin) {
+      foot.appendChild(
+        d.h(
+          "button",
+          {
+            type: "button",
+            class: "btn btn-primary btn-sm",
+            onclick: function () {
+              N.daily.openCrate(render);
+            },
+          },
+          [d.icon("gift"), "Open"],
+        ),
+      );
+    } else {
+      foot.appendChild(ownedChip("Opened today"));
+    }
+    box.appendChild(
+      d.h("div", { class: "shop-row glass" + (st.canSpin ? " ready" : "") }, [
+        d.h("div", { class: "shop-row-ic" }, [d.icon("gift")]),
+        d.h("div", { class: "shop-row-txt" }, [
+          d.h("b", null, st.canSpin ? "A crate is waiting" : "Crate opened today"),
+          d.h(
+            "span",
+            null,
+            "Day " + st.spinStreak + " streak \u00b7 5\u201375 coins or 20 XP, with a streak bonus",
+          ),
+        ]),
+        foot,
+      ]),
+    );
+    return box;
+  }
+
   /* ---------- render ---------- */
   function render() {
     renderBar();
     var body = d.qs("#shopBody");
     if (!body) return;
     body.textContent = "";
+
+    var crateSec = section("Daily crate", "gift", "one free open every day");
+    crateSec.appendChild(dailyRow());
+    body.appendChild(crateSec);
+
+    var questSec = section("Daily quests", "zap", "resets at midnight");
+    questSec.appendChild(N.daily.questList(render));
+    body.appendChild(questSec);
 
     var betaSec = section("Beta games", "game", "unlocked builds join your library");
     var betaGrid = d.h("div", { class: "shop-grid" });
@@ -359,13 +410,20 @@
     });
     fxSec.appendChild(fxBox);
     body.appendChild(fxSec);
+
+    var achSec = section("Achievements", "trophy", "permanent milestones, paid in coins");
+    achSec.appendChild(N.daily.achList(render));
+    body.appendChild(achSec);
   }
 
   function init() {
-    if (!N.econ) return;
+    if (!N.econ || !N.daily) return;
     render();
-    /* coins earned or spent in another NULL window show up here live */
+    /* coins earned or spent in another NULL window show up here live, and any
+       quest / achievement claim anywhere repaints the list */
     N.bus.on("sync", render);
+    N.bus.on("eco", render);
+    N.bus.on("daily", render);
   }
 
   if (document.readyState === "loading") {
