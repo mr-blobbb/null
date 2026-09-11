@@ -452,6 +452,9 @@
       });
     }
 
+    /* another NULL window edited something — show its values here too */
+    N.bus.on("sync", refresh);
+
     /* danger zone */
     var rs = d.qs("#dangerReset");
     if (rs) {

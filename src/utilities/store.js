@@ -27,7 +27,7 @@
 
   N.store = { read: read, write: write, del: del };
 
-  /* tiny pub/sub used to refresh lists when favorites/recent change */
+  /* ---------- tiny pub/sub used to refresh lists when favorites/recent change ---------- */
   var busMap = {};
   N.bus = {
     on: function (type, fn) {
@@ -95,6 +95,16 @@
         write(PREFS_KEY, data);
         return data;
       },
+      /* re-read from storage after another NULL window wrote (see N.sync).
+         Patched in place so every `N.prefs.data` reference stays valid. */
+      reload: function () {
+        var fresh = Object.assign({}, DEFAULTS, read(PREFS_KEY, {}));
+        Object.keys(data).forEach(function (k) {
+          if (!(k in fresh)) delete data[k];
+        });
+        Object.assign(data, fresh);
+        return data;
+      },
     };
   })();
 
@@ -115,6 +125,13 @@
       clear: function () {
         data = {};
         del(FLAGS_KEY);
+      },
+      reload: function () {
+        var fresh = read(FLAGS_KEY, {});
+        Object.keys(data).forEach(function (k) {
+          delete data[k];
+        });
+        Object.assign(data, fresh);
       },
     };
   })();
@@ -148,6 +165,9 @@
       clear: function () {
         items = [];
         save();
+      },
+      reload: function () {
+        items = read(RECENT_KEY, []);
       },
     };
   })();
@@ -191,6 +211,9 @@
         items = [];
         save();
       },
+      reload: function () {
+        items = read(FAVS_KEY, []);
+      },
     };
   })();
 
@@ -206,6 +229,9 @@
       },
       count: function (kind, id) {
         return data[kind + ":" + id] || 0;
+      },
+      reload: function () {
+        data = read(PLAYS_KEY, {});
       },
     };
   })();
@@ -255,6 +281,9 @@
       reset: function () {
         data = { week: mondayOf(new Date()), plays: [] };
         save();
+      },
+      reload: function () {
+        data = read(WEEK_KEY, { week: mondayOf(new Date()), plays: [] });
       },
       summary: function (plays) {
         plays = plays || data.plays;
@@ -334,4 +363,52 @@
       });
     },
   };
+
+  /* ---------- live sync between NULL windows ----------
+     One origin shares one storage area, and every same-origin way of running
+     NULL shares it: a second tab, the installed app window, and the cloaked
+     about:blank / blob: windows (they frame the real site). The browser fires
+     `storage` in the *other* windows whenever one of them writes, so they can
+     stay in step with no server. A genuinely different origin — another host
+     or a preview link — can never see it; that is what the Settings backup
+     file is for. */
+  var reloaders = [
+    N.prefs.reload,
+    N.flags.reload,
+    N.recent.reload,
+    N.favs.reload,
+    N.plays.reload,
+    N.week.reload,
+  ];
+
+  function resync() {
+    reloaders.forEach(function (fn) {
+      try {
+        fn();
+      } catch (err) {}
+    });
+    N.bus.emit("sync");
+  }
+
+  N.sync = {
+    /* modules holding their own cache (the economy) register a reload here */
+    register: function (fn) {
+      reloaders.push(fn);
+    },
+    now: resync,
+    watch: function () {
+      window.addEventListener("storage", function (e) {
+        /* a null key means localStorage.clear() somewhere on this origin */
+        if (e.key && e.key.indexOf("null:") !== 0) return;
+        resync();
+      });
+      /* a backgrounded window can be throttled and miss events; catch up when
+         it comes back to the front instead of staying stale */
+      document.addEventListener("visibilitychange", function () {
+        if (!document.hidden) resync();
+      });
+    },
+  };
+
+  N.sync.watch();
 })();

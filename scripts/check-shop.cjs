@@ -467,6 +467,15 @@ async function partH() {
   const lightPacks = rule(css, 'html[data-theme="light"] .pack-fx,\nhtml[data-theme="light"] .pack-preview {', 0);
   check("light mode rewrites the pack page tint", /--pk-bg-1: #f/.test(lightPacks) && /!important/.test(lightPacks));
   check("light mode keeps the pack art (no blanket opacity fade)", !/html\[data-theme="light"\] \.pack-fx \{\s*opacity: 0\.4/.test(css));
+  check(
+    "light mode darkens pale pack particles (white stars/dust would vanish)",
+    /html\[data-theme="light"\] \.pack-fx \.pf-p,\nhtml\[data-theme="light"\] \.pack-preview \.pf-p \{\n  filter:/.test(css),
+  );
+  check(
+    "light mode deepens synthwave's sun + grid",
+    /html\[data-theme="light"\] \[data-pack="synthwave"\] \.pf-c \{/.test(css) &&
+      /html\[data-theme="light"\] \[data-pack="synthwave"\] \.pf-b \{/.test(css),
+  );
   check("light mode re-inks the particle layers", /html\[data-theme="light"\] \.part-fx,\nhtml\[data-theme="light"\] \.part-preview \{\n  filter:/.test(css));
 
   /* tip card is rounded like the rest of NULL */
@@ -475,7 +484,26 @@ async function partH() {
   /* export / import */
   check("settings offers a data download", !!d.querySelector("#btnDataExport"));
   check("settings offers a data upload", !!d.querySelector("#btnDataImport") && !!d.querySelector("#dataFile"));
-  check("the backup row explains why sync needs a file", /localStorage per site/.test(d.querySelector('[aria-label="Your data"]').textContent));
+  check(
+    "the backup row explains same-address windows sync on their own",
+    /stays in sync with the others/.test(d.querySelector('[aria-label="Your data"]').textContent),
+  );
+
+  /* live sync: another window sharing this origin writes, the browser fires
+     `storage` here, and this window adopts the new settings without a reload */
+  check("the sync bus is exposed", !!w.N.sync && typeof w.N.sync.register === "function");
+  w.localStorage.setItem("null:prefs", JSON.stringify({ theme: "light", accent: "gold", glow: "off" }));
+  w.dispatchEvent(new w.StorageEvent("storage", { key: "null:prefs" }));
+  await wait(120);
+  check("another window's write is adopted live", d.documentElement.dataset.theme === "light");
+  check("live sync re-reads prefs into memory", w.N.prefs.get("theme") === "light");
+  check("live sync repaints the settings controls", d.querySelector('#themeSeg button[data-val="light"]').classList.contains("on"));
+  /* another site on the same origin writing its own keys must not disturb us */
+  w.localStorage.setItem("other-app:prefs", JSON.stringify({ theme: "dark" }));
+  w.dispatchEvent(new w.StorageEvent("storage", { key: "other-app:prefs" }));
+  await wait(80);
+  check("unrelated storage keys are ignored", w.N.prefs.get("theme") === "light");
+
   d.querySelector("#btnDataExport").click();
   await wait(60);
   check("export runs without errors", errs.length === 0);

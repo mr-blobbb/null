@@ -30,6 +30,14 @@
     N.store.write(KEY, data);
   }
 
+  /* another NULL window (a second tab, the installed app, a cloaked copy)
+     may have spent coins or earned XP — re-read so the two agree */
+  function reload() {
+    var fresh = N.store.read(KEY, null);
+    if (fresh) data = fresh;
+  }
+  if (N.sync) N.sync.register(reload);
+
   /* ---------- shop catalog ----------
      Themes are full packs, not single accents: a multi-colour palette, the
      accent pair that drives the UI, and an animated backdrop. theme.js reads
@@ -402,6 +410,7 @@
     bank: bank,
     buy: buy,
     grant: grant,
+    reload: reload,
     isUnlocked: isUnlocked,
     unlockedBetas: unlockedBetas,
   };

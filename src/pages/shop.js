@@ -364,6 +364,8 @@
   function init() {
     if (!N.econ) return;
     render();
+    /* coins earned or spent in another NULL window show up here live */
+    N.bus.on("sync", render);
   }
 
   if (document.readyState === "loading") {

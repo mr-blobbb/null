@@ -144,6 +144,16 @@
   }
   N.bus.on("annSeen", paintAnnDots);
 
+  /* another NULL window sharing this origin (a second tab, the installed app,
+     a cloaked about:blank / blob: copy) just changed the stored settings —
+     adopt them here instead of looking stale until the next reload */
+  N.bus.on("sync", function () {
+    if (N.theme) N.theme.applyAll();
+    if (N.tab) N.tab.apply();
+    if (N.seasons) N.seasons.refresh();
+    paintAnnDots();
+  });
+
   function themeIcon() {
     return d.icon(
       document.documentElement.dataset.theme === "light" ? "moon" : "sun",

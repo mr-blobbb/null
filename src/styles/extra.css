@@ -1013,6 +1013,21 @@ html[data-theme="light"] .pack-preview {
 html[data-theme="light"] .pack-fx {
   filter: saturate(1.25) contrast(1.04);
 }
+/* ...but the particle hosts are pale-on-dark art (white stars, white dust,
+   white rain specks) and would disappear over the daylight wash. Darkening
+   only the particle hosts — never the backdrop — keeps the tint soft while
+   the same shapes stay visible. */
+html[data-theme="light"] .pack-fx .pf-p,
+html[data-theme="light"] .pack-preview .pf-p {
+  filter: saturate(1.5) brightness(0.6) contrast(1.15);
+}
+/* synthwave's sun and grid keep their colour, just deepened for daylight */
+html[data-theme="light"] [data-pack="synthwave"] .pf-c {
+  filter: saturate(1.35) brightness(0.82);
+}
+html[data-theme="light"] [data-pack="synthwave"] .pf-b {
+  filter: saturate(1.4) brightness(0.7);
+}
 /* graphite's vignette goes light instead of blackening the corners */
 html[data-theme="light"] [data-pack="graphite"] .pf-b {
   background-image: radial-gradient(120% 92% at 50% 45%, transparent 42%, rgba(17, 17, 19, 0.1) 100%);
