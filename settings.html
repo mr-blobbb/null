@@ -135,7 +135,7 @@
           Full themes: a whole palette plus a drifting backdrop behind everything.
           Free packs are always available — the louder ones unlock in the Shop.
         </p>
-        <div id="packGrid" class="shop-grid"></div>
+        <div id="packGrid" class="shop-grid shop-grid--list"></div>
       </section>
 
       <!-- background particles -->
@@ -146,7 +146,7 @@
           pack. The three basics are free &mdash; the loud ones unlock in the Shop.
           Click the applied card to switch particles off.
         </p>
-        <div id="partGrid" class="shop-grid"></div>
+        <div id="partGrid" class="shop-grid shop-grid--list"></div>
       </section>
 
       <!-- seasonal theme -->
@@ -327,6 +327,38 @@
           <div class="cloak-actions">
             <button type="button" class="btn btn-outline" id="btnCloakBlank"><span data-icon="ban"></span>about:blank</button>
             <button type="button" class="btn btn-outline" id="btnCloakBlob"><span data-icon="file"></span>blob:</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- your data — move the local profile between origins -->
+      <section class="set-card glass set-card--wide" aria-label="Your data">
+        <h2 class="set-title"><span data-icon="download"></span>Your data</h2>
+        <p class="set-sub">
+          Everything NULL knows about you lives in this browser, on this address.
+          Browsers keep localStorage per site, so nothing can sync on its own between
+          the GitHub Pages URL, a cloaked about:blank window, or a preview link &mdash;
+          download your data here and load it back up on the other side.
+        </p>
+
+        <div class="set-row">
+          <div class="lbl-txt">
+            <b>Download your data</b>
+            <span>One JSON file with your settings, unlocks, favorites, history and flags.</span>
+          </div>
+          <div class="toolbar" style="margin:0">
+            <button type="button" class="btn btn-primary btn-sm" id="btnDataExport"><span data-icon="download"></span>Download</button>
+          </div>
+        </div>
+
+        <div class="set-row">
+          <div class="lbl-txt">
+            <b>Load data back</b>
+            <span>Pick a NULL backup file &mdash; it replaces what's stored here and reloads NULL.</span>
+          </div>
+          <div class="toolbar" style="margin:0">
+            <button type="button" class="btn btn-outline btn-sm" id="btnDataImport"><span data-icon="upload"></span>Upload</button>
+            <input type="file" id="dataFile" accept="application/json,.json" hidden>
           </div>
         </div>
       </section>

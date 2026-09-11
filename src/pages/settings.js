@@ -308,11 +308,10 @@
             title: "Install NULL in Chrome",
             icon: "download",
             body:
-              "<p>Chrome can turn NULL into its own app window with its own icon:</p>" +
-              "<p>1. Open the <b>\u22ee</b> menu in the top-right.<br>" +
-              "2. Pick <b>Cast, save and share \u2192 Install page as app</b> (newer builds call it <b>Install NULL</b>).<br>" +
-              "3. Confirm \u2014 NULL opens in a clean window, no tabs or address bar.</p>" +
-              "<p style='color:var(--text-2)'>Once the browser has offered its install prompt, an <b>Install</b> button shows up here instead.</p>",
+"<p>Chrome can turn NULL into its own app window with its own icon:</p>" +
+"<p>Just click the <b>Install</b> button right here on this page.</p>" +
+"<p>NULL will instantly open in a clean window with no tabs or address bar.</p>"
+,
             actions: [{ label: "Got it", variant: "primary" }],
           });
         });
@@ -355,6 +354,22 @@
         N.prefs.set("glowComet", csw.checked);
         N.theme.setComet(csw.checked);
         d.toast(csw.checked ? "Comet mode on" : "Comet mode off");
+      });
+    }
+
+    /* export / import */
+    var ex = d.qs("#btnDataExport");
+    if (ex) ex.addEventListener("click", exportData);
+    var im = d.qs("#btnDataImport");
+    var imFile = d.qs("#dataFile");
+    if (im && imFile) {
+      im.addEventListener("click", function () {
+        imFile.click();
+      });
+      imFile.addEventListener("change", function () {
+        var f = imFile.files && imFile.files[0];
+        if (f) importData(f);
+        imFile.value = "";
       });
     }
 
@@ -720,6 +735,98 @@
     N.theme.allParticles().forEach(function (p) {
       grid.appendChild(partCard(p));
     });
+  }
+
+  /* ---------- export / import ----------
+     localStorage is scoped to one origin, so a NULL profile cannot follow you
+     from googleslides2026.github.io to an about:blank clone, a blob: window or
+     a preview URL without a server — which NULL deliberately doesn't have.
+     A backup file is the honest way to carry the profile across. */
+  var PREFIX = "null:";
+
+  function exportData() {
+    var bag = {};
+    try {
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (k && k.indexOf(PREFIX) === 0) bag[k] = localStorage.getItem(k);
+      }
+    } catch (err) {}
+    var n = Object.keys(bag).length;
+    var payload = { app: "null", v: 1, at: new Date().toISOString(), data: bag };
+    var blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    var url = URL.createObjectURL(blob);
+    var a = d.h("a", { href: url, download: "null-data-" + new Date().toISOString().slice(0, 10) + ".json" });
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () {
+      URL.revokeObjectURL(url);
+    }, 4000);
+    d.toast("Downloaded " + n + " saved item" + (n === 1 ? "" : "s"), { icon: "check" });
+  }
+
+  function importData(file) {
+    var reader = new FileReader();
+    reader.onerror = function () {
+      d.toast("Could not read that file.", { type: "err" });
+    };
+    reader.onload = function () {
+      var parsed;
+      try {
+        parsed = JSON.parse(reader.result);
+      } catch (err) {
+        d.toast("That file isn't valid JSON.", { type: "err" });
+        return;
+      }
+      var bag = parsed && parsed.data;
+      if (!bag || typeof bag !== "object") {
+        d.toast("That doesn't look like a NULL backup.", { type: "err" });
+        return;
+      }
+      var keys = Object.keys(bag).filter(function (k) {
+        return k.indexOf(PREFIX) === 0;
+      });
+      if (!keys.length) {
+        d.toast("That backup has no NULL data in it.", { type: "err" });
+        return;
+      }
+
+      N.modal.open({
+        title: "Load " + keys.length + " saved item" + (keys.length === 1 ? "" : "s") + "?",
+        icon: "upload",
+        body:
+          "<p>This swaps the NULL data stored in this browser for what's in the file, then reloads.</p>" +
+          "<p style='color:var(--text-2)'>There is no undo &mdash; the file is your backup.</p>",
+        actions: [
+          { label: "Cancel", variant: "outline" },
+          {
+            label: "Load it",
+            variant: "primary",
+            onClick: function () {
+              try {
+                var have = [];
+                for (var i = 0; i < localStorage.length; i++) {
+                  var k = localStorage.key(i);
+                  if (k && k.indexOf(PREFIX) === 0) have.push(k);
+                }
+                have.forEach(function (k) {
+                  if (keys.indexOf(k) < 0) localStorage.removeItem(k);
+                });
+                keys.forEach(function (k) {
+                  localStorage.setItem(k, String(bag[k]));
+                });
+              } catch (err) {
+                d.toast("Could not write the backup \u2014 storage may be full.", { type: "err" });
+                return;
+              }
+              location.reload();
+            },
+          },
+        ],
+      });
+    };
+    reader.readAsText(file);
   }
 
   function init() {

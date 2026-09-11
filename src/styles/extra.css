@@ -475,6 +475,23 @@ html[data-perf="1"] .nav-dot {
 }
 
 /* ============================================================
+   settings — fit + finish
+   Long labels shrink rather than shoving their control off the card, and
+   every card is allowed to shrink inside the grid. Lives here (not
+   global.css) so it always loads after the base settings rules.
+   ============================================================ */
+.set-card {
+  min-width: 0;
+}
+.set-row .lbl-txt {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.set-grid .set-card--wide {
+  grid-column: 1 / -1;
+}
+
+/* ============================================================
    home — tip of the day
    ============================================================ */
 .tip-card {
@@ -482,6 +499,10 @@ html[data-perf="1"] .nav-dot {
   align-items: flex-start;
   gap: 14px;
   padding: 16px 18px;
+  border-radius: var(--r-lg);
+  background:
+    linear-gradient(112deg, color-mix(in srgb, var(--ac-1) 10%, transparent), transparent 58%),
+    var(--glass-bg);
 }
 .tip-ic {
   display: grid;
@@ -755,6 +776,75 @@ html[data-perf="1"] .pl-core {
   transform: translateY(-3px);
   border-color: var(--line-2);
 }
+
+/* list layout — the Settings cards stretch the full width as compact rows
+   instead of a wall of chunky tile cards */
+.shop-grid--list {
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+.shop-grid--list .shop-card,
+.shop-grid--list .shop-card:hover {
+  flex-direction: row;
+  align-items: stretch;
+  transform: none;
+}
+.shop-grid--list .shop-card:hover {
+  border-color: var(--line-2);
+}
+.shop-grid--list .pack-thumb,
+.shop-grid--list .part-thumb {
+  width: 168px;
+  flex: 0 0 168px;
+  aspect-ratio: 16 / 10;
+  border-bottom: 0;
+  border-right: 1px solid var(--line);
+}
+.shop-grid--list .pack-strip {
+  flex-direction: column;
+  width: 6px;
+  height: auto;
+}
+.shop-grid--list .shop-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 12px 14px;
+}
+.shop-grid--list .shop-info p {
+  margin-bottom: 6px;
+}
+.shop-grid--list .shop-foot {
+  flex: 0 0 auto;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-end;
+  padding: 12px 14px;
+}
+@media (max-width: 620px) {
+  .shop-grid--list .shop-card,
+  .shop-grid--list .shop-card:hover {
+    flex-direction: column;
+  }
+  .shop-grid--list .pack-thumb,
+  .shop-grid--list .part-thumb {
+    width: auto;
+    flex: none;
+    aspect-ratio: 16 / 9;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .shop-grid--list .pack-strip {
+    flex-direction: row;
+    width: auto;
+    height: 7px;
+  }
+  .shop-grid--list .shop-foot {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
 .shop-card.owned {
   border-color: color-mix(in srgb, var(--ok) 34%, var(--line));
 }
@@ -911,8 +1001,26 @@ html[data-perf="1"] .pl-core {
   animation-duration: calc(var(--dur, 5) * 1s);
   animation-delay: calc(var(--delay, 0) * -1s);
 }
+/* light mode: the pack keeps its palette but the page tint flips from the
+   pack's dark sheet to a soft daylight wash, so a pack reads as a tint on a
+   bright page instead of dumping a black rectangle behind it. `!important`
+   is required because the tints are written inline by theme.js. */
+html[data-theme="light"] .pack-fx,
+html[data-theme="light"] .pack-preview {
+  --pk-bg-1: #f8f8fa !important;
+  --pk-bg-2: #e9ebf2 !important;
+}
 html[data-theme="light"] .pack-fx {
-  opacity: 0.4;
+  filter: saturate(1.25) contrast(1.04);
+}
+/* graphite's vignette goes light instead of blackening the corners */
+html[data-theme="light"] [data-pack="graphite"] .pf-b {
+  background-image: radial-gradient(120% 92% at 50% 45%, transparent 42%, rgba(17, 17, 19, 0.1) 100%);
+}
+/* the matrix scanlines stay dark, but lighter, so they read as texture only */
+html[data-theme="light"] [data-pack="matrix"] .pf-b {
+  background-image: repeating-linear-gradient(0deg, rgba(17, 17, 19, 0.12) 0 1px, transparent 1px 3px);
+  opacity: 0.7;
 }
 html[data-perf="1"] .pack-fx {
   display: none;
@@ -1307,7 +1415,7 @@ html[data-perf="1"] .pack-fx {
   border-color: var(--ac-1);
 }
 .pack-card.locked {
-  opacity: 0.62;
+  border-color: var(--line-2);
 }
 .pack-foot-note {
   font-size: 12px;
@@ -1358,23 +1466,23 @@ html[data-perf="1"] .part-fx {
   animation-play-state: paused !important;
 }
 
-/* ---- free: motes — slow specks rising ---- */
+/* ---- free: motes — soft glowing dust rising ---- */
 .pt-p-mote b {
-  width: var(--s);
-  height: var(--s);
+  width: calc(var(--s) * 3);
+  height: calc(var(--s) * 3);
   border-radius: 50%;
-  background: var(--pt-1);
-  filter: blur(0.4px);
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--pt-1) 95%, transparent), transparent 72%);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--pt-1) 45%, transparent);
   animation-name: pt-rise;
   animation-duration: calc(var(--dur, 5) * 3.4s);
 }
 /* ---- free: haze — wide slow clouds ---- */
 .pt-p-haze b {
-  width: calc(var(--s) * 44);
-  height: calc(var(--s) * 26);
+  width: calc(var(--s) * 62);
+  height: calc(var(--s) * 36);
   border-radius: 50%;
-  background: radial-gradient(closest-side, color-mix(in srgb, var(--pt-2) 34%, transparent), transparent 74%);
-  filter: blur(30px);
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--pt-2) 62%, transparent), transparent 74%);
+  filter: blur(34px);
   animation-name: pt-cloud;
   animation-duration: calc(var(--dur, 5) * 6s);
   animation-direction: alternate;
@@ -1382,89 +1490,99 @@ html[data-perf="1"] .part-fx {
 }
 /* ---- free: twinkle — pin-prick lights ---- */
 .pt-p-spark b {
-  width: calc(var(--s) * 1.4);
-  height: calc(var(--s) * 1.4);
+  width: calc(var(--s) * 2.4);
+  height: calc(var(--s) * 2.4);
   border-radius: 50%;
-  background: var(--pt-1);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--pt-1) 70%, transparent);
+  background: radial-gradient(closest-side, var(--pt-1) 45%, transparent 80%);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--pt-1) 90%, transparent);
   animation-name: pt-twinkle;
   animation-duration: calc(var(--dur, 5) * 2.2s);
   animation-timing-function: ease-in-out;
 }
 /* ---- fireflies — glowing orbs that wander and pulse ---- */
 .pt-p-firefly b {
-  width: calc(var(--s) * 2.6);
-  height: calc(var(--s) * 2.6);
+  width: calc(var(--s) * 5);
+  height: calc(var(--s) * 5);
   border-radius: 50%;
-  background: radial-gradient(closest-side, #fff, var(--pt-1) 45%, transparent 74%);
-  box-shadow: 0 0 16px color-mix(in srgb, var(--pt-1) 70%, transparent);
+  background: radial-gradient(closest-side, #fff 10%, var(--pt-2) 36%, var(--pt-1) 60%, transparent 80%);
+  box-shadow:
+    0 0 20px color-mix(in srgb, var(--pt-1) 90%, transparent),
+    0 0 54px color-mix(in srgb, var(--pt-3) 55%, transparent);
   animation:
     pt-wander calc(var(--dur, 5) * 4s) ease-in-out infinite alternate,
     pt-glow calc(var(--dur, 5) * 0.7s) ease-in-out infinite;
   animation-delay: calc(var(--delay, 0) * -1s);
 }
-/* ---- embers — rising sparks that flicker as they cool ---- */
+/* ---- embers — rising flames that flicker as they cool ---- */
 .pt-p-ember b {
-  width: calc(var(--s) * 1.7);
-  height: calc(var(--s) * 1.7);
-  border-radius: 50%;
-  background: radial-gradient(closest-side, #fff3c4, var(--pt-1) 52%, transparent 78%);
-  box-shadow: 0 0 10px color-mix(in srgb, var(--pt-1) 75%, transparent);
+  width: calc(var(--s) * 3);
+  height: calc(var(--s) * 4.6);
+  border-radius: 50% 50% 46% 46% / 64% 64% 36% 36%;
+  background: radial-gradient(closest-side, #fff6d0 5%, var(--pt-2) 32%, var(--pt-1) 64%, transparent 84%);
+  box-shadow:
+    0 0 20px color-mix(in srgb, var(--pt-1) 90%, transparent),
+    0 0 52px color-mix(in srgb, var(--pt-3) 60%, transparent);
+  /* pt-flicker owns the opacity, so the rise only moves + shrinks — an ember
+     that cools as it climbs instead of popping in and out */
   animation:
-    pt-rise calc(var(--dur, 5) * 3.2s) linear infinite,
+    pt-ember-rise calc(var(--dur, 5) * 3.2s) linear infinite,
     pt-flicker calc(var(--dur, 5) * 0.5s) ease-in-out infinite;
   animation-delay: calc(var(--delay, 0) * -1s);
 }
-/* ---- bubbles — glass spheres wobbling upward ---- */
+/* ---- bubbles — flat rings that rise and swell (NULL is a flat UI, so
+   these are outlined hoops rather than glossy glass spheres) ---- */
 .pt-p-bubble b {
-  width: calc(var(--s) * 6);
-  height: calc(var(--s) * 6);
-  border-radius: 50%;
-  border: 1px solid color-mix(in srgb, var(--pt-2) 65%, transparent);
-  background: radial-gradient(circle at 32% 26%, color-mix(in srgb, #fff 55%, transparent), transparent 46%);
-  box-shadow: inset 0 0 14px color-mix(in srgb, var(--pt-3) 40%, transparent);
-  animation:
-    pt-rise calc(var(--dur, 5) * 4.6s) linear infinite,
-    pt-wobble calc(var(--dur, 5) * 1.2s) ease-in-out infinite;
-  animation-delay: calc(var(--delay, 0) * -1s);
-}
-/* ---- starlight — four-point sparkles ---- */
-.pt-p-sparkle b {
   width: calc(var(--s) * 8);
   height: calc(var(--s) * 8);
-  background:
-    linear-gradient(var(--pt-1), var(--pt-1)) 50% 0 / 1.5px 100% no-repeat,
-    linear-gradient(var(--pt-1), var(--pt-1)) 0 50% / 100% 1.5px no-repeat;
-  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--pt-3) 85%, transparent));
+  border-radius: 50%;
+  border: calc(var(--s) * 0.55) solid color-mix(in srgb, var(--pt-2) 80%, transparent);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--pt-3) 40%, transparent);
+  animation-name: pt-bubble;
+  animation-duration: calc(var(--dur, 5) * 4.6s);
+  animation-delay: calc(var(--delay, 0) * -1s);
+}
+/* ---- starlight — real four-point stars that bloom and fade ---- */
+.pt-p-sparkle b {
+  width: calc(var(--s) * 10);
+  height: calc(var(--s) * 10);
+  background: radial-gradient(closest-side, #fff 4%, color-mix(in srgb, var(--pt-2) 90%, transparent) 42%, transparent 76%);
+  clip-path: polygon(50% 0%, 58% 42%, 100% 50%, 58% 58%, 50% 100%, 42% 58%, 0% 50%, 42% 42%);
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--pt-3) 95%, transparent));
   animation-name: pt-sparkle;
-  animation-duration: calc(var(--dur, 5) * 1.6s);
+  animation-duration: calc(var(--dur, 5) * 2.4s);
   animation-timing-function: ease-in-out;
 }
-/* ---- plasma — huge blurred colour fields bleeding together ---- */
+/* ---- plasma — huge colour fields bleeding into each other ---- */
 .pt-p-plasma b {
-  width: calc(var(--s) * 56);
-  height: calc(var(--s) * 56);
+  width: calc(var(--s) * 180);
+  height: calc(var(--s) * 180);
   border-radius: 50%;
   background: radial-gradient(
     closest-side,
-    color-mix(in srgb, var(--pt-1) 55%, transparent),
-    color-mix(in srgb, var(--pt-3) 26%, transparent) 54%,
+    color-mix(in srgb, var(--pt-1) 92%, transparent),
+    color-mix(in srgb, var(--pt-3) 52%, transparent) 50%,
     transparent 76%
   );
-  filter: blur(44px);
+  filter: blur(calc(var(--s) * 24));
   mix-blend-mode: screen;
-  animation-name: pt-cloud;
+  animation-name: pt-plasma;
   animation-duration: calc(var(--dur, 5) * 9s);
   animation-direction: alternate;
   animation-timing-function: ease-in-out;
 }
-/* ---- warp — stars streaming out from the middle ---- */
+/* ---- warp — stars streaking outward from the middle ---- */
+.pt-p-warp::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(closest-side at 50% 50%, color-mix(in srgb, var(--pt-2) 34%, transparent), transparent 56%);
+}
 .pt-p-warp b {
-  width: calc(var(--s) * 1.5);
-  height: calc(var(--s) * 1.5);
-  border-radius: 50%;
-  background: var(--pt-1);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--pt-1) 80%, transparent);
+  width: calc(var(--s) * 36);
+  height: calc(var(--s) * 1.4);
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--pt-2) 70%, transparent) 45%, #fff);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--pt-2) 85%, transparent);
   animation-name: pt-warp;
   animation-timing-function: linear;
 }
@@ -1485,17 +1603,25 @@ html[data-perf="1"] .part-fx {
     opacity: 0;
   }
 }
+@keyframes pt-ember-rise {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(var(--dx, 40px), -116vh, 0) scale(0.34);
+  }
+}
 @keyframes pt-cloud {
   from {
     transform: translate3d(calc(var(--dx, 40px) * -1), 0, 0) scale(1);
-    opacity: 0.1;
+    opacity: calc(var(--o, 0.6) * 0.4);
   }
   50% {
     opacity: var(--o, 0.6);
   }
   to {
-    transform: translate3d(var(--dx, 40px), -3%, 0) scale(1.12);
-    opacity: 0.14;
+    transform: translate3d(var(--dx, 40px), -3%, 0) scale(1.14);
+    opacity: calc(var(--o, 0.6) * 0.55);
   }
 }
 @keyframes pt-twinkle {
@@ -1538,13 +1664,22 @@ html[data-perf="1"] .part-fx {
     opacity: calc(var(--o, 0.6) * 0.7);
   }
 }
-/* margin, not transform — so a wobbling bubble can still rise */
-@keyframes pt-wobble {
+/* a bubble rises, swells and fades — the whole motion lives in one
+   keyframe so the ring can scale without fighting a translate */
+@keyframes pt-bubble {
   from {
-    margin-left: calc(var(--dx, 40px) * -0.3);
+    transform: translate3d(0, 0, 0) scale(0.4);
+    opacity: 0;
+  }
+  14% {
+    opacity: var(--o, 0.6);
+  }
+  78% {
+    opacity: var(--o, 0.6);
   }
   to {
-    margin-left: calc(var(--dx, 40px) * 0.3);
+    transform: translate3d(calc(var(--dx, 40px) * 0.5), -108vh, 0) scale(1.2);
+    opacity: 0;
   }
 }
 @keyframes pt-sparkle {
@@ -1565,18 +1700,39 @@ html[data-perf="1"] .part-fx {
     transform: rotate(90deg) scale(0.3);
   }
 }
+@keyframes pt-plasma {
+  from {
+    transform: translate3d(calc(var(--dx, 40px) * -1.5), 4%, 0) scale(0.7);
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+  to {
+    transform: translate3d(var(--dx, 40px), -5%, 0) scale(1.4);
+    opacity: 0.6;
+  }
+}
 @keyframes pt-warp {
   from {
-    transform: rotate(var(--ang, 0deg)) translateX(0);
+    transform: rotate(var(--ang, 0deg)) translateX(0) scaleX(0.15);
     opacity: 0;
   }
-  12% {
+  14% {
     opacity: var(--o, 0.9);
   }
   to {
-    transform: rotate(var(--ang, 0deg)) translateX(var(--dist, 80vh));
+    transform: rotate(var(--ang, 0deg)) translateX(var(--dist, 80vh)) scaleX(2);
     opacity: 0;
   }
+}
+
+/* light mode: the same layers, re-inked so they read on a bright page.
+   Darkening the finished layer keeps every kind (including the Shop's pale
+   palettes) visible against white without touching the inline colours. */
+html[data-theme="light"] .part-fx,
+html[data-theme="light"] .part-preview {
+  filter: saturate(1.55) brightness(0.6) contrast(1.1);
 }
 
 /* ---- particle cards (settings + shop) ---- */
@@ -1611,19 +1767,25 @@ html[data-perf="1"] .part-fx {
   --pf-rise: 200px;
   --pf-blur: 24px;
 }
+/* a locked preview stays fully visible — nobody buys what they can't see.
+   The lock is just a badge in the corner of the thumbnail. */
 .pack-lock,
 .part-lock {
   position: absolute;
-  inset: 0;
+  inset: auto 9px 9px auto;
   display: grid;
   place-items: center;
-  background: rgba(0, 0, 0, 0.34);
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(12, 12, 14, 0.66);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   color: #fff;
-  backdrop-filter: blur(2px);
+  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.4);
 }
 .pack-lock .msr,
 .part-lock .msr {
-  font-size: 26px;
+  font-size: 15px;
 }
 .pack-strip {
   display: flex;

@@ -12,6 +12,15 @@ function check(name, ok) {
 }
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
+/* pull one CSS rule block out of a stylesheet, so a check can look inside it */
+function rule(css, sel) {
+  const i = css.indexOf(sel);
+  if (i < 0) return "";
+  const open = css.indexOf("{", i);
+  const close = css.indexOf("}", open);
+  return open < 0 || close < 0 ? "" : css.slice(open, close);
+}
+
 function makeDom(html, url, seed) {
   const dom = new JSDOM(html, {
     url: url,
@@ -361,6 +370,9 @@ async function partG() {
       window.requestAnimationFrame = (fn) => setTimeout(fn, 0);
       window.cancelAnimationFrame = (id) => clearTimeout(id);
       window.HTMLElement.prototype.scrollIntoView = () => {};
+      /* jsdom has no object URLs; the export builds one for its download */
+      window.URL.createObjectURL = () => "blob:null-backup";
+      window.URL.revokeObjectURL = () => {};
     },
   });
   const w = dom.window;
@@ -406,6 +418,93 @@ async function partG() {
 }
 
 /* ---------------------------------------------------------------- *
+ * Part H — settings: list layout, see-through locks, data backup    *
+ * ---------------------------------------------------------------- */
+async function partH() {
+  const dom = new JSDOM(injectPage("settings.html"), {
+    url: "http://localhost:5173/settings",
+    runScripts: "dangerously",
+    pretendToBeVisual: true,
+    beforeParse(window) {
+      window.fetch = () => Promise.reject(new Error("no fetch"));
+      window.scrollTo = () => {};
+      window.matchMedia = () => ({ matches: false });
+      window.requestAnimationFrame = (fn) => setTimeout(fn, 0);
+      window.cancelAnimationFrame = (id) => clearTimeout(id);
+      window.HTMLElement.prototype.scrollIntoView = () => {};
+      window.URL.createObjectURL = () => "blob:null-backup";
+      window.URL.revokeObjectURL = () => {};
+      window.localStorage.setItem("null:favs", JSON.stringify([{ k: "game", id: "x" }]));
+    },
+  });
+  const w = dom.window;
+  const errs = [];
+  w.addEventListener("error", (e) => errs.push(String(e.message || e.error)));
+  await wait(400);
+  const d = w.document;
+
+  check("pack + particle grids use the full-width list layout",
+    d.querySelector("#packGrid").classList.contains("shop-grid--list") &&
+      d.querySelector("#partGrid").classList.contains("shop-grid--list"));
+
+  const css = fs.readFileSync("src/styles/extra.css", "utf8");
+  const lock = rule(css, ".pack-lock,\n.part-lock {");
+  check("the lock is a corner badge, not a blur over the preview",
+    /inset: auto/.test(lock) && !/inset: 0/.test(lock) && !/backdrop-filter/.test(lock));
+  check("locked cards are no longer dimmed flat", !/\.pack-card\.locked \{\s*opacity/.test(css));
+  check("list layout styles exist", /\.shop-grid--list \{/.test(css) && /\.shop-grid--list \.shop-card/.test(css));
+
+  /* every particle kind got a bigger, louder shape */
+  ["sparkle", "ember", "bubble", "plasma", "warp", "firefly"].forEach((k) => {
+    check("particle redesigned: " + k, !!rule(css, ".pt-p-" + k + " b {"));
+  });
+  check("starlight is a real star shape", /clip-path: polygon\(50% 0%/.test(css));
+  check("bubbles became flat rings", /border: calc\(var\(--s\) \* 0\.55\) solid/.test(css));
+  check("warp streaks instead of dots", /@keyframes pt-warp/.test(css) && /scaleX\(2\)/.test(css));
+  check("plasma has its own drift keyframe", /@keyframes pt-plasma/.test(css));
+
+  /* light mode: packs get a daylight tint, particles get re-inked */
+  const lightPacks = rule(css, 'html[data-theme="light"] .pack-fx,\nhtml[data-theme="light"] .pack-preview {', 0);
+  check("light mode rewrites the pack page tint", /--pk-bg-1: #f/.test(lightPacks) && /!important/.test(lightPacks));
+  check("light mode keeps the pack art (no blanket opacity fade)", !/html\[data-theme="light"\] \.pack-fx \{\s*opacity: 0\.4/.test(css));
+  check("light mode re-inks the particle layers", /html\[data-theme="light"\] \.part-fx,\nhtml\[data-theme="light"\] \.part-preview \{\n  filter:/.test(css));
+
+  /* tip card is rounded like the rest of NULL */
+  check("tip card is rounded like every other surface", /border-radius: var\(--r-lg\)/.test(rule(css, ".tip-card {")));
+
+  /* export / import */
+  check("settings offers a data download", !!d.querySelector("#btnDataExport"));
+  check("settings offers a data upload", !!d.querySelector("#btnDataImport") && !!d.querySelector("#dataFile"));
+  check("the backup row explains why sync needs a file", /localStorage per site/.test(d.querySelector('[aria-label="Your data"]').textContent));
+  d.querySelector("#btnDataExport").click();
+  await wait(60);
+  check("export runs without errors", errs.length === 0);
+
+  const backup = JSON.stringify({ app: "null", v: 1, data: { "null:prefs": JSON.stringify({ theme: "light" }), "null:eco": JSON.stringify({ coins: 999 }) } });
+  const file = new w.File([backup], "null-data.json", { type: "application/json" });
+  const picker = d.querySelector("#dataFile");
+  Object.defineProperty(picker, "files", { value: [file], configurable: true });
+  picker.dispatchEvent(new w.Event("change"));
+  await wait(200);
+  const confirm = Array.from(d.querySelectorAll(".modal-ov.open .btn")).find((b) => /Load it/.test(b.textContent));
+  check("loading a backup asks for confirmation first", !!confirm);
+  if (confirm) confirm.click();
+  await wait(120);
+  check("backup replaced the stored profile", JSON.parse(w.localStorage.getItem("null:eco")).coins === 999);
+  check("stale keys not in the backup are dropped", w.localStorage.getItem("null:favs") === null);
+
+  /* a junk file is rejected instead of wiping anything */
+  const junk = new w.File(["not json at all"], "x.json", { type: "application/json" });
+  Object.defineProperty(picker, "files", { value: [junk], configurable: true });
+  picker.dispatchEvent(new w.Event("change"));
+  await wait(200);
+  const openText = Array.from(d.querySelectorAll(".modal-ov.open")).map((m) => m.textContent).join(" ");
+  check("junk backups are refused without wiping the profile",
+    !/Load \d+ saved/.test(openText) && JSON.parse(w.localStorage.getItem("null:eco")).coins === 999);
+  w.close();
+}
+
+/* ---------------------------------------------------------------- *
  * Part F — player boot spinner + coin readout markup                *
  * ---------------------------------------------------------------- */
 function partF() {
@@ -447,6 +546,7 @@ function partF() {
   await partD();
   await partE();
   await partG();
+  await partH();
   partF();
   console.log(failures ? "FAILURES: " + failures : "ALL SHOP CHECKS PASS");
   process.exit(failures ? 1 : 0);

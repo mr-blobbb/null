@@ -114,9 +114,9 @@
           : start === "bottom"
             ? rnd(74, 112).toFixed(1) + "%"
             : rnd(0, 100).toFixed(1) + "%";
-      b.style.setProperty("--s", rnd(1, 3.2).toFixed(2) + "px");
-      b.style.setProperty("--dx", (Math.random() < 0.5 ? -1 : 1) * rnd(18, 140).toFixed(0) + "px");
-      b.style.setProperty("--o", rnd(0.2, 0.8).toFixed(2));
+      b.style.setProperty("--s", rnd(1.3, 3.8).toFixed(2) + "px");
+      b.style.setProperty("--dx", (Math.random() < 0.5 ? -1 : 1) * rnd(18, 160).toFixed(0) + "px");
+      b.style.setProperty("--o", rnd(0.45, 0.95).toFixed(2));
       b.style.setProperty("--rot", rnd(-30, 30).toFixed(0) + "deg");
       b.style.setProperty("--dur", rnd(3, 9).toFixed(2));
       b.style.setProperty("--delay", rnd(0, 18).toFixed(2));
@@ -244,9 +244,9 @@
         : part.sp === "bottom"
           ? rnd(74, 112).toFixed(1) + "%"
           : rnd(-8, 100).toFixed(1) + "%";
-      b.style.setProperty("--s", rnd(1, 3.2).toFixed(2) + "px");
-      b.style.setProperty("--dx", (Math.random() < 0.5 ? -1 : 1) * rnd(18, 140).toFixed(0) + "px");
-      b.style.setProperty("--o", rnd(0.25, 0.85).toFixed(2));
+      b.style.setProperty("--s", rnd(1.6, 4.2).toFixed(2) + "px");
+      b.style.setProperty("--dx", (Math.random() < 0.5 ? -1 : 1) * rnd(18, 160).toFixed(0) + "px");
+      b.style.setProperty("--o", rnd(0.5, 1).toFixed(2));
       b.style.setProperty("--rot", rnd(-30, 30).toFixed(0) + "deg");
       b.style.setProperty("--dur", rnd(3, 9).toFixed(2));
       b.style.setProperty("--delay", rnd(0, 18).toFixed(2));
@@ -254,8 +254,8 @@
          distance instead of a left/top start point */
       if (part.k === "warp") {
         b.style.setProperty("--ang", rnd(0, 360).toFixed(0) + "deg");
-        b.style.setProperty("--dist", rnd(45, 130).toFixed(0) + "vh");
-        b.style.setProperty("--dur", rnd(1.6, 4).toFixed(2));
+        b.style.setProperty("--dist", rnd(55, 150).toFixed(0) + "vh");
+        b.style.setProperty("--dur", rnd(1.4, 3.4).toFixed(2));
       }
       host.appendChild(b);
     }
