@@ -1,7 +1,7 @@
 /* NULL — content.js
    Hand-edited site content that search + the home dashboard read.
-   Games, apps and proxies are discovered automatically (see scripts/);
-   announcements and page descriptions live here on purpose. */
+   The game/app/proxy library itself lives in src/catalog/generated-catalog.js
+   (built with /tools); announcements and page descriptions live here. */
 window.NULL_CONTENT = {
   announcements: [
     {

@@ -108,6 +108,11 @@
     unlock: "lock_open",
     tip: "lightbulb",
     trend: "trending_up",
+    wrench: "build",
+    code: "code",
+    beaker: "science",
+    eye: "visibility",
+    pause: "pause",
   };
 
   function icon(name, cls) {

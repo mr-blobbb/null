@@ -4444,6 +4444,23 @@ html[data-perf="1"] .nav-dot {
 }
 
 /* ============================================================
+   settings — fit + finish
+   Long labels shrink rather than shoving their control off the card, and
+   every card is allowed to shrink inside the grid. Lives here (not
+   global.css) so it always loads after the base settings rules.
+   ============================================================ */
+.set-card {
+  min-width: 0;
+}
+.set-row .lbl-txt {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.set-grid .set-card--wide {
+  grid-column: 1 / -1;
+}
+
+/* ============================================================
    home — tip of the day
    ============================================================ */
 .tip-card {
@@ -4451,6 +4468,10 @@ html[data-perf="1"] .nav-dot {
   align-items: flex-start;
   gap: 14px;
   padding: 16px 18px;
+  border-radius: var(--r-lg);
+  background:
+    linear-gradient(112deg, color-mix(in srgb, var(--ac-1) 10%, transparent), transparent 58%),
+    var(--glass-bg);
 }
 .tip-ic {
   display: grid;
@@ -4484,55 +4505,290 @@ html[data-perf="1"] .nav-dot {
 }
 
 /* ============================================================
-   home — "new since your last visit" marquee
+   glow border — the whole page glows with the ring
+   Every card surface picks up a soft edge glow in the live border
+   palette (theme.js publishes --glow-1..4), so changing the glow
+   preset re-inks the cards, not just the viewport edge.
    ============================================================ */
-.new-strip {
-  overflow: hidden;
-  padding: 12px 0;
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
-  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+html[data-glow] :is(.glass, .panel, .tcard, .rec-row, .ann-card, .set-card, .shop-row),
+html[data-pack="neon"] :is(.glass, .panel, .tcard, .rec-row, .ann-card, .set-card, .shop-row) {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--glow-1, #35c3f2) 22%, transparent),
+    0 0 18px -6px color-mix(in srgb, var(--glow-2, #a86bff) 42%, transparent);
+  transition:
+    box-shadow 0.2s var(--ease),
+    border-color 0.2s var(--ease),
+    background 0.18s var(--ease);
 }
-.new-track {
-  display: inline-flex;
+html[data-glow] :is(.glass, .panel, .tcard, .rec-row, .ann-card, .set-card, .shop-row):hover,
+html[data-pack="neon"] :is(.glass, .panel, .tcard, .rec-row, .ann-card, .set-card, .shop-row):hover {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--glow-1, #35c3f2) 40%, transparent),
+    0 0 26px -4px color-mix(in srgb, var(--glow-2, #a86bff) 62%, transparent);
+}
+/* the dialog is the one surface allowed to glow hard */
+html[data-glow] .modal,
+html[data-pack="neon"] .modal {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--glow-1, #35c3f2) 34%, transparent),
+    0 0 44px -10px color-mix(in srgb, var(--glow-2, #a86bff) 70%, transparent);
+}
+
+/* ============================================================
+   daily — crate strip, quests, achievements
+   ============================================================ */
+.daily-strip {
+  display: flex;
   align-items: center;
-  gap: 18px;
-  white-space: nowrap;
-  animation: nsScroll var(--ns-dur, 30s) linear infinite;
-  will-change: transform;
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: var(--r-lg);
 }
-.new-strip:hover .new-track {
-  animation-play-state: paused;
+.daily-strip.ready {
+  background:
+    linear-gradient(112deg, color-mix(in srgb, var(--ac-1) 12%, transparent), transparent 58%),
+    var(--glass-bg);
+  border-color: color-mix(in srgb, var(--ac-1) 32%, var(--line));
 }
-.ns-item {
-  font-size: 14.5px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: color 0.18s var(--ease);
+.daily-ic {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  border-radius: var(--r-md);
+  color: var(--ac-1);
+  background: var(--glass-bg-3);
+  border: 1px solid var(--line);
 }
-.ns-item:hover {
+.daily-ic .msr {
+  font-size: 21px;
+}
+.daily-strip.ready .daily-ic {
+  box-shadow: 0 0 18px -5px color-mix(in srgb, var(--ac-1) 70%, transparent);
+}
+.daily-txt {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.daily-txt b {
+  font-size: 15px;
+}
+.daily-txt span {
+  font-size: 13px;
+  color: var(--text-2);
+}
+.daily-chips {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+.daily-acts {
+  display: flex;
+  gap: 8px;
+  flex: none;
+}
+
+/* the crate itself — a box that shakes while opening, then pops */
+.crate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+.crate-box {
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 96px;
+  border-radius: var(--r-lg);
+  background:
+    radial-gradient(62% 62% at 50% 28%, color-mix(in srgb, var(--ac-1) 26%, transparent), transparent 72%),
+    var(--glass-bg-2);
+  border: 1px solid color-mix(in srgb, var(--ac-1) 32%, var(--line));
+}
+.crate-box .crate-ic {
   color: var(--ac-1);
 }
-.ns-dot {
-  color: var(--text-2);
+.crate-box .msr {
+  font-size: 46px;
+}
+.crate-box.rolling {
+  animation: crateShake 0.42s ease-in-out infinite;
+}
+.crate-box.open {
+  animation: cratePop 0.55s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+@keyframes crateShake {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+  50% {
+    transform: translateY(-4px) rotate(2deg);
+  }
+}
+@keyframes cratePop {
+  0% {
+    transform: scale(0.86);
+  }
+  60% {
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.crate-num {
+  min-height: 38px;
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  transition: color 0.2s var(--ease), opacity 0.2s var(--ease);
+}
+.crate-num.rolling {
   opacity: 0.55;
 }
-@keyframes nsScroll {
-  from {
-    transform: translateX(0);
+.crate-num.won {
+  color: var(--ac-1);
+  text-shadow: 0 0 24px color-mix(in srgb, var(--ac-1) 60%, transparent);
+}
+.crate-note {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--text-2);
+}
+.crate-cap {
+  margin: 6px 0 0;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+.crate-tiers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+/* progress rows — shared by daily quests and achievements */
+.pg-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pg-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: var(--r-lg);
+  background: var(--glass-bg);
+  border: 1px solid var(--line);
+}
+.pg-row.ready {
+  background:
+    linear-gradient(112deg, color-mix(in srgb, var(--ac-1) 10%, transparent), transparent 62%),
+    var(--glass-bg);
+  border-color: color-mix(in srgb, var(--ac-1) 38%, var(--line));
+}
+.pg-row.done {
+  opacity: 0.62;
+}
+.pg-ic {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  border-radius: var(--r-md);
+  color: var(--ac-1);
+  background: var(--glass-bg-3);
+  border: 1px solid var(--line);
+}
+.pg-ic .msr {
+  font-size: 20px;
+}
+.pg-row.done .pg-ic {
+  color: var(--text-2);
+}
+.pg-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.pg-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.pg-top b {
+  font-size: 14.5px;
+}
+.pg-meta {
+  flex: none;
+  font-size: 12px;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+.pg-sub {
+  font-size: 13px;
+  color: var(--text-2);
+}
+.pg-bar {
+  height: 6px;
+  margin-top: 5px;
+  border-radius: 999px;
+  background: var(--glass-bg-3);
+  overflow: hidden;
+}
+.pg-bar i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--ac-1), var(--ac-2, var(--ac-1)));
+  transition: width 0.45s var(--ease);
+}
+.pg-row.ready .pg-bar i {
+  box-shadow: 0 0 12px color-mix(in srgb, var(--ac-1) 70%, transparent);
+}
+.pg-side {
+  flex: none;
+}
+.shop-row.ready {
+  background:
+    linear-gradient(112deg, color-mix(in srgb, var(--ac-1) 10%, transparent), transparent 62%),
+    var(--glass-bg);
+  border-color: color-mix(in srgb, var(--ac-1) 38%, var(--line));
+}
+@media (max-width: 760px) {
+  .daily-strip {
+    flex-wrap: wrap;
   }
-  to {
-    transform: translateX(-50%);
+  .daily-chips {
+    margin-left: 0;
+  }
+  .daily-acts {
+    width: 100%;
   }
 }
-html[data-perf="1"] .new-track {
-  animation-duration: calc(var(--ns-dur, 30s) * 2);
-}
-@media (prefers-reduced-motion: reduce) {
-  .new-track {
-    animation: none;
+@media (max-width: 620px) {
+  .pg-row {
+    flex-wrap: wrap;
   }
-  .new-strip {
-    overflow-x: auto;
+  .pg-side,
+  .pg-claim {
+    width: 100%;
   }
 }
 
@@ -4707,6 +4963,75 @@ html[data-perf="1"] .pl-core {
   transform: translateY(-3px);
   border-color: var(--line-2);
 }
+
+/* list layout — the Settings cards stretch the full width as compact rows
+   instead of a wall of chunky tile cards */
+.shop-grid--list {
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+.shop-grid--list .shop-card,
+.shop-grid--list .shop-card:hover {
+  flex-direction: row;
+  align-items: stretch;
+  transform: none;
+}
+.shop-grid--list .shop-card:hover {
+  border-color: var(--line-2);
+}
+.shop-grid--list .pack-thumb,
+.shop-grid--list .part-thumb {
+  width: 168px;
+  flex: 0 0 168px;
+  aspect-ratio: 16 / 10;
+  border-bottom: 0;
+  border-right: 1px solid var(--line);
+}
+.shop-grid--list .pack-strip {
+  flex-direction: column;
+  width: 6px;
+  height: auto;
+}
+.shop-grid--list .shop-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 12px 14px;
+}
+.shop-grid--list .shop-info p {
+  margin-bottom: 6px;
+}
+.shop-grid--list .shop-foot {
+  flex: 0 0 auto;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-end;
+  padding: 12px 14px;
+}
+@media (max-width: 620px) {
+  .shop-grid--list .shop-card,
+  .shop-grid--list .shop-card:hover {
+    flex-direction: column;
+  }
+  .shop-grid--list .pack-thumb,
+  .shop-grid--list .part-thumb {
+    width: auto;
+    flex: none;
+    aspect-ratio: 16 / 9;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .shop-grid--list .pack-strip {
+    flex-direction: row;
+    width: auto;
+    height: 7px;
+  }
+  .shop-grid--list .shop-foot {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
 .shop-card.owned {
   border-color: color-mix(in srgb, var(--ok) 34%, var(--line));
 }
@@ -4834,6 +5159,7 @@ html[data-perf="1"] .pl-core {
 .pack-preview {
   background: linear-gradient(170deg, var(--pk-bg-1, transparent), var(--pk-bg-2, transparent));
   --pf-fall: 130vh;
+  --pf-rise: 70vh;
   --pf-blur: 70px;
 }
 .pack-fx {
@@ -4851,14 +5177,57 @@ html[data-perf="1"] .pl-core {
   inset: 0;
   display: block;
 }
-.pf-dots b {
+/* every particle kind shares this base; each kind then shapes + animates
+   its own <b> children from the random props theme.js writes inline */
+.pf-p b {
   position: absolute;
   display: block;
+  opacity: var(--o, 0.6);
   animation-iteration-count: infinite;
   animation-timing-function: linear;
+  animation-duration: calc(var(--dur, 5) * 1s);
+  animation-delay: calc(var(--delay, 0) * -1s);
+}
+/* light mode: the pack keeps its palette but the page tint flips from the
+   pack's dark sheet to a soft daylight wash, so a pack reads as a tint on a
+   bright page instead of dumping a black rectangle behind it. `!important`
+   is required because the tints are written inline by theme.js. */
+html[data-theme="light"] .pack-fx,
+html[data-theme="light"] .pack-preview {
+  --pk-bg-1: #f8f8fa !important;
+  --pk-bg-2: #e9ebf2 !important;
 }
 html[data-theme="light"] .pack-fx {
-  opacity: 0.4;
+  filter: saturate(1.25) contrast(1.04);
+}
+/* ...but the particle hosts are pale-on-dark art (white stars, white dust,
+   white rain specks) and would disappear over the daylight wash. Darkening
+   only the particle hosts — never the backdrop — keeps the tint soft while
+   the same shapes stay visible. */
+html[data-theme="light"] .pack-fx .pf-p,
+html[data-theme="light"] .pack-preview .pf-p {
+  filter: saturate(1.5) brightness(0.6) contrast(1.15);
+}
+/* synthwave's sun and grid keep their colour, just deepened for daylight */
+html[data-theme="light"] [data-pack="synthwave"] .pf-c {
+  filter: saturate(1.35) brightness(0.82);
+}
+html[data-theme="light"] [data-pack="synthwave"] .pf-b {
+  filter: saturate(1.4) brightness(0.7);
+}
+/* neon's glow lines are far too pale for a white page: deepen them so the
+   wireframe still reads as light rather than washing out */
+html[data-theme="light"] [data-pack="neon"] .pf-b,
+html[data-theme="light"] [data-pack="neon"] .pf-c {
+  filter: saturate(1.6) brightness(0.72);
+}
+html[data-theme="light"] [data-pack="neon"] .pf-b {
+  filter: saturate(1.7) brightness(0.6) drop-shadow(0 0 8px color-mix(in srgb, var(--glow-1, #00e5ff) 65%, transparent));
+}
+/* the matrix scanlines stay dark, but lighter, so they read as texture only */
+html[data-theme="light"] [data-pack="matrix"] .pf-b {
+  background-image: repeating-linear-gradient(0deg, rgba(17, 17, 19, 0.12) 0 1px, transparent 1px 3px);
+  opacity: 0.7;
 }
 html[data-perf="1"] .pack-fx {
   display: none;
@@ -4915,8 +5284,8 @@ html[data-perf="1"] .pack-fx {
   background-image: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.3) 0 1px, transparent 1px 3px);
   opacity: 0.45;
 }
-[data-pack="matrix"] .pf-dots b {
-  top: -14%;
+/* rain — thin streaks of light falling */
+.pf-p-rain b {
   width: calc(var(--s) * 0.9);
   height: calc(var(--s) * 9);
   border-radius: 999px;
@@ -4924,6 +5293,137 @@ html[data-perf="1"] .pack-fx {
   box-shadow: 0 0 7px color-mix(in srgb, var(--pk-1) 60%, transparent);
   opacity: 0.75;
   animation-name: pk-fall;
+}
+/* star — bright twinkling points */
+.pf-p-star b {
+  width: var(--s);
+  height: var(--s);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 6px color-mix(in srgb, var(--pk-3) 80%, transparent);
+  animation-name: pk-twinkle;
+  animation-timing-function: ease-in-out;
+}
+/* starFar — dimmer stars that slowly slide across, giving the field depth */
+.pf-p-starfar b {
+  width: calc(var(--s) * 0.7);
+  height: calc(var(--s) * 0.7);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--pk-4) 60%, #fff);
+  animation-name: pk-starDrift;
+  animation-duration: calc(var(--dur, 5) * 6s);
+  animation-timing-function: ease-in-out;
+  animation-direction: alternate;
+}
+/* dust — tiny specks floating through the light */
+.pf-p-dust b {
+  width: calc(var(--s) * 0.6);
+  height: calc(var(--s) * 0.6);
+  border-radius: 50%;
+  background: var(--pk-3);
+  filter: blur(0.4px);
+  animation-name: pk-dust;
+  animation-duration: calc(var(--dur, 5) * 8s);
+  animation-direction: alternate;
+  animation-timing-function: ease-in-out;
+}
+/* ribbon — the aurora curtains themselves: tall blurred bands of light */
+.pf-p-ribbon b {
+  width: calc(var(--s) * 6);
+  height: calc(28% + var(--s) * 14);
+  border-radius: 999px;
+  filter: blur(calc(var(--s) * 3));
+  background: linear-gradient(180deg, transparent, var(--pk-1) 32%, var(--pk-3) 70%, transparent);
+  mix-blend-mode: screen;
+  animation-name: pk-ribbon;
+  animation-duration: calc(var(--dur, 5) * 5s);
+  animation-direction: alternate;
+  animation-timing-function: ease-in-out;
+}
+/* smoke — puffs rising, swelling and fading out */
+.pf-p-smoke b {
+  width: calc(var(--s) * 9);
+  height: calc(var(--s) * 9);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--pk-2) 60%, transparent), transparent 72%);
+  filter: blur(calc(var(--s) * 1.6));
+  animation-name: pk-smoke;
+  animation-duration: calc(var(--dur, 5) * 3.4s);
+  animation-timing-function: ease-out;
+}
+/* cloud — wide, slow banks of haze drifting sideways */
+.pf-p-cloud b {
+  width: calc(var(--s) * 46);
+  height: calc(var(--s) * 26);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--pk-3) 45%, transparent), transparent 74%);
+  filter: blur(calc(var(--pf-blur) * 0.8));
+  animation-name: pk-cloud;
+  animation-duration: calc(var(--dur, 5) * 7s);
+  animation-direction: alternate;
+  animation-timing-function: ease-in-out;
+}
+@keyframes pk-starDrift {
+  from {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  to {
+    transform: translate3d(var(--dx, 40px), 0, 0);
+    opacity: 0.25;
+  }
+}
+@keyframes pk-dust {
+  from {
+    transform: translate3d(0, 0, 0) scale(0.8);
+    opacity: 0.1;
+  }
+  to {
+    transform: translate3d(var(--dx, 40px), calc(var(--dx, 40px) * -0.4), 0) scale(1.2);
+    opacity: 0.5;
+  }
+}
+@keyframes pk-ribbon {
+  from {
+    transform: translate3d(0, 0, 0) rotate(var(--rot, 0deg)) scaleY(0.85);
+    opacity: 0.12;
+  }
+  50% {
+    opacity: var(--o, 0.6);
+  }
+  to {
+    transform: translate3d(var(--dx, 40px), -6%, 0) rotate(calc(var(--rot, 0deg) + 8deg)) scaleY(1.15);
+    opacity: 0.2;
+  }
+}
+@keyframes pk-smoke {
+  from {
+    transform: translate3d(0, 0, 0) scale(0.7);
+    opacity: 0;
+  }
+  18% {
+    opacity: var(--o, 0.6);
+  }
+  to {
+    transform: translate3d(var(--dx, 40px), calc(var(--pf-rise, 70vh) * -1), 0) scale(1.7);
+    opacity: 0;
+  }
+}
+@keyframes pk-cloud {
+  from {
+    transform: translate3d(calc(var(--dx, 40px) * -1), 0, 0) scale(1);
+    opacity: 0.12;
+  }
+  50% {
+    opacity: 0.45;
+  }
+  to {
+    transform: translate3d(var(--dx, 40px), -4%, 0) scale(1.15);
+    opacity: 0.18;
+  }
 }
 @keyframes pk-fall {
   to {
@@ -4986,7 +5486,9 @@ html[data-perf="1"] .pack-fx {
   background: radial-gradient(closest-side, var(--pk-3), transparent 72%);
   animation: pk-drift-b 34s ease-in-out infinite alternate;
 }
-[data-pack="aurora"] .pf-dots {
+[data-pack="aurora"] .pf-a::after {
+  content: "";
+  position: absolute;
   inset: -20% -10%;
   border-radius: 50%;
   filter: blur(calc(var(--pf-blur) * 1.15));
@@ -5029,15 +5531,6 @@ html[data-perf="1"] .pack-fx {
 [data-pack="cosmos"] .pf-b {
   background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--pk-3) 42%, transparent), transparent 62%);
   animation: pk-breathe 18s ease-in-out infinite alternate;
-}
-[data-pack="cosmos"] .pf-dots b {
-  width: var(--s);
-  height: var(--s);
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 0 6px color-mix(in srgb, var(--pk-3) 85%, transparent);
-  animation-name: pk-twinkle;
-  animation-timing-function: ease-in-out;
 }
 @keyframes pk-twinkle {
   0%,
@@ -5097,6 +5590,706 @@ html[data-perf="1"] .pack-fx {
   }
 }
 
+/* ---- neon: a glowing wireframe room ----------------------------------
+   The one pack that doesn't use --pk-*: every line, tube and halo is pulled
+   from --glow-1..4, which theme.js publishes from the live glow-border
+   preset. Change the border and the room re-inks with it. */
+[data-pack="neon"] .pf-a {
+  background:
+    radial-gradient(44% 40% at 16% 20%, color-mix(in srgb, var(--glow-1, #00e5ff) 34%, transparent), transparent 70%),
+    radial-gradient(48% 44% at 84% 28%, color-mix(in srgb, var(--glow-2, #b14bff) 30%, transparent), transparent 72%),
+    radial-gradient(56% 48% at 50% 98%, color-mix(in srgb, var(--glow-3, #ff2d95) 26%, transparent), transparent 74%),
+    linear-gradient(180deg, var(--pk-bg-1), var(--pk-bg-2));
+}
+/* the floor: a perspective grid running at the viewer, drawn in glow lines */
+[data-pack="neon"] .pf-b {
+  inset: auto 0 -2%;
+  height: 46%;
+  background-image:
+    repeating-linear-gradient(90deg, color-mix(in srgb, var(--glow-1, #00e5ff) 62%, transparent) 0 1px, transparent 1px 56px),
+    repeating-linear-gradient(0deg, color-mix(in srgb, var(--glow-2, #b14bff) 55%, transparent) 0 1px, transparent 1px 36px);
+  transform: perspective(420px) rotateX(74deg);
+  transform-origin: 50% 100%;
+  filter: drop-shadow(0 0 9px color-mix(in srgb, var(--glow-1, #00e5ff) 75%, transparent));
+  -webkit-mask-image: linear-gradient(to top, #000 8%, transparent 88%);
+  mask-image: linear-gradient(to top, #000 8%, transparent 88%);
+  animation: pk-neon-floor 2.6s linear infinite;
+}
+@keyframes pk-neon-floor {
+  to {
+    background-position: 0 0, 0 36px;
+  }
+}
+/* the centrepiece: a wireframe orbit with a second ring turning against it */
+[data-pack="neon"] .pf-c {
+  inset: 10% auto auto 50%;
+  width: 40%;
+  aspect-ratio: 1;
+  margin-left: -20%;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--glow-3, #ff2d95) 70%, transparent);
+  box-shadow:
+    0 0 46px color-mix(in srgb, var(--glow-3, #ff2d95) 55%, transparent),
+    inset 0 0 70px color-mix(in srgb, var(--glow-2, #b14bff) 40%, transparent);
+  animation: pk-neon-orbit 26s linear infinite;
+}
+[data-pack="neon"] .pf-c::after {
+  content: "";
+  position: absolute;
+  inset: 14%;
+  border-radius: 50%;
+  border: 1px dashed color-mix(in srgb, var(--glow-1, #00e5ff) 55%, transparent);
+  animation: pk-neon-orbit 17s linear infinite reverse;
+}
+@keyframes pk-neon-orbit {
+  from {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.07);
+  }
+  to {
+    transform: rotate(360deg) scale(1);
+  }
+}
+/* neonTube — standing bars of light, flickering like a bad sign */
+.pf-p-neontube b {
+  width: calc(var(--s) * 1.8);
+  height: calc(var(--s) * 40);
+  border-radius: 999px;
+  background: linear-gradient(180deg, transparent, var(--glow-4, #6cff9e) 26%, #fff 74%, var(--glow-1, #00e5ff));
+  box-shadow:
+    0 0 12px color-mix(in srgb, var(--glow-1, #00e5ff) 85%, transparent),
+    0 0 40px color-mix(in srgb, var(--glow-4, #6cff9e) 55%, transparent);
+  animation:
+    pk-neon-flicker calc(var(--dur, 5) * 0.5s) steps(2, end) infinite,
+    pk-neon-bob calc(var(--dur, 5) * 6s) ease-in-out infinite alternate;
+  animation-delay: calc(var(--delay, 0) * -1s);
+}
+@keyframes pk-neon-flicker {
+  0%,
+  100% {
+    opacity: var(--o, 0.6);
+  }
+  50% {
+    opacity: calc(var(--o, 0.6) * 0.55);
+  }
+}
+@keyframes pk-neon-bob {
+  from {
+    transform: translate3d(0, 0, 0) scaleY(0.88);
+  }
+  to {
+    transform: translate3d(calc(var(--dx, 40px) * 0.35), calc(var(--dx, 40px) * -0.25), 0) scaleY(1.12);
+  }
+}
+/* neonPulse — rings of light swelling across the room */
+.pf-p-neonpulse b {
+  width: calc(var(--s) * 80);
+  height: calc(var(--s) * 80);
+  border-radius: 50%;
+  border: calc(var(--s) * 0.5) solid color-mix(in srgb, var(--glow-2, #b14bff) 60%, transparent);
+  box-shadow: 0 0 30px color-mix(in srgb, var(--glow-2, #b14bff) 55%, transparent);
+  animation-name: pk-neon-pulse;
+  animation-duration: calc(var(--dur, 5) * 4.4s);
+  animation-timing-function: ease-out;
+  animation-delay: calc(var(--delay, 0) * -1s);
+}
+@keyframes pk-neon-pulse {
+  from {
+    transform: scale(0.2);
+    opacity: 0;
+  }
+  22% {
+    opacity: var(--o, 0.6);
+  }
+  to {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* ---- free packs: same engine, deliberately quieter ---- */
+[data-pack="dawn"] .pf-a {
+  background:
+    radial-gradient(80% 55% at 50% -8%, color-mix(in srgb, var(--pk-1) 38%, transparent), transparent 66%),
+    radial-gradient(70% 46% at 22% 2%, color-mix(in srgb, var(--pk-2) 24%, transparent), transparent 68%),
+    linear-gradient(180deg, var(--pk-bg-1), var(--pk-bg-2));
+}
+[data-pack="dawn"] .pf-b {
+  background-image: linear-gradient(180deg, color-mix(in srgb, var(--pk-4) 16%, transparent), transparent 62%);
+}
+[data-pack="mist"] .pf-a {
+  background: linear-gradient(180deg, var(--pk-bg-1), var(--pk-bg-2));
+}
+[data-pack="mist"] .pf-b {
+  background: radial-gradient(64% 42% at 30% 72%, color-mix(in srgb, var(--pk-3) 22%, transparent), transparent 72%);
+}
+
+/* ---- pack cards (settings + shop share these) ---- */
+.pack-card.playing {
+  border-color: var(--ac-1);
+}
+.pack-card.locked {
+  border-color: var(--line-2);
+}
+.pack-foot-note {
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+/* ============================================================
+   ambient particles — the extended set
+   The layered kinds the Shop's particles are built from (bloom, trail,
+   wisp, flare, glint, swirl, speck) plus the warp core. The warp rules
+   carry an extra ancestor so they beat the base kind whichever order the
+   two blocks end up in.
+   ============================================================ */
+/* warp — a bright core at dead centre. theme.js pins left/top to 50%, and
+   the negative margin centres each streak's box on that point, so with
+   transform-origin at the left edge every streak really does leave the
+   exact middle of the viewport. */
+.part-fx .pt-p-warp::before,
+.part-preview .pt-p-warp::before {
+  background: radial-gradient(
+    closest-side at 50% 50%,
+    color-mix(in srgb, #fff 60%, transparent),
+    color-mix(in srgb, var(--pt-3) 40%, transparent) 26%,
+    color-mix(in srgb, var(--pt-2) 24%, transparent) 42%,
+    transparent 64%
+  );
+}
+.part-fx .pt-p-warp b,
+.part-preview .pt-p-warp b {
+  width: calc(var(--s) * 44);
+  margin-top: calc(var(--s) * -0.7);
+  transform-origin: 0 50%;
+}
+/* tunnel — rings rushing out of the exact centre as well */
+.pt-p-tunnel b {
+  width: calc(var(--s) * 44);
+  height: calc(var(--s) * 44);
+  margin: calc(var(--s) * -22) 0 0 calc(var(--s) * -22);
+  border-radius: 50%;
+  border: calc(var(--s) * 0.4) solid color-mix(in srgb, var(--pt-2) 55%, transparent);
+  box-shadow: 0 0 22px color-mix(in srgb, var(--pt-3) 50%, transparent);
+  animation-name: pt-tunnel;
+  animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+/* bloom — wide halos that give the field depth */
+.pt-p-bloom b {
+  width: calc(var(--s) * 54);
+  height: calc(var(--s) * 54);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--pt-1) 36%, transparent), transparent 72%);
+  filter: blur(calc(var(--s) * 6));
+  animation-name: pt-bloom;
+  animation-duration: calc(var(--dur, 5) * 7s);
+  animation-direction: alternate;
+  animation-timing-function: ease-in-out;
+}
+/* trail — motion streaks with a hot head */
+.pt-p-trail b {
+  width: calc(var(--s) * 34);
+  height: calc(var(--s) * 0.9);
+  border-radius: 999px;
+  transform-origin: 0 50%;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--pt-2) 75%, transparent) 68%, #fff);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--pt-2) 55%, transparent);
+  animation-name: pt-trail;
+  animation-duration: calc(var(--dur, 5) * 3.8s);
+  animation-timing-function: ease-in-out;
+}
+/* wisp — curling ribbons of smoke */
+.pt-p-wisp b {
+  width: calc(var(--s) * 11);
+  height: calc(var(--s) * 48);
+  border-radius: 999px;
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--pt-2) 62%, transparent) 42%, transparent);
+  filter: blur(calc(var(--s) * 2.4));
+  animation-name: pt-wisp;
+  animation-duration: calc(var(--dur, 5) * 6s);
+  animation-direction: alternate;
+  animation-timing-function: ease-in-out;
+}
+/* flare — four-ray crosses that bloom and twist */
+.pt-p-flare b {
+  width: calc(var(--s) * 30);
+  height: calc(var(--s) * 30);
+  background:
+    linear-gradient(0deg, transparent 47%, color-mix(in srgb, var(--pt-1) 92%, transparent) 49% 51%, transparent 53%),
+    linear-gradient(90deg, transparent 47%, color-mix(in srgb, var(--pt-1) 92%, transparent) 49% 51%, transparent 53%),
+    radial-gradient(closest-side, #fff 5%, transparent 42%);
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--pt-3) 95%, transparent));
+  animation-name: pt-flare;
+  animation-duration: calc(var(--dur, 5) * 5s);
+  animation-timing-function: ease-in-out;
+}
+/* glint — hard little highlights */
+.pt-p-glint b {
+  width: calc(var(--s) * 1.8);
+  height: calc(var(--s) * 1.8);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 14px 3px color-mix(in srgb, var(--pt-3) 80%, transparent);
+  animation-name: pt-glint;
+  animation-duration: calc(var(--dur, 5) * 1.7s);
+  animation-timing-function: ease-out;
+}
+/* swirl — huge spinning colour fields */
+.pt-p-swirl b {
+  width: calc(var(--s) * 200);
+  height: calc(var(--s) * 200);
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    color-mix(in srgb, var(--pt-1) 72%, transparent),
+    color-mix(in srgb, var(--pt-3) 62%, transparent),
+    color-mix(in srgb, var(--pt-2) 68%, transparent),
+    color-mix(in srgb, var(--pt-1) 72%, transparent)
+  );
+  filter: blur(calc(var(--s) * 10));
+  mix-blend-mode: screen;
+  animation-name: pt-swirl;
+  animation-duration: calc(var(--dur, 5) * 16s);
+}
+/* speck — tiny depth-of-field motes */
+.pt-p-speck b {
+  width: calc(var(--s) * 1.1);
+  height: calc(var(--s) * 1.1);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--pt-1) 90%, transparent);
+  box-shadow: 0 0 9px color-mix(in srgb, var(--pt-2) 70%, transparent);
+  filter: blur(calc((1.4 - var(--z, 1)) * 1.1px));
+  animation-name: pt-speck;
+  animation-duration: calc(var(--dur, 5) * 1.5s);
+  animation-timing-function: ease-in-out;
+}
+@keyframes pt-tunnel {
+  from {
+    transform: scale(0.05);
+    opacity: 0;
+  }
+  18% {
+    opacity: var(--o, 0.6);
+  }
+  to {
+    transform: scale(3.6);
+    opacity: 0;
+  }
+}
+@keyframes pt-bloom {
+  from {
+    transform: translate3d(0, 5%, 0) scale(0.7);
+    opacity: calc(var(--o, 0.6) * 0.3);
+  }
+  50% {
+    opacity: var(--o, 0.6);
+  }
+  to {
+    transform: translate3d(calc(var(--dx, 40px) * 0.5), -7%, 0) scale(1.3);
+    opacity: calc(var(--o, 0.6) * 0.4);
+  }
+}
+@keyframes pt-trail {
+  0%,
+  100% {
+    transform: rotate(var(--rot, 0deg)) scaleX(0.1);
+    opacity: 0;
+  }
+  50% {
+    transform: rotate(var(--rot, 0deg)) scaleX(1);
+    opacity: var(--o, 0.6);
+  }
+}
+@keyframes pt-wisp {
+  from {
+    transform: translate3d(0, 0, 0) rotate(calc(var(--rot, 0deg) * 0.7)) scaleY(0.8);
+    opacity: calc(var(--o, 0.6) * 0.3);
+  }
+  50% {
+    opacity: var(--o, 0.6);
+  }
+  to {
+    transform: translate3d(calc(var(--dx, 40px) * 0.6), calc(var(--dx, 40px) * -0.7), 0)
+      rotate(calc(var(--rot, 0deg) * -0.7 + 12deg)) scaleY(1.25);
+    opacity: calc(var(--o, 0.6) * 0.35);
+  }
+}
+@keyframes pt-flare {
+  0%,
+  100% {
+    transform: rotate(var(--rot, 0deg)) scale(0.45);
+    opacity: 0;
+  }
+  50% {
+    transform: rotate(calc(var(--rot, 0deg) + 45deg)) scale(1);
+    opacity: var(--o, 0.6);
+  }
+}
+@keyframes pt-glint {
+  0%,
+  100% {
+    transform: scale(0.25);
+    opacity: 0;
+  }
+  30% {
+    transform: scale(1);
+    opacity: var(--o, 0.6);
+  }
+  60% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
+@keyframes pt-swirl {
+  from {
+    transform: rotate(0deg) scale(0.85);
+  }
+  to {
+    transform: rotate(360deg) scale(1.12);
+  }
+}
+@keyframes pt-speck {
+  0%,
+  100% {
+    transform: scale(0.7);
+    opacity: calc(var(--o, 0.6) * 0.15);
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: var(--o, 0.6);
+  }
+}
+
+/* ============================================================
+   ambient particles — NULL's standalone background motion
+   One layer, one family of shapes. theme.js writes the random
+   numbers inline; every kind here turns them into motion. Mono
+   particles read their colour from CSS so they follow the site
+   theme; Shop particles get --pt-1..4 set inline from their palette.
+   ============================================================ */
+.part-fx,
+.part-preview {
+  --pt-1: var(--text);
+  --pt-2: var(--text-2);
+  --pt-3: var(--ac-1);
+  --pt-4: var(--text-2);
+}
+.part-fx {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.part-fx > span,
+.part-preview > span {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+.pt-p b {
+  position: absolute;
+  display: block;
+  opacity: var(--o, 0.6);
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+  animation-duration: calc(var(--dur, 5) * 1s);
+  animation-delay: calc(var(--delay, 0) * -1s);
+}
+html[data-perf="1"] .part-fx {
+  display: none;
+}
+.part-fx.pt-paused,
+.part-fx.pt-paused * {
+  animation-play-state: paused !important;
+}
+
+/* ---- free: motes — soft glowing dust rising ---- */
+.pt-p-mote b {
+  width: calc(var(--s) * 3.4);
+  height: calc(var(--s) * 3.4);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--pt-1) 95%, transparent), transparent 72%);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--pt-1) 45%, transparent);
+  animation-name: pt-rise;
+  animation-duration: calc(var(--dur, 5) * 3.4s);
+}
+/* ---- free: haze — wide slow clouds ---- */
+.pt-p-haze b {
+  width: calc(var(--s) * 62);
+  height: calc(var(--s) * 40);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--pt-2) 62%, transparent), transparent 74%);
+  filter: blur(34px);
+  animation-name: pt-cloud;
+  animation-duration: calc(var(--dur, 5) * 6s);
+  animation-direction: alternate;
+  animation-timing-function: ease-in-out;
+}
+/* ---- free: twinkle — pin-prick lights ---- */
+.pt-p-spark b {
+  width: calc(var(--s) * 2.4);
+  height: calc(var(--s) * 2.4);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, var(--pt-1) 45%, transparent 80%);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--pt-1) 90%, transparent);
+  animation-name: pt-twinkle;
+  animation-duration: calc(var(--dur, 5) * 2.2s);
+  animation-timing-function: ease-in-out;
+}
+/* ---- fireflies — glowing orbs that wander and pulse ---- */
+.pt-p-firefly b {
+  width: calc(var(--s) * 5);
+  height: calc(var(--s) * 5);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, #fff 10%, var(--pt-2) 36%, var(--pt-1) 60%, transparent 80%);
+  box-shadow:
+    0 0 20px color-mix(in srgb, var(--pt-1) 90%, transparent),
+    0 0 54px color-mix(in srgb, var(--pt-3) 55%, transparent);
+  animation:
+    pt-wander calc(var(--dur, 5) * 4s) ease-in-out infinite alternate,
+    pt-glow calc(var(--dur, 5) * 0.7s) ease-in-out infinite;
+  animation-delay: calc(var(--delay, 0) * -1s);
+}
+/* ---- embers — rising flames that flicker as they cool ---- */
+.pt-p-ember b {
+  width: calc(var(--s) * 3);
+  height: calc(var(--s) * 4.6);
+  border-radius: 50% 50% 46% 46% / 64% 64% 36% 36%;
+  background: radial-gradient(closest-side, #fff6d0 5%, var(--pt-2) 32%, var(--pt-1) 64%, transparent 84%);
+  box-shadow:
+    0 0 20px color-mix(in srgb, var(--pt-1) 90%, transparent),
+    0 0 52px color-mix(in srgb, var(--pt-3) 60%, transparent);
+  /* pt-flicker owns the opacity, so the rise only moves + shrinks — an ember
+     that cools as it climbs instead of popping in and out */
+  animation:
+    pt-ember-rise calc(var(--dur, 5) * 3.2s) linear infinite,
+    pt-flicker calc(var(--dur, 5) * 0.5s) ease-in-out infinite;
+  animation-delay: calc(var(--delay, 0) * -1s);
+}
+/* ---- bubbles — flat rings that rise and swell (NULL is a flat UI, so
+   these are outlined hoops rather than glossy glass spheres) ---- */
+.pt-p-bubble b {
+  width: calc(var(--s) * 8);
+  height: calc(var(--s) * 8);
+  border-radius: 50%;
+  border: calc(var(--s) * 0.55) solid color-mix(in srgb, var(--pt-2) 80%, transparent);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--pt-3) 40%, transparent);
+  animation-name: pt-bubble;
+  animation-duration: calc(var(--dur, 5) * 4.6s);
+  animation-delay: calc(var(--delay, 0) * -1s);
+}
+/* ---- starlight — real four-point stars that bloom and fade ---- */
+.pt-p-sparkle b {
+  width: calc(var(--s) * 10);
+  height: calc(var(--s) * 10);
+  background: radial-gradient(closest-side, #fff 4%, color-mix(in srgb, var(--pt-2) 90%, transparent) 42%, transparent 76%);
+  clip-path: polygon(50% 0%, 58% 42%, 100% 50%, 58% 58%, 50% 100%, 42% 58%, 0% 50%, 42% 42%);
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--pt-3) 95%, transparent));
+  animation-name: pt-sparkle;
+  animation-duration: calc(var(--dur, 5) * 2.4s);
+  animation-timing-function: ease-in-out;
+}
+/* ---- plasma — huge colour fields bleeding into each other ---- */
+.pt-p-plasma b {
+  width: calc(var(--s) * 180);
+  height: calc(var(--s) * 180);
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in srgb, var(--pt-1) 92%, transparent),
+    color-mix(in srgb, var(--pt-3) 52%, transparent) 50%,
+    transparent 76%
+  );
+  filter: blur(calc(var(--s) * 24));
+  mix-blend-mode: screen;
+  animation-name: pt-plasma;
+  animation-duration: calc(var(--dur, 5) * 9s);
+  animation-direction: alternate;
+  animation-timing-function: ease-in-out;
+}
+/* ---- warp — stars streaking outward from the middle ---- */
+.pt-p-warp::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(closest-side at 50% 50%, color-mix(in srgb, var(--pt-2) 34%, transparent), transparent 56%);
+}
+.pt-p-warp b {
+  width: calc(var(--s) * 36);
+  height: calc(var(--s) * 1.4);
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--pt-2) 70%, transparent) 45%, #fff);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--pt-2) 85%, transparent);
+  animation-name: pt-warp;
+  animation-timing-function: linear;
+}
+
+@keyframes pt-rise {
+  from {
+    transform: translate3d(0, 0, 0);
+    opacity: 0;
+  }
+  12% {
+    opacity: var(--o, 0.6);
+  }
+  85% {
+    opacity: var(--o, 0.6);
+  }
+  to {
+    transform: translate3d(var(--dx, 40px), -112vh, 0);
+    opacity: 0;
+  }
+}
+@keyframes pt-ember-rise {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(var(--dx, 40px), -116vh, 0) scale(0.34);
+  }
+}
+@keyframes pt-cloud {
+  from {
+    transform: translate3d(calc(var(--dx, 40px) * -1), 0, 0) scale(1);
+    opacity: calc(var(--o, 0.6) * 0.4);
+  }
+  50% {
+    opacity: var(--o, 0.6);
+  }
+  to {
+    transform: translate3d(var(--dx, 40px), -3%, 0) scale(1.14);
+    opacity: calc(var(--o, 0.6) * 0.55);
+  }
+}
+@keyframes pt-twinkle {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  50% {
+    opacity: var(--o, 0.6);
+    transform: scale(1);
+  }
+}
+@keyframes pt-wander {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(var(--dx, 40px), calc(var(--dx, 40px) * -0.55), 0);
+  }
+}
+@keyframes pt-glow {
+  0%,
+  100% {
+    opacity: calc(var(--o, 0.6) * 0.35);
+  }
+  50% {
+    opacity: var(--o, 0.6);
+  }
+}
+@keyframes pt-flicker {
+  0%,
+  100% {
+    opacity: calc(var(--o, 0.6) * 0.4);
+  }
+  40% {
+    opacity: var(--o, 0.6);
+  }
+  70% {
+    opacity: calc(var(--o, 0.6) * 0.7);
+  }
+}
+/* a bubble rises, swells and fades — the whole motion lives in one
+   keyframe so the ring can scale without fighting a translate */
+@keyframes pt-bubble {
+  from {
+    transform: translate3d(0, 0, 0) scale(0.4);
+    opacity: 0;
+  }
+  14% {
+    opacity: var(--o, 0.6);
+  }
+  78% {
+    opacity: var(--o, 0.6);
+  }
+  to {
+    transform: translate3d(calc(var(--dx, 40px) * 0.5), -108vh, 0) scale(1.2);
+    opacity: 0;
+  }
+}
+@keyframes pt-sparkle {
+  0% {
+    opacity: 0;
+    transform: rotate(0deg) scale(0.3);
+  }
+  40% {
+    opacity: var(--o, 0.6);
+    transform: rotate(30deg) scale(1);
+  }
+  60% {
+    opacity: var(--o, 0.6);
+    transform: rotate(45deg) scale(0.9);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(90deg) scale(0.3);
+  }
+}
+@keyframes pt-plasma {
+  from {
+    transform: translate3d(calc(var(--dx, 40px) * -1.5), 4%, 0) scale(0.7);
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+  to {
+    transform: translate3d(var(--dx, 40px), -5%, 0) scale(1.4);
+    opacity: 0.6;
+  }
+}
+@keyframes pt-warp {
+  from {
+    transform: rotate(var(--ang, 0deg)) translateX(0) scaleX(0.15);
+    opacity: 0;
+  }
+  14% {
+    opacity: var(--o, 0.9);
+  }
+  to {
+    transform: rotate(var(--ang, 0deg)) translateX(var(--dist, 80vh)) scaleX(2);
+    opacity: 0;
+  }
+}
+
+/* light mode: the same layers, re-inked so they read on a bright page.
+   Darkening the finished layer keeps every kind (including the Shop's pale
+   palettes) visible against white without touching the inline colours. */
+html[data-theme="light"] .part-fx,
+html[data-theme="light"] .part-preview {
+  filter: saturate(1.55) brightness(0.6) contrast(1.1);
+}
+
+/* ---- particle cards (settings + shop) ---- */
+.part-thumb {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-bottom: 1px solid var(--line);
+  background:
+    radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--text) 7%, transparent), transparent 72%),
+    var(--glass-bg-2);
+}
+.part-thumb .part-preview {
+  position: absolute;
+  inset: 0;
+}
+
 /* ============================================================
    shop — theme pack cards + settings swatches
    ============================================================ */
@@ -5111,19 +6304,28 @@ html[data-perf="1"] .pack-fx {
   position: absolute;
   inset: 0;
   --pf-fall: 340px;
+  --pf-rise: 200px;
   --pf-blur: 24px;
 }
-.pack-lock {
+/* a locked preview stays fully visible — nobody buys what they can't see.
+   The lock is just a badge in the corner of the thumbnail. */
+.pack-lock,
+.part-lock {
   position: absolute;
-  inset: 0;
+  inset: auto 9px 9px auto;
   display: grid;
   place-items: center;
-  background: rgba(0, 0, 0, 0.34);
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(12, 12, 14, 0.66);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   color: #fff;
-  backdrop-filter: blur(2px);
+  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.4);
 }
-.pack-lock .msr {
-  font-size: 26px;
+.pack-lock .msr,
+.part-lock .msr {
+  font-size: 15px;
 }
 .pack-strip {
   display: flex;
@@ -5191,30 +6393,15 @@ window.NULL_CONTENT = {
       id: "welcome",
       title: "Welcome to NULL",
       date: "2026-08-24",
-      category: "update",
-      desc: "NULL is up: a plain black-and-white hub for games, apps, proxies and tools. Recently played, tab cloaks and themes all live in your browser \u2014 nothing is uploaded anywhere.",
-    },
-    {
-      id: "new-games",
-      title: "Library refresh \u2014 PULSE, TRACE & FLIP",
-      date: "2026-08-26",
-      category: "update",
-      desc: "New first-party games landed in the library. Drop more folders into games/ and re-run the catalog build to add them automatically.",
-    },
-    {
-      id: "school-starts",
-      title: "Schedule is loaded",
-      date: "2026-08-17",
       category: "notice",
-      desc: "The schedule is live on the home page and the Schedule page: Regular days Monday/Wednesday/Friday, Homeroom/WIN on Tuesday/Thursday, with a live time-left clock. Rename your periods and pick your lunch period (4\u20136) right on the page.",
+      desc: "Welcome to NULL, a new alternative to SG Games developed by Mr Blob, hosting over 2,300 games, apps, and proxies, prioritizing the user first, always.",
     },
     {
-      id: "releases",
-      title: "Standalone releases",
-      date: "2026-09-01",
-      category: "update",
-      desc: "NULL Mini, Lite and Regular are generated as single-file builds in /releases. Each is fully standalone \u2014 no CSS, JS or catalog files needed.",
-      link: "/releases/null-regular.html",
+      id: "welcome",
+      title: "How to use",
+      date: "2026-08-26",
+      category: "notice",
+      desc: "Please read our TOS, Privacy Policy, and District policy to learn more about our rules!",
     },
   ],
 
@@ -5390,7 +6577,7 @@ window.NULL_CONTENT = {
 
   N.store = { read: read, write: write, del: del };
 
-  /* tiny pub/sub used to refresh lists when favorites/recent change */
+  /* ---------- tiny pub/sub used to refresh lists when favorites/recent change ---------- */
   var busMap = {};
   N.bus = {
     on: function (type, fn) {
@@ -5413,6 +6600,7 @@ window.NULL_CONTENT = {
   var DEFAULTS = {
     theme: "dark", // dark | light
     accent: "off", // palette id from theme.js
+    particles: "none", // ambient background particle id from econ.js
     glow: "off", // glow preset id from theme.js
     glowColor1: "#35c3f2", // custom glow color 1
     glowColor2: "#a86bff", // custom glow color 2
@@ -5457,6 +6645,16 @@ window.NULL_CONTENT = {
         write(PREFS_KEY, data);
         return data;
       },
+      /* re-read from storage after another NULL window wrote (see N.sync).
+         Patched in place so every `N.prefs.data` reference stays valid. */
+      reload: function () {
+        var fresh = Object.assign({}, DEFAULTS, read(PREFS_KEY, {}));
+        Object.keys(data).forEach(function (k) {
+          if (!(k in fresh)) delete data[k];
+        });
+        Object.assign(data, fresh);
+        return data;
+      },
     };
   })();
 
@@ -5477,6 +6675,13 @@ window.NULL_CONTENT = {
       clear: function () {
         data = {};
         del(FLAGS_KEY);
+      },
+      reload: function () {
+        var fresh = read(FLAGS_KEY, {});
+        Object.keys(data).forEach(function (k) {
+          delete data[k];
+        });
+        Object.assign(data, fresh);
       },
     };
   })();
@@ -5510,6 +6715,9 @@ window.NULL_CONTENT = {
       clear: function () {
         items = [];
         save();
+      },
+      reload: function () {
+        items = read(RECENT_KEY, []);
       },
     };
   })();
@@ -5553,6 +6761,9 @@ window.NULL_CONTENT = {
         items = [];
         save();
       },
+      reload: function () {
+        items = read(FAVS_KEY, []);
+      },
     };
   })();
 
@@ -5568,6 +6779,9 @@ window.NULL_CONTENT = {
       },
       count: function (kind, id) {
         return data[kind + ":" + id] || 0;
+      },
+      reload: function () {
+        data = read(PLAYS_KEY, {});
       },
     };
   })();
@@ -5617,6 +6831,9 @@ window.NULL_CONTENT = {
       reset: function () {
         data = { week: mondayOf(new Date()), plays: [] };
         save();
+      },
+      reload: function () {
+        data = read(WEEK_KEY, { week: mondayOf(new Date()), plays: [] });
       },
       summary: function (plays) {
         plays = plays || data.plays;
@@ -5696,6 +6913,54 @@ window.NULL_CONTENT = {
       });
     },
   };
+
+  /* ---------- live sync between NULL windows ----------
+     One origin shares one storage area, and every same-origin way of running
+     NULL shares it: a second tab, the installed app window, and the cloaked
+     about:blank / blob: windows (they frame the real site). The browser fires
+     `storage` in the *other* windows whenever one of them writes, so they can
+     stay in step with no server. A genuinely different origin — another host
+     or a preview link — can never see it; that is what the Settings backup
+     file is for. */
+  var reloaders = [
+    N.prefs.reload,
+    N.flags.reload,
+    N.recent.reload,
+    N.favs.reload,
+    N.plays.reload,
+    N.week.reload,
+  ];
+
+  function resync() {
+    reloaders.forEach(function (fn) {
+      try {
+        fn();
+      } catch (err) {}
+    });
+    N.bus.emit("sync");
+  }
+
+  N.sync = {
+    /* modules holding their own cache (the economy) register a reload here */
+    register: function (fn) {
+      reloaders.push(fn);
+    },
+    now: resync,
+    watch: function () {
+      window.addEventListener("storage", function (e) {
+        /* a null key means localStorage.clear() somewhere on this origin */
+        if (e.key && e.key.indexOf("null:") !== 0) return;
+        resync();
+      });
+      /* a backgrounded window can be throttled and miss events; catch up when
+         it comes back to the front instead of staying stale */
+      document.addEventListener("visibilitychange", function () {
+        if (!document.hidden) resync();
+      });
+    },
+  };
+
+  N.sync.watch();
 })();
 
 ;
@@ -5706,7 +6971,12 @@ window.NULL_CONTENT = {
    the XP boost and effects. Nothing ever leaves the browser.
 
    Unlock state lives in null:eco:
-     { time, xp, coins, next, pend, boostUntil, unlocks: { games, themes, fx } } */
+     { time, xp, coins, next, pend, boostUntil, unlocks: { games, themes, particles, fx },
+       earned, buys, plays, seen, day, dgames, dsecs, dplays, qclaim, ach, qtotal,
+       spins, spinDay, spinStreak, spinStreakDay, streak, lastPlayDay }
+
+   Also owns progress: daily quests, permanent achievements and the once-a-day
+   crate, all fed by trackPlay() / bank() and all paid out in coins. */
 (function () {
   var N = (window.N = window.N || {});
 
@@ -5716,6 +6986,14 @@ window.NULL_CONTENT = {
   var COIN_EVERY = 100; // XP per coin milestone
   var COIN_AMOUNT = 30; // coins per milestone
   var BOOST_MS = 24 * 3600000; // XP boost lasts 24h
+  var DAY = 86400000;
+
+  function dayKey(t) {
+    var n = new Date(t == null ? Date.now() : t);
+    var m = n.getMonth() + 1;
+    var d = n.getDate();
+    return n.getFullYear() + "-" + (m < 10 ? "0" : "") + m + "-" + (d < 10 ? "0" : "") + d;
+  }
 
   var data = N.store.read(KEY, {
     time: 0,
@@ -5724,17 +7002,67 @@ window.NULL_CONTENT = {
     next: COIN_EVERY,
     pend: 0,
     boostUntil: 0,
-    unlocks: { games: [], themes: [], fx: [] },
+    unlocks: { games: [], themes: [], particles: [], fx: [] },
   });
+
+  /* saves from before quests/achievements/crate existed get the new counters
+     filled in, so a returning player keeps every coin and unlock */
+  (function migrate() {
+    var changed = false;
+    function def(key, val) {
+      if (data[key] === undefined) {
+        data[key] = val;
+        changed = true;
+      }
+    }
+    if (!data.unlocks) {
+      data.unlocks = {};
+      changed = true;
+    }
+    ["games", "themes", "particles", "fx"].forEach(function (k) {
+      if (!Array.isArray(data.unlocks[k])) {
+        data.unlocks[k] = [];
+        changed = true;
+      }
+    });
+    def("earned", data.coins || 0); // coins banked over the account's life
+    def("buys", 0);
+    def("plays", 0);
+    def("seen", []);
+    def("day", dayKey());
+    def("dgames", []);
+    def("dsecs", 0);
+    def("dplays", 0);
+    def("qclaim", []);
+    def("ach", []);
+    def("qtotal", 0);
+    def("spins", 0);
+    def("spinDay", null);
+    def("spinStreak", 0);
+    def("spinStreakDay", null);
+    def("streak", 0);
+    def("lastPlayDay", null);
+    if (changed) N.store.write(KEY, data);
+  })();
 
   function save() {
     N.store.write(KEY, data);
   }
 
+  /* another NULL window (a second tab, the installed app, a cloaked copy)
+     may have spent coins or earned XP — re-read so the two agree */
+  function reload() {
+    var fresh = N.store.read(KEY, null);
+    if (fresh) data = fresh;
+  }
+  if (N.sync) N.sync.register(reload);
+
   /* ---------- shop catalog ----------
      Themes are full packs, not single accents: a multi-colour palette, the
      accent pair that drives the UI, and an animated backdrop. theme.js reads
-     `colors` / `bg` / `tint` when applying a pack, extra.css holds the art. */
+     `colors` / `bg` / `tint` / `parts` when applying a pack, extra.css holds
+     the art. `parts` lists the drifting particles: the key is a shape kind,
+     n is how many, sp is where they start (top / bottom / spread). */
   var THEMES = [
     {
       id: "synthwave",
@@ -5744,6 +7072,7 @@ window.NULL_CONTENT = {
       c2: "#4fd8ff",
       colors: ["#ff4fa8", "#a45bff", "#4fd8ff", "#ffd166"],
       bg: "horizon",
+      parts: [],
       tint: ["#2a1140", "#07091b"],
       desc: "Neon '86 — perspective grid floor, glowing horizon and a magenta sun.",
       tags: ["Grid floor", "Neon sun", "4 colors"],
@@ -5756,7 +7085,7 @@ window.NULL_CONTENT = {
       c2: "#8affb2",
       colors: ["#39ff88", "#0aff9d", "#6fffb0", "#c8ffdd"],
       bg: "rain",
-      dots: 34,
+      parts: [{ k: "rain", n: 48, sp: "top" }],
       tint: ["#04180c", "#02060a"],
       desc: "Phosphor terminal — glyph rain falls behind a faint scanline haze.",
       tags: ["Code rain", "Scanlines", "Terminal"],
@@ -5769,6 +7098,7 @@ window.NULL_CONTENT = {
       c2: "#ffe9a8",
       colors: ["#ffd45e", "#f2a93b", "#fff0bf", "#8a6a1f"],
       bg: "rays",
+      parts: [],
       tint: ["#1d1403", "#0a0a0b"],
       desc: "Award-show gold — sweeping light shafts over warm film grain.",
       tags: ["Light shafts", "Film grain", "Warm tint"],
@@ -5781,9 +7111,10 @@ window.NULL_CONTENT = {
       c2: "#8f9dff",
       colors: ["#4fe0c8", "#7c8cff", "#b06bff", "#3ba0ff"],
       bg: "aurora",
+      parts: [{ k: "ribbon", n: 14 }, { k: "star", n: 28 }],
       tint: ["#06181e", "#05060f"],
-      desc: "Polar curtains — soft teal and violet blobs drifting past each other.",
-      tags: ["Drifting aurora", "Cool palette", "Calm"],
+      desc: "Polar curtains — shimmering ribbons and glowing stars drift past.",
+      tags: ["Aurora ribbons", "Stars", "Calm"],
     },
     {
       id: "cosmos",
@@ -5793,10 +7124,10 @@ window.NULL_CONTENT = {
       c2: "#d18cff",
       colors: ["#8f9dff", "#e06fff", "#5ac8ff", "#ffe6a8"],
       bg: "stars",
-      dots: 70,
+      parts: [{ k: "star", n: 96 }, { k: "starfar", n: 44 }, { k: "dust", n: 16 }],
       tint: ["#0b0a22", "#04040c"],
-      desc: "Deep field — a twinkling starfield wrapped around a slow nebula bloom.",
-      tags: ["Starfield", "Nebula", "70 stars"],
+      desc: "Deep field — a dense twinkling starfield over a slow nebula bloom.",
+      tags: ["Starfield", "Drifting dust", "Nebula"],
     },
     {
       id: "vapor",
@@ -5806,26 +7137,229 @@ window.NULL_CONTENT = {
       c2: "#ff9ad5",
       colors: ["#7ef2d0", "#ff9ad5", "#a6b8ff", "#ffe07a"],
       bg: "waves",
+      parts: [{ k: "smoke", n: 22, sp: "bottom" }, { k: "cloud", n: 7 }],
       tint: ["#120f2a", "#07121a"],
-      desc: "Liquid light — pastel gradient bands roll across the background.",
-      tags: ["Wave bands", "Pastel", "Silky"],
+      desc: "Smoke lounge — soft puffs rise and drift through pastel cloud banks.",
+      tags: ["Smoke", "Cloud banks", "Silky"],
+    },
+    /* the flagship pack, and the only one that ignores its own palette: it is
+       painted from the live glow-border colours instead (theme.js publishes
+       them as --glow-1..4), so the page and the border glow as one thing */
+    {
+      id: "neon",
+      name: "Neon",
+      price: 200,
+      glowAccent: true,
+      c1: "#00e5ff",
+      c2: "#b14bff",
+      colors: ["#00e5ff", "#b14bff", "#ff2d95", "#6cff9e"],
+      bg: "neon",
+      parts: [{ k: "neonTube", n: 12 }, { k: "neonPulse", n: 16 }, { k: "star", n: 22 }],
+      tint: ["#050512", "#010103"],
+      desc: "A glowing wireframe room lit by your glow border — tubes, halo blooms and floor grid all take the border's colours.",
+      tags: ["Glow tubes", "Follows your glow", "Most expensive"],
     },
   ];
+
+  /* Free packs — always available, deliberately quieter than the shop's.
+     They reuse the same backdrop engine with fewer particles. */
+  var FREE_PACKS = [
+    {
+      id: "dawn",
+      name: "Dawn",
+      free: true,
+      price: 0,
+      c1: "#ff9d6b",
+      c2: "#ffd0a8",
+      colors: ["#ff9d6b", "#ff8fb0", "#ffd7a8", "#8f6bd6"],
+      bg: "glow",
+      parts: [],
+      tint: ["#1a1020", "#0a0a0f"],
+      desc: "A warm sunrise glow that fades into the page. No motion, no noise.",
+      tags: ["Free", "Sunrise", "Static"],
+    },
+    {
+      id: "mist",
+      name: "Mist",
+      free: true,
+      price: 0,
+      c1: "#9fd8e8",
+      c2: "#c8c2f0",
+      colors: ["#9fd8e8", "#c8c2f0", "#8fb8d8", "#e6f0f5"],
+      bg: "mist",
+      parts: [{ k: "cloud", n: 5 }],
+      tint: ["#101820", "#080b0f"],
+      desc: "Cold morning haze — a few slow clouds, nothing else moving.",
+      tags: ["Free", "Haze", "Slow"],
+    },
+  ];
+  /* Ambient background particles — a layer of motion that runs behind every
+     page, on its own or over a theme pack. `parts` lists the kinds and how
+     many: theme.js turns that into DOM and extra.css draws each kind. Free
+     particles are monochrome (mono) so they read in both site themes; shop
+     particles carry their own little palette. */
+  var FREE_PARTICLES = [
+    {
+      id: "motes",
+      name: "Motes",
+      free: true,
+      price: 0,
+      mono: true,
+      desc: "Glowing dust drifting upward through soft halo blooms.",
+      tags: ["Free", "Subtle", "Slow"],
+      parts: [
+        { k: "mote", n: 34, sp: "bottom" },
+        { k: "bloom", n: 10, sp: "bottom" },
+      ],
+    },
+    {
+      id: "haze",
+      name: "Haze",
+      free: true,
+      price: 0,
+      mono: true,
+      desc: "Cloud banks, curling wisps and a scatter of far-off specks.",
+      tags: ["Free", "Clouds"],
+      parts: [
+        { k: "haze", n: 6 },
+        { k: "wisp", n: 9 },
+        { k: "speck", n: 20 },
+      ],
+    },
+    {
+      id: "twinkle",
+      name: "Twinkle",
+      free: true,
+      price: 0,
+      mono: true,
+      desc: "Pin-prick lights that fade in and out, with slow cross flares.",
+      tags: ["Free", "Twinkle"],
+      parts: [
+        { k: "spark", n: 34 },
+        { k: "flare", n: 10 },
+      ],
+    },
+  ];
+
+  var PARTICLES = [
+    {
+      id: "fireflies",
+      name: "Fireflies",
+      price: 70,
+      colors: ["#ffe98a", "#ffd45e", "#fff6c9", "#f2a93b"],
+      desc: "Warm orbs wandering with light trails, pulsing like a summer field.",
+      tags: ["Glow", "Trails", "Wandering"],
+      parts: [
+        { k: "firefly", n: 22 },
+        { k: "trail", n: 20 },
+        { k: "speck", n: 22 },
+      ],
+    },
+    {
+      id: "embers",
+      name: "Embers",
+      price: 80,
+      colors: ["#ff8a3d", "#ffb020", "#ff4d2e", "#ffe0a3"],
+      desc: "Sparks climb off a glowing bed, flicker, and drag smoke up with them.",
+      tags: ["Rising", "Flicker", "Smoke"],
+      parts: [
+        { k: "ember", n: 38, sp: "bottom" },
+        { k: "bloom", n: 14, sp: "bottom" },
+        { k: "wisp", n: 10, sp: "bottom" },
+      ],
+    },
+    {
+      id: "bubbles",
+      name: "Bubbles",
+      price: 80,
+      colors: ["#9fe6ff", "#c9f2ff", "#7cc4ff", "#ffffff"],
+      desc: "Outlined rings with glinting highlights, rising and swelling out of sight.",
+      tags: ["Rising", "Rings", "Glint"],
+      parts: [
+        { k: "bubble", n: 22, sp: "bottom" },
+        { k: "glint", n: 18 },
+        { k: "bloom", n: 8, sp: "bottom" },
+      ],
+    },
+    {
+      id: "starlight",
+      name: "Starlight",
+      price: 90,
+      colors: ["#ffffff", "#dceaff", "#bcd4ff", "#ffffff"],
+      desc: "Four-point stars bloom and vanish among slow cross flares and tiny specks.",
+      tags: ["Stars", "Flares", "Depth"],
+      parts: [
+        { k: "sparkle", n: 28 },
+        { k: "flare", n: 14 },
+        { k: "speck", n: 28 },
+      ],
+    },
+    {
+      id: "plasma",
+      name: "Plasma",
+      price: 110,
+      colors: ["#a86bff", "#3d8bff", "#ff4fa8", "#4fe0c8"],
+      desc: "Colour fields roll and spin across the page over slow halo blooms.",
+      tags: ["Colour", "Swirl", "Slow"],
+      parts: [
+        { k: "plasma", n: 8 },
+        { k: "swirl", n: 3 },
+        { k: "bloom", n: 7 },
+      ],
+    },
+    {
+      id: "warp",
+      name: "Warp",
+      price: 120,
+      colors: ["#ffffff", "#9fe6ff", "#c9c2ff", "#ffffff"],
+      desc: "Rings zoom out of dead centre while stars streak past \u2014 lightspeed.",
+      tags: ["Speed", "Radial", "Tunnel"],
+      parts: [
+        { k: "tunnel", n: 26, sp: "center" },
+        { k: "warp", n: 90, sp: "center" },
+        { k: "speck", n: 30 },
+      ],
+    },
+  ];
+
   var BOOSTS = [
     { id: "xpboost", name: "XP boost", price: 30, desc: "Double XP for 24 hours — every 30 minutes banks 20 XP." },
   ];
   var FX = [
     { id: "goldconfetti", name: "Golden confetti", price: 30, desc: "Period-end confetti drops in gold instead of grayscale." },
+    { id: "customaccent", name: "Custom accent color", price: 80, desc: "Unlocks a color picker in Settings, so your accent can be any color at all." },
   ];
 
   function boosted() {
     return data.boostUntil > Date.now();
   }
 
+  function addCoins(n) {
+    data.coins += n;
+    data.earned += n;
+  }
+
+  /* ---------- daily rollover ----------
+     Quest progress, playtime counters and the crate are per-day; XP, coins
+     and unlocks are permanent. */
+  function ensureDay() {
+    var t = dayKey();
+    if (data.day === t) return;
+    data.day = t;
+    data.dgames = [];
+    data.dsecs = 0;
+    data.dplays = 0;
+    data.qclaim = [];
+    save();
+    N.bus.emit("eco");
+  }
+
   /* Bank playtime. Returns { xp, coins } gained so callers can celebrate. */
   function bank(seconds) {
     if (!(seconds > 0)) return { xp: 0, coins: 0 };
+    ensureDay();
     data.time += seconds;
+    data.dsecs += seconds;
     data.pend += seconds;
     var xp = 0;
     while (data.pend >= STEP) {
@@ -5835,7 +7369,7 @@ window.NULL_CONTENT = {
     }
     var coins = 0;
     while (data.xp >= data.next) {
-      data.coins += COIN_AMOUNT;
+      addCoins(COIN_AMOUNT);
       coins += COIN_AMOUNT;
       data.next += COIN_EVERY;
     }
@@ -5843,25 +7377,233 @@ window.NULL_CONTENT = {
     return { xp: xp, coins: coins };
   }
 
+  /* ---------- progress signals ----------
+     catalog.js calls trackPlay() once per launch, so quests, streaks and the
+     achievement counters all read from one place. Only games count. */
+  function trackPlay(kind, id) {
+    if (kind !== "game" || !id) return;
+    ensureDay();
+    data.plays += 1;
+    data.dplays += 1;
+    if (data.dgames.indexOf(id) < 0) data.dgames.push(id);
+    if (data.seen.indexOf(id) < 0) data.seen.push(id);
+    var today = dayKey();
+    if (data.lastPlayDay !== today) {
+      data.streak = data.lastPlayDay === dayKey(Date.now() - DAY) ? (data.streak || 0) + 1 : 1;
+      data.lastPlayDay = today;
+    }
+    save();
+    N.bus.emit("eco");
+  }
+
+  /* ---------- daily quests ----------
+     Three rotate in per day, picked from the date so they stay put all day
+     and change overnight without storing a schedule. Claiming pays coins. */
+  var QUEST_POOL = [
+    { id: "warmup", name: "Warm up", hint: "Play a game", metric: "plays", goal: 1, reward: 5 },
+    { id: "sprint", name: "Quick sprint", hint: "Play 2 games", metric: "plays", goal: 2, reward: 8 },
+    { id: "explorer", name: "Explorer", hint: "Play 3 different games", metric: "games", goal: 3, reward: 12 },
+    { id: "sampler", name: "Sampler", hint: "Play 4 different games", metric: "games", goal: 4, reward: 16 },
+    { id: "focus", name: "Deep focus", hint: "Play for 15 minutes", metric: "secs", goal: 900, reward: 15 },
+    { id: "haul", name: "Long haul", hint: "Play for 30 minutes", metric: "secs", goal: 1800, reward: 25 },
+  ];
+
+  function dayHash(s) {
+    var h = 0;
+    for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+    return h;
+  }
+  function metricVal(m) {
+    if (m === "plays") return data.dplays;
+    if (m === "games") return data.dgames.length;
+    if (m === "secs") return data.dsecs;
+    return 0;
+  }
+  function quests() {
+    ensureDay();
+    var h = dayHash(data.day);
+    var out = [];
+    for (var i = 0; i < 3; i++) {
+      var q = QUEST_POOL[(h + i * 2) % QUEST_POOL.length];
+      var prog = Math.min(metricVal(q.metric), q.goal);
+      out.push({
+        id: q.id,
+        name: q.name,
+        hint: q.hint,
+        metric: q.metric,
+        reward: q.reward,
+        goal: q.goal,
+        prog: prog,
+        done: prog >= q.goal,
+        claimed: data.qclaim.indexOf(q.id) >= 0,
+      });
+    }
+    return out;
+  }
+  function claimQuest(id) {
+    var q = quests().filter(function (x) {
+      return x.id === id;
+    })[0];
+    if (!q || !q.done || q.claimed) return { ok: false };
+    data.qclaim.push(id);
+    data.qtotal += 1;
+    addCoins(q.reward);
+    save();
+    N.bus.emit("eco");
+    return { ok: true, reward: q.reward };
+  }
+
+  /* ---------- achievements ----------
+     Permanent milestones. `val` reads the live counters, so bars fill as you
+     play; claiming pays coins once. */
+  function stats() {
+    return {
+      plays: data.plays,
+      diff: data.seen.length,
+      secs: data.time,
+      xp: data.xp,
+      earned: data.earned,
+      buys: data.buys,
+      themes: (data.unlocks.themes || []).length,
+      particles: (data.unlocks.particles || []).length,
+      quests: data.qtotal,
+      spins: data.spins,
+      streak: data.streak,
+    };
+  }
+  var ACHS = [
+    { id: "first", name: "First steps", hint: "Play your first game", reward: 10, goal: 1, val: function (s) { return s.plays; } },
+    { id: "sampler", name: "Sampler", hint: "Play 5 different games", reward: 25, goal: 5, val: function (s) { return s.diff; } },
+    { id: "collector", name: "Collector", hint: "Play 12 different games", reward: 60, goal: 12, val: function (s) { return s.diff; } },
+    { id: "regular", name: "Creature of habit", hint: "Launch games 25 times", reward: 30, goal: 25, val: function (s) { return s.plays; } },
+    { id: "hour", name: "One hour in", hint: "Play for 1 hour", reward: 30, goal: 3600, val: function (s) { return s.secs; } },
+    { id: "deep", name: "Five hours deep", hint: "Play for 5 hours", reward: 80, goal: 18000, val: function (s) { return s.secs; } },
+    { id: "grinder", name: "Grinder", hint: "Reach 250 XP", reward: 30, goal: 250, val: function (s) { return s.xp; } },
+    { id: "purse", name: "Coin purse", hint: "Bank 150 coins", reward: 20, goal: 150, val: function (s) { return s.earned; } },
+    { id: "spender", name: "Big spender", hint: "Buy something in the Shop", reward: 20, goal: 1, val: function (s) { return s.buys; } },
+    { id: "designer", name: "Interior designer", hint: "Own 3 theme packs", reward: 40, goal: 3, val: function (s) { return s.themes; } },
+    { id: "atmos", name: "Atmosphere", hint: "Own 2 particle sets", reward: 30, goal: 2, val: function (s) { return s.particles; } },
+    { id: "runner", name: "Quest runner", hint: "Claim 7 daily quests", reward: 50, goal: 7, val: function (s) { return s.quests; } },
+    { id: "lucky", name: "Lucky", hint: "Open the crate 5 times", reward: 25, goal: 5, val: function (s) { return s.spins; } },
+    { id: "streak3", name: "Three in a row", hint: "Play 3 days in a row", reward: 35, goal: 3, val: function (s) { return s.streak; } },
+  ];
+  function achievements() {
+    ensureDay();
+    var s = stats();
+    return ACHS.map(function (a) {
+      var v = Math.min(a.val(s), a.goal);
+      return {
+        id: a.id,
+        name: a.name,
+        hint: a.hint,
+        reward: a.reward,
+        goal: a.goal,
+        prog: v,
+        done: v >= a.goal,
+        claimed: data.ach.indexOf(a.id) >= 0,
+      };
+    });
+  }
+  function claimAch(id) {
+    var a = achievements().filter(function (x) {
+      return x.id === id;
+    })[0];
+    if (!a || !a.done || a.claimed) return { ok: false };
+    data.ach.push(id);
+    addCoins(a.reward);
+    save();
+    N.bus.emit("eco");
+    return { ok: true, reward: a.reward };
+  }
+
+  /* ---------- daily crate ----------
+     One free open per day, weighted toward small coin drops with a rare
+     jackpot, plus a +5/day streak bonus so coming back keeps paying. */
+  var SPIN_POOL = [
+    { type: "coins", amount: 5, w: 26 },
+    { type: "coins", amount: 10, w: 24 },
+    { type: "coins", amount: 15, w: 20 },
+    { type: "coins", amount: 25, w: 14 },
+    { type: "coins", amount: 40, w: 9 },
+    { type: "xp", amount: 20, w: 5 },
+    { type: "coins", amount: 75, w: 2 },
+  ];
+  function canSpin() {
+    ensureDay();
+    return data.spinDay !== data.day;
+  }
+  /* what the streak *would* be if you opened the crate today */
+  function spinStreak() {
+    ensureDay();
+    if (data.spinStreakDay === data.day) return data.spinStreak || 1;
+    return data.spinStreakDay === dayKey(Date.now() - DAY) ? (data.spinStreak || 0) + 1 : 1;
+  }
+  function spin() {
+    ensureDay();
+    if (data.spinDay === data.day) return { ok: false, reason: "already" };
+    var total = SPIN_POOL.reduce(function (n, p) {
+      return n + p.w;
+    }, 0);
+    var r = Math.random() * total;
+    var acc = 0;
+    var prize = SPIN_POOL[SPIN_POOL.length - 1];
+    for (var i = 0; i < SPIN_POOL.length; i++) {
+      acc += SPIN_POOL[i].w;
+      if (r < acc) {
+        prize = SPIN_POOL[i];
+        break;
+      }
+    }
+    data.spinStreak = spinStreak();
+    data.spinStreakDay = data.day;
+    data.spinDay = data.day;
+    data.spins += 1;
+    var bonus = Math.min(25, (data.spinStreak - 1) * 5);
+    if (prize.type === "xp") data.xp += prize.amount;
+    else addCoins(prize.amount);
+    if (bonus) addCoins(bonus);
+    save();
+    N.bus.emit("eco");
+    return { ok: true, type: prize.type, amount: prize.amount, bonus: bonus, streak: data.spinStreak };
+  }
+
   /* ---------- unlocks ----------
      "game" unlocks are the shop's beta builds, which come from the
      hand-maintained content.js list — the same list the Shop page renders. */
   function listFor(type) {
     if (type === "theme") return THEMES;
+    if (type === "particle") return PARTICLES;
     if (type === "boost") return BOOSTS;
     if (type === "fx") return FX;
     if (type === "game") return (window.NULL_CONTENT && window.NULL_CONTENT.betas) || [];
     return [];
   }
   function keyFor(type) {
-    return type === "game" ? "games" : type;
+    if (type === "game") return "games";
+    if (type === "particle") return "particles";
+    return type;
   }
   function ownedList(type) {
     var u = data.unlocks || {};
     return u[keyFor(type)] || [];
   }
+  /* free theme packs + free particles are owned by everyone */
+  function isFree(type, id) {
+    if (type === "theme") {
+      return FREE_PACKS.some(function (p) {
+        return p.id === id;
+      });
+    }
+    if (type === "particle") {
+      return FREE_PARTICLES.some(function (p) {
+        return p.id === id;
+      });
+    }
+    return false;
+  }
   function isUnlocked(type, id) {
     if (type === "boost") return boosted();
+    if (isFree(type, id)) return true;
     return ownedList(type).indexOf(id) >= 0;
   }
   function priceFor(type, id) {
@@ -5876,18 +7618,20 @@ window.NULL_CONTENT = {
   /* Buy an item. Returns { ok, reason } — no partial state on failure. */
   function buy(type, id) {
     var price = priceFor(type, id);
-    if (!price) return { ok: false, reason: "unknown item" };
+    if (!price) return { ok: false, reason: isFree(type, id) ? "free" : "unknown item" };
     if (isUnlocked(type, id)) return { ok: false, reason: "already owned" };
     if (data.coins < price) return { ok: false, reason: "not enough coins" };
     data.coins -= price;
+    data.buys += 1;
     if (type === "boost") {
       data.boostUntil = Date.now() + BOOST_MS;
     } else {
-      var u = data.unlocks || (data.unlocks = { games: [], themes: [], fx: [] });
+      var u = data.unlocks || (data.unlocks = { games: [], themes: [], particles: [], fx: [] });
       var key = keyFor(type);
       (u[key] = u[key] || []).push(id);
     }
     save();
+    N.bus.emit("eco");
     return { ok: true };
   }
 
@@ -5903,10 +7647,11 @@ window.NULL_CONTENT = {
   /* dev console / debugging: unlock an item without spending coins, so a
      backdrop can be checked without grinding 20 hours of playtime first. */
   function grant(type, id) {
+    if (isFree(type, id)) return { ok: true };
     if (type === "boost") {
       data.boostUntil = Date.now() + BOOST_MS;
     } else {
-      var u = data.unlocks || (data.unlocks = { games: [], themes: [], fx: [] });
+      var u = data.unlocks || (data.unlocks = { games: [], themes: [], particles: [], fx: [] });
       var key = keyFor(type);
       var list = u[key] || (u[key] = []);
       if (list.indexOf(id) < 0) list.push(id);
@@ -5917,9 +7662,13 @@ window.NULL_CONTENT = {
 
   N.econ = {
     THEMES: THEMES,
+    FREE_PACKS: FREE_PACKS,
+    PARTICLES: PARTICLES,
+    FREE_PARTICLES: FREE_PARTICLES,
     BOOSTS: BOOSTS,
     FX: FX,
     state: function () {
+      ensureDay();
       return {
         time: data.time,
         xp: data.xp,
@@ -5927,13 +7676,43 @@ window.NULL_CONTENT = {
         next: data.next,
         boosted: boosted(),
         boostUntil: data.boostUntil,
+        streak: data.streak,
+        plays: data.plays,
+        earned: data.earned,
+        canSpin: canSpin(),
+        spinStreak: spinStreak(),
+        questsReady: quests().filter(function (q) {
+          return q.done && !q.claimed;
+        }).length,
+        achReady: achievements().filter(function (a) {
+          return a.done && !a.claimed;
+        }).length,
       };
     },
     bank: bank,
     buy: buy,
     grant: grant,
+    reload: reload,
     isUnlocked: isUnlocked,
     unlockedBetas: unlockedBetas,
+    /* progress: quests, achievements and the daily crate */
+    trackPlay: trackPlay,
+    quests: quests,
+    claimQuest: claimQuest,
+    achievements: achievements,
+    claimAch: claimAch,
+    canSpin: canSpin,
+    spin: spin,
+    spinStreak: spinStreak,
+    spinPool: SPIN_POOL,
+    stats: stats,
+    /* dev console: hand out coins / reset daily progress */
+    addCoins: addCoins,
+    newDay: function () {
+      data.day = "";
+      data.spinDay = null;
+      ensureDay();
+    },
   };
 })();
 ;
@@ -6411,13 +8190,18 @@ window.NULL_CONTENT = {
     { id: "ocean", name: "Ocean", c1: "#4b86e0", c2: "#84adee" },
   ];
 
-  /* shop-unlocked theme packs. econ.js owns the item catalog; theme.js only
-     needs the data for rendering + applying. */
+  /* every theme pack you can actually wear: the free ones plus whatever the
+     Shop has unlocked. econ.js owns the catalogs; theme.js only needs the
+     data for rendering + applying. */
   function extraAccents() {
-    if (!N.econ || !N.econ.THEMES) return [];
-    return N.econ.THEMES.filter(function (t) {
-      return N.econ.isUnlocked("theme", t.id);
-    });
+    if (!N.econ) return [];
+    var free = N.econ.FREE_PACKS || [];
+    var paid = N.econ.THEMES || [];
+    return free.concat(
+      paid.filter(function (t) {
+        return N.econ.isUnlocked("theme", t.id);
+      }),
+    );
   }
 
   /* ---------- theme packs ----------
@@ -6450,9 +8234,66 @@ window.NULL_CONTENT = {
     return true;
   }
 
-  function packDom(p) {
+  /* ---------- palette ---------- */
+  function packVars(p) {
+    var colors = p.colors && p.colors.length ? p.colors : [p.c1, p.c2];
+    var tint = p.tint || ["#0e0e12", "#08080b"];
+    var vars = {};
+    for (var i = 0; i < 4; i++) {
+      vars["--pk-" + (i + 1)] = colors[i] || colors[colors.length - 1];
+    }
+    vars["--pk-bg-1"] = tint[0];
+    vars["--pk-bg-2"] = tint[1];
+    return vars;
+  }
+
+  /* ---------- backdrop art ----------
+     Every pack draws the same three layers (pf-a/b/c, styled per pack) plus
+     one host per particle kind. Particles carry their randomness as custom
+     props, so extra.css decides the shape and motion of each kind. */
+  var CUSTOM_ID = "custom";
+
+  /* where a kind's particles start when the pack doesn't say */
+  var KIND_START = {
+    rain: "top",
+    smoke: "bottom",
+  };
+
+  function rnd(a, b) {
+    return a + Math.random() * (b - a);
+  }
+
+  function partHost(part, scale) {
+    var host = document.createElement("span");
+    host.className = "pf-p pf-p-" + part.k;
+    var start = part.sp || KIND_START[part.k] || "spread";
+    var n = Math.max(1, Math.round((part.n || 0) * scale));
+    for (var i = 0; i < n; i++) {
+      var b = document.createElement("b");
+      b.style.left = rnd(-4, 104).toFixed(1) + "%";
+      b.style.top =
+        start === "top"
+          ? rnd(-24, -6).toFixed(1) + "%"
+          : start === "bottom"
+            ? rnd(74, 112).toFixed(1) + "%"
+            : rnd(0, 100).toFixed(1) + "%";
+      b.style.setProperty("--s", rnd(1.3, 3.8).toFixed(2) + "px");
+      b.style.setProperty("--dx", (Math.random() < 0.5 ? -1 : 1) * rnd(18, 160).toFixed(0) + "px");
+      b.style.setProperty("--o", rnd(0.45, 0.95).toFixed(2));
+      b.style.setProperty("--rot", rnd(-30, 30).toFixed(0) + "deg");
+      b.style.setProperty("--dur", rnd(3, 9).toFixed(2));
+      b.style.setProperty("--delay", rnd(0, 18).toFixed(2));
+      host.appendChild(b);
+    }
+    return host;
+  }
+
+  /* one builder for both the live full-screen layer and the shop/settings
+     previews — same markup, same CSS, so a preview never lies */
+  function packArt(p, cls, opts) {
+    opts = opts || {};
     var el = document.createElement("div");
-    el.className = "pack-fx";
+    el.className = cls;
     el.setAttribute("data-pack", p.id);
     el.setAttribute("aria-hidden", "true");
     ["a", "b", "c"].forEach(function (k) {
@@ -6460,21 +8301,39 @@ window.NULL_CONTENT = {
       i.className = "pf-" + k;
       el.appendChild(i);
     });
-    var host = document.createElement("span");
-    host.className = "pf-dots";
-    var rain = p.bg === "rain";
-    var n = p.dots || 0;
-    for (var j = 0; j < n; j++) {
-      var s = document.createElement("b");
-      s.style.left = (Math.random() * 100).toFixed(2) + "%";
-      s.style.top = rain ? "-14%" : (Math.random() * 100).toFixed(2) + "%";
-      s.style.setProperty("--s", (1 + Math.random() * 1.8).toFixed(2) + "px");
-      s.style.animationDelay = (-Math.random() * 14).toFixed(2) + "s";
-      s.style.animationDuration = (2.4 + Math.random() * 5.5).toFixed(2) + "s";
-      host.appendChild(s);
+    var scale = opts.scale || 1;
+    (p.parts || []).forEach(function (part) {
+      el.appendChild(partHost(part, scale));
+    });
+    if (opts.vars) {
+      var vars = packVars(p);
+      for (var k in vars) el.style.setProperty(k, vars[k]);
     }
-    el.appendChild(host);
     return el;
+  }
+
+  function packPreview(p, opts) {
+    return packArt(p, "pack-preview", { vars: true, scale: (opts && opts.scale) || 0.25 });
+  }
+
+  /* a card-sized preview, optionally veiled for a pack that isn't owned yet */
+  function packThumb(p, opts) {
+    var thumb = document.createElement("div");
+    thumb.className = "pack-thumb";
+    thumb.appendChild(packPreview(p));
+    if (opts && opts.lock) {
+      var veil = document.createElement("div");
+      veil.className = "pack-lock";
+      veil.appendChild(N.dom.icon("lock"));
+      thumb.appendChild(veil);
+    }
+    return thumb;
+  }
+
+  /* every pack that exists — free first, then the Shop's */
+  function allPacks() {
+    if (!N.econ) return [];
+    return (N.econ.FREE_PACKS || []).concat(N.econ.THEMES || []);
   }
 
   function killPack() {
@@ -6486,7 +8345,7 @@ window.NULL_CONTENT = {
     if (!p || !p.bg || !packAllowed()) return;
     if (packEl && packEl.isConnected && packEl.dataset.pack === p.id) return;
     killPack();
-    packEl = packDom(p);
+    packEl = packArt(p, "pack-fx");
     document.body.appendChild(packEl);
     if (document.hidden) packEl.classList.add("pf-paused");
   }
@@ -6500,20 +8359,172 @@ window.NULL_CONTENT = {
       killPack();
       return;
     }
-    var colors = p.colors && p.colors.length ? p.colors : [p.c1, p.c2];
-    for (var i = 0; i < 4; i++) {
-      root.style.setProperty("--pk-" + (i + 1), colors[i] || colors[colors.length - 1]);
-    }
-    var tint = p.tint || ["#0e0e12", "#08080b"];
-    root.style.setProperty("--pk-bg-1", tint[0]);
-    root.style.setProperty("--pk-bg-2", tint[1]);
+    var vars = packVars(p);
+    for (var k in vars) root.style.setProperty(k, vars[k]);
     root.dataset.pack = p.id;
     buildPack(p);
   }
 
-  /* pause the backdrop while the tab is hidden */
+  /* ---------- ambient particles ----------
+     A layer of drifting motion that sits behind the page on its own, or on
+     top of a theme pack. econ.js owns the catalog (free + Shop); this file
+     builds the DOM from a particle's `parts` list and extra.css draws each
+     kind. Same gating as a backdrop: no particles in performance mode, for
+     reduced-motion users, or on the player / 404 pages. */
+  var partEl = null;
+  var curPart = null;
+
+  function allParticles() {
+    if (!N.econ) return [];
+    return (N.econ.FREE_PARTICLES || []).concat(N.econ.PARTICLES || []);
+  }
+
+  function particleFor(id) {
+    return (
+      allParticles().find(function (p) {
+        return p.id === id;
+      }) || null
+    );
+  }
+
+  /* free particles are everyone's; the rest must be unlocked in the Shop */
+  function partOwned(p) {
+    return !!p && (p.free || (N.econ && N.econ.isUnlocked("particle", p.id)));
+  }
+
+  /* NB: named ptHost, not partHost — the theme-pack builder above owns that
+     name, and a second declaration would shadow it for the whole file. */
+  function ptHost(part, scale) {
+    var host = document.createElement("span");
+    host.className = "pt-p pt-p-" + part.k;
+    var n = Math.max(1, Math.round((part.n || 0) * scale));
+    var center = part.sp === "center";
+    for (var i = 0; i < n; i++) {
+      var b = document.createElement("b");
+      /* depth: far particles are smaller, dimmer and take a little blur, which
+         is what turns a flat field of dots into a space you can look into */
+      var z = rnd(0.45, 1.4);
+      b.style.left = center ? "50%" : rnd(-6, 106).toFixed(1) + "%";
+      b.style.top = center
+        ? "50%"
+        : part.sp === "bottom"
+          ? rnd(72, 112).toFixed(1) + "%"
+          : rnd(-10, 100).toFixed(1) + "%";
+      b.style.setProperty("--z", z.toFixed(2));
+      b.style.setProperty("--s", (rnd(1.6, 4.2) * z).toFixed(2) + "px");
+      b.style.setProperty("--dx", (Math.random() < 0.5 ? -1 : 1) * rnd(18, 200).toFixed(0) + "px");
+      b.style.setProperty("--o", (rnd(0.5, 1) * (0.5 + z * 0.5)).toFixed(2));
+      b.style.setProperty("--rot", rnd(-40, 40).toFixed(0) + "deg");
+      b.style.setProperty("--spin", (Math.random() < 0.5 ? -1 : 1) * rnd(90, 720).toFixed(0) + "deg");
+      b.style.setProperty("--dur", rnd(3, 9).toFixed(2));
+      b.style.setProperty("--delay", rnd(0, 18).toFixed(2));
+      /* warp streams outward from the middle, so it needs an angle + a
+         distance instead of a left/top start point */
+      if (part.k === "warp") {
+        b.style.setProperty("--ang", rnd(0, 360).toFixed(0) + "deg");
+        b.style.setProperty("--dist", rnd(55, 150).toFixed(0) + "vh");
+        b.style.setProperty("--dur", rnd(1.2, 3).toFixed(2));
+      }
+      if (part.k === "tunnel") {
+        b.style.setProperty("--dur", rnd(2.2, 5).toFixed(2));
+      }
+      host.appendChild(b);
+    }
+    return host;
+  }
+
+  function partArt(p, cls, opts) {
+    opts = opts || {};
+    var el = document.createElement("div");
+    el.className = cls;
+    el.setAttribute("data-part", p.id);
+    el.setAttribute("aria-hidden", "true");
+    var scale = opts.scale || 1;
+    (p.parts || []).forEach(function (part) {
+      el.appendChild(ptHost(part, scale));
+    });
+    /* mono particles get their colors from CSS so they follow dark/light;
+       the rest are fed their own palette inline */
+    if (!p.mono && p.colors) {
+      var colors = p.colors;
+      for (var i = 0; i < 4; i++) {
+        el.style.setProperty("--pt-" + (i + 1), colors[i] || colors[colors.length - 1]);
+      }
+    }
+    return el;
+  }
+
+  function partPreview(p, opts) {
+    return partArt(p, "part-preview", { scale: (opts && opts.scale) || 0.3 });
+  }
+
+  function partThumb(p, opts) {
+    var thumb = document.createElement("div");
+    thumb.className = "part-thumb";
+    thumb.appendChild(partPreview(p));
+    if (opts && opts.lock) {
+      var veil = document.createElement("div");
+      veil.className = "part-lock";
+      veil.appendChild(N.dom.icon("lock"));
+      thumb.appendChild(veil);
+    }
+    return thumb;
+  }
+
+  function killPart() {
+    if (partEl && partEl.parentNode) partEl.parentNode.removeChild(partEl);
+    partEl = null;
+  }
+
+  function buildPart(p) {
+    if (!p || !partOwned(p) || !(p.parts || []).length || !packAllowed()) return;
+    if (partEl && partEl.isConnected && partEl.dataset.part === p.id) return;
+    killPart();
+    partEl = partArt(p, "part-fx");
+    document.body.appendChild(partEl);
+    if (document.hidden) partEl.classList.add("pt-paused");
+  }
+
+  function applyPart(p) {
+    if (!p) {
+      killPart();
+      return;
+    }
+    buildPart(p);
+  }
+
+  function setParticles(id) {
+    var p = particleFor(id);
+    curPart = p ? p.id : null;
+    applyPart(partOwned(p) ? p : null);
+  }
+
+  /* ---------- custom accent ----------
+     A Shop unlock (econ fx "customaccent"): the accent can be any color, and
+     the second tone is derived from it so gradients keep working. */
+  function lighten(hex, amt) {
+    var m = /^#?([0-9a-f]{6})$/i.exec(String(hex || ""));
+    if (!m) return hex;
+    var v = parseInt(m[1], 16);
+    function mix(c) {
+      return Math.round(c + (255 - c) * amt);
+    }
+    return "#" + ((1 << 24) + (mix((v >> 16) & 255) << 16) + (mix((v >> 8) & 255) << 8) + mix(v & 255)).toString(16).slice(1);
+  }
+
+  function customPair(hex) {
+    var c1 = hex || N.prefs.get("accentColor") || "#6cc7ff";
+    return [c1, lighten(c1, 0.36)];
+  }
+
+  function customOn() {
+    return !!(N.econ && N.econ.isUnlocked("fx", "customaccent"));
+  }
+
+  /* pause the backdrop + particles while the tab is hidden */
   document.addEventListener("visibilitychange", function () {
     if (packEl) packEl.classList.toggle("pf-paused", document.hidden);
+    if (partEl) partEl.classList.toggle("pt-paused", document.hidden);
   });
 
   /* Glow presets. Colors are ordered around the ring and the gradient
@@ -6546,6 +8557,28 @@ window.NULL_CONTENT = {
       return [c1, c2];
     }
     return (g && g.colors) || ["#3d8bff", "#7d6bff", "#a86bff"];
+  }
+
+  /* Neon's own tube colours, used whenever the glow border is off so the pack
+     still has a palette to glow with. With the border on it borrows the exact
+     colours the border is running, so page and pack glow as one. */
+  var NEON_DEFAULT = ["#00e5ff", "#b14bff", "#ff2d95", "#6cff9e"];
+
+  /* Publish the active glow palette as --glow-1..4 on <html>. Pack art reads
+     them (see the Neon backdrop in extra.css), so switching the glow preset
+     re-inks the backdrop too. Returns true when the palette actually moved. */
+  function publishGlowVars(id) {
+    var colors = id && id !== "off" ? colorsFor(id) : NEON_DEFAULT;
+    var changed = false;
+    for (var i = 0; i < 4; i++) {
+      var key = "--glow-" + (i + 1);
+      var val = colors[i] || colors[colors.length - 1];
+      if (root.style.getPropertyValue(key) !== val) changed = true;
+      root.style.setProperty(key, val);
+    }
+    if (id && id !== "off") root.dataset.glowOn = "1";
+    else delete root.dataset.glowOn;
+    return changed;
   }
 
   /* seamless conic gradient — equal stops around the circle, ending on the
@@ -6635,8 +8668,9 @@ window.NULL_CONTENT = {
     var n = layerEl(kind);
     n.style.background = bg;
     n.classList.add("ng-in");
-    var host = kind === "flareBand" ? st.flare : old.parentNode;
-    host.insertBefore(n, old);
+    /* the old layer's parent is always the right host (flareBand lives
+       inside the flare element, everything else directly inside el) */
+    old.parentNode.insertBefore(n, old);
     old.classList.add("ng-xf");
     void n.offsetWidth;
     n.classList.remove("ng-in");
@@ -6706,8 +8740,22 @@ window.NULL_CONTENT = {
     document.removeEventListener("pointermove", proxMove);
   }
 
+  /* Neon's accent pairs with the glow palette (--glow-1/-2), with Neon's own
+     tubes as the fallback for when the vars aren't published yet */
+  function paintNeonAccent() {
+    root.style.setProperty("--ac-1", root.style.getPropertyValue("--glow-1") || NEON_DEFAULT[0]);
+    root.style.setProperty("--ac-2", root.style.getPropertyValue("--glow-2") || NEON_DEFAULT[1]);
+  }
+
   function setGlow(raw) {
     var id = normalize(raw);
+    /* the Neon pack is drawn from the glow palette, so a palette change has
+       to rebuild it — no other pack cares */
+    if (publishGlowVars(id) && curPack === "neon") {
+      killPack();
+      buildPack(packFor("neon"));
+      paintNeonAccent();
+    }
     if (id === "off" || !masksOK) {
       delete root.dataset.glow;
       if (elState && elState.el.isConnected) {
@@ -6745,7 +8793,11 @@ window.NULL_CONTENT = {
     var a = ACCENTS.concat(extraAccents()).find(function (x) {
       return x.id === id;
     });
-    if (a && a.c1) {
+    if (id === CUSTOM_ID && customOn()) {
+      var pair = customPair();
+      root.style.setProperty("--ac-1", pair[0]);
+      root.style.setProperty("--ac-2", pair[1]);
+    } else if (a && a.c1) {
       root.style.setProperty("--ac-1", a.c1);
       root.style.setProperty("--ac-2", a.c2 || a.c1);
     } else {
@@ -6754,30 +8806,64 @@ window.NULL_CONTENT = {
     }
     var p = packFor(id);
     curPack = p ? p.id : null;
+    /* Neon takes its accent from the glow palette, so the UI can never drift
+       away from the tubes behind it */
+    if (p && p.glowAccent) paintNeonAccent();
     applyPack(p);
   }
 
   function setPerf(on) {
     if (on) root.dataset.perf = "1";
     else delete root.dataset.perf;
-    /* performance mode drops the pack backdrop; leaving it restores it */
-    if (on) killPack();
-    else buildPack(packFor(curPack));
+    /* performance mode drops the pack backdrop and particles; leaving it
+       restores whichever ones were on */
+    if (on) {
+      killPack();
+      killPart();
+    } else {
+      buildPack(packFor(curPack));
+      buildPart(particleFor(curPart));
+    }
   }
 
   function applyAll() {
     var p = N.prefs.data;
     setTheme(p.theme);
     setPerf(p.perf);
-    setAccent(p.accent);
+    /* glow first: Neon's backdrop is built from the glow palette, so the
+       vars have to exist before the pack is built (avoids a rebuild) */
     cometOn = !!p.glowComet;
     setGlow(p.glow);
+    setAccent(p.accent);
+    setParticles(p.particles);
   }
 
   N.theme = {
     ACCENTS: ACCENTS,
     GLOWS: GLOWS,
     extraAccents: extraAccents,
+    /* shop + settings share this so a preview can never drift from the real
+       thing — same builder, same CSS, different container class */
+    packPreview: packPreview,
+    packThumb: packThumb,
+    allPacks: allPacks,
+    packVars: packVars,
+    /* particles — same builder-and-preview deal as packs */
+    partPreview: partPreview,
+    partThumb: partThumb,
+    allParticles: allParticles,
+    particleFor: particleFor,
+    setParticles: setParticles,
+    /* rebuild particles after perf / season / reduced-motion changes */
+    refreshParts: function () {
+      applyPart(particleFor(curPart));
+    },
+    customOn: customOn,
+    setCustomAccent: function (hex) {
+      N.prefs.set("accentColor", hex);
+      N.prefs.set("accent", CUSTOM_ID);
+      setAccent(CUSTOM_ID);
+    },
     packFor: packFor,
     /* rebuild the backdrop after unrelated prefs (perf, season) change */
     refreshPack: function () {
@@ -7194,6 +9280,7 @@ window.NULL_CONTENT = {
     N.recent.add(kind, id);
     if (kind !== "proxy" && N.plays) N.plays.tap(kind, id); /* powers card badges */
     if (kind !== "proxy" && N.week) N.week.log(kind, id); /* weekly wrap-up log */
+    if (N.econ && N.econ.trackPlay) N.econ.trackPlay(kind, id); /* quests + achievements */
 
     if (entry.warning) {
       N.modal.open({
@@ -7271,7 +9358,10 @@ window.NULL_CONTENT = {
     },
     openExternal: openExternal,
     randomGame: function () {
-      var g = N.catalog.games();
+      /* games only — a beta build labelled "app" must never turn up here */
+      var g = N.catalog.games().filter(function (e) {
+        return !e.labels || e.labels[0] !== "app";
+      });
       if (!g.length) {
         d.toast("No games in the library yet.", { type: "err" });
         return;

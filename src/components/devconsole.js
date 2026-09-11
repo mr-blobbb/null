@@ -507,6 +507,12 @@
                 },
               });
             } },
+          { label: "Catalog builder (/tools)", icon: "wrench", run: function () {
+              location.href = "/tools.html";
+            } },
+          { label: "Test suite (/tests)", icon: "beaker", run: function () {
+              location.href = "/tests.html";
+            } },
           { label: "Reload page", icon: "refresh", run: function () { location.reload(); } },
         ],
       ],
