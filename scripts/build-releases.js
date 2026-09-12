@@ -164,6 +164,17 @@ ${t.minify ? transformSync(js, { loader: "js", minify: true, target: "es2020" })
 `;
 }
 
+/* global.css points the icon font at a path that only exists on the site, so a
+   standalone build carries the file itself — same idea as the games' code. */
+const FONT = "public/fonts/material-symbols-rounded.woff2";
+function inlineFont(css) {
+  if (!exists(FONT)) return css;
+  return css.replaceAll(
+    "url(\"/" + FONT + "\")",
+    'url("' + dataUri(FONT, "font/woff2") + '")',
+  );
+}
+
 function cssFor(tier) {
   /* perf.css rides along in every tier so data-perf="ultra" still means
      something inside a single-file build */
@@ -173,7 +184,7 @@ function cssFor(tier) {
     parts.push(read("src/styles/particles.css"));
   }
   parts.push(read("scripts/release.css"));
-  return parts.join("\n");
+  return inlineFont(parts.join("\n"));
 }
 
 const catalog = buildCatalog();

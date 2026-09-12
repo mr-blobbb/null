@@ -42,6 +42,7 @@ site can be previewed and the releases rebuilt; see the end of this file.)
 │   └── pages/             One small init script per page
 ├── public/
 │   ├── favicon.svg, icon-*.png
+│   ├── fonts/             The icon font NULL ships (a ~88 KB cut of Material Symbols)
 │   └── fallback-assets/   NULL-styled thumbnails used when one is missing
 ├── releases/              Self-contained single-file builds (generated snapshots)
 │   ├── null-regular.html  The whole thing, readable
@@ -50,9 +51,11 @@ site can be previewed and the releases rebuilt; see the end of this file.)
 │                          animations off — and compressed, so it is smallest
 ├── scripts/               Build + check tools (dev only, never loaded by a page)
 │   ├── build-catalog.js   Scans the content folders → generated-catalog.js
+│   ├── build-font.js      Cuts the icon font down to the glyphs the site uses
 │   └── build-releases.js  Rebuilds the three single-file builds
 ├── .github/workflows/     update-catalog.yml — refresh + commit on content changes
 ├── sw.js                  Service worker (installable app + offline shell)
+├── robots.txt             Keeps the catalog builder, tests and 404 out of search
 ├── .nojekyll              Serves the repo as plain files on GitHub Pages
 └── package.json, vite.config.js, tsconfig.json   Dev only, see below
 ```
@@ -111,8 +114,9 @@ and listed, an unchanged library leaves the file — and its timestamp — exact
 as it was, and the cache key on the pages only moves when something changed.
 
 `.github/workflows/update-catalog.yml` runs this for you. Push anything under
-`games/`, `apps/` or `proxies/` and the Action rebuilds the catalog **and** the
-single-file releases, then commits them, ready for Pages to serve. Node runs on
+`games/`, `apps/` or `proxies/` and the Action rebuilds the catalog — plus the
+`?v=` cache key on every page that loads it — **and** the single-file releases,
+then commits all of it, ready for Pages to serve. Node runs on
 the runner during that build step only: the deployed site is still just the
 HTML, CSS, JS and data files in this repo — no backend, no server, nothing for a
 visitor to install. (It needs *Settings → Actions → General → Read and write
@@ -159,6 +163,36 @@ confirmation); they are never wrapped in the player.
   (`about.html`, `privacy.html`, …); look for the `<!-- WRITE MARKDOWN HERE -->` marker.
 - **Schedule** — edit the `SCHEDULE` object at the top of `src/components/schedule.js`.
 - **Backup links / statuses** — edit `backups.html`. Statuses are manual.
+
+---
+
+## Icons
+
+Every glyph in the interface comes from one font, Material Symbols Rounded.
+Upstream that is a single 5 MB file covering all ~3,600 Google icons; NULL uses
+67 of them, so `public/fonts/material-symbols-rounded.woff2` is an ~88 KB cut of
+it and nothing else:
+
+```
+bun run font            # or: node scripts/build-font.js
+```
+
+`src/utilities/dom.js` holds the table — a name (`home`, `coin`, `warn`…) and the
+glyph's codepoint, with the ligature it came from in the comment. Add a name, run
+the script, and it tells you the codepoint to paste, then re-cuts the font. It
+writes nothing unless every icon still draws exactly what the full font draws,
+including the **filled** heart and star, which the FILL axis swaps in as
+different glyphs.
+
+Two things to know before touching it:
+
+- The table holds codepoints, not the ligature words the glyphs are named after.
+  A cut this small has no letters in it: keeping them would let HarfBuzz's layout
+  closure pull all ~3,600 icons back in, and the file lands at 4.7 MB instead of
+  88 KB.
+- The pages serve the file themselves, so icons render offline, behind a network
+  that blocks `fonts.googleapis.com`, and with no third-party request on the
+  critical path. The single-file releases carry it inline as a `data:` URI.
 
 ---
 
@@ -241,6 +275,10 @@ Two things make the links behave on Pages:
   for those anyway: if someone types or bookmarks one, it tries
   `/schedule.html`, then `/schedule/index.html`, and hops to whichever exists.
 
+`robots.txt` allows the site but keeps the catalog builder, the test suite and
+`404.html` out of search results — they are tools for whoever runs the site, and
+each carries a `noindex` tag of its own anyway.
+
 `.nojekyll` keeps Pages from running Jekyll over the repo, so every file is
 served exactly as it is in git. If you ever host under a sub-path instead,
 prefix a `<base>` tag in each HTML head.
@@ -260,6 +298,7 @@ so the site can be previewed, rebuilt and checked while working on it:
 | --- | --- |
 | `vite.config.js` + `package.json` | the local preview server (`bun run dev`); HMR is off, and the config serves these files exactly as GitHub Pages does |
 | `scripts/build-catalog.js` | scans `games/`, `apps/`, `proxies/` and regenerates the catalog |
+| `scripts/build-font.js` | cuts the icon font down to the glyphs the site uses |
 | `scripts/build-releases.js` | regenerates the three single-file builds |
 | `scripts/check-releases.js` | drives the built releases and reports errors |
 | `scripts/check-links.js` | verifies every internal path resolves to a file |
@@ -268,8 +307,9 @@ so the site can be previewed, rebuilt and checked while working on it:
 | `node_modules/` | install output, ignored by git |
 
 Handy commands: `bun run dev` (preview), `bun run catalog` (refresh the
-catalog), `bun run releases` (rebuild the single-file builds), `bun run build`
-(both of those), `bun run check` (syntax check) and the three check scripts (`check:links` for
+catalog), `bun run font` (re-cut the icon font), `bun run releases` (rebuild the
+single-file builds), `bun run build`
+(catalog + releases), `bun run check` (syntax check) and the three check scripts (`check:links` for
 broken internal paths, `check:pages` for the real pages, `check:releases` for
 the single-file builds). Delete
 any of it and the deployed site is unaffected — GitHub Pages serves the files in

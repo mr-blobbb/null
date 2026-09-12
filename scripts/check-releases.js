@@ -46,7 +46,14 @@ function load(build) {
   });
   vc.on("error", (msg) => errors.push(String(msg)));
 
-  const dom = new JSDOM(fs.readFileSync(path.join(root, "releases", build), "utf8"), {
+  const html = fs.readFileSync(path.join(root, "releases", build), "utf8");
+
+  /* the icon font is served from a path that only exists on the site, so a
+     build has to carry the file itself — without it every icon in a standalone
+     copy renders as nothing */
+  ok(html.includes("data:font/woff2;base64,"), "carries the icon font");
+
+  const dom = new JSDOM(html, {
     url: "https://null.test/",
     runScripts: "dangerously",
     pretendToBeVisual: true,

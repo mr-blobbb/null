@@ -258,5 +258,37 @@ for (const page of PAGES) {
   win.close();
 }
 
+/* ---------- icon font ----------
+   The icon table has to hold codepoints, not the ligature names the glyphs came
+   from. NULL ships a cut of the font with no letters in it (see
+   scripts/build-font.js), so a name left written as words renders as nothing at
+   all — worth catching here rather than by eye. */
+console.log("\nicon font");
+{
+  const dom = fs.readFileSync(path.join(root, "src", "utilities", "dom.js"), "utf8");
+  const table = dom.slice(dom.indexOf("var P = {"));
+  const entries = [
+    ...table.slice(0, table.indexOf("};")).matchAll(/(\w+):\s*"((?:\\.|[^"\\])*)"/g),
+  ].map((m) => ({ name: m[1], value: JSON.parse('"' + m[2] + '"') }));
+  const spelled = entries.filter(
+    (e) => !(e.value.length === 1 && e.value.charCodeAt(0) >= 0xe000),
+  );
+
+  ok(entries.length > 20, "the icon table parsed (" + entries.length + " glyphs)");
+  ok(
+    spelled.length === 0,
+    spelled.length
+      ? "every icon is a codepoint — " + spelled.map((e) => e.name).join(", ") + ": run `bun run font`"
+      : "every icon is a codepoint",
+  );
+
+  const font = "public/fonts/material-symbols-rounded.woff2";
+  ok(fs.existsSync(path.join(root, font)), "the icon font is present");
+  ok(
+    fs.readFileSync(path.join(root, "src", "styles", "global.css"), "utf8").includes('url("/' + font + '")'),
+    "global.css serves it locally",
+  );
+}
+
 console.log(failed ? "\n" + failed + " check(s) failed" : "\nall page checks passed");
 process.exit(failed ? 1 : 0);

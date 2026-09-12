@@ -47,79 +47,89 @@
   }
 
   /* ---------- icons (Google Material Symbols Rounded) ---------- */
+  /* ---------- icon glyphs ----------
+     Each name maps to a codepoint in the icon font NULL ships, rather than to
+     the ligature it was written as. NULL carries a ~90 KB cut of Material
+     Symbols instead of the full 5 MB font (see scripts/build-font.js), and a
+     cut that small only keeps the icons themselves — ligature formation needs
+     every letter, and the font's layout closure then drags all ~3,600 Google
+     icons back in. The ligature each codepoint came from is in the comment,
+     which is also what the build script reads to find a glyph when a name is
+     still spelled out in words. */
   var P = {
-    home: "home",
-    game: "sports_esports",
-    grid: "apps",
-    proxy: "public",
-    ann: "campaign",
-    sched: "calendar_month",
-    backups: "archive",
-    settings: "settings",
-    clock: "schedule",
-    clock2: "timer",
-    star: "star",
-    search: "search",
-    x: "close",
-    chevD: "expand_more",
-    chevR: "chevron_right",
-    menu: "menu",
-    back: "arrow_back",
-    play: "play_arrow",
-    warn: "warning",
-    ext: "open_in_new",
-    max: "fullscreen",
-    min: "fullscreen_exit",
-    refresh: "refresh",
-    sun: "light_mode",
-    moon: "dark_mode",
-    info: "info",
-    trash: "delete",
-    up: "arrow_upward",
-    ban: "block",
-    file: "description",
-    tab: "tab",
-    book: "menu_book",
-    school: "school",
-    scale: "balance",
-    cookie: "cookie",
-    zap: "bolt",
-    lock: "lock",
-    shuffle: "shuffle",
-    list: "list",
-    heart: "favorite",
-    chrome: "language",
-    pen: "edit",
-    check: "check",
-    calendar: "event",
-    copy: "content_copy",
-    upload: "upload",
-    download: "download",
-    save: "save",
-    leaf: "eco",
-    snow: "ac_unit",
-    petal: "local_florist",
-    sparkle: "auto_awesome",
-    coin: "payments",
-    store: "storefront",
-    boost: "rocket_launch",
-    trophy: "emoji_events",
-    gift: "redeem",
-    unlock: "lock_open",
-    tip: "lightbulb",
-    trend: "trending_up",
-    wrench: "build",
-    code: "code",
-    beaker: "science",
-    eye: "visibility",
-    pause: "pause",
+    home: "\ue88a", // home
+    game: "\ue6ec", // sports_esports
+    grid: "\ue5c3", // apps
+    proxy: "\ue80b", // public
+    ann: "\uef49", // campaign
+    sched: "\uebcc", // calendar_month
+    backups: "\ue149", // archive
+    settings: "\ue8b8", // settings
+    clock: "\ue192", // schedule
+    clock2: "\ue425", // timer
+    star: "\ue838", // star
+    search: "\ue8b6", // search
+    x: "\ue14c", // close
+    chevD: "\ue5cf", // expand_more
+    chevR: "\ue409", // chevron_right
+    menu: "\ue5d2", // menu
+    back: "\ue5c4", // arrow_back
+    play: "\ue037", // play_arrow
+    warn: "\ue002", // warning
+    ext: "\ue895", // open_in_new
+    max: "\ue5d0", // fullscreen
+    min: "\ue5d1", // fullscreen_exit
+    refresh: "\ue5d5", // refresh
+    sun: "\ue518", // light_mode
+    moon: "\ue51c", // dark_mode
+    info: "\ue88e", // info
+    trash: "\ue872", // delete
+    up: "\ue5d8", // arrow_upward
+    ban: "\ue033", // block
+    file: "\ue873", // description
+    tab: "\ue8d8", // tab
+    book: "\uea19", // menu_book
+    school: "\ue80c", // school
+    scale: "\ueaf6", // balance
+    cookie: "\ueaac", // cookie
+    zap: "\uea0b", // bolt
+    lock: "\ue88d", // lock
+    shuffle: "\ue043", // shuffle
+    list: "\ue896", // list
+    heart: "\ue87d", // favorite
+    chrome: "\ue894", // language
+    pen: "\ue150", // edit
+    check: "\ue5ca", // check
+    calendar: "\ue24f", // event
+    copy: "\ue14d", // content_copy
+    upload: "\ue2c6", // upload
+    download: "\ue171", // download
+    save: "\ue161", // save
+    leaf: "\uea35", // eco
+    snow: "\ueb3b", // ac_unit
+    petal: "\ue545", // local_florist
+    sparkle: "\ue65f", // auto_awesome
+    coin: "\uef63", // payments
+    store: "\uea12", // storefront
+    boost: "\ueb9b", // rocket_launch
+    trophy: "\ue71a", // emoji_events
+    gift: "\ue8b1", // redeem
+    unlock: "\ue898", // lock_open
+    tip: "\ue0f0", // lightbulb
+    trend: "\ue8e5", // trending_up
+    wrench: "\ue869", // build
+    code: "\ue86f", // code
+    beaker: "\uea4b", // science
+    eye: "\ue417", // visibility
+    pause: "\ue034", // pause
+    help: "\ue887", // help
   };
 
   function icon(name, cls) {
     var span = document.createElement("span");
     span.className = "msr" + (cls ? " " + cls : "");
     span.setAttribute("aria-hidden", "true");
-    span.textContent = P[name] || "help";
+    span.textContent = P[name] || P.help;
     return span;
   }
 

@@ -3,8 +3,20 @@
    Shared black-and-white / grayscale design system for every page.
    ============================================================ */
 
-/* Material Symbols — one uniform icon font for every glyph on NULL */
-@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200");
+/* Material Symbols — one uniform icon font for every glyph on NULL.
+   NULL serves its own ~88 KB cut of it (scripts/build-font.js) rather than
+   asking Google for the full 5 MB one, so the interface renders the same
+   offline, behind a network that blocks fonts.googleapis.com, and with no
+   third-party request in the critical path. font-display:block keeps the
+   glyphs invisible for the instant before the file lands, instead of painting
+   a row of .notdef boxes. */
+@font-face {
+  font-family: "Material Symbols Rounded";
+  font-style: normal;
+  font-weight: 100 700;
+  font-display: block;
+  src: url("/public/fonts/material-symbols-rounded.woff2") format("woff2");
+}
 
 /* ---------- tokens ---------- */
 :root {

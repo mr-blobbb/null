@@ -2,6 +2,7 @@
 node_modules
 dist
 tsconfig.tsbuildinfo
+.cache
 
 # Host/editor secrets — never publish (NULL needs no keys to run)
 .env.local

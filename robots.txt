@@ -1,0 +1,11 @@
+# NULL — a static hub, served straight from the repository by GitHub Pages.
+
+User-agent: *
+Allow: /
+
+# The catalog builder, the test suite and the 404 page are tools for whoever
+# runs the site, not content: there is nothing there for a search result to
+# land on. (Each of those pages also carries a noindex tag of its own.)
+Disallow: /tests.html
+Disallow: /tools.html
+Disallow: /404.html
