@@ -174,8 +174,11 @@ Neither is needed to run or deploy NULL:
   that host check has something to build. It type-checks nothing; it only parses
   the JavaScript, so it still catches syntax errors. Safe to delete.
 
-There is no `package.json`, no Vite, no Prettier, no build scripts and no
-TypeScript in the project.
+The **site itself** is only HTML, CSS and plain JavaScript (plus the static
+`public/manifest.webmanifest`). A few host/editor leftovers may sit in the repo
+(`package.json`, `bun.lock`, `convex/`, `src/lib/vly-integrations.ts`) — none are
+loaded by any page, none are needed to run or deploy, and none can execute on
+GitHub Pages. Ignore or delete them; NULL never calls out to anything.
 
 ## Features at a glance
 

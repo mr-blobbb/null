@@ -2,6 +2,11 @@
 node_modules
 tsconfig.tsbuildinfo
 
+# Host/editor secrets — never publish (NULL needs no keys to run)
+.env.local
+.env*.local
+.env
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
