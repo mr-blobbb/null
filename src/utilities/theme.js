@@ -372,7 +372,7 @@
     { id: "bp", name: "Blue + Purple", colors: ["#3d8bff", "#7d6bff", "#a86bff"] },
     { id: "pg", name: "Purple + Green", colors: ["#a95bff", "#63e0c8", "#2fe58f"] },
     { id: "rainbow", name: "Rainbow", colors: ["#ff4d6d", "#ffb020", "#ffe94a", "#35e88f", "#38b6ff", "#a26bff"] },
-    { id: "nnhs", name: "NNHS", colors: ["#bd5500ff", "#06005dff", "#007bffff"] }
+    { id: "nnhs", name: "NNHS", colors: ["#bd5500ff", "#06005dff", "#007bffff"] },
     { id: "custom", name: "Custom", colors: null },
   ];
 

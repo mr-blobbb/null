@@ -9,5 +9,5 @@
     "moduleResolution": "bundler",
     "skipLibCheck": true
   },
-  "include": ["src", "sw.js"]
+  "include": ["src", "sw.js", "scripts", "vite.config.js"]
 }

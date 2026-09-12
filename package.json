@@ -1,4 +1,18 @@
 {
+  "name": "null",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "NULL — a plain black-and-white hub for games, apps, proxies and tools. Static HTML/CSS/JS. Vite is only the local preview server; GitHub Pages serves these files as-is.",
+  "scripts": {
+    "dev": "vite",
+    "preview": "vite preview",
+    "releases": "node scripts/build-releases.js",
+    "check": "tsc -b"
+  },
+  "devDependencies": {
+    "vite": "^7.3.5"
+  },
   "dependencies": {
     "@vly-ai/integrations": "^0.6.13"
   }

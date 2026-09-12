@@ -8,9 +8,10 @@ static HTML/CSS/JS, deployable straight to GitHub Pages.
 Primary deployment: https://googleslides2026.github.io
 ```
 
-No backend. No database. No framework. **No build step and no toolchain** —
-there is nothing to install or compile. Open the folder on a static host and it
-runs.
+No backend, no database, no framework, and **no build step for the site** —
+there is nothing to compile and nothing to deploy beyond these files. Open the
+folder on a static host and it runs. (A small dev-only toolchain exists so the
+site can be previewed and the releases rebuilt; see the end of this file.)
 
 ---
 
@@ -41,12 +42,15 @@ runs.
 ├── public/
 │   ├── favicon.svg, icon-*.png
 │   └── fallback-assets/   NULL-styled thumbnails used when one is missing
-├── releases/              Self-contained single-file builds (static snapshots)
-│   ├── null-mini.html     Lightweight essentials
-│   ├── null-lite.html     More capable standalone
-│   └── null-regular.html  Closest standalone reproduction of the full site
+├── releases/              Self-contained single-file builds (generated snapshots)
+│   ├── null-regular.html  The whole thing, readable
+│   ├── null-mini.html     Same build, compressed
+│   └── null-lite.html     Stripped: no theme packs, particles, glow or shop,
+│                          animations off — and compressed, so it is smallest
+├── scripts/               Build + check tools (dev only, never loaded by a page)
 ├── sw.js                  Service worker (installable app + offline shell)
-└── tsconfig.json, node_modules/   Host-only: see "Not part of the site"
+├── .nojekyll              Serves the repo as plain files on GitHub Pages
+└── package.json, vite.config.js, tsconfig.json   Dev only, see below
 ```
 
 Pages are ordinary HTML files. The library pages live as `games/index.html`,
@@ -144,11 +148,29 @@ site it needs to be served over http(s) — the frames cannot load from `file://
 
 ## Releases
 
-`releases/null-{mini,lite,regular}.html` are self-contained single-file builds:
-the whole stylesheet, the runtime and the catalog inlined, with a small
-tier-driven shell. They are **committed snapshots** — copy one somewhere and it
-works on its own, with no other NULL files. Rebuild them by hand if you change
-something they should carry.
+`releases/null-{regular,mini,lite}.html` are self-contained single-file builds.
+Each one inlines the stylesheets, the whole runtime and the release shell, plus
+a copy of the catalog whose games and apps carry their own code as a `data:`
+URI — copy one anywhere and it runs with no other NULL file, on `file://`, in a
+blob or on a hosted page.
+
+They are **generated**, so rebuild them after changing anything they should
+carry:
+
+```
+bun run releases            # or: node scripts/build-releases.js
+```
+
+The three tiers differ only in what the build keeps:
+
+| build | contents |
+| --- | --- |
+| `null-regular.html` | everything, readable source |
+| `null-mini.html` | everything, minified |
+| `null-lite.html` | no theme packs, particles, glow or shop, performance mode pinned on, minified |
+
+`scripts/check-releases.js` loads all three and drives them (nav, library, the
+player overlay, settings, shop) to catch a bad build before you ship it.
 
 ## Deployment
 
@@ -156,29 +178,46 @@ Push the repo and let GitHub Pages serve it from the repository root.
 `404.html`, `index.html` and all content folders live at the root on purpose, so
 no build step or special Pages config is needed.
 
-Path note: links are root-relative and clean (`/games`, `/apps`, …). GitHub
-Pages resolves those to the directory index files (`games/index.html`, …) and
-redirects to the trailing-slash form — the nav accounts for both. If you ever
-host under a sub-path instead, prefix a `<base>` tag in each HTML head.
+Two things make the links behave on Pages:
+
+- Library links point at directories (`/games`, `/apps`, `/proxies`) — Pages
+  resolves those to `games/index.html` and redirects to the trailing-slash form,
+  and the nav lights up for either shape.
+- Root pages are linked as their real files (`/schedule.html`, `/settings.html`,
+  …). Pages serves an exact file or a directory index and nothing else, so an
+  extensionless `/schedule` would 404 there. `404.html` doubles as a redirect
+  for those anyway: if someone types or bookmarks one, it tries
+  `/schedule.html`, then `/schedule/index.html`, and hops to whichever exists.
+
+`.nojekyll` keeps Pages from running Jekyll over the repo, so every file is
+served exactly as it is in git. If you ever host under a sub-path instead,
+prefix a `<base>` tag in each HTML head.
+
+`node scripts/check-links.js` re-checks that every internal path in the HTML and
+the shipped JavaScript exists as a real file before you push.
 
 ---
 
-## Not part of the site
-
-Two things exist only because this project was scaffolded by a hosted editor.
-Neither is needed to run or deploy NULL:
-
-- `node_modules/` — leftover install output. The host runs a syntax check after
-  each change; delete the folder if you don't want that.
-- `tsconfig.json` — a JS-only stub (`allowJs`, `checkJs: false`) that exists so
-  that host check has something to build. It type-checks nothing; it only parses
-  the JavaScript, so it still catches syntax errors. Safe to delete.
+## Dev only — nothing here is needed to deploy
 
 The **site itself** is only HTML, CSS and plain JavaScript (plus the static
-`public/manifest.webmanifest`). A few host/editor leftovers may sit in the repo
-(`package.json`, `bun.lock`, `convex/`, `src/lib/vly-integrations.ts`) — none are
-loaded by any page, none are needed to run or deploy, and none can execute on
-GitHub Pages. Ignore or delete them; NULL never calls out to anything.
+`public/manifest.webmanifest`). No page loads any of the following; they exist
+so the site can be previewed, rebuilt and checked while working on it:
+
+| file | what it is for |
+| --- | --- |
+| `vite.config.js` + `package.json` | the local preview server (`bun run dev`). The editor this project was built in also injects an unused `@vly-ai/integrations` dependency here — no page touches it |
+| `scripts/build-releases.js` | regenerates the three single-file builds |
+| `scripts/check-releases.js` | drives the built releases and reports errors |
+| `scripts/check-links.js` | verifies every internal path resolves to a file |
+| `scripts/release-shell.js` + `release.css` | the app inside the releases |
+| `tsconfig.json` | a JS-only stub (`allowJs`, `checkJs: false`) so `bun run check` parses the site's JavaScript and catches syntax errors |
+| `node_modules/` | install output, ignored by git |
+
+Handy commands: `bun run dev` (preview), `bun run check` (syntax check),
+`bun run releases` (rebuild releases), then the two check scripts above. Delete
+any of it and the deployed site is unaffected — GitHub Pages serves the files in
+this folder as they are, and NULL never calls out to anything.
 
 ## Features at a glance
 

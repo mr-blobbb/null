@@ -1,0 +1,134 @@
+/* NULL — release.css
+   The few styles the single-file builds need on top of the site's own
+   global.css + extra.css: the shell frame around the views, the library grid
+   and the compact home announcements list. Everything else in the releases
+   (cards, glass, shop rows, player, daily strip, settings rows) is the real
+   site styling. Inlined by scripts/build-releases.js. */
+
+.rel-shell {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 14px 16px 80px;
+}
+.rel-top {
+  position: sticky;
+  top: 12px;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--bg-2);
+}
+.rel-top .sp {
+  flex: 1;
+}
+.rel-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 12px 0 6px;
+}
+.rel-view {
+  margin-top: 14px;
+}
+.rel-hero {
+  border-radius: 26px;
+  padding: 26px 26px 22px;
+  margin-top: 8px;
+}
+.rel-hero h1 {
+  font-size: clamp(30px, 6vw, 52px);
+  letter-spacing: -0.03em;
+  margin: 4px 0 10px;
+}
+.rel-hero p {
+  color: var(--text-2);
+  max-width: 560px;
+  line-height: 1.6;
+}
+.rel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+  align-items: center;
+}
+
+.libgrid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(208px, 1fr));
+}
+.libgrid .tcard {
+  width: 100%;
+}
+
+.view-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 8px 0 14px;
+}
+.view-head h2 {
+  font-size: 22px;
+}
+.view-head .field {
+  margin-left: auto;
+  min-width: 200px;
+  flex: 1;
+  max-width: 300px;
+}
+
+/* compact announcements list on the home view */
+.ann-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ann-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  padding: 9px 11px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: var(--glass-bg);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+.ann-line:hover {
+  border-color: var(--line-2);
+  background: var(--glass-bg-2);
+}
+.ann-line span {
+  font-size: 12px;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+
+.foot {
+  margin-top: 40px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  color: var(--text-2);
+  font-size: 12.5px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  align-items: center;
+  justify-content: center;
+}
+.lines p {
+  margin: 8px 0;
+}
+.section + .section {
+  margin-top: 18px;
+}

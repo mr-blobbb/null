@@ -209,7 +209,7 @@
         _h: norm(raw),
         _x: "",
         run: function () {
-          location.href = "/announcements";
+          location.href = "/announcements.html";
         },
       });
     });
@@ -276,8 +276,8 @@
           { t: "Home", u: "/", i: "home" },
           { t: "Games", u: "/games/", i: "game" },
           { t: "Apps", u: "/apps/", i: "grid" },
-          { t: "Schedule", u: "/schedule", i: "sched" },
-          { t: "Settings", u: "/settings", i: "settings" },
+          { t: "Schedule", u: "/schedule.html", i: "sched" },
+          { t: "Settings", u: "/settings.html", i: "settings" },
         ].forEach(function (s) {
           var it = {
             kind: "page",

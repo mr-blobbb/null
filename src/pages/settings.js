@@ -620,7 +620,7 @@
       );
     } else {
       foot.appendChild(d.h("span", { class: "chip price-chip" }, [d.icon("coin"), String(p.price)]));
-      foot.appendChild(d.h("a", { class: "btn btn-outline btn-sm", href: "/shop" }, [d.icon("store"), "Shop"]));
+      foot.appendChild(d.h("a", { class: "btn btn-outline btn-sm", href: "/shop.html" }, [d.icon("store"), "Shop"]));
     }
 
     return d.h(
@@ -696,7 +696,7 @@
       );
     } else {
       foot.appendChild(d.h("span", { class: "chip price-chip" }, [d.icon("coin"), String(p.price)]));
-      foot.appendChild(d.h("a", { class: "btn btn-outline btn-sm", href: "/shop" }, [d.icon("store"), "Shop"]));
+      foot.appendChild(d.h("a", { class: "btn btn-outline btn-sm", href: "/shop.html" }, [d.icon("store"), "Shop"]));
     }
 
     return d.h(

@@ -300,7 +300,7 @@
             } },
           { label: "Open shop", icon: "store", run: function () {
               ok("heading to the shop");
-              setTimeout(function () { location.href = "/shop"; }, 150);
+              setTimeout(function () { location.href = "/shop.html"; }, 150);
             } },
         ],
         [

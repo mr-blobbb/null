@@ -5,9 +5,9 @@
    Strategy:
      · navigations  — network first, so updates always land; cached page on
                       failure, falling back to the cached home shell.
-     · same-origin  — network first too (dev servers transform /src/*.css and
-       GET assets     /src/*.js on the fly, so a cached copy is only ever a
-                      fallback), filling the runtime cache on success.
+     · same-origin  — network first too (a static host serves the raw files;
+       GET assets     a cached copy is only ever a fallback), filling the
+                      runtime cache on success.
 
    Cache writes are type-checked: a stylesheet URL may only be stored when the
    response really is text/css. Without that guard a dev server's JS-wrapped
@@ -15,19 +15,19 @@
    leaving every page unstyled.
 
    Bump CACHE/RUNTIME when the core file list changes so old caches are dropped. */
-const CACHE = "null-v3";
-const RUNTIME = "null-runtime-v3";
+const CACHE = "null-v4";
+const RUNTIME = "null-runtime-v4";
 
 const CORE = [
   "/",
   "/index.html",
   "/404.html",
   "/player.html",
-  "/schedule",
-  "/settings",
-  "/announcements",
-  "/shop",
-  "/backups",
+  "/schedule.html",
+  "/settings.html",
+  "/announcements.html",
+  "/shop.html",
+  "/backups.html",
   "/games/",
   "/apps/",
   "/proxies/",

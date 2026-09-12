@@ -413,7 +413,7 @@
       ok("the daily strip renders", !!strip);
       ok("the strip names the crate", /Daily crate/.test(txt("#dailyStrip")));
       ok("the strip shows quest progress", /Quests \d\/3/.test(txt("#dailyStrip")));
-      ok("the strip links into the shop", !!q('#dailyStrip a[href="/shop"]'));
+      ok("the strip links into the shop", !!q('#dailyStrip a[href="/shop.html"]'));
       ok("the old marquee is gone from the page", !q("#newSec") && !q(".new-track"));
       ok("the tip of the day renders", /Tip of the day/.test(txt("#tipCard")));
 

@@ -214,7 +214,7 @@
         ]),
       ]);
       card.addEventListener("click", function () {
-        location.href = a.link || "/announcements";
+        location.href = a.link || "/announcements.html";
       });
       box.appendChild(card);
     });
@@ -404,7 +404,7 @@
           variant: "primary",
           onClick: function () {
             N.flags.set("customize");
-            location.href = "/settings";
+            location.href = "/settings.html";
           },
         },
       ],
