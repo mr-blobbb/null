@@ -1,0 +1,62 @@
+/* NULL — perf.css
+   Ultra-Performance mode. Performance mode (data-perf="1") shortens
+   animation; this is the floor: no motion, no effect layers, no blur and
+   no paint work for anything off screen. Meant for machines that cannot
+   hold a frame — shell.js only turns it on with the user's say-so.
+
+   Kept in its own file rather than appended to global.css so the rule set
+   can be read (and shipped or dropped) on its own. Loaded after
+   global.css, so it wins on equal specificity. */
+
+html[data-perf="ultra"] *,
+html[data-perf="ultra"] *::before,
+html[data-perf="ultra"] *::after {
+  animation: none !important;
+  transition: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+/* keep the one outline that matters: where the keyboard is */
+html[data-perf="ultra"] :focus-visible {
+  outline: 2px solid var(--ac-1);
+  outline-offset: 2px;
+}
+
+/* effect layers are pure decoration — drop them entirely */
+html[data-perf="ultra"] .part-fx,
+html[data-perf="ultra"] .pack-fx,
+html[data-perf="ultra"] .pack-preview,
+html[data-perf="ultra"] .part-preview,
+html[data-perf="ultra"] #null-glow-el,
+html[data-perf="ultra"] .glow-bg,
+html[data-perf="ultra"] .sf-p,
+html[data-perf="ultra"] .cf-ov {
+  display: none !important;
+}
+
+/* no card lift on hover either (the standard perf rule only covers
+   [data-perf="1"], and ultra sets its own value) */
+html[data-perf="ultra"] .tcard:hover,
+html[data-perf="ultra"] .mirror:hover,
+html[data-perf="ultra"] .ann-card:hover,
+html[data-perf="ultra"] .shop-card:hover,
+html[data-perf="ultra"] .panel:hover {
+  transform: none !important;
+}
+
+/* only paint what's on screen: cards and rows outside the viewport skip
+   layout + paint until they're scrolled to */
+html[data-perf="ultra"] .tcard,
+html[data-perf="ultra"] .mirror,
+html[data-perf="ultra"] .ann-card,
+html[data-perf="ultra"] .set-card,
+html[data-perf="ultra"] .shop-card,
+html[data-perf="ultra"] .shop-row,
+html[data-perf="ultra"] .panel,
+html[data-perf="ultra"] .section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 300px;
+}

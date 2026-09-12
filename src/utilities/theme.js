@@ -455,7 +455,7 @@
   })();
 
   /* ---------- glow element ---------- */
-  var elState = null; // { el, ring, glow, glow2, comet, flareBand }
+  var elState = null; // { el, ring, glow, glow2, comet }
   var curId = "off";
   var cometOn = false;
 
@@ -485,14 +485,8 @@
       if (bg) comet.style.background = cometBg(colorsFor(curId));
       el.appendChild(comet);
     }
-    /* proximity flare: bright wedge of ring that follows the cursor */
-    var flare = layerEl("flare");
-    var flareBand = layerEl("flare-band");
-    if (bg) flareBand.style.background = bg;
-    flare.appendChild(flareBand);
-    el.appendChild(flare);
     document.body.appendChild(el);
-    elState = { el: el, ring: ring, glow: glow, glow2: glow2, comet: comet, flareBand: flareBand };
+    elState = { el: el, ring: ring, glow: glow, glow2: glow2, comet: comet };
     return elState;
   }
 
@@ -506,8 +500,8 @@
     var n = layerEl(kind);
     n.style.background = bg;
     n.classList.add("ng-in");
-    /* the old layer's parent is always the right host (flareBand lives
-       inside the flare element, everything else directly inside el) */
+    /* every layer host sits directly inside #null-glow-el, so the new
+       layer goes in front of the old one and then crossfades over it */
     old.parentNode.insertBefore(n, old);
     old.classList.add("ng-xf");
     void n.offsetWidth;
@@ -541,43 +535,6 @@
     }
   }
 
-  /* cursor proximity: only the piece of border near the pointer reacts.
-     We track the distance to the nearest edge (0..1 flare strength) and
-     the cursor's angle around the viewport center, which aims the flare
-     wedge at the right segment. */
-  var proxOn = false;
-  var proxRaf = null;
-  var proxX = -999;
-  var proxY = -999;
-  function proxMove(e) {
-    proxX = e.clientX;
-    proxY = e.clientY;
-    if (proxRaf) return;
-    proxRaf = requestAnimationFrame(function () {
-      proxRaf = null;
-      var st = elState;
-      if (!st || !st.el.isConnected) return;
-      var w = window.innerWidth;
-      var h = window.innerHeight;
-      var d = Math.min(proxX, w - proxX, proxY, h - proxY);
-      var v = N.dom.clamp(1 - d / 80, 0, 1);
-      var deg = (Math.atan2(proxX - w / 2, -(proxY - h / 2)) * 180) / Math.PI;
-      st.el.style.setProperty("--ng-prox", v);
-      st.el.style.setProperty("--ng-cur", (deg + 360) % 360 + "deg");
-      st.el.classList.toggle("ng-near", v > 0.02);
-    });
-  }
-  function wireProx() {
-    if (proxOn) return;
-    proxOn = true;
-    document.addEventListener("pointermove", proxMove, { passive: true });
-  }
-  function unwireProx() {
-    if (!proxOn) return;
-    proxOn = false;
-    document.removeEventListener("pointermove", proxMove);
-  }
-
   /* Neon's accent pairs with the glow palette (--glow-1/-2), with Neon's own
      tubes as the fallback for when the vars aren't published yet */
   function paintNeonAccent() {
@@ -604,7 +561,6 @@
           if (st.el.parentNode) st.el.parentNode.removeChild(st.el);
         }, 600);
       }
-      unwireProx();
       return;
     }
     root.dataset.glow = id;
@@ -615,9 +571,7 @@
     setLayerBg("ring", bg);
     setLayerBg("glow", bg);
     setLayerBg("glow2", bg);
-    setLayerBg("flareBand", bg);
     if (cometOn) setLayerBg("comet", cometBg(colors));
-    wireProx();
   }
 
   function setTheme(t) {
@@ -650,8 +604,13 @@
     applyPack(p);
   }
 
-  function setPerf(on) {
-    if (on) root.dataset.perf = "1";
+  /* perf is false | true | "ultra". Ultra is performance mode plus no
+     animation, no effect layers and no off-screen paint — see perf.css. */
+  function setPerf(level) {
+    var ultra = level === "ultra";
+    var on = !!level;
+    if (ultra) root.dataset.perf = "ultra";
+    else if (on) root.dataset.perf = "1";
     else delete root.dataset.perf;
     /* performance mode drops the pack backdrop and particles; leaving it
        restores whichever ones were on */

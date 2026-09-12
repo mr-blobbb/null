@@ -62,7 +62,8 @@
     confetti: true, // celebrate when a class period ends
     marathonMin: 0, // marathon mode: 0 = off, else minutes between switches
     marathonAt: 0, // timestamp of the next auto-switch (ms)
-    perf: false, // performance mode
+    perf: false, // performance mode: false | true | "ultra" (see perf.css)
+    cloakRedirect: true, // hand this tab to the preset's real site when cloaking
     gmailAddr: "you@gmail.com",
     gmailUnread: 0,
     panicKey: "`",

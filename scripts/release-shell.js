@@ -1020,21 +1020,46 @@
     return row;
   }
 
+  /* perf is false | true | "ultra" — ultra adds no animation at all, no
+     effect layers and no off-screen paint (perf.css) */
   function perfRow(card) {
-    var row = d.h("div", { class: "set-row" }, [
-      d.h("div", { class: "lbl-txt" }, [d.h("b", null, "Performance mode"), d.h("span", null, "Disables animation, glow, particles and blur on slower devices.")])
-    ]);
-    var lab = d.h("label", { class: "switch" });
     var sw = d.h("input", { type: "checkbox", checked: !!N.prefs.get("perf") });
-    if (LITE) sw.disabled = true;
-    sw.addEventListener("change", function () {
-      N.prefs.set("perf", sw.checked);
-      N.theme.setPerf(sw.checked);
-    });
-    lab.appendChild(sw);
-    lab.appendChild(d.h("span", { class: "track" }));
-    row.appendChild(lab);
-    card.appendChild(row);
+    var usw = d.h("input", { type: "checkbox", checked: N.prefs.get("perf") === "ultra" });
+    if (LITE) {
+      sw.disabled = true;
+      usw.disabled = true;
+    }
+    function apply() {
+      var level = usw.checked ? "ultra" : sw.checked;
+      N.prefs.set("perf", level);
+      N.theme.setPerf(level);
+      sw.checked = !!level;
+      usw.checked = level === "ultra";
+    }
+    sw.addEventListener("change", apply);
+    usw.addEventListener("change", apply);
+
+    function rowFor(label, hint, input) {
+      var lab = d.h("label", { class: "switch" });
+      lab.appendChild(input);
+      lab.appendChild(d.h("span", { class: "track" }));
+      var row = d.h("div", { class: "set-row" }, [
+        d.h("div", { class: "lbl-txt" }, [d.h("b", null, label), d.h("span", null, hint)]),
+        lab
+      ]);
+      card.appendChild(row);
+      return row;
+    }
+    var row = rowFor(
+      "Performance mode",
+      "Disables animation, glow, particles and blur on slower devices.",
+      sw
+    );
+    rowFor(
+      "Ultra-Performance mode",
+      "No animation at all, no effects, and only what's on screen is drawn.",
+      usw
+    );
     return row;
   }
 

@@ -12,10 +12,12 @@
     "build": "node scripts/build-catalog.js && node scripts/build-releases.js",
     "check:links": "node scripts/check-links.js",
     "check:releases": "node scripts/check-releases.js",
+    "check:pages": "node scripts/check-pages.js",
     "check": "tsc -b"
   },
   "devDependencies": {
     "esbuild": "^0.28.2",
+    "jsdom": "^30.0.1",
     "typescript": "^5.9.3",
     "vite": "^7.3.5"
   },

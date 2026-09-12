@@ -86,7 +86,11 @@ html {
 
 body {
   margin: 0;
-  min-height: 100%;
+  /* column + min-height keeps the footer on the bottom edge on short pages
+     (announcements, backups) instead of floating with dead space below it */
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
   background: var(--bg);
   color: var(--text);
   font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
@@ -230,6 +234,10 @@ html[data-perf="1"] .sf-p {
 }
 
 /* ---------- shared layout ---------- */
+body > main {
+  flex: 1 0 auto;
+}
+
 .page {
   width: 100%;
   max-width: var(--maxw);
@@ -1275,8 +1283,8 @@ html[data-perf='1'] .dc-ov {
    Corner radii are matched per layer (inner arc is always the same
    radius) so the glow follows the ring perfectly around corners.
    The gradient rotates in a loop (--nga); comet mode adds a bright
-   streak; .ng-near + --ng-prox/--ng-cur (set by theme.js) light up
-   only the border piece near the cursor.
+   streak. The border is uniform all the way round — it does not react
+   to the cursor.
    ============================================================ */
 @property --nga {
   syntax: "<angle>";
@@ -1299,8 +1307,7 @@ html[data-perf='1'] .dc-ov {
 #null-glow-el .ng-ring,
 #null-glow-el .ng-glow,
 #null-glow-el .ng-glow2,
-#null-glow-el .ng-comet,
-#null-glow-el .ng-flare-band {
+#null-glow-el .ng-comet {
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
@@ -1332,25 +1339,6 @@ html[data-perf='1'] .dc-ov {
   border-radius: 13px;
   opacity: 0.95;
   animation: nga 5s linear infinite;
-}
-/* proximity flare: a bright wedge of ring that follows the cursor.
-   theme.js sets --ng-cur to the cursor's angle; the wedge mask keeps
-   the reaction on just that piece of border, and the band inside keeps
-   its own geometry so it stays perfectly aligned with the viewport. */
-#null-glow-el .ng-flare {
-  opacity: 0;
-  transition: opacity 0.16s ease;
-  -webkit-mask: conic-gradient(from calc(var(--ng-cur, 0deg) - 30deg), #000 0 60deg, transparent 60deg 360deg);
-  mask: conic-gradient(from calc(var(--ng-cur, 0deg) - 30deg), #000 0 60deg, transparent 60deg 360deg);
-}
-#null-glow-el .ng-flare-band {
-  padding: 5px;
-  border-radius: 12px;
-  filter: brightness(1.45);
-  animation: nga 8s linear infinite;
-}
-#null-glow-el.ng-near .ng-flare {
-  opacity: calc(0.45 + var(--ng-prox, 0) * 0.55);
 }
 /* crossfade helpers — theme.js toggles these when a preset changes */
 #null-glow-el .ng-in {
@@ -1462,6 +1450,7 @@ html[data-perf="1"] #null-glow-el {
 
 /* footer */
 .site-foot {
+  margin-top: auto;
   border-top: 1px solid color-mix(in srgb, var(--ac-1) 10%, var(--line));
   background: var(--bg-2);
 }

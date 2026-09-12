@@ -29,9 +29,11 @@
     }
     paintGlow();
 
-    /* performance switch */
+    /* performance switches — perf is false | true | "ultra" */
     var sw = d.qs("#perfSwitch");
     if (sw) sw.checked = !!p.perf;
+    var usw = d.qs("#ultraSwitch");
+    if (usw) usw.checked = p.perf === "ultra";
 
     /* library extras toggles */
     var rsw = d.qs("#recsSwitch");
@@ -60,6 +62,7 @@
     paintTabPreview();
     paintGmail();
     paintCustomTab();
+    paintCloak();
 
     /* panic key */
     paintPanic();
@@ -114,6 +117,29 @@
     if (ti && document.activeElement !== ti) ti.value = (p.tabCustom && p.tabCustom.title) || "";
     var ii = d.qs("#tabCustomIcon");
     if (ii && document.activeElement !== ii) ii.value = (p.tabCustom && p.tabCustom.icon) || "";
+    var ui = d.qs("#tabCustomUrl");
+    if (ui && document.activeElement !== ui) ui.value = (p.tabCustom && p.tabCustom.url) || "";
+  }
+
+  /* say where the cloak redirect will land, so the toggle isn't a mystery */
+  function paintCloak() {
+    var sw = d.qs("#cloakRedirectSwitch");
+    if (sw) sw.checked = N.prefs.get("cloakRedirect") !== false;
+    var info = d.qs("#cloakTargetInfo");
+    if (!info) return;
+    var to = N.cloak && N.cloak.target ? N.cloak.target() : null;
+    var preset = N.tab.current() || {};
+    if (N.prefs.get("cloakRedirect") === false) {
+      info.textContent = "Off — after cloaking, this tab stays on NULL.";
+    } else if (!to) {
+      info.textContent =
+        "This tab preset has no real site of its own" +
+        (preset.id === "custom" ? " — add one under Browser tab presets." : ", so this tab stays on NULL.");
+    } else {
+      info.textContent =
+        "The cloaked window opens first, then this tab goes to " + to +
+        ", so the address bar matches the tab title.";
+    }
   }
 
   /* show/hide the custom glow color pickers to match the selected preset.
@@ -236,14 +262,25 @@
 
     /* performance */
     var sw = d.qs("#perfSwitch");
-    if (sw) {
-      sw.addEventListener("change", function () {
-        N.prefs.set("perf", sw.checked);
-        N.theme.setPerf(sw.checked);
-        if (N.seasons) N.seasons.refresh(); /* particles skip perf mode */
-        d.toast(sw.checked ? "Performance mode on" : "Performance mode off");
-      });
+    var usw = d.qs("#ultraSwitch");
+    function applyPerf() {
+      /* ultra implies the plain switch; turning plain mode off leaves ultra */
+      var level = usw && usw.checked ? "ultra" : sw && sw.checked;
+      N.prefs.set("perf", level);
+      N.theme.setPerf(level);
+      if (sw) sw.checked = !!level;
+      if (usw) usw.checked = level === "ultra";
+      if (N.seasons) N.seasons.refresh(); /* particles skip perf mode */
+      d.toast(
+        level === "ultra"
+          ? "Ultra-Performance mode on"
+          : level
+            ? "Performance mode on"
+            : "Performance mode off",
+      );
     }
+    if (sw) sw.addEventListener("change", applyPerf);
+    if (usw) usw.addEventListener("change", applyPerf);
 
     /* seasonal theme */
     var ssw = d.qs("#seasonalSwitch");
@@ -386,6 +423,15 @@
         if (N.cloak) N.cloak.site("blob");
       });
     }
+    var cRed = d.qs("#cloakRedirectSwitch");
+    if (cRed) {
+      cRed.addEventListener("change", function () {
+        N.prefs.set("cloakRedirect", cRed.checked);
+        paintCloak();
+        d.toast(cRed.checked ? "This tab will follow the preset" : "This tab stays on NULL");
+      });
+    }
+    paintCloak();
 
     /* tab preset */
     var sel = d.qs("#tabSelect");
@@ -408,6 +454,13 @@
     if (tcIcon) {
       tcIcon.addEventListener("input", function () {
         saveTabCustom({ icon: tcIcon.value });
+      });
+    }
+    var tcUrl = d.qs("#tabCustomUrl");
+    if (tcUrl) {
+      tcUrl.addEventListener("input", function () {
+        saveTabCustom({ url: tcUrl.value.trim() });
+        paintCloak();
       });
     }
     var tcUpload = d.qs("#btnCustomIconUpload");

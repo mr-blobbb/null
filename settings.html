@@ -13,13 +13,14 @@
   <link rel="stylesheet" href="/src/styles/global.css">
   <link rel="stylesheet" href="/src/styles/extra.css">
   <link rel="stylesheet" href="/src/styles/particles.css">
+  <link rel="stylesheet" href="/src/styles/perf.css">
   <script>
     (function () {
       try {
         var p = JSON.parse(localStorage.getItem("null:prefs") || "{}");
         var t = p.theme === "light" ? "light" : "dark";
         document.documentElement.dataset.theme = t;
-        if (p.perf) document.documentElement.dataset.perf = "1";
+        if (p.perf) document.documentElement.dataset.perf = p.perf === "ultra" ? "ultra" : "1";
         if (p.glow && p.glow !== "off") document.documentElement.dataset.glow = p.glow;
       } catch (e) {}
     })();
@@ -72,10 +73,26 @@
         <div class="set-row">
           <div class="lbl-txt">
             <b>Performance mode</b>
-            <span>Disables hover movement and shadows for slower devices.</span>
+            <span>Shortens animations and drops hover movement, glow and shadows for slower devices.</span>
           </div>
           <label class="switch">
             <input type="checkbox" id="perfSwitch">
+            <span class="track"></span>
+          </label>
+        </div>
+
+        <div class="set-row">
+          <div class="lbl-txt">
+            <b>Ultra-Performance mode</b>
+            <span>
+              The floor: no animation or transition at all, no particles, no
+              glow, no blur, and only what&rsquo;s on screen is drawn. NULL looks
+              plain and runs as light as it can. NULL also offers this on its
+              own if it measures a low frame rate.
+            </span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="ultraSwitch" aria-label="Ultra-Performance mode">
             <span class="track"></span>
           </label>
         </div>
@@ -86,8 +103,8 @@
         <h2 class="set-title"><span data-icon="zap"></span>Glow border</h2>
         <p class="set-sub">
           A slim 5px neon border around the whole screen edge with a soft
-          glow hugging it. The colors drift in a continuous loop, and moving
-          the cursor to an edge lights up just that spot. Off by default.
+          glow hugging it. The colors drift in a continuous loop around the
+          whole frame. Off by default.
         </p>
         <div class="set-row" style="display:block">
           <label class="lbl" for="glowSelect">Preset</label>
@@ -246,6 +263,10 @@
           <span class="field">
             <input id="tabCustomTitle" type="text" maxlength="80" placeholder="Untitled document" autocomplete="off">
           </span>
+          <label class="lbl" for="tabCustomUrl" style="margin-top:12px">Real site URL</label>
+          <span class="field">
+            <input id="tabCustomUrl" type="url" placeholder="https://example.com/" autocomplete="off">
+          </span>
           <label class="lbl" for="tabCustomIcon" style="margin-top:12px">Favicon URL</label>
           <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
             <span class="field" style="flex:1;min-width:200px">
@@ -330,6 +351,21 @@
             <button type="button" class="btn btn-outline" id="btnCloakBlank"><span data-icon="ban"></span>about:blank</button>
             <button type="button" class="btn btn-outline" id="btnCloakBlob"><span data-icon="file"></span>blob:</button>
           </div>
+        </div>
+
+        <div class="set-row">
+          <div class="lbl-txt">
+            <b>Redirect this tab</b>
+            <span id="cloakTargetInfo">
+              The cloaked window opens first, then this tab goes to the real
+              site behind your tab preset, so the address bar matches the tab
+              title.
+            </span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="cloakRedirectSwitch" aria-label="Redirect this tab when cloaking">
+            <span class="track"></span>
+          </label>
         </div>
       </section>
 

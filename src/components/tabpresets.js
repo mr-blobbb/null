@@ -25,28 +25,32 @@
     maps: "https://ssl.gstatic.com/maps/maps_2023_32dp.png",
   };
 
+  /* `url` is where the real site lives. When a cloak window opens, this tab
+     can hand over to that address so the address bar matches the tab the
+     site is calling itself (see N.tab.url and shell.js). NULL itself has no
+     url — cloaking it and redirecting would just point back here. */
   var PRESETS = [
-    { id: "slides", name: "", title: "Untitled Slide - Google Slides", icon: G.slides },
-    { id: "null", name: "NULL", title: "NULL", icon: "/public/favicon.svg" },
-    { id: "home", name: "Home", title: "Naperville Community Unit School District 203", icon: s2("naperville203.org") },
-    { id: "noredink", name: "NoRedInk", title: "NoRedInk", icon: s2("noredink.com") },
-    { id: "kahoot", name: "Kahoot", title: "Kahoot!", icon: s2("kahoot.it") },
-    { id: "campus", name: "Infinite Campus", title: "Infinite Campus", icon: s2("infinitecampus.com") },
-    { id: "desmos", name: "Desmos", title: "Desmos", icon: s2("desmos.com") },
-    { id: "canvas", name: "Canvas", title: "Canvas", icon: s2("canvaslms.com") },
-    { id: "canva", name: "Canva", title: "Canva", icon: s2("canva.com") },
-    { id: "britannica", name: "Encyclopedia Britannica", title: "Encyclopedia Britannica", icon: s2("britannica.com") },
-    { id: "docs", name: "Google Docs", title: "Untitled document - Google Docs", icon: G.docs },
-    { id: "sheets", name: "Google Sheets", title: "Untitled spreadsheet - Google Sheets", icon: G.sheets },
-    { id: "search", name: "Calculator", title: "calculator - Google Search", icon: "https://www.google.com/favicon.ico" },
-    { id: "maps", name: "Google Maps", title: "Google Maps", icon: G.maps },
-    { id: "keep", name: "Google Keep", title: "Google Keep", icon: G.keep },
-    { id: "drive", name: "Google Drive", title: "My Drive - Google Drive", icon: G.drive },
-    { id: "gclass", name: "Google Classroom", title: "Home", icon: G.classroom },
-    { id: "gcal", name: "Google Calendar", title: "Google Calendar", icon: G.calendar },
-    { id: "gmail", name: "Gmail", title: null, icon: G.gmail },
-    /* custom preset — title/favicon come from prefs.tabCustom, edited in settings */
-    { id: "custom", name: "Custom tab", title: null, icon: null },
+    { id: "slides", name: "Google Slides", title: "Untitled Slide - Google Slides", icon: G.slides, url: "https://docs.google.com/presentation/u/0/" },
+    { id: "null", name: "NULL", title: "NULL", icon: "/public/favicon.svg", url: null },
+    { id: "home", name: "Home", title: "Naperville Community Unit School District 203", icon: s2("naperville203.org"), url: "https://www.naperville203.org/" },
+    { id: "noredink", name: "NoRedInk", title: "NoRedInk", icon: s2("noredink.com"), url: "https://www.noredink.com/" },
+    { id: "kahoot", name: "Kahoot", title: "Kahoot!", icon: s2("kahoot.it"), url: "https://kahoot.it/" },
+    { id: "campus", name: "Infinite Campus", title: "Infinite Campus", icon: s2("infinitecampus.com"), url: "https://www.infinitecampus.com/" },
+    { id: "desmos", name: "Desmos", title: "Desmos", icon: s2("desmos.com"), url: "https://www.desmos.com/calculator" },
+    { id: "canvas", name: "Canvas", title: "Canvas", icon: s2("canvaslms.com"), url: "https://canvas.instructure.com/" },
+    { id: "canva", name: "Canva", title: "Canva", icon: s2("canva.com"), url: "https://www.canva.com/" },
+    { id: "britannica", name: "Encyclopedia Britannica", title: "Encyclopedia Britannica", icon: s2("britannica.com"), url: "https://www.britannica.com/" },
+    { id: "docs", name: "Google Docs", title: "Untitled document - Google Docs", icon: G.docs, url: "https://docs.google.com/document/u/0/" },
+    { id: "sheets", name: "Google Sheets", title: "Untitled spreadsheet - Google Sheets", icon: G.sheets, url: "https://docs.google.com/spreadsheets/u/0/" },
+    { id: "search", name: "Calculator", title: "calculator - Google Search", icon: "https://www.google.com/favicon.ico", url: "https://www.google.com/search?q=calculator" },
+    { id: "maps", name: "Google Maps", title: "Google Maps", icon: G.maps, url: "https://www.google.com/maps" },
+    { id: "keep", name: "Google Keep", title: "Google Keep", icon: G.keep, url: "https://keep.google.com/" },
+    { id: "drive", name: "Google Drive", title: "My Drive - Google Drive", icon: G.drive, url: "https://drive.google.com/drive/my-drive" },
+    { id: "gclass", name: "Google Classroom", title: "Home", icon: G.classroom, url: "https://classroom.google.com/" },
+    { id: "gcal", name: "Google Calendar", title: "Google Calendar", icon: G.calendar, url: "https://calendar.google.com/" },
+    { id: "gmail", name: "Gmail", title: null, icon: G.gmail, url: "https://mail.google.com/mail/u/0/" },
+    /* custom preset — title/favicon/url come from prefs.tabCustom, edited in settings */
+    { id: "custom", name: "Custom tab", title: null, icon: null, url: null },
   ];
 
   function get(id) {
@@ -74,6 +78,17 @@
 
   function current() {
     return get(N.prefs.get("tab")) || get("slides");
+  }
+
+  /* where this tab should hand over to when a cloak window opens: the real
+     site behind the preset, so the address bar agrees with the tab title. */
+  function urlFor(p) {
+    if (!p) return null;
+    if (p.id === "custom") {
+      var c = N.prefs.get("tabCustom") || {};
+      return c.url || null;
+    }
+    return p.url || null;
   }
 
   function apply(id) {
@@ -144,6 +159,10 @@
     list: PRESETS,
     get: get,
     current: current,
+    urlFor: urlFor,
+    url: function () {
+      return urlFor(current());
+    },
     titleFor: titleFor,
     apply: apply,
     smartStart: smartStart,

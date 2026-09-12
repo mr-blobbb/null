@@ -117,7 +117,7 @@ function prepaint(pinPerf) {
     "  try {",
     '    var p = JSON.parse(localStorage.getItem("null:prefs") || "{}");',
     '    document.documentElement.dataset.theme = p.theme === "light" ? "light" : "dark";',
-    '    if (p.perf) document.documentElement.dataset.perf = "1";',
+    '    if (p.perf) document.documentElement.dataset.perf = p.perf === "ultra" ? "ultra" : "1";',
     '    if (p.glow && p.glow !== "off") document.documentElement.dataset.glow = p.glow;',
     "  } catch (e) {}",
     pinPerf ? '  document.documentElement.dataset.perf = "1";' : "",
@@ -165,7 +165,9 @@ ${t.minify ? transformSync(js, { loader: "js", minify: true, target: "es2020" })
 }
 
 function cssFor(tier) {
-  const parts = [read("src/styles/global.css")];
+  /* perf.css rides along in every tier so data-perf="ultra" still means
+     something inside a single-file build */
+  const parts = [read("src/styles/global.css"), read("src/styles/perf.css")];
   if (TIERS[tier].extraCss) {
     parts.push(read("src/styles/extra.css"));
     parts.push(read("src/styles/particles.css"));

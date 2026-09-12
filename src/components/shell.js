@@ -338,8 +338,10 @@ return foot;
 
   /* Popup blockers can refuse the open but still hand back a WindowProxy
      (or kill the tab a moment later). In every failure case we make sure
-     nothing is left open — close the window, show the warning only. */
-  function cloakOpen(url, mode, shell) {
+     nothing is left open — close the window, show the warning only.
+     `to` is the preset's real site: once the cloaked window is up, this tab
+     navigates there so the address bar matches the name on the tab. */
+  function cloakOpen(url, mode, shell, to) {
     var w = null;
     try {
       w = window.open(url, "_blank");
@@ -375,9 +377,34 @@ return foot;
         cloakBlocked(mode);
       }
     }, 800);
+    if (to) {
+      /* the cloaked copy is already open and loaded from here, so handing
+         this tab over to the real site costs nothing */
+      d.toast("Opening " + hostOf(to) + " in this tab", { icon: "ban" });
+      setTimeout(function () {
+        location.href = to;
+      }, 700);
+      return;
+    }
     d.toast(mode === "blank" ? "Opened NULL in about:blank" : "Opened NULL in blob:", {
       icon: "ban",
     });
+  }
+
+  /* the host of a redirect target, for the toast — never throws on junk */
+  function hostOf(url) {
+    try {
+      return new URL(url).hostname;
+    } catch (err) {
+      return url;
+    }
+  }
+
+  /* where this tab hands over to: the current preset's real site, unless the
+     user turned the redirect off in Settings */
+  function cloakTarget() {
+    if (N.prefs.get("cloakRedirect") === false) return null;
+    return N.tab.url ? N.tab.url() : null;
   }
 
   N.cloak = {
@@ -385,6 +412,8 @@ return foot;
     blocked: popupsBlocked,
     markBlocked: noteBlocked,
     clear: noteAllowed,
+    /* the address this tab would become — settings shows it before you click */
+    target: cloakTarget,
     site: function (mode) {
       /* if popups are known to be blocked, don't even try to open about:blank
          or blob: — warn, and let the user enable them first */
@@ -394,7 +423,7 @@ return foot;
       }
       var shell = cloakShell();
       var url = mode === "blob" ? URL.createObjectURL(new Blob([shell], { type: "text/html" })) : "about:blank";
-      cloakOpen(url, mode, shell);
+      cloakOpen(url, mode, shell, cloakTarget());
     },
   };
 
@@ -680,6 +709,72 @@ return foot;
     }, 2600);
   }
 
+  /* ---------- measured frame rate ----------
+     Device memory is a guess; the frame rate isn't. We sample rAF quietly
+     in the background and, if two windows in a row come in under FPS_FLOOR,
+     offer Ultra-Performance mode once. The flag is set whether or not the
+     offer is taken, so nobody gets asked twice. */
+  var FPS_FLOOR = 10;
+
+  function ultraOn() {
+    N.prefs.set("perf", "ultra");
+    N.theme.setPerf("ultra");
+    d.toast("Ultra-Performance mode on", { icon: "zap" });
+  }
+
+  /* returns true once the offer is spent — or already was. While another
+     modal owns the screen we hold off and try again next window, so the one
+     and only ask never gets swallowed. */
+  function fpsOffer(fps) {
+    if (N.flags.get("ultraSuggest")) return true;
+    if (d.qs(".modal-ov.open")) return false;
+    N.flags.set("ultraSuggest");
+    N.modal.open({
+      title: "Turn on Ultra-Performance mode?",
+      icon: "zap",
+      body:
+        "<p>NULL measured this device at about <b>" +
+        Math.round(fps) +
+        " fps</b>, which is slow enough to feel sticky.</p>" +
+        "<p>Ultra-Performance mode drops every animation, particle and effect, and only draws what is on screen. NULL looks plainer, and moves a lot faster.</p>" +
+        "<p style='color:var(--text-2)'>You can switch it back off any time in Settings.</p>",
+      actions: [
+        { label: "Keep it as is", variant: "outline" },
+        { label: "Enable Ultra mode", variant: "primary", onClick: ultraOn },
+      ],
+    });
+    return true;
+  }
+
+  function fpsWatch() {
+    if (N.prefs.get("perf") === "ultra") return;
+    if (N.flags.get("ultraSuggest")) return;
+    /* the player runs real games — heavy there is normal, not a problem */
+    if (document.body.classList.contains("no-chrome")) return;
+    if (!window.requestAnimationFrame) return;
+    var frames = 0;
+    var slow = 0;
+    var t0 = 0;
+    function tick(now) {
+      if (N.prefs.get("perf") === "ultra") return;
+      if (!t0) t0 = now;
+      frames++;
+      var span = now - t0;
+      if (span < 2500) {
+        requestAnimationFrame(tick);
+        return;
+      }
+      var fps = (frames * 1000) / span;
+      /* a background tab pauses rAF, which would otherwise read as 0 fps */
+      slow = document.hidden ? 0 : fps < FPS_FLOOR ? slow + 1 : 0;
+      frames = 0;
+      t0 = now;
+      if (slow >= 2 && fpsOffer(fps)) return;
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
   /* ---------- weekly wrap-up ----------
      Once a week (Monday-keyed), the first page load after the week rolls
      over shows a summary of the previous week's plays. Fires on every page
@@ -783,6 +878,8 @@ return foot;
        the first-run welcome chain on the home page */
     setTimeout(wrapupCheck, 1200);
     perfSuggest();
+    /* give the first paint time to settle before judging the frame rate */
+    setTimeout(fpsWatch, 5000);
     paintAnnDots();
     paintShopDot();
 
@@ -871,6 +968,7 @@ return foot;
 
   N.shell = { init: init, screensaverNow: ssNow };
   N.fx = { confetti: confetti };
+  N.perf = { ultra: ultraOn, watchFps: fpsWatch, floor: FPS_FLOOR };
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);

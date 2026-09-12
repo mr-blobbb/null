@@ -246,18 +246,22 @@ so the site can be previewed, rebuilt and checked while working on it:
 
 Handy commands: `bun run dev` (preview), `bun run catalog` (refresh the
 catalog), `bun run releases` (rebuild the single-file builds), `bun run build`
-(both of those), `bun run check` (syntax check) and the two check scripts. Delete
+(both of those), `bun run check` (syntax check) and the three check scripts (`check:links` for
+broken internal paths, `check:pages` for the real pages, `check:releases` for
+the single-file builds). Delete
 any of it and the deployed site is unaffected — GitHub Pages serves the files in
 this folder as they are, and NULL never calls out to anything.
 
 ## Features at a glance
 
 - Minimal flat design system, dark + light themes, configurable accents, and a
-  **glow border** that re-inks the edge of the viewport *and every card* in the
-  palette you pick.
+  **glow border** that re-inks the viewport edge in the palette you pick (the
+  Neon theme pack is the one that also lights its cards).
 - Catalog with labels, warnings, fallback thumbs, NEW/HOT badges and popularity.
 - Shared NULL player (fullscreen, favorites, tab-preset override, about:blank /
-  blob: cloaking within browser limits).
+  blob: cloaking within browser limits). Cloaking from Settings opens the
+  cloaked copy first and then hands this tab to the real site behind the tab
+  preset, so the address bar matches the title the tab is wearing.
 - Virtualized library grid: rows render around the viewport and unload far away,
   while scroll height/position stay stable — built for huge libraries on
   Chromebooks.
@@ -272,7 +276,10 @@ this folder as they are, and NULL never calls out to anything.
   boosts and effects.
 - **Daily crate** (a modal with a spinning reel, streak bonuses), three rotating
   **daily quests** and permanent **achievements**, all paid in coins.
-- Seasonal mode, performance mode, panic key, screensaver, smart tab cloak.
+- Seasonal mode, performance mode, and an **Ultra-Performance** floor (no
+  animation at all, no effects, no off-screen paint) that NULL offers by itself
+  when it measures a low frame rate. Plus panic key, screensaver, smart tab
+  cloak.
 - Installable PWA with an offline shell, and a Service Worker that keeps the
   shell usable without a network.
 - Single-file releases: NULL Mini / Lite / Regular.

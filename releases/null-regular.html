@@ -97,7 +97,11 @@ html {
 
 body {
   margin: 0;
-  min-height: 100%;
+  /* column + min-height keeps the footer on the bottom edge on short pages
+     (announcements, backups) instead of floating with dead space below it */
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
   background: var(--bg);
   color: var(--text);
   font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
@@ -241,6 +245,10 @@ html[data-perf="1"] .sf-p {
 }
 
 /* ---------- shared layout ---------- */
+body > main {
+  flex: 1 0 auto;
+}
+
 .page {
   width: 100%;
   max-width: var(--maxw);
@@ -1286,8 +1294,8 @@ html[data-perf='1'] .dc-ov {
    Corner radii are matched per layer (inner arc is always the same
    radius) so the glow follows the ring perfectly around corners.
    The gradient rotates in a loop (--nga); comet mode adds a bright
-   streak; .ng-near + --ng-prox/--ng-cur (set by theme.js) light up
-   only the border piece near the cursor.
+   streak. The border is uniform all the way round — it does not react
+   to the cursor.
    ============================================================ */
 @property --nga {
   syntax: "<angle>";
@@ -1310,8 +1318,7 @@ html[data-perf='1'] .dc-ov {
 #null-glow-el .ng-ring,
 #null-glow-el .ng-glow,
 #null-glow-el .ng-glow2,
-#null-glow-el .ng-comet,
-#null-glow-el .ng-flare-band {
+#null-glow-el .ng-comet {
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
@@ -1343,25 +1350,6 @@ html[data-perf='1'] .dc-ov {
   border-radius: 13px;
   opacity: 0.95;
   animation: nga 5s linear infinite;
-}
-/* proximity flare: a bright wedge of ring that follows the cursor.
-   theme.js sets --ng-cur to the cursor's angle; the wedge mask keeps
-   the reaction on just that piece of border, and the band inside keeps
-   its own geometry so it stays perfectly aligned with the viewport. */
-#null-glow-el .ng-flare {
-  opacity: 0;
-  transition: opacity 0.16s ease;
-  -webkit-mask: conic-gradient(from calc(var(--ng-cur, 0deg) - 30deg), #000 0 60deg, transparent 60deg 360deg);
-  mask: conic-gradient(from calc(var(--ng-cur, 0deg) - 30deg), #000 0 60deg, transparent 60deg 360deg);
-}
-#null-glow-el .ng-flare-band {
-  padding: 5px;
-  border-radius: 12px;
-  filter: brightness(1.45);
-  animation: nga 8s linear infinite;
-}
-#null-glow-el.ng-near .ng-flare {
-  opacity: calc(0.45 + var(--ng-prox, 0) * 0.55);
 }
 /* crossfade helpers — theme.js toggles these when a preset changes */
 #null-glow-el .ng-in {
@@ -1473,6 +1461,7 @@ html[data-perf="1"] #null-glow-el {
 
 /* footer */
 .site-foot {
+  margin-top: auto;
   border-top: 1px solid color-mix(in srgb, var(--ac-1) 10%, var(--line));
   background: var(--bg-2);
 }
@@ -3967,6 +3956,69 @@ noscript .ns-nav a:hover {
   .brand-name {
     display: none;
   }
+}
+
+/* NULL — perf.css
+   Ultra-Performance mode. Performance mode (data-perf="1") shortens
+   animation; this is the floor: no motion, no effect layers, no blur and
+   no paint work for anything off screen. Meant for machines that cannot
+   hold a frame — shell.js only turns it on with the user's say-so.
+
+   Kept in its own file rather than appended to global.css so the rule set
+   can be read (and shipped or dropped) on its own. Loaded after
+   global.css, so it wins on equal specificity. */
+
+html[data-perf="ultra"] *,
+html[data-perf="ultra"] *::before,
+html[data-perf="ultra"] *::after {
+  animation: none !important;
+  transition: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+/* keep the one outline that matters: where the keyboard is */
+html[data-perf="ultra"] :focus-visible {
+  outline: 2px solid var(--ac-1);
+  outline-offset: 2px;
+}
+
+/* effect layers are pure decoration — drop them entirely */
+html[data-perf="ultra"] .part-fx,
+html[data-perf="ultra"] .pack-fx,
+html[data-perf="ultra"] .pack-preview,
+html[data-perf="ultra"] .part-preview,
+html[data-perf="ultra"] #null-glow-el,
+html[data-perf="ultra"] .glow-bg,
+html[data-perf="ultra"] .sf-p,
+html[data-perf="ultra"] .cf-ov {
+  display: none !important;
+}
+
+/* no card lift on hover either (the standard perf rule only covers
+   [data-perf="1"], and ultra sets its own value) */
+html[data-perf="ultra"] .tcard:hover,
+html[data-perf="ultra"] .mirror:hover,
+html[data-perf="ultra"] .ann-card:hover,
+html[data-perf="ultra"] .shop-card:hover,
+html[data-perf="ultra"] .panel:hover {
+  transform: none !important;
+}
+
+/* only paint what's on screen: cards and rows outside the viewport skip
+   layout + paint until they're scrolled to */
+html[data-perf="ultra"] .tcard,
+html[data-perf="ultra"] .mirror,
+html[data-perf="ultra"] .ann-card,
+html[data-perf="ultra"] .set-card,
+html[data-perf="ultra"] .shop-card,
+html[data-perf="ultra"] .shop-row,
+html[data-perf="ultra"] .panel,
+html[data-perf="ultra"] .section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 300px;
 }
 
 /* NULL — extra.css
@@ -6542,7 +6594,7 @@ window.RELEASE_TIER = "regular";
   try {
     var p = JSON.parse(localStorage.getItem("null:prefs") || "{}");
     document.documentElement.dataset.theme = p.theme === "light" ? "light" : "dark";
-    if (p.perf) document.documentElement.dataset.perf = "1";
+    if (p.perf) document.documentElement.dataset.perf = p.perf === "ultra" ? "ultra" : "1";
     if (p.glow && p.glow !== "off") document.documentElement.dataset.glow = p.glow;
   } catch (e) {}
 })();
@@ -6618,7 +6670,8 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-12T14:50:41.024Z","g
     confetti: true, // celebrate when a class period ends
     marathonMin: 0, // marathon mode: 0 = off, else minutes between switches
     marathonAt: 0, // timestamp of the next auto-switch (ms)
-    perf: false, // performance mode
+    perf: false, // performance mode: false | true | "ultra" (see perf.css)
+    cloakRedirect: true, // hand this tab to the preset's real site when cloaking
     gmailAddr: "you@gmail.com",
     gmailUnread: 0,
     panicKey: "`",
@@ -8638,7 +8691,7 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-12T14:50:41.024Z","g
   })();
 
   /* ---------- glow element ---------- */
-  var elState = null; // { el, ring, glow, glow2, comet, flareBand }
+  var elState = null; // { el, ring, glow, glow2, comet }
   var curId = "off";
   var cometOn = false;
 
@@ -8668,14 +8721,8 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-12T14:50:41.024Z","g
       if (bg) comet.style.background = cometBg(colorsFor(curId));
       el.appendChild(comet);
     }
-    /* proximity flare: bright wedge of ring that follows the cursor */
-    var flare = layerEl("flare");
-    var flareBand = layerEl("flare-band");
-    if (bg) flareBand.style.background = bg;
-    flare.appendChild(flareBand);
-    el.appendChild(flare);
     document.body.appendChild(el);
-    elState = { el: el, ring: ring, glow: glow, glow2: glow2, comet: comet, flareBand: flareBand };
+    elState = { el: el, ring: ring, glow: glow, glow2: glow2, comet: comet };
     return elState;
   }
 
@@ -8689,8 +8736,8 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-12T14:50:41.024Z","g
     var n = layerEl(kind);
     n.style.background = bg;
     n.classList.add("ng-in");
-    /* the old layer's parent is always the right host (flareBand lives
-       inside the flare element, everything else directly inside el) */
+    /* every layer host sits directly inside #null-glow-el, so the new
+       layer goes in front of the old one and then crossfades over it */
     old.parentNode.insertBefore(n, old);
     old.classList.add("ng-xf");
     void n.offsetWidth;
@@ -8724,43 +8771,6 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-12T14:50:41.024Z","g
     }
   }
 
-  /* cursor proximity: only the piece of border near the pointer reacts.
-     We track the distance to the nearest edge (0..1 flare strength) and
-     the cursor's angle around the viewport center, which aims the flare
-     wedge at the right segment. */
-  var proxOn = false;
-  var proxRaf = null;
-  var proxX = -999;
-  var proxY = -999;
-  function proxMove(e) {
-    proxX = e.clientX;
-    proxY = e.clientY;
-    if (proxRaf) return;
-    proxRaf = requestAnimationFrame(function () {
-      proxRaf = null;
-      var st = elState;
-      if (!st || !st.el.isConnected) return;
-      var w = window.innerWidth;
-      var h = window.innerHeight;
-      var d = Math.min(proxX, w - proxX, proxY, h - proxY);
-      var v = N.dom.clamp(1 - d / 80, 0, 1);
-      var deg = (Math.atan2(proxX - w / 2, -(proxY - h / 2)) * 180) / Math.PI;
-      st.el.style.setProperty("--ng-prox", v);
-      st.el.style.setProperty("--ng-cur", (deg + 360) % 360 + "deg");
-      st.el.classList.toggle("ng-near", v > 0.02);
-    });
-  }
-  function wireProx() {
-    if (proxOn) return;
-    proxOn = true;
-    document.addEventListener("pointermove", proxMove, { passive: true });
-  }
-  function unwireProx() {
-    if (!proxOn) return;
-    proxOn = false;
-    document.removeEventListener("pointermove", proxMove);
-  }
-
   /* Neon's accent pairs with the glow palette (--glow-1/-2), with Neon's own
      tubes as the fallback for when the vars aren't published yet */
   function paintNeonAccent() {
@@ -8787,7 +8797,6 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-12T14:50:41.024Z","g
           if (st.el.parentNode) st.el.parentNode.removeChild(st.el);
         }, 600);
       }
-      unwireProx();
       return;
     }
     root.dataset.glow = id;
@@ -8798,9 +8807,7 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-12T14:50:41.024Z","g
     setLayerBg("ring", bg);
     setLayerBg("glow", bg);
     setLayerBg("glow2", bg);
-    setLayerBg("flareBand", bg);
     if (cometOn) setLayerBg("comet", cometBg(colors));
-    wireProx();
   }
 
   function setTheme(t) {
@@ -8833,8 +8840,13 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-12T14:50:41.024Z","g
     applyPack(p);
   }
 
-  function setPerf(on) {
-    if (on) root.dataset.perf = "1";
+  /* perf is false | true | "ultra". Ultra is performance mode plus no
+     animation, no effect layers and no off-screen paint — see perf.css. */
+  function setPerf(level) {
+    var ultra = level === "ultra";
+    var on = !!level;
+    if (ultra) root.dataset.perf = "ultra";
+    else if (on) root.dataset.perf = "1";
     else delete root.dataset.perf;
     /* performance mode drops the pack backdrop and particles; leaving it
        restores whichever ones were on */
@@ -9665,28 +9677,32 @@ window.NULL_CONTENT = {
     maps: "https://ssl.gstatic.com/maps/maps_2023_32dp.png",
   };
 
+  /* `url` is where the real site lives. When a cloak window opens, this tab
+     can hand over to that address so the address bar matches the tab the
+     site is calling itself (see N.tab.url and shell.js). NULL itself has no
+     url — cloaking it and redirecting would just point back here. */
   var PRESETS = [
-    { id: "slides", name: "", title: "Untitled Slide - Google Slides", icon: G.slides },
-    { id: "null", name: "NULL", title: "NULL", icon: "/public/favicon.svg" },
-    { id: "home", name: "Home", title: "Naperville Community Unit School District 203", icon: s2("naperville203.org") },
-    { id: "noredink", name: "NoRedInk", title: "NoRedInk", icon: s2("noredink.com") },
-    { id: "kahoot", name: "Kahoot", title: "Kahoot!", icon: s2("kahoot.it") },
-    { id: "campus", name: "Infinite Campus", title: "Infinite Campus", icon: s2("infinitecampus.com") },
-    { id: "desmos", name: "Desmos", title: "Desmos", icon: s2("desmos.com") },
-    { id: "canvas", name: "Canvas", title: "Canvas", icon: s2("canvaslms.com") },
-    { id: "canva", name: "Canva", title: "Canva", icon: s2("canva.com") },
-    { id: "britannica", name: "Encyclopedia Britannica", title: "Encyclopedia Britannica", icon: s2("britannica.com") },
-    { id: "docs", name: "Google Docs", title: "Untitled document - Google Docs", icon: G.docs },
-    { id: "sheets", name: "Google Sheets", title: "Untitled spreadsheet - Google Sheets", icon: G.sheets },
-    { id: "search", name: "Calculator", title: "calculator - Google Search", icon: "https://www.google.com/favicon.ico" },
-    { id: "maps", name: "Google Maps", title: "Google Maps", icon: G.maps },
-    { id: "keep", name: "Google Keep", title: "Google Keep", icon: G.keep },
-    { id: "drive", name: "Google Drive", title: "My Drive - Google Drive", icon: G.drive },
-    { id: "gclass", name: "Google Classroom", title: "Home", icon: G.classroom },
-    { id: "gcal", name: "Google Calendar", title: "Google Calendar", icon: G.calendar },
-    { id: "gmail", name: "Gmail", title: null, icon: G.gmail },
-    /* custom preset — title/favicon come from prefs.tabCustom, edited in settings */
-    { id: "custom", name: "Custom tab", title: null, icon: null },
+    { id: "slides", name: "Google Slides", title: "Untitled Slide - Google Slides", icon: G.slides, url: "https://docs.google.com/presentation/u/0/" },
+    { id: "null", name: "NULL", title: "NULL", icon: "/public/favicon.svg", url: null },
+    { id: "home", name: "Home", title: "Naperville Community Unit School District 203", icon: s2("naperville203.org"), url: "https://www.naperville203.org/" },
+    { id: "noredink", name: "NoRedInk", title: "NoRedInk", icon: s2("noredink.com"), url: "https://www.noredink.com/" },
+    { id: "kahoot", name: "Kahoot", title: "Kahoot!", icon: s2("kahoot.it"), url: "https://kahoot.it/" },
+    { id: "campus", name: "Infinite Campus", title: "Infinite Campus", icon: s2("infinitecampus.com"), url: "https://www.infinitecampus.com/" },
+    { id: "desmos", name: "Desmos", title: "Desmos", icon: s2("desmos.com"), url: "https://www.desmos.com/calculator" },
+    { id: "canvas", name: "Canvas", title: "Canvas", icon: s2("canvaslms.com"), url: "https://canvas.instructure.com/" },
+    { id: "canva", name: "Canva", title: "Canva", icon: s2("canva.com"), url: "https://www.canva.com/" },
+    { id: "britannica", name: "Encyclopedia Britannica", title: "Encyclopedia Britannica", icon: s2("britannica.com"), url: "https://www.britannica.com/" },
+    { id: "docs", name: "Google Docs", title: "Untitled document - Google Docs", icon: G.docs, url: "https://docs.google.com/document/u/0/" },
+    { id: "sheets", name: "Google Sheets", title: "Untitled spreadsheet - Google Sheets", icon: G.sheets, url: "https://docs.google.com/spreadsheets/u/0/" },
+    { id: "search", name: "Calculator", title: "calculator - Google Search", icon: "https://www.google.com/favicon.ico", url: "https://www.google.com/search?q=calculator" },
+    { id: "maps", name: "Google Maps", title: "Google Maps", icon: G.maps, url: "https://www.google.com/maps" },
+    { id: "keep", name: "Google Keep", title: "Google Keep", icon: G.keep, url: "https://keep.google.com/" },
+    { id: "drive", name: "Google Drive", title: "My Drive - Google Drive", icon: G.drive, url: "https://drive.google.com/drive/my-drive" },
+    { id: "gclass", name: "Google Classroom", title: "Home", icon: G.classroom, url: "https://classroom.google.com/" },
+    { id: "gcal", name: "Google Calendar", title: "Google Calendar", icon: G.calendar, url: "https://calendar.google.com/" },
+    { id: "gmail", name: "Gmail", title: null, icon: G.gmail, url: "https://mail.google.com/mail/u/0/" },
+    /* custom preset — title/favicon/url come from prefs.tabCustom, edited in settings */
+    { id: "custom", name: "Custom tab", title: null, icon: null, url: null },
   ];
 
   function get(id) {
@@ -9714,6 +9730,17 @@ window.NULL_CONTENT = {
 
   function current() {
     return get(N.prefs.get("tab")) || get("slides");
+  }
+
+  /* where this tab should hand over to when a cloak window opens: the real
+     site behind the preset, so the address bar agrees with the tab title. */
+  function urlFor(p) {
+    if (!p) return null;
+    if (p.id === "custom") {
+      var c = N.prefs.get("tabCustom") || {};
+      return c.url || null;
+    }
+    return p.url || null;
   }
 
   function apply(id) {
@@ -9784,6 +9811,10 @@ window.NULL_CONTENT = {
     list: PRESETS,
     get: get,
     current: current,
+    urlFor: urlFor,
+    url: function () {
+      return urlFor(current());
+    },
     titleFor: titleFor,
     apply: apply,
     smartStart: smartStart,
@@ -11627,8 +11658,10 @@ return foot;
 
   /* Popup blockers can refuse the open but still hand back a WindowProxy
      (or kill the tab a moment later). In every failure case we make sure
-     nothing is left open — close the window, show the warning only. */
-  function cloakOpen(url, mode, shell) {
+     nothing is left open — close the window, show the warning only.
+     `to` is the preset's real site: once the cloaked window is up, this tab
+     navigates there so the address bar matches the name on the tab. */
+  function cloakOpen(url, mode, shell, to) {
     var w = null;
     try {
       w = window.open(url, "_blank");
@@ -11664,9 +11697,34 @@ return foot;
         cloakBlocked(mode);
       }
     }, 800);
+    if (to) {
+      /* the cloaked copy is already open and loaded from here, so handing
+         this tab over to the real site costs nothing */
+      d.toast("Opening " + hostOf(to) + " in this tab", { icon: "ban" });
+      setTimeout(function () {
+        location.href = to;
+      }, 700);
+      return;
+    }
     d.toast(mode === "blank" ? "Opened NULL in about:blank" : "Opened NULL in blob:", {
       icon: "ban",
     });
+  }
+
+  /* the host of a redirect target, for the toast — never throws on junk */
+  function hostOf(url) {
+    try {
+      return new URL(url).hostname;
+    } catch (err) {
+      return url;
+    }
+  }
+
+  /* where this tab hands over to: the current preset's real site, unless the
+     user turned the redirect off in Settings */
+  function cloakTarget() {
+    if (N.prefs.get("cloakRedirect") === false) return null;
+    return N.tab.url ? N.tab.url() : null;
   }
 
   N.cloak = {
@@ -11674,6 +11732,8 @@ return foot;
     blocked: popupsBlocked,
     markBlocked: noteBlocked,
     clear: noteAllowed,
+    /* the address this tab would become — settings shows it before you click */
+    target: cloakTarget,
     site: function (mode) {
       /* if popups are known to be blocked, don't even try to open about:blank
          or blob: — warn, and let the user enable them first */
@@ -11683,7 +11743,7 @@ return foot;
       }
       var shell = cloakShell();
       var url = mode === "blob" ? URL.createObjectURL(new Blob([shell], { type: "text/html" })) : "about:blank";
-      cloakOpen(url, mode, shell);
+      cloakOpen(url, mode, shell, cloakTarget());
     },
   };
 
@@ -11969,6 +12029,72 @@ return foot;
     }, 2600);
   }
 
+  /* ---------- measured frame rate ----------
+     Device memory is a guess; the frame rate isn't. We sample rAF quietly
+     in the background and, if two windows in a row come in under FPS_FLOOR,
+     offer Ultra-Performance mode once. The flag is set whether or not the
+     offer is taken, so nobody gets asked twice. */
+  var FPS_FLOOR = 10;
+
+  function ultraOn() {
+    N.prefs.set("perf", "ultra");
+    N.theme.setPerf("ultra");
+    d.toast("Ultra-Performance mode on", { icon: "zap" });
+  }
+
+  /* returns true once the offer is spent — or already was. While another
+     modal owns the screen we hold off and try again next window, so the one
+     and only ask never gets swallowed. */
+  function fpsOffer(fps) {
+    if (N.flags.get("ultraSuggest")) return true;
+    if (d.qs(".modal-ov.open")) return false;
+    N.flags.set("ultraSuggest");
+    N.modal.open({
+      title: "Turn on Ultra-Performance mode?",
+      icon: "zap",
+      body:
+        "<p>NULL measured this device at about <b>" +
+        Math.round(fps) +
+        " fps</b>, which is slow enough to feel sticky.</p>" +
+        "<p>Ultra-Performance mode drops every animation, particle and effect, and only draws what is on screen. NULL looks plainer, and moves a lot faster.</p>" +
+        "<p style='color:var(--text-2)'>You can switch it back off any time in Settings.</p>",
+      actions: [
+        { label: "Keep it as is", variant: "outline" },
+        { label: "Enable Ultra mode", variant: "primary", onClick: ultraOn },
+      ],
+    });
+    return true;
+  }
+
+  function fpsWatch() {
+    if (N.prefs.get("perf") === "ultra") return;
+    if (N.flags.get("ultraSuggest")) return;
+    /* the player runs real games — heavy there is normal, not a problem */
+    if (document.body.classList.contains("no-chrome")) return;
+    if (!window.requestAnimationFrame) return;
+    var frames = 0;
+    var slow = 0;
+    var t0 = 0;
+    function tick(now) {
+      if (N.prefs.get("perf") === "ultra") return;
+      if (!t0) t0 = now;
+      frames++;
+      var span = now - t0;
+      if (span < 2500) {
+        requestAnimationFrame(tick);
+        return;
+      }
+      var fps = (frames * 1000) / span;
+      /* a background tab pauses rAF, which would otherwise read as 0 fps */
+      slow = document.hidden ? 0 : fps < FPS_FLOOR ? slow + 1 : 0;
+      frames = 0;
+      t0 = now;
+      if (slow >= 2 && fpsOffer(fps)) return;
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
   /* ---------- weekly wrap-up ----------
      Once a week (Monday-keyed), the first page load after the week rolls
      over shows a summary of the previous week's plays. Fires on every page
@@ -12072,6 +12198,8 @@ return foot;
        the first-run welcome chain on the home page */
     setTimeout(wrapupCheck, 1200);
     perfSuggest();
+    /* give the first paint time to settle before judging the frame rate */
+    setTimeout(fpsWatch, 5000);
     paintAnnDots();
     paintShopDot();
 
@@ -12160,6 +12288,7 @@ return foot;
 
   N.shell = { init: init, screensaverNow: ssNow };
   N.fx = { confetti: confetti };
+  N.perf = { ultra: ultraOn, watchFps: fpsWatch, floor: FPS_FLOOR };
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);
@@ -13190,21 +13319,46 @@ return foot;
     return row;
   }
 
+  /* perf is false | true | "ultra" — ultra adds no animation at all, no
+     effect layers and no off-screen paint (perf.css) */
   function perfRow(card) {
-    var row = d.h("div", { class: "set-row" }, [
-      d.h("div", { class: "lbl-txt" }, [d.h("b", null, "Performance mode"), d.h("span", null, "Disables animation, glow, particles and blur on slower devices.")])
-    ]);
-    var lab = d.h("label", { class: "switch" });
     var sw = d.h("input", { type: "checkbox", checked: !!N.prefs.get("perf") });
-    if (LITE) sw.disabled = true;
-    sw.addEventListener("change", function () {
-      N.prefs.set("perf", sw.checked);
-      N.theme.setPerf(sw.checked);
-    });
-    lab.appendChild(sw);
-    lab.appendChild(d.h("span", { class: "track" }));
-    row.appendChild(lab);
-    card.appendChild(row);
+    var usw = d.h("input", { type: "checkbox", checked: N.prefs.get("perf") === "ultra" });
+    if (LITE) {
+      sw.disabled = true;
+      usw.disabled = true;
+    }
+    function apply() {
+      var level = usw.checked ? "ultra" : sw.checked;
+      N.prefs.set("perf", level);
+      N.theme.setPerf(level);
+      sw.checked = !!level;
+      usw.checked = level === "ultra";
+    }
+    sw.addEventListener("change", apply);
+    usw.addEventListener("change", apply);
+
+    function rowFor(label, hint, input) {
+      var lab = d.h("label", { class: "switch" });
+      lab.appendChild(input);
+      lab.appendChild(d.h("span", { class: "track" }));
+      var row = d.h("div", { class: "set-row" }, [
+        d.h("div", { class: "lbl-txt" }, [d.h("b", null, label), d.h("span", null, hint)]),
+        lab
+      ]);
+      card.appendChild(row);
+      return row;
+    }
+    var row = rowFor(
+      "Performance mode",
+      "Disables animation, glow, particles and blur on slower devices.",
+      sw
+    );
+    rowFor(
+      "Ultra-Performance mode",
+      "No animation at all, no effects, and only what's on screen is drawn.",
+      usw
+    );
     return row;
   }
 

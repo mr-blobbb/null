@@ -13,13 +13,14 @@
   <link rel="stylesheet" href="/src/styles/global.css">
   <link rel="stylesheet" href="/src/styles/extra.css">
   <link rel="stylesheet" href="/src/styles/particles.css">
+  <link rel="stylesheet" href="/src/styles/perf.css">
   <script>
     (function () {
       try {
         var p = JSON.parse(localStorage.getItem("null:prefs") || "{}");
         var t = p.theme === "light" ? "light" : "dark";
         document.documentElement.dataset.theme = t;
-        if (p.perf) document.documentElement.dataset.perf = "1";
+        if (p.perf) document.documentElement.dataset.perf = p.perf === "ultra" ? "ultra" : "1";
         if (p.glow && p.glow !== "off") document.documentElement.dataset.glow = p.glow;
       } catch (e) {}
     })();
