@@ -34,9 +34,11 @@
     function sorted(arr) {
       var copy = arr.slice();
       if (sortMode === "plays") {
-        /* most-played first (local counts), ties by name */
+        /* popularity: HOT entries lead, then whatever this browser plays most,
+           ties broken A–Z */
         copy.sort(function (a, b) {
           return (
+            (b.hot ? 1 : 0) - (a.hot ? 1 : 0) ||
             N.plays.count(favKind, b.id) - N.plays.count(favKind, a.id) ||
             a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
           );

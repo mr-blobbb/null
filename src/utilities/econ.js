@@ -381,9 +381,19 @@
     return data.boostUntil > Date.now();
   }
 
+  /* low-level: every internal caller saves once at the end of its own change */
   function addCoins(n) {
     data.coins += n;
     data.earned += n;
+  }
+
+  /* public: hand the player coins and persist it, so a caller outside this
+     file can never leave the new balance sitting in memory only */
+  function giveCoins(n) {
+    addCoins(n);
+    save();
+    N.bus.emit("eco");
+    return data.coins;
   }
 
   /* ---------- daily rollover ----------
@@ -754,7 +764,7 @@
     spinPool: SPIN_POOL,
     stats: stats,
     /* dev console: hand out coins / reset daily progress */
-    addCoins: addCoins,
+    giveCoins: giveCoins,
     newDay: function () {
       data.day = "";
       data.spinDay = null;

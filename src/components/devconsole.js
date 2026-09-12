@@ -587,8 +587,8 @@
         }),
         b("Add 200 coins", "coin", function () {
           if (!N.econ) return err("economy module missing");
-          N.econ.addCoins(200);
-          ok("200 coins added (now " + N.econ.state().coins + ")");
+          var now = N.econ.giveCoins(200);
+          ok("200 coins added (now " + now + ", saved)");
           refreshStats();
         }),
         b("Finish today's quests", "check", function () {
@@ -689,6 +689,24 @@
       { name: "pages", icon: "wrench", items: [
         b("Catalog builder", "wrench", function () { location.href = "/tools.html"; }),
         b("Test suite", "beaker", function () { location.href = "/tests.html"; }),
+        /* the single-file builds are big, so they get their own tab and the
+           404 (also just a page) follows the others in this one */
+        b("Single-file regular", "file", function () {
+          ok("opening releases/null-regular.html");
+          window.open("/releases/null-regular.html", "_blank", "noopener");
+        }),
+        b("Single-file mini", "file", function () {
+          ok("opening releases/null-mini.html");
+          window.open("/releases/null-mini.html", "_blank", "noopener");
+        }),
+        b("Single-file lite", "file", function () {
+          ok("opening releases/null-lite.html");
+          window.open("/releases/null-lite.html", "_blank", "noopener");
+        }),
+        b("404 page", "warn", function () {
+          ok("opening 404.html");
+          location.href = "/404.html";
+        }),
         b("Reload", "refresh", function () { location.reload(); }),
       ] },
     ];

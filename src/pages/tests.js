@@ -538,6 +538,23 @@
         ok("games cards render", qa("#grid .tcard").length > 0, qa("#grid .tcard").length + " cards");
         ok("the label filter row is built", qa("#labelRow button").length > 0);
         ok("the count is shown", /\d/.test(txt("#count")));
+
+        /* popularity leads with HOT entries — the sort select is upgraded to a
+           custom dropdown, but it still drives the hidden native one */
+        var hot = w.N.catalog.games().filter(function (g) {
+          return g.hot;
+        }).length;
+        if (hot) {
+          var sel = q("#sortSel");
+          sel.value = "plays";
+          sel.dispatchEvent(new w.Event("change", { bubbles: true }));
+          var first = qa("#grid .tcard")[0];
+          ok(
+            "popularity sorts HOT games to the top",
+            !!first && /HOT/.test(first.textContent),
+            first ? first.textContent.replace(/\s+/g, " ").slice(0, 40) : "no cards",
+          );
+        }
         return mount("/proxies/index.html");
       })
       .then(function () {

@@ -7405,9 +7405,19 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-12T14:50:41.024Z","g
     return data.boostUntil > Date.now();
   }
 
+  /* low-level: every internal caller saves once at the end of its own change */
   function addCoins(n) {
     data.coins += n;
     data.earned += n;
+  }
+
+  /* public: hand the player coins and persist it, so a caller outside this
+     file can never leave the new balance sitting in memory only */
+  function giveCoins(n) {
+    addCoins(n);
+    save();
+    N.bus.emit("eco");
+    return data.coins;
   }
 
   /* ---------- daily rollover ----------
@@ -7778,7 +7788,7 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-12T14:50:41.024Z","g
     spinPool: SPIN_POOL,
     stats: stats,
     /* dev console: hand out coins / reset daily progress */
-    addCoins: addCoins,
+    giveCoins: giveCoins,
     newDay: function () {
       data.day = "";
       data.spinDay = null;
@@ -12034,7 +12044,7 @@ return foot;
      in the background and, if two windows in a row come in under FPS_FLOOR,
      offer Ultra-Performance mode once. The flag is set whether or not the
      offer is taken, so nobody gets asked twice. */
-  var FPS_FLOOR = 10;
+  var FPS_FLOOR = 20;
 
   function ultraOn() {
     N.prefs.set("perf", "ultra");

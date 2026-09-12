@@ -159,6 +159,23 @@ for (const page of PAGES) {
         if (clear) clear.click();
         ok(win.N.catalog.games().length === before, "clearing removes them again (" + win.N.catalog.games().length + ")");
       }
+
+      const buttons = Array.from(doc.querySelectorAll(".dc-b"));
+      ok(
+        [/Single-file regular/, /Single-file mini/, /Single-file lite/, /404 page/].every((re) =>
+          buttons.some((b) => re.test(b.textContent)),
+        ),
+        "dev console links the three single-file builds and the 404",
+      );
+
+      /* handing out coins has to survive a reload, not just look right */
+      const coinsBtn = buttons.find((b) => /Add 200 coins/.test(b.textContent));
+      ok(!!coinsBtn, "dev console has the coin button");
+      if (coinsBtn) {
+        coinsBtn.click();
+        const eco = JSON.parse(win.localStorage.getItem("null:eco") || "{}");
+        ok(eco.coins >= 200, "coins from the console are persisted (" + (eco.coins || 0) + ")");
+      }
       dev.hide();
     }
   }
