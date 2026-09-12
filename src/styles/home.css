@@ -1,20 +1,126 @@
 /* NULL — home.css
-   Home-page only bits. Loaded after global.css, so the hero's sizing wins. */
+   Home-page only styles. Loaded after global.css, so these win over the
+   shared `.mast` rules there: the header is a full-width band (edge-to-edge
+   hairlines, content on the same grid as every other page) rather than the
+   old 760px column. */
 
-/* ---------- masthead: tagline over an oversized NULL ---------- */
-.mast h1 {
+/* ============================================================
+   the band
+   ============================================================ */
+.mast {
+  display: block;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(180deg, var(--bg-2), transparent);
+  border-bottom: 1px solid var(--line);
+}
+.mast-in {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: calc(var(--nh) + 22px) 22px 30px;
+}
+
+/* meta row: credits left, live counts right */
+.mast-meta {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 20px;
+  flex-wrap: wrap;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.mast-stats {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* tagline + copy left, search right */
+.mast-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 460px);
+  align-items: end;
+  gap: 26px 48px;
+  padding-top: 32px;
+}
+.mast-lead {
+  min-width: 0;
 }
 .mast-tag {
-  font-size: clamp(20px, 3vw, 30px);
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  line-height: 1.15;
+  font-size: clamp(26px, 3.4vw, 44px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.08;
 }
-.mast h1 .dim {
-  font-size: clamp(68px, 15vw, 148px);
-  letter-spacing: -0.06em;
+.mast-sub {
+  margin-top: 10px;
+  max-width: 62ch;
+}
+.mast-top .hero-search {
+  width: 100%;
+  margin-top: 0;
+}
+
+/* the wordmark, anchored to the floor of the band */
+.mast-floor {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px 40px;
+  flex-wrap: wrap;
+  margin-top: 34px;
+}
+.mast h1.mast-null {
+  font-size: clamp(64px, 10vw, 152px);
+  font-weight: 800;
+  letter-spacing: -0.055em;
   line-height: 0.86;
+  color: color-mix(in srgb, var(--text) 78%, transparent);
+}
+.mast-quick {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-bottom: 10px;
+}
+.mast-quick a {
+  padding: 7px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 560;
+  color: var(--text-2);
+  transition: color 0.16s, background 0.16s;
+}
+.mast-quick a:hover {
+  color: var(--text);
+  background: var(--glass-bg-2);
+}
+
+/* the band already clears the fixed nav, so the page below starts tight */
+.home-page {
+  padding-top: 30px;
+}
+
+@media (max-width: 900px) {
+  .mast-top {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 22px;
+  }
+  .mast-floor {
+    margin-top: 26px;
+  }
+}
+@media (max-width: 620px) {
+  .mast-in {
+    padding: calc(var(--nh) + 16px) 18px 26px;
+  }
+  .mast-quick {
+    padding-bottom: 4px;
+  }
 }

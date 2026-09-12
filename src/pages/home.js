@@ -27,6 +27,24 @@
     });
   }
 
+  /* ---------- masthead counts ----------
+     Live totals in the top-right of the hero band. Empty libraries just
+     drop the matching part (and the whole line if there is nothing). */
+  function renderMastStats() {
+    var el = d.qs("#mastStats");
+    if (!el) return;
+    function n(count, one, many) {
+      return count ? count.toLocaleString() + " " + (count === 1 ? one : many) : "";
+    }
+    var parts = [
+      n(N.catalog.games().length, "game", "games"),
+      n(N.catalog.apps().length, "app", "apps"),
+      n(N.catalog.proxies().length, "proxy", "proxies"),
+    ].filter(Boolean);
+    el.textContent = parts.join(" \u00b7 ");
+    el.hidden = !parts.length;
+  }
+
   /* ---------- featured rail ---------- */
   function renderFeatured() {
     var track = d.qs("#featTrack");
@@ -432,6 +450,7 @@
   function init() {
     if (inited) return;
     inited = true;
+    renderMastStats();
     bindSearch();
     renderFeatured();
     renderGotd();

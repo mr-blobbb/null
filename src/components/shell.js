@@ -714,7 +714,7 @@ return foot;
      in the background and, if two windows in a row come in under FPS_FLOOR,
      offer Ultra-Performance mode once. The flag is set whether or not the
      offer is taken, so nobody gets asked twice. */
-  var FPS_FLOOR = 10;
+  var FPS_FLOOR = 20;
 
   function ultraOn() {
     N.prefs.set("perf", "ultra");

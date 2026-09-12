@@ -118,6 +118,9 @@ for (const page of PAGES) {
 
   if (page === "index.html") {
     ok(doc.querySelectorAll(".tcard").length > 0, "home lists featured cards (" + doc.querySelectorAll(".tcard").length + ")");
+    const stats = doc.querySelector("#mastStats");
+    ok(!!stats && /game/.test(stats.textContent), "masthead shows the live catalog counts (\"" + (stats ? stats.textContent : "") + "\")");
+    ok(!!doc.querySelector(".mast-quick a"), "masthead quick links render");
   }
   if (page === "announcements.html") {
     const n = doc.querySelectorAll(".ann-card").length;
