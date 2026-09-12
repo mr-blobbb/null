@@ -1,0 +1,62 @@
+/* NULL — dev.css
+   Additions for the dev console (type nldev). The overlay, cards, pill
+   buttons and log live in global.css; this is the filter box, the lit
+   "this is the active setting" state, and cards that need the whole row. */
+
+/* ---------- filter ---------- */
+.dc-find {
+  width: min(260px, 32vw);
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+}
+.dc-find::placeholder {
+  color: var(--text-2);
+}
+.dc-find:focus {
+  outline: none;
+  border-color: var(--line-2);
+}
+
+/* the filter hides things with the hidden attribute; .dc-b and .dc-card set
+   their own display, which would otherwise win over the UA rule */
+.dc-b[hidden],
+.dc-card[hidden] {
+  display: none;
+}
+
+/* ---------- a button whose setting is the one in use ---------- */
+.dc-b.on {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--ac-1) 55%, var(--line));
+  background: color-mix(in srgb, var(--ac-1) 18%, var(--glass-bg-2));
+}
+.dc-b.on .msr {
+  color: var(--ac-1);
+}
+
+/* ---------- card header count + full-width cards ---------- */
+.dc-n {
+  margin-left: auto;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  opacity: 0.7;
+}
+.dc-card.wide {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 720px) {
+  .dc-head,
+  .dc-actions {
+    flex-wrap: wrap;
+  }
+  .dc-find {
+    width: 150px;
+  }
+}

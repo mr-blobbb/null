@@ -31,7 +31,7 @@ site can be previewed and the releases rebuilt; see the end of this file.)
 ├── proxies/               Proxy list — index.html is the /proxies page
 ├── src/
 │   ├── styles/            global.css, extra.css, home.css, tools.css,
-│   │                      tests.css, particles.css, perf.css
+│   │                      tests.css, particles.css, perf.css, dev.css
 │   ├── utilities/         store, dom, modal, theme, scroll, markdown, econ,
 │   │                      catalog-tool (the parser behind /tools)
 │   ├── components/        shell (nav/footer), cards, search, schedule,
@@ -173,6 +173,26 @@ stylesheets, the service worker and the catalog are all wired up.
 Your `null:*` localStorage keys are snapshotted before a run and put back
 afterwards; **Restore my data** does it again on demand. Like the rest of the
 site it needs to be served over http(s) — the frames cannot load from `file://`.
+
+## Dev console — type `nldev`
+
+Type **`nldev`** on any page (no input focused) for a full-screen tool panel.
+It is grouped into one card per job — stress test, launch, look, theme packs,
+particles, fx, modals, tab presets, seasonal, economy, data, pages — with a
+filter box in the header and a lit state on whichever setting is currently
+active. The lists of packs, particle sets, accents, glow palettes and tab
+presets come straight out of the modules that own them, so adding one to the
+site adds it here automatically.
+
+**Stress test** pushes placeholder entries into the live catalog — *250 games*,
+*1,000 games*, apps, proxies — so the virtualized grid, search and the featured
+rail can be loaded up without touching a single file. Placeholders carry a
+`placeholder` label (filter for them on any library page), a share of the NEW
+and HOT badges, some deliberately empty and some deliberately long
+descriptions, and they launch the first real game in the library so the player
+still opens. They live under `null:devseed` and are merged back on every page
+load, so the seeded build survives a reload or a page change until you press
+**Clear placeholders**.
 
 ## Releases
 

@@ -374,6 +374,16 @@
     });
     N.bus.on("recent", renderRecs);
 
+    /* the dev console can push placeholder entries into the catalog while a
+       page is open — rebuild the list, chips and grid when it does */
+    N.bus.on("catalog", function () {
+      list = kind === "apps" ? N.catalog.apps() : kind === "proxies" ? N.catalog.proxies() : N.catalog.games();
+      if (rowHost) buildChips();
+      renderFavs();
+      renderRecs();
+      paint();
+    });
+
     if (!listMode) {
       gridApi = N.cards.vgrid(grid, {
         items: filtered(),

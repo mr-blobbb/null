@@ -1,10 +1,18 @@
 /* NULL — devconsole.js
    Hidden developer console. Type "nldev" anywhere (case-insensitive, only
-   letters/digits count) to open a full-screen glass terminal overlay:
-   a header with live stats, action sections with buttons wired to real site
-   behavior (confetti, toasts, modals, random launches, tab presets, data
-   maintenance) and a terminal-style log. No page-specific code needed —
-   loaded on every NULL page. */
+   letters/digits count) to open a full-screen glass terminal overlay.
+
+   Layout, top to bottom: a header with live stats and a filter box, a grid of
+   tool cards, and a terminal-style log. Every card is one flat list of pill
+   buttons — no fixed rows — so a section can grow or shrink without looking
+   ragged, and the cards pair up two-per-row unless they need the full width.
+
+   Two rules keep it from going stale:
+     · anything the site already registers (glow palettes, accents, theme
+       packs, particle sets, tab presets) is listed from that registry, so a
+       new pack or palette shows up here for free;
+     · a button can declare `on()` and lights up while its setting is the
+       active one, so the console doubles as a readout of current state. */
 (function () {
   var N = (window.N = window.N || {});
   var d = N.dom;
@@ -30,8 +38,9 @@
   var open = false;
   var ov = null;
   var logBox = null;
-  var statsBox = null;
+  var findBox = null;
   var lastCat = "";
+  var groups = []; // [{ card, items: [{ el, label, on }] }]
 
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
@@ -59,20 +68,155 @@
   function ok(m) { log(m); }
   function err(m) { log(m, "err"); }
 
+  /* ---------- placeholder library (stress test) ----------
+     Dev-only fake entries pushed into the live catalog so the library, the
+     virtual grid, search and the featured rail can be loaded up without
+     touching the repo. They live under null:devseed and are merged back in on
+     every page load, so what you seeded is still there after a reload or a
+     trip to another page. "Some placeholders" wipes them again. */
+  var SEED_KEY = "null:devseed";
+  var SEED_KINDS = { game: "games", app: "apps", proxy: "proxies" };
+  var SEED_WORDS = [
+    "Void", "Nova", "Echo", "Prism", "Cobalt", "Lunar", "Static", "Zenith",
+    "Orbit", "Fractal", "Onyx", "Rift", "Halo", "Quartz", "Drift", "Pixel",
+    "Comet", "Vector", "Nimbus", "Ash",
+  ];
+  var SEED_TAILS = [
+    "Runner", "Puzzle", "Arena", "Tactics", "Rush", "Quest", "Shift", "Blitz",
+    "Cascade", "Trials",
+  ];
+  var SEED_LABELS = ["Action", "Puzzle", "Arcade", "Chill", "2 Player", "Retro"];
+
+  function seedStore() {
+    var bag = N.store.read(SEED_KEY, null);
+    return bag && typeof bag === "object" ? bag : {};
+  }
+
+  function seedCount(bag) {
+    var n = 0;
+    Object.keys(SEED_KINDS).forEach(function (k) {
+      n += ((bag || seedStore())[SEED_KINDS[k]] || []).length;
+    });
+    return n;
+  }
+
+  /* the first real file in the library, so seeded entries still launch
+     instead of tripping the "files are missing" toast */
+  function realFile(kind) {
+    var list = kind === "game" ? N.catalog.games() : kind === "app" ? N.catalog.apps() : [];
+    for (var i = 0; i < list.length; i++) {
+      if (!list[i].dev && list[i].file) return list[i].file;
+    }
+    return null;
+  }
+
+  function seedEntry(kind, i) {
+    var id = "ph-" + kind + "-" + i;
+    var name =
+      SEED_WORDS[i % SEED_WORDS.length] + " " +
+      SEED_TAILS[Math.floor(i / SEED_WORDS.length) % SEED_TAILS.length];
+    var lap = Math.floor(i / (SEED_WORDS.length * SEED_TAILS.length));
+    if (lap) name += " " + (lap + 1);
+    var desc =
+      i % 4 === 0
+        ? ""
+        : "Placeholder entry " + (i + 1) + " \u2014 seeded by the dev console for a load test." +
+          (i % 5 === 0
+            ? " This one carries a deliberately long description so the card has to deal with a line or three of wrapping text."
+            : "");
+    var labels = [SEED_LABELS[i % SEED_LABELS.length], "placeholder"];
+    if (kind === "proxy") {
+      return {
+        id: id, name: name, url: "https://example.com/", dev: true,
+        desc: desc || "Placeholder proxy.",
+        status: i % 6 === 0 ? "Issue" : "All Good",
+      };
+    }
+    return {
+      id: id, name: name, desc: desc, dev: true,
+      file: realFile(kind),
+      thumb: d.fbFor(kind),
+      labels: labels,
+      at: i % 5 === 0 ? Date.now() - i * 3600000 : 0, // exercises the NEW badge
+      hot: i % 7 === 0, // exercises the HOT badge
+    };
+  }
+
+  /* replace whatever is in the live catalog with the stored seed */
+  function applySeed() {
+    var raw = window.NULL_CATALOG;
+    if (!raw) return;
+    var bag = seedStore();
+    Object.keys(SEED_KINDS).forEach(function (kind) {
+      var key = SEED_KINDS[kind];
+      var kept = (raw[key] || []).filter(function (e) {
+        return !e.dev;
+      });
+      raw[key] = kept.concat(bag[key] || []);
+    });
+    N.bus.emit("catalog");
+  }
+
+  function feed(kind, n) {
+    var key = SEED_KINDS[kind];
+    var bag = seedStore();
+    var have = (bag[key] || []).length;
+    var add = [];
+    for (var i = 0; i < n; i++) add.push(seedEntry(kind, have + i));
+    bag[key] = (bag[key] || []).concat(add);
+    N.store.write(SEED_KEY, bag);
+    applySeed();
+    refreshStats();
+    ok("+" + n + " " + key + " \u2014 " + bag[key].length + " placeholders in the library");
+  }
+
+  function clearSeed() {
+    var total = seedCount();
+    if (!total) return err("no placeholders seeded");
+    N.store.del(SEED_KEY);
+    applySeed();
+    refreshStats();
+    ok("removed " + total + " placeholders");
+  }
+
+  /* merge a stored seed before any page script runs, so a page loaded with
+     placeholders already in place never flickers from the real catalog */
+  if (seedCount()) applySeed();
+
   /* ---------- helpers over real site systems ---------- */
-  function statsHtml() {
+  /* the seeded count is the one stat worth shouting about, so it is marked
+     here and the html view turns the marker into <b> — the log line and the
+     header want the same numbers in different dress */
+  function statParts() {
     var g = (N.catalog && N.catalog.games ? N.catalog.games() : []).length;
     var a = (N.catalog && N.catalog.apps ? N.catalog.apps() : []).length;
     var p = (N.catalog && N.catalog.proxies ? N.catalog.proxies() : []).length;
     var rec = N.recent ? N.recent.list().length : 0;
     var fav = N.favs ? N.favs.list().length : 0;
     var eco = N.econ ? N.econ.state() : null;
-    return (
-      g + (eco ? "+" + (N.econ.unlockedBetas ? N.econ.unlockedBetas().length : 0) : "") + " games &middot; " +
-      a + " apps &middot; " + p + " proxies &middot; " +
-      rec + " recent &middot; " + fav + " favorites" +
-      (eco ? " &middot; " + eco.coins + " coins &middot; " + eco.xp + " xp" : "")
-    );
+    var out = [
+      g + (eco ? "+" + (N.econ.unlockedBetas ? N.econ.unlockedBetas().length : 0) : "") + " games",
+      a + " apps",
+      p + " proxies",
+      rec + " recent",
+      fav + " favorites",
+    ];
+    if (eco) out.push(eco.coins + " coins", eco.xp + " xp");
+    var seeded = seedCount();
+    if (seeded) out.push("@" + seeded + " placeholder" + (seeded === 1 ? "" : "s"));
+    return out;
+  }
+
+  function statsText() {
+    return statParts().map(function (s) {
+      return s.charAt(0) === "@" ? s.slice(1) : s;
+    }).join(" \u00b7 ");
+  }
+
+  function statsHtml() {
+    return statParts().map(function (s) {
+      return s.charAt(0) === "@" ? "<b>" + s.slice(1) + "</b>" : s;
+    }).join(" &middot; ");
   }
 
   function anyItem(kind) {
@@ -115,12 +259,11 @@
     if (N.seasons) N.seasons.refresh();
   }
 
-  /* the custom accent picker is also a shop item */
-  function setCustom(hex) {
+  function setParticles(id) {
     if (!N.theme) return err("theme module missing");
-    if (N.econ) N.econ.grant("fx", "customaccent");
-    N.theme.setCustomAccent(hex || "#6cc7ff");
-    if (N.seasons) N.seasons.refresh();
+    if (id !== "none" && N.econ) N.econ.grant("particle", id);
+    N.theme.setParticles(id);
+    N.prefs.set("particles", id);
   }
 
   function applyTab(id) {
@@ -131,393 +274,425 @@
     ok("tab preset \u2192 " + p.name + (N.tab.titleFor ? " (\u201c" + N.tab.titleFor(p) + "\u201d)" : ""));
   }
 
-  /* ---------- action sections ---------- */
-  var SECTIONS = [
-    {
-      name: "effects",
-      icon: "zap",
-      rows: [
-        [
-          { label: "Confetti burst", icon: "star", run: function () { N.fx.confetti(); ok("confetti fired"); } },
-          { label: "Triple confetti", icon: "star", run: function () {
-              N.fx.confetti(); setTimeout(function () { N.fx.confetti(); }, 350);
-              setTimeout(function () { N.fx.confetti(); }, 700);
-              ok("3 bursts queued");
-            } },
-          { label: "Toast (info)", icon: "info", run: function () { d.toast("Dev toast \u2014 all systems nominal", { icon: "info" }); ok("toast shown"); } },
-          { label: "Toast (error)", icon: "warn", run: function () { d.toast("Dev error toast", { icon: "warn", type: "err", hold: 4000 }); ok("error toast shown"); } },
-        ],
-        [
-          { label: "Glow: Blue+Purple", icon: "zap", run: function () { setGlow("bp"); ok("glow \u2192 Blue + Purple"); } },
-          { label: "Glow: Rainbow", icon: "zap", run: function () { setGlow("rainbow"); ok("glow \u2192 Rainbow"); } },
-          { label: "Glow: Off", icon: "ban", run: function () { setGlow("off"); ok("glow \u2192 off"); } },
-          { label: "Comet toggle", icon: "zap", run: function () {
-              var on = !N.prefs.get("glowComet");
-              N.theme.setComet(on);
-              N.prefs.set("glowComet", on);
-              ok("comet " + (on ? "on" : "off"));
-            } },
-        ],
-        [
-          { label: "Accent: Ice", icon: "pen", run: function () { setAccent("ice"); ok("accent \u2192 Ice"); } },
-          { label: "Accent: Violet", icon: "pen", run: function () { setAccent("violet"); ok("accent \u2192 Violet"); } },
-          { label: "Accent: Ember", icon: "pen", run: function () { setAccent("ember"); ok("accent \u2192 Ember"); } },
-          { label: "Accent: Off", icon: "ban", run: function () { setAccent("off"); ok("accent \u2192 off"); } },
-        ],
-        [
-          { label: "Pack: Synthwave", icon: "pen", run: function () { setPack("synthwave"); ok("theme \u2192 Synthwave"); } },
-          { label: "Pack: Matrix", icon: "pen", run: function () { setPack("matrix"); ok("theme \u2192 Matrix"); } },
-          { label: "Pack: Gold", icon: "pen", run: function () { setPack("gold"); ok("theme \u2192 Gold"); } },
-          { label: "Pack: Aurora", icon: "pen", run: function () { setPack("aurora"); ok("theme \u2192 Aurora"); } },
-        ],
-        [
-          { label: "Pack: Cosmos", icon: "pen", run: function () { setPack("cosmos"); ok("theme \u2192 Cosmos"); } },
-          { label: "Pack: Vapor", icon: "pen", run: function () { setPack("vapor"); ok("theme \u2192 Vapor"); } },
-          { label: "Pack: Neon", icon: "pen", run: function () { setPack("neon"); ok("theme \u2192 Neon (shop, most expensive)"); } },
-          { label: "Pack: Dawn", icon: "pen", run: function () { setPack("dawn"); ok("theme \u2192 Dawn (free)"); } },
-        ],
-        [
-          { label: "Pack: Mist", icon: "pen", run: function () { setPack("mist"); ok("theme \u2192 Mist (free)"); } },
-          { label: "Accent: Custom", icon: "pen", run: function () { setCustom(); ok("accent \u2192 custom #6cc7ff"); } },
-          { label: "Accent: Custom amber", icon: "pen", run: function () { setCustom("#ffb347"); ok("accent \u2192 custom amber"); } },
-          { label: "Pack: Clear", icon: "ban", run: function () { setAccent("off"); ok("theme pack cleared"); } },
-        ],
-      ],
-    },
-    {
-      name: "modals",
-      icon: "info",
-      rows: [
-        [
-          { label: "Welcome modal", icon: "info", run: function () {
-              N.modal.open({
-                title: "Welcome to NULL",
-                icon: "ban",
-                body: "<p>The ultimate browser-based hub \u2014 unblocked, fast, and built for you.</p>",
-                actions: [{ label: "Continue", variant: "primary" }],
-              });
-              ok("welcome modal shown");
-            } },
-          { label: "Popup note", icon: "ext", run: function () {
-              N.modal.open({
-                title: "Popups & redirects",
-                icon: "ext",
-                body: "<p>Some NULL features ask the browser to allow popups and redirects.</p>",
-                actions: [{ label: "Please accept", variant: "primary" }],
-              });
-              ok("popup note shown");
-            } },
-          { label: "Customize prompt", icon: "pen", run: function () {
-              N.modal.open({
-                title: "Make NULL yours",
-                icon: "pen",
-                body:
-                  "<p>Would you like to customize NULL's look?</p>" +
-                  "<p><b>Introducing seasonal mode</b> \u2014 leaves, snow, petals and summer light drift behind everything, following the real seasons. Flip it on or off in Settings.</p>",
-                actions: [
-                  { label: "Not right now", variant: "outline" },
-                  { label: "Sure", variant: "primary" },
-                ],
-              });
-              ok("customize prompt shown");
-            } },
-          { label: "Weekly wrap-up", icon: "ann", run: function () {
-              if (!N.wrapup || !N.wrapup.show()) return err("no plays recorded this week yet \u2014 try \u201cSeed weekly log\u201d");
-              ok("weekly wrap-up shown (current week)");
-            } },
-          { label: "Confirm dialog", icon: "check", run: function () {
-              N.modal.confirm({ title: "Dev confirm", body: "<p>This is what a NULL confirm looks like.</p>", onOk: function () { ok("confirm accepted"); } });
-              ok("confirm dialog shown");
-            } },
-          { label: "SGGAMES egg", icon: "zap", run: function () {
-              if (N.modal.showSgGames) N.modal.showSgGames();
-              else err("egg not exported \u2014 type sggames");
-            } },
-        ],
-        [
-          { label: "Game warning", icon: "warn", run: function () {
-              N.modal.open({
-                title: "Heads up (sample warning)",
-                icon: "warn",
-                iconTone: "warn",
-                body: "<p>Keyboard needed. Arrow keys move, space jumps. This is how a game's Warning.txt renders.</p>",
-                dismissible: false,
-                actions: [
-                  { label: "Go back", variant: "outline" },
-                  { label: "Okay", variant: "primary" },
-                ],
-              });
-              ok("warning modal shown");
-            } },
-          { label: "Danger modal", icon: "trash", run: function () {
-              N.modal.open({
-                title: "Danger sample",
-                icon: "warn",
-                iconTone: "danger",
-                body: "<p>This is how a danger modal renders. Nothing was harmed.</p>",
-                actions: [{ label: "Phew", variant: "danger" }],
-              });
-              ok("danger modal shown");
-            } },
-          { label: "Stack 3 modals", icon: "list", run: function () {
-              for (var i = 3; i >= 1; i--) {
-                (function (n) {
-                  N.modal.open({
-                    title: "Modal #" + n,
-                    icon: "info",
-                    body: "<p>Stacked modal " + n + " of 3. Close top first.</p>",
-                    actions: [{ label: "Next", variant: "primary" }],
-                  });
-                })(i);
-              }
-              ok("3 modals stacked (top closes first)");
-            } },
-        ],
-      ],
-    },
-    {
-      name: "launchers",
-      icon: "play",
-      rows: [
-        [
-          { label: "Random game", icon: "play", run: function () {
-              var e = anyItem("game");
-              ok("launching \u201c" + (e ? e.name : "?") + "\u201d");
-              setTimeout(function () { launchItem("game", e); }, 150);
-            } },
-          { label: "Random app", icon: "grid", run: function () {
-              var e = anyItem("app");
-              ok("launching \u201c" + (e ? e.name : "?") + "\u201d");
-              setTimeout(function () { launchItem("app", e); }, 150);
-            } },
-          { label: "Random proxy", icon: "proxy", run: function () {
-              var e = anyItem("proxy");
-              ok("opening \u201c" + (e ? e.name : "?") + "\u201d (confirm will show)");
-              setTimeout(function () { launchItem("proxy", e); }, 150);
-            } },
-          { label: "Open player (blank)", icon: "file", run: function () {
-              location.href = N.launch.playerUrl("game", "void");
-            } },
-          { label: "Open shop", icon: "store", run: function () {
-              ok("heading to the shop");
-              setTimeout(function () { location.href = "/shop.html"; }, 150);
-            } },
-        ],
-        [
-          { label: "Armed marathon +5m", icon: "clock", run: function () {
-              if (N.prefs.get("marathon") === false) return err("marathon disabled in settings");
-              N.prefs.set("marathonMin", 5);
-              N.prefs.set("marathonAt", Date.now() + 5 * 60000);
-              ok("marathon armed: next switch in 5:00");
-            } },
-          { label: "Marathon due now", icon: "zap", run: function () {
-              if (N.prefs.get("marathon") === false) return err("marathon disabled in settings");
-              N.prefs.set("marathonMin", 5);
-              N.prefs.set("marathonAt", 1);
-              ok("marathon fired \u2014 ticker will switch in \u2264 1s");
-            } },
-          { label: "Disarm marathon", icon: "ban", run: function () {
-              N.prefs.set("marathonMin", 0);
-              N.prefs.set("marathonAt", 0);
-              ok("marathon disarmed");
-            } },
-        ],
-      ],
-    },
-    {
-      name: "tab presets",
-      icon: "tab",
-      rows: [
-        [
-          { label: "Google Slides", icon: "tab", run: function () { applyTab("slides"); } },
-          { label: "Google Docs", icon: "tab", run: function () { applyTab("docs"); } },
-          { label: "Google Classroom", icon: "tab", run: function () { applyTab("gclass"); } },
-          { label: "Kahoot", icon: "tab", run: function () { applyTab("kahoot"); } },
-        ],
-        [
-          { label: "Calculator", icon: "tab", run: function () { applyTab("search"); } },
-          { label: "NULL", icon: "tab", run: function () { applyTab("null"); } },
-          { label: "Custom tab", icon: "pen", run: function () { applyTab("custom"); } },
-        ],
-      ],
-    },
-    {
-      name: "seasonal theme",
-      icon: "leaf",
-      rows: [
-        [
-          { label: "Fall", icon: "leaf", run: function () {
-              if (!N.seasons) return err("seasons module missing");
-              N.seasons.pick("fall");
-              ok("season \u2192 Fall (preview)");
-            } },
-          { label: "Winter", icon: "snow", run: function () {
-              if (!N.seasons) return err("seasons module missing");
-              N.seasons.pick("winter");
-              ok("season \u2192 Winter (preview)");
-            } },
-          { label: "Spring", icon: "petal", run: function () {
-              if (!N.seasons) return err("seasons module missing");
-              N.seasons.pick("spring");
-              ok("season \u2192 Spring (preview)");
-            } },
-          { label: "Summer", icon: "sparkle", run: function () {
-              if (!N.seasons) return err("seasons module missing");
-              N.seasons.pick("summer");
-              ok("season \u2192 Summer (preview)");
-            } },
-        ],
-        [
-          { label: "Auto (calendar)", icon: "calendar", run: function () {
-              if (!N.seasons) return err("seasons module missing");
-              N.seasons.pick("auto");
-              ok("season \u2192 follows the calendar");
-            } },
-          { label: "Seasonal off", icon: "ban", run: function () {
-              if (!N.seasons) return err("seasons module missing");
-              N.seasons.pick("off");
-              ok("seasonal theme off");
-            } },
-        ],
-      ],
-    },
-    {
-      name: "screensaver & view",
-      icon: "sun",
-      rows: [
-        [
-          { label: "Trigger screensaver", icon: "clock", run: function () {
-              var evt = new Event("dc-ss");
-              document.dispatchEvent(evt);
-              ok("screensaver requested");
-            } },
-          { label: "Theme: Dark", icon: "moon", run: function () {
-              N.theme.setTheme("dark"); N.prefs.set("theme", "dark");
-              ok("theme \u2192 dark");
-            } },
-          { label: "Theme: Light", icon: "sun", run: function () {
-              N.theme.setTheme("light"); N.prefs.set("theme", "light");
-              ok("theme \u2192 light");
-            } },
-          { label: "Back to top", icon: "up", run: function () {
-              var sv = d.qs("#scrollview");
-              if (sv) sv.scrollTo({ top: 0, behavior: "smooth" });
-              else window.scrollTo({ top: 0, behavior: "smooth" });
-              ok("scrolled to top");
-            } },
-        ],
-      ],
-    },
-    {
-      name: "data & maintenance",
-      icon: "trash",
-      rows: [
-        [
-          { label: "Seed recents (5)", icon: "play", run: function () {
-              var games = N.catalog.games();
-              if (!games.length) return err("library empty");
-              for (var i = 0; i < 5; i++) {
-                var g = games[Math.floor(Math.random() * games.length)];
-                N.recent.add("game", g.id);
-                N.plays.tap("game", g.id);
-              }
-              ok("5 recents + plays seeded");
-              refreshStats();
-            } },
-          { label: "Clear recents", icon: "trash", run: function () {
-              N.recent.clear(); ok("recents cleared"); refreshStats();
-            } },
-          { label: "Clear favorites", icon: "trash", run: function () {
-              N.favs.clear(); ok("favorites cleared"); refreshStats();
-            } },
-          { label: "Reset play counts", icon: "trash", run: function () {
-              N.store.del("null:plays"); ok("play counts wiped"); refreshStats();
-            } },
-        ],
-        [
-          { label: "Bank 5h playtime", icon: "coin", run: function () {
-              if (!N.econ) return err("econ module missing");
-              var got = N.econ.bank(5 * 3600);
-              var s = N.econ.state();
-              ok("banked 5h \u2192 +" + got.xp + " xp, +" + got.coins + " coins (now " + s.coins + " coins)");
-              refreshStats();
-            } },
-          { label: "Give 200 coins", icon: "coin", run: function () {
-              if (!N.econ) return err("econ module missing");
-              N.econ.addCoins(200);
-              ok("200 coins added (now " + N.econ.state().coins + ")");
-              refreshStats();
-            } },
-          { label: "Finish today's quests", icon: "check", run: function () {
-              if (!N.econ) return err("econ module missing");
-              ["snake", "simon", "pulse", "void", "trace"].forEach(function (id) { N.econ.trackPlay("game", id); });
-              N.econ.bank(2400);
-              ok("today's quests should all be ready to claim in the Shop");
-              refreshStats();
-            } },
-          { label: "Reset daily progress", icon: "refresh", run: function () {
-              if (!N.econ) return err("econ module missing");
-              N.econ.newDay();
-              ok("day rolled over \u2014 quests and the crate are fresh");
-              refreshStats();
-            } },
-          { label: "Open the daily crate", icon: "gift", run: function () {
-              if (!N.daily) return err("the daily crate lives on Home and Shop");
-              N.daily.openCrate(function () { refreshStats(); });
-              ok("crate modal opened");
-            } },
-          { label: "Reset economy", icon: "trash", run: function () {
-              N.store.del("null:eco");
-              ok("economy wiped \u2014 reload to reset balances");
-              refreshStats();
-            } },
-          { label: "Seed weekly log", icon: "clock", run: function () {
-              if (!N.week) return err("week module missing");
-              var games = N.catalog.games().slice(0, 4);
-              var apps = N.catalog.apps().slice(0, 2);
-              if (!games.length && !apps.length) return err("library empty");
-              var pool = games
-                .map(function (g) { return { k: "game", id: g.id }; })
-                .concat(apps.map(function (a) { return { k: "app", id: a.id }; }));
-              for (var i = 0; i < 12; i++) {
-                var p = pool[Math.floor(Math.random() * pool.length)];
-                N.week.log(p.k, p.id);
-              }
-              ok("12 plays seeded into this week's log \u2014 open \u201cWeekly wrap-up\u201d to see it");
-            } },
-          { label: "Reset first-run flags", icon: "info", run: function () {
-              N.flags.clear(); ok("flags reset \u2014 welcome, popup, customize & weekly wrap-up return next visit");
-            } },
-          { label: "Clear search history", icon: "trash", run: function () {
-              N.store.del("null:searches");
-              ok("search history wiped");
-            } },
-          { label: "Factory reset", icon: "warn", run: function () {
-              N.modal.confirm({
-                title: "Factory reset?",
-                icon: "warn",
-                iconTone: "danger",
-                body: "<p>Wipes every NULL preference, flag, recent, favorite, play count, weekly log and history from this browser. This cannot be undone.</p>",
-                okLabel: "Wipe everything",
-                okVariant: "danger",
-                onOk: function () {
-                  ["null:prefs", "null:flags", "null:recent", "null:favs", "null:plays", "null:searches", "null:sched", "null:lunch", "null:week", "null:eco", "null:annSeen"].forEach(N.store.del);
-                  ok("factory reset done \u2014 reloading");
-                  setTimeout(function () { location.reload(); }, 600);
-                },
-              });
-            } },
-          { label: "Catalog builder (/tools)", icon: "wrench", run: function () {
-              location.href = "/tools.html";
-            } },
-          { label: "Test suite (/tests)", icon: "beaker", run: function () {
-              location.href = "/tests.html";
-            } },
-          { label: "Reload page", icon: "refresh", run: function () { location.reload(); } },
-        ],
-      ],
-    },
+  /* ---------- button + section builders ----------
+     A button is { label, icon, run, on? } — `on` is optional and only says
+     whether the setting it toggles is the active one right now. */
+  function b(label, icon, run, on) {
+    return { label: label, icon: icon, run: run, on: on || null };
+  }
+
+  function prefIs(key, val) {
+    return function () {
+      return N.prefs.get(key) === val;
+    };
+  }
+
+  function packButtons() {
+    return N.theme.allPacks().map(function (p) {
+      return b(p.name, "pen", function () {
+        setPack(p.id);
+        ok("theme pack \u2192 " + p.name + (p.free ? " (free)" : " (granted)"));
+      }, prefIs("accent", p.id));
+    });
+  }
+
+  function particleButtons() {
+    var list = N.theme.allParticles().map(function (p) {
+      return b(p.name, "sparkle", function () {
+        setParticles(p.id);
+        ok("particles \u2192 " + p.name + (p.free ? " (free)" : " (granted)"));
+      }, prefIs("particles", p.id));
+    });
+    return list.concat([
+      b("None", "ban", function () {
+        setParticles("none");
+        ok("particles \u2192 none");
+      }, prefIs("particles", "none")),
+    ]);
+  }
+
+  function accentButtons() {
+    var list = N.theme.ACCENTS.map(function (a) {
+      return b(a.name, "pen", function () {
+        setAccent(a.id);
+        ok("accent \u2192 " + a.name);
+      }, prefIs("accent", a.id));
+    });
+    /* custom accent is a shop item; the console grants it so the picker path
+       can be exercised without buying it first */
+    list.push(
+      b("Custom accent", "pen", function () {
+        if (N.econ) N.econ.grant("fx", "customaccent");
+        N.theme.setCustomAccent(N.prefs.get("accentColor") || "#6cc7ff");
+        ok("accent \u2192 custom (picker unlocked)");
+      }, prefIs("accent", "custom")),
+    );
+    return list;
+  }
+
+  function glowButtons() {
+    return N.theme.GLOWS.filter(function (g) {
+      /* the custom palette only exists once the picker is unlocked */
+      return g.id !== "custom" || (N.theme.customOn && N.theme.customOn());
+    }).map(function (g) {
+      return b(g.name, "zap", function () {
+        setGlow(g.id);
+        ok("glow \u2192 " + g.name);
+      }, prefIs("glow", g.id));
+    });
+  }
+
+  function tabButtons() {
+    return (N.tab.list || []).map(function (p) {
+      return b(p.name, "tab", function () {
+        applyTab(p.id);
+      }, prefIs("tab", p.id));
+    });
+  }
+
+  var SEASONS = [
+    ["Spring", "petal"], ["Summer", "sparkle"], ["Fall", "leaf"], ["Winter", "snow"],
   ];
+
+  function seasonButtons() {
+    var list = [
+      b("Auto (calendar)", "calendar", function () {
+        N.seasons.pick("auto");
+        ok("season \u2192 follows the calendar");
+      }, function () {
+        return N.prefs.get("seasonal") === true && !N.prefs.get("seasonOverride");
+      }),
+      b("Off", "ban", function () {
+        N.seasons.pick("off");
+        ok("seasonal theme off");
+      }, function () {
+        return !N.prefs.get("seasonal");
+      }),
+    ];
+    SEASONS.forEach(function (s) {
+      list.push(
+        b(s[0], s[1], function () {
+          N.seasons.pick(s[0].toLowerCase());
+          ok("season \u2192 " + s[0] + " (preview)");
+        }, function () {
+          return N.prefs.get("seasonal") === true && N.prefs.get("seasonOverride") === s[0].toLowerCase();
+        }),
+      );
+    });
+    return list;
+  }
+
+  function perfButtons() {
+    return [
+      b("Performance on", "zap", function () {
+        N.prefs.set("perf", true);
+        N.theme.setPerf(true);
+        ok("performance mode on \u2014 no glow, particles or pack");
+      }, function () {
+        return N.prefs.get("perf") === true;
+      }),
+      b("Ultra-Performance", "zap", function () {
+        N.prefs.set("perf", "ultra");
+        N.theme.setPerf("ultra");
+        ok("ultra mode on \u2014 no animation, no effects, off-screen paint skipped");
+      }, prefIs("perf", "ultra")),
+      b("Perf off", "ban", function () {
+        N.prefs.set("perf", false);
+        N.theme.setPerf(false);
+        ok("performance mode off \u2014 glow, particles and pack restored");
+      }, function () {
+        return !N.prefs.get("perf");
+      }),
+    ];
+  }
+
+  /* built fresh each time the console opens: packs, particles, accents and
+     presets all come out of the modules that own them */
+  function buildSections() {
+    return [
+      {
+        name: "stress test", icon: "grid", wide: true,
+        items: [
+          b("50 games", "grid", function () { feed("game", 50); }),
+          b("250 games", "grid", function () { feed("game", 250); }),
+          b("1,000 games", "grid", function () { feed("game", 1000); }),
+          b("50 apps", "grid", function () { feed("app", 50); }),
+          b("250 apps", "grid", function () { feed("app", 250); }),
+          b("25 proxies", "proxy", function () { feed("proxy", 25); }),
+          b("100 proxies", "proxy", function () { feed("proxy", 100); }),
+          b("Clear placeholders", "trash", clearSeed),
+        ],
+      },
+      {
+        name: "launch", icon: "play",
+        items: [
+          b("Random game", "play", function () {
+            var e = anyItem("game");
+            ok("launching \u201c" + (e ? e.name : "?") + "\u201d");
+            setTimeout(function () { launchItem("game", e); }, 150);
+          }),
+          b("Random app", "grid", function () {
+            var e = anyItem("app");
+            ok("launching \u201c" + (e ? e.name : "?") + "\u201d");
+            setTimeout(function () { launchItem("app", e); }, 150);
+          }),
+          b("Random proxy", "proxy", function () {
+            var e = anyItem("proxy");
+            ok("opening \u201c" + (e ? e.name : "?") + "\u201d (confirm will show)");
+            setTimeout(function () { launchItem("proxy", e); }, 150);
+          }),
+          b("Open the shop", "store", function () {
+            ok("heading to the shop");
+            setTimeout(function () { location.href = "/shop.html"; }, 150);
+          }),
+          b("Player, missing id", "file", function () {
+            ok("opening the player with an id that does not exist");
+            setTimeout(function () { location.href = N.launch.playerUrl("game", "nope-not-a-game"); }, 150);
+          }),
+          b("Marathon in 5m", "clock", function () {
+            if (N.prefs.get("marathon") === false) return err("marathon is off in Settings");
+            N.prefs.set("marathonMin", 5);
+            N.prefs.set("marathonAt", Date.now() + 5 * 60000);
+            ok("marathon armed \u2014 next switch in 5:00");
+          }),
+          b("Marathon due now", "zap", function () {
+            if (N.prefs.get("marathon") === false) return err("marathon is off in Settings");
+            N.prefs.set("marathonMin", 5);
+            N.prefs.set("marathonAt", 1);
+            ok("marathon fired \u2014 the ticker switches within a second");
+          }),
+          b("Disarm marathon", "ban", function () {
+            N.prefs.set("marathonMin", 0);
+            N.prefs.set("marathonAt", 0);
+            ok("marathon disarmed");
+          }),
+        ],
+      },
+      {
+        name: "look", icon: "pen", wide: true,
+        items: [
+          b("Dark", "moon", function () {
+            N.theme.setTheme("dark");
+            N.prefs.set("theme", "dark");
+            ok("theme \u2192 dark");
+          }, prefIs("theme", "dark")),
+          b("Light", "sun", function () {
+            N.theme.setTheme("light");
+            N.prefs.set("theme", "light");
+            ok("theme \u2192 light");
+          }, prefIs("theme", "light")),
+          b("Comet", "zap", function () {
+            var on = !N.prefs.get("glowComet");
+            N.theme.setComet(on);
+            N.prefs.set("glowComet", on);
+            ok("glow comet " + (on ? "on" : "off"));
+          }, function () {
+            return !!N.prefs.get("glowComet");
+          }),
+        ]
+          .concat(glowButtons())
+          .concat(accentButtons())
+          .concat(perfButtons()),
+      },
+      { name: "theme packs", icon: "star", wide: true, items: packButtons() },
+      { name: "particles", icon: "sparkle", wide: true, items: particleButtons() },
+      { name: "fx", icon: "star", items: [
+        b("Confetti burst", "star", function () {
+          N.fx.confetti();
+          ok("confetti fired");
+        }),
+        b("Triple confetti", "star", function () {
+          N.fx.confetti();
+          setTimeout(function () { N.fx.confetti(); }, 350);
+          setTimeout(function () { N.fx.confetti(); }, 700);
+          ok("3 bursts queued");
+        }),
+        b("Toast (info)", "info", function () {
+          d.toast("Dev toast \u2014 all systems nominal", { icon: "info" });
+          ok("toast shown");
+        }),
+        b("Toast (error)", "warn", function () {
+          d.toast("Dev error toast", { icon: "warn", type: "err", hold: 4000 });
+          ok("error toast shown");
+        }),
+        b("Screensaver", "clock", function () {
+          document.dispatchEvent(new Event("dc-ss"));
+          ok("screensaver requested");
+        }),
+      ] },
+      { name: "modals", icon: "info", items: [
+        b("Warning", "warn", function () {
+          N.modal.open({
+            title: "Heads up (sample warning)",
+            icon: "warn",
+            iconTone: "warn",
+            body: "<p>Keyboard needed. Arrow keys move, space jumps. This is how a game's Warning.txt renders.</p>",
+            dismissible: false,
+            actions: [
+              { label: "Go back", variant: "outline" },
+              { label: "Okay", variant: "primary" },
+            ],
+          });
+          ok("warning modal shown");
+        }),
+        b("Confirm", "check", function () {
+          N.modal.confirm({
+            title: "Dev confirm",
+            body: "<p>This is what a NULL confirm looks like.</p>",
+            onOk: function () { ok("confirm accepted"); },
+          });
+          ok("confirm dialog shown");
+        }),
+        b("Danger", "trash", function () {
+          N.modal.open({
+            title: "Danger sample",
+            icon: "warn",
+            iconTone: "danger",
+            body: "<p>This is how a danger modal renders. Nothing was harmed.</p>",
+            actions: [{ label: "Phew", variant: "danger" }],
+          });
+          ok("danger modal shown");
+        }),
+        b("Stack 3", "list", function () {
+          for (var i = 3; i >= 1; i--) {
+            (function (n) {
+              N.modal.open({
+                title: "Modal #" + n,
+                icon: "info",
+                body: "<p>Stacked modal " + n + " of 3. Close top first.</p>",
+                actions: [{ label: "Next", variant: "primary" }],
+              });
+            })(i);
+          }
+          ok("3 modals stacked (top closes first)");
+        }),
+        b("Weekly wrap-up", "ann", function () {
+          if (!N.wrapup || !N.wrapup.show()) return err("nothing in this week's log yet \u2014 try \u201cSeed weekly log\u201d");
+          ok("weekly wrap-up shown");
+        }),
+        b("SGGAMES egg", "zap", function () {
+          if (N.modal.showSgGames) N.modal.showSgGames();
+          else err("egg not exported");
+          ok("SGGAMES egg shown");
+        }),
+      ] },
+      { name: "tab presets", icon: "tab", items: tabButtons() },
+      { name: "seasonal", icon: "leaf", items: seasonButtons() },
+      { name: "economy", icon: "coin", items: [
+        b("Bank 5h playtime", "coin", function () {
+          if (!N.econ) return err("economy module missing");
+          var got = N.econ.bank(5 * 3600);
+          ok("banked 5h \u2192 +" + got.xp + " xp, +" + got.coins + " coins (now " + N.econ.state().coins + " coins)");
+          refreshStats();
+        }),
+        b("Add 200 coins", "coin", function () {
+          if (!N.econ) return err("economy module missing");
+          N.econ.addCoins(200);
+          ok("200 coins added (now " + N.econ.state().coins + ")");
+          refreshStats();
+        }),
+        b("Finish today's quests", "check", function () {
+          if (!N.econ) return err("economy module missing");
+          var games = N.catalog.games().slice(0, 5);
+          if (!games.length) return err("library empty");
+          games.forEach(function (g) { N.econ.trackPlay("game", g.id); });
+          N.econ.bank(2400);
+          ok("today's quests should all be claimable in the Shop");
+          refreshStats();
+        }),
+        b("Daily crate", "gift", function () {
+          if (!N.daily) return err("the crate only exists on Home and Shop");
+          N.daily.openCrate(function () { refreshStats(); });
+          ok("crate modal opened");
+        }),
+        b("Roll over the day", "refresh", function () {
+          if (!N.econ) return err("economy module missing");
+          N.econ.newDay();
+          ok("new day \u2014 quests and the crate are fresh");
+          refreshStats();
+        }),
+        b("Reset economy", "trash", function () {
+          N.store.del("null:eco");
+          ok("economy wiped \u2014 reload to reset balances");
+          refreshStats();
+        }),
+      ] },
+      { name: "data", icon: "backups", items: [
+        b("Seed recents (5)", "play", function () {
+          var games = N.catalog.games();
+          if (!games.length) return err("library empty");
+          for (var i = 0; i < 5; i++) {
+            var g = games[Math.floor(Math.random() * games.length)];
+            N.recent.add("game", g.id);
+            N.plays.tap("game", g.id);
+          }
+          ok("5 recents + plays seeded");
+          refreshStats();
+        }),
+        b("Seed weekly log", "clock", function () {
+          if (!N.week) return err("week module missing");
+          var pool = N.catalog.games().slice(0, 4).map(function (g) {
+            return { k: "game", id: g.id };
+          }).concat(N.catalog.apps().slice(0, 2).map(function (a) {
+            return { k: "app", id: a.id };
+          }));
+          if (!pool.length) return err("library empty");
+          for (var i = 0; i < 12; i++) {
+            var p = pool[Math.floor(Math.random() * pool.length)];
+            N.week.log(p.k, p.id);
+          }
+          ok("12 plays seeded into this week \u2014 open \u201cWeekly wrap-up\u201d");
+        }),
+        b("Clear recents", "trash", function () {
+          N.recent.clear();
+          ok("recents cleared");
+          refreshStats();
+        }),
+        b("Clear favorites", "trash", function () {
+          N.favs.clear();
+          ok("favorites cleared");
+          refreshStats();
+        }),
+        b("Reset play counts", "trash", function () {
+          N.store.del("null:plays");
+          ok("play counts wiped");
+          refreshStats();
+        }),
+        b("Clear search history", "trash", function () {
+          N.store.del("null:searches");
+          ok("search history wiped");
+        }),
+        b("Reset first-run flags", "info", function () {
+          N.flags.clear();
+          ok("flags reset \u2014 welcome, popup and customize prompt return next visit");
+        }),
+        b("Factory reset", "warn", function () {
+          N.modal.confirm({
+            title: "Factory reset?",
+            icon: "warn",
+            iconTone: "danger",
+            body: "<p>Wipes every NULL preference, flag, recent, favorite, play count, weekly log, history and seeded placeholder from this browser. This cannot be undone.</p>",
+            okLabel: "Wipe everything",
+            okVariant: "danger",
+            onOk: function () {
+              [
+                "null:prefs", "null:flags", "null:recent", "null:favs", "null:plays",
+                "null:searches", "null:sched", "null:lunch", "null:week", "null:eco",
+                "null:annSeen", SEED_KEY,
+              ].forEach(N.store.del);
+              ok("factory reset done \u2014 reloading");
+              setTimeout(function () { location.reload(); }, 600);
+            },
+          });
+        }),
+      ] },
+      { name: "pages", icon: "wrench", items: [
+        b("Catalog builder", "wrench", function () { location.href = "/tools.html"; }),
+        b("Test suite", "beaker", function () { location.href = "/tests.html"; }),
+        b("Reload", "refresh", function () { location.reload(); }),
+      ] },
+    ];
+  }
 
   /* ---------- console shell ---------- */
   function headEl() {
@@ -526,11 +701,23 @@
       d.h("div", { class: "dc-brand" }, [
         d.icon("ban"),
         d.h("b", null, "NULL DEVCONSOLE"),
-        d.h("span", { class: "dc-ver" }, "v1.0 \u00b7 " + statsHtml()),
+        d.h("span", { class: "dc-ver", html: "v2.0 \u00b7 " + statsHtml() }),
       ]),
     );
+
+    findBox = d.h("input", {
+      type: "search",
+      class: "dc-find",
+      placeholder: "Filter tools\u2026",
+      "aria-label": "Filter dev tools",
+      autocomplete: "off",
+      spellcheck: "false",
+      oninput: function () { filter(findBox.value); },
+    });
+
     head.appendChild(
       d.h("div", { class: "dc-actions" }, [
+        findBox,
         d.h("button", {
           type: "button", class: "btn btn-ghost btn-sm dc-btn",
           title: "Copy console log", "aria-label": "Copy console log",
@@ -538,17 +725,17 @@
             var txt = logBox ? Array.prototype.map.call(logBox.children, function (l) { return l.textContent; }).join("\n") : "";
             /* writeText resolves async — a rejected promise would slip past try/catch */
             function fallback() {
-              var ok = false;
+              var done = false;
               try {
                 var ta = document.createElement("textarea");
                 ta.value = txt;
                 ta.style.cssText = "position:fixed;opacity:0;top:0";
                 document.body.appendChild(ta);
                 ta.select();
-                ok = !!document.execCommand && document.execCommand("copy");
+                done = !!document.execCommand && document.execCommand("copy");
                 document.body.removeChild(ta);
               } catch (e2) {}
-              if (ok) d.toast("Log copied", { icon: "copy" });
+              if (done) d.toast("Log copied", { icon: "copy" });
               else err("clipboard unavailable");
             }
             if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -573,24 +760,59 @@
 
   function sectionsEl() {
     var wrap = d.h("div", { class: "dc-cols" });
-    SECTIONS.forEach(function (s) {
-      var card = d.h("section", { class: "dc-card glass" });
-      card.appendChild(d.h("h3", { class: "dc-card-h" }, [d.icon(s.icon), s.name]));
-      s.rows.forEach(function (row) {
-        var r = d.h("div", { class: "dc-row" });
-        row.forEach(function (b) {
-          r.appendChild(
-            d.h("button", {
-              type: "button", class: "dc-b",
-              onclick: function () { b.run(); },
-            }, [d.icon(b.icon), b.label]),
-          );
-        });
-        card.appendChild(r);
+    groups = [];
+    buildSections().forEach(function (s) {
+      var card = d.h("section", { class: "dc-card glass" + (s.wide ? " wide" : "") });
+      card.appendChild(
+        d.h("h3", { class: "dc-card-h" }, [
+          d.icon(s.icon),
+          s.name,
+          d.h("span", { class: "dc-n" }, String(s.items.length)),
+        ]),
+      );
+      var row = d.h("div", { class: "dc-row" });
+      var items = [];
+      s.items.forEach(function (it) {
+        var el = d.h("button", {
+          type: "button", class: "dc-b",
+          onclick: function () {
+            it.run();
+            paint();
+          },
+        }, [d.icon(it.icon), it.label]);
+        row.appendChild(el);
+        items.push({ el: el, label: it.label.toLowerCase(), on: it.on });
       });
+      card.appendChild(row);
       wrap.appendChild(card);
+      groups.push({ card: card, name: s.name.toLowerCase(), items: items });
     });
     return wrap;
+  }
+
+  /* the filter box: match a button by label, or a whole card by its name */
+  function filter(q) {
+    var term = (q || "").trim().toLowerCase();
+    groups.forEach(function (g) {
+      var whole = term && g.name.indexOf(term) >= 0;
+      var shown = 0;
+      g.items.forEach(function (it) {
+        var hit = !term || whole || it.label.indexOf(term) >= 0;
+        it.el.hidden = !hit;
+        if (hit) shown++;
+      });
+      g.card.hidden = !shown;
+    });
+  }
+
+  /* light up whatever is currently applied */
+  function paint() {
+    groups.forEach(function (g) {
+      g.items.forEach(function (it) {
+        if (!it.on) return;
+        it.el.classList.toggle("on", !!it.on());
+      });
+    });
   }
 
   function show() {
@@ -610,8 +832,9 @@
     document.body.appendChild(ov);
     document.body.style.overflow = "hidden";
 
+    paint();
     log("devconsole attached \u2014 type nldev to reopen");
-    log("session: " + statsHtml());
+    log("session: " + statsText());
 
     function fadeIn() { ov.classList.add("on"); }
     requestAnimationFrame(fadeIn);
@@ -628,6 +851,8 @@
     var el = ov;
     ov = null;
     logBox = null;
+    findBox = null;
+    groups = [];
     setTimeout(function () {
       if (el.parentNode) el.parentNode.removeChild(el);
     }, 220);
@@ -635,7 +860,7 @@
 
   function refreshStats() {
     var v = d.qs(".dc-ver", ov);
-    if (v) v.innerHTML = "v1.0 \u00b7 " + statsHtml();
+    if (v) v.innerHTML = "v2.0 \u00b7 " + statsHtml();
   }
 
   /* wire the screensaver button into shell.js's screensaver via a custom event */
@@ -644,12 +869,15 @@
   });
 
   document.addEventListener("keydown", function (e) {
-    if (open && e.key === "Escape") {
+    if (!open) return;
+    if (e.key === "Escape") {
       e.preventDefault();
       hide();
     }
   });
 
   armCode();
-  N.dev = { show: show, hide: hide, isOpen: function () { return open; } };
+  /* the door in for anything that isn't a keystroke (the real devtools
+     console, a test) — show() and hide() are both idempotent */
+  N.dev = { show: show, hide: hide };
 })();

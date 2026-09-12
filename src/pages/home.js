@@ -461,6 +461,13 @@
     renderSchedHome();
     bind();
     N.bus.on("recent", renderRecents);
+    /* the dev console can change the catalog under us — keep the counts and
+       the featured rail honest */
+    N.bus.on("catalog", function () {
+      renderMastStats();
+      renderFeatured();
+      renderGotd();
+    });
     N.bus.on("sched", function () {
       if (document.body.contains(d.qs("#schedHome"))) renderSchedHome();
     });

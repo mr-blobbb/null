@@ -122,6 +122,46 @@ for (const page of PAGES) {
     ok(!!stats && /game/.test(stats.textContent), "masthead shows the live catalog counts (\"" + (stats ? stats.textContent : "") + "\")");
     ok(!!doc.querySelector(".mast-quick a"), "masthead quick links render");
   }
+
+  /* the dev console (type nldev) has to build, filter, and actually seed a
+     library — it is the tool used to stress the grid */
+  if (page === "games/index.html") {
+    const dev = win.N && win.N.dev;
+    ok(!!dev && typeof dev.show === "function", "dev console is exposed as N.dev");
+    if (dev) {
+      dev.show();
+      const cards = doc.querySelectorAll(".dc-card").length;
+      ok(cards >= 10, "dev console builds its tool cards (" + cards + ")");
+      ok(!!doc.querySelector(".dc-find"), "dev console has a filter box");
+
+      const find = doc.querySelector(".dc-find");
+      find.value = "confetti";
+      find.dispatchEvent(new win.Event("input"));
+      const shown = Array.from(doc.querySelectorAll(".dc-card")).filter((c) => !c.hidden).length;
+      const keptButtons = Array.from(doc.querySelectorAll(".dc-b")).filter((b) => !b.hidden).length;
+      ok(shown === 1 && keptButtons === 2, "filtering keeps only the matches (" + shown + " card, " + keptButtons + " buttons)");
+      find.value = "";
+      find.dispatchEvent(new win.Event("input"));
+      ok(Array.from(doc.querySelectorAll(".dc-card")).every((c) => !c.hidden), "clearing the filter restores every card");
+
+      const before = win.N.catalog.games().length;
+      const seedBtn = Array.from(doc.querySelectorAll(".dc-b")).find((b) => /250 games/.test(b.textContent));
+      ok(!!seedBtn, "dev console has a \"250 games\" stress-test button");
+      if (seedBtn) {
+        seedBtn.click();
+        const after = win.N.catalog.games().length;
+        ok(after === before + 250, "seeding adds placeholders (" + before + " \u2192 " + after + ")");
+        /* jsdom has no layout, so the virtual grid renders nothing to count —
+           the library's own counter is the honest signal that it refreshed */
+        const counter = doc.querySelector("#count");
+        ok(!!counter && new RegExp(after + " / " + after).test(counter.textContent), "the library page re-counts itself (\"" + (counter ? counter.textContent : "") + "\")");
+        const clear = Array.from(doc.querySelectorAll(".dc-b")).find((b) => /Clear placeholders/.test(b.textContent));
+        if (clear) clear.click();
+        ok(win.N.catalog.games().length === before, "clearing removes them again (" + win.N.catalog.games().length + ")");
+      }
+      dev.hide();
+    }
+  }
   if (page === "announcements.html") {
     const n = doc.querySelectorAll(".ann-card").length;
     ok(n > 0, "announcements render cards (" + n + ")");
