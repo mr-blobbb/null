@@ -176,8 +176,10 @@ site it needs to be served over http(s) — the frames cannot load from `file://
 
 ## Dev console — type `nldev`
 
-Type **`nldev`** on any page (no input focused) for a full-screen tool panel.
-It is grouped into one card per job — stress test, launch, look, theme packs,
+Type **`nldev`** on any page (no input focused) for a full-screen tool panel. It
+asks for a password first — it lives in `devconsole.js`, which is a speed bump
+and not security: anything served to the browser can be read. It is grouped into
+one card per job — stress test, launch, look, theme packs,
 particles, fx, modals, tab presets, seasonal, economy, data, pages — with a
 filter box in the header and a lit state on whichever setting is currently
 active. The lists of packs, particle sets, accents, glow palettes and tab

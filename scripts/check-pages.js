@@ -128,6 +128,28 @@ for (const page of PAGES) {
   if (page === "games/index.html") {
     const dev = win.N && win.N.dev;
     ok(!!dev && typeof dev.show === "function", "dev console is exposed as N.dev");
+
+    /* typing nldev has to ask for the password first */
+    const type = (s) => {
+      for (const ch of s) doc.dispatchEvent(new win.KeyboardEvent("keydown", { key: ch, bubbles: true }));
+    };
+    const submit = (field, value) => {
+      field.value = value;
+      const form = doc.querySelector(".dc-gate-box");
+      form.dispatchEvent(new win.Event("submit", { bubbles: true, cancelable: true }));
+    };
+    type("nldev");
+    ok(!!doc.querySelector(".dc-gate"), "typing nldev opens the password gate");
+    if (doc.querySelector(".dc-gate")) {
+      submit(doc.querySelector(".dc-gate-in"), "open-sesame");
+      ok(/wrong password/i.test(doc.querySelector(".dc-gate-err").textContent), "a wrong password is refused");
+      ok(!!doc.querySelector(".dc-gate"), "...and the gate stays up");
+      submit(doc.querySelector(".dc-gate-in"), "mynameisblob123");
+      ok(!!doc.querySelector(".dc-ov"), "the right password opens the console");
+      await wait(260);
+      ok(!doc.querySelector(".dc-gate"), "...and the gate is gone");
+    }
+
     if (dev) {
       dev.show();
       const cards = doc.querySelectorAll(".dc-card").length;
@@ -162,10 +184,9 @@ for (const page of PAGES) {
 
       const buttons = Array.from(doc.querySelectorAll(".dc-b"));
       ok(
-        [/Single-file regular/, /Single-file mini/, /Single-file lite/, /404 page/].every((re) =>
-          buttons.some((b) => re.test(b.textContent)),
-        ),
-        "dev console links the three single-file builds and the 404",
+        buttons.some((b) => /404 page/.test(b.textContent)) &&
+          !buttons.some((b) => /Single-file/.test(b.textContent)),
+        "the pages card links the 404 and no longer the single-file builds",
       );
 
       /* handing out coins has to survive a reload, not just look right */

@@ -22,13 +22,13 @@
   function armCode() {
     document.addEventListener("keydown", function (e) {
       if (e.repeat) return;
-      if (open) return; // don't re-trigger while the console is up
+      if (open || gate) return; // don't re-trigger while it's up
       var k = e.key;
       if (k && k.length === 1 && /[a-zA-Z0-9]/.test(k)) {
         seq = (seq + k.toLowerCase()).slice(-8);
         if (seq === "nldev") {
           seq = "";
-          show();
+          openGate();
         }
       }
     });
@@ -36,6 +36,7 @@
 
   /* ---------- state ---------- */
   var open = false;
+  var gate = null;
   var ov = null;
   var logBox = null;
   var findBox = null;
@@ -689,20 +690,6 @@
       { name: "pages", icon: "wrench", items: [
         b("Catalog builder", "wrench", function () { location.href = "/tools.html"; }),
         b("Test suite", "beaker", function () { location.href = "/tests.html"; }),
-        /* the single-file builds are big, so they get their own tab and the
-           404 (also just a page) follows the others in this one */
-        b("Single-file regular", "file", function () {
-          ok("opening releases/null-regular.html");
-          window.open("/releases/null-regular.html", "_blank", "noopener");
-        }),
-        b("Single-file mini", "file", function () {
-          ok("opening releases/null-mini.html");
-          window.open("/releases/null-mini.html", "_blank", "noopener");
-        }),
-        b("Single-file lite", "file", function () {
-          ok("opening releases/null-lite.html");
-          window.open("/releases/null-lite.html", "_blank", "noopener");
-        }),
         b("404 page", "warn", function () {
           ok("opening 404.html");
           location.href = "/404.html";
@@ -833,6 +820,85 @@
     });
   }
 
+  /* ---------- password gate ----------
+     A speed bump, not security: this file is served to the browser, so the
+     password is readable by anyone who looks for it. It keeps the console out
+     of the way of casual hands. The programmatic door (N.dev.show) skips it —
+     by then you have the source open anyway. */
+  var PW = "mynameisblob123";
+
+  function closeGate() {
+    if (!gate) return;
+    var el = gate;
+    gate = null;
+    document.body.style.overflow = "";
+    el.classList.remove("on");
+    setTimeout(function () {
+      if (el.parentNode) el.parentNode.removeChild(el);
+    }, 200);
+  }
+
+  function openGate() {
+    if (gate || open) return;
+
+    var input = d.h("input", {
+      type: "password",
+      class: "dc-gate-in",
+      placeholder: "Password",
+      autocomplete: "off",
+      "aria-label": "Dev console password",
+    });
+    var errEl = d.h("p", { class: "dc-gate-err", role: "alert" });
+
+    var form = d.h("form", {
+      class: "dc-gate-box glass-2 elev",
+      onsubmit: function (e) {
+        e.preventDefault();
+        if (input.value === PW) {
+          closeGate();
+          show();
+          return;
+        }
+        errEl.textContent = "Wrong password.";
+        input.value = "";
+        form.classList.remove("shake");
+        void form.offsetWidth; /* restart the animation */
+        form.classList.add("shake");
+        input.focus();
+      },
+    }, [
+      d.h("span", { class: "dc-gate-ic" }, [d.icon("lock")]),
+      d.h("b", { class: "dc-gate-title" }, "NULL DEVCONSOLE"),
+      d.h("p", { class: "dc-gate-sub" }, "This one is behind a password."),
+      input,
+      errEl,
+      d.h("div", { class: "dc-gate-actions" }, [
+        d.h("button", { type: "button", class: "btn btn-ghost btn-sm", onclick: closeGate }, "Cancel"),
+        d.h("button", { type: "submit", class: "btn btn-primary btn-sm" }, "Unlock"),
+      ]),
+    ]);
+
+    gate = d.h("div", {
+      class: "dc-gate",
+      role: "dialog",
+      "aria-modal": "true",
+      "aria-label": "NULL dev console locked",
+    }, [form]);
+    document.body.appendChild(gate);
+    document.body.style.overflow = "hidden";
+
+    function fadeIn() {
+      if (gate) gate.classList.add("on");
+    }
+    requestAnimationFrame(fadeIn);
+    setTimeout(fadeIn, 60);
+    /* focus after the keystroke that opened the gate has finished, or the
+       "v" from "nldev" lands in the field */
+    setTimeout(function () {
+      if (gate) input.focus();
+    }, 90);
+  }
+
   function show() {
     if (open) return;
     open = true;
@@ -887,8 +953,11 @@
   });
 
   document.addEventListener("keydown", function (e) {
-    if (!open) return;
-    if (e.key === "Escape") {
+    if (e.key !== "Escape") return;
+    if (gate) {
+      e.preventDefault();
+      closeGate();
+    } else if (open) {
       e.preventDefault();
       hide();
     }
