@@ -1,0 +1,20 @@
+/* NULL — home.css
+   Home-page only bits. Loaded after global.css, so the hero's sizing wins. */
+
+/* ---------- masthead: tagline over an oversized NULL ---------- */
+.mast h1 {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.mast-tag {
+  font-size: clamp(20px, 3vw, 30px);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+}
+.mast h1 .dim {
+  font-size: clamp(68px, 15vw, 148px);
+  letter-spacing: -0.06em;
+  line-height: 0.86;
+}

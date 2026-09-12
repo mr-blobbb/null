@@ -30,7 +30,8 @@ site can be previewed and the releases rebuilt; see the end of this file.)
 ├── apps/                  App library — index.html is the /apps page
 ├── proxies/               Proxy list — index.html is the /proxies page
 ├── src/
-│   ├── styles/            global.css, extra.css, tools.css, tests.css
+│   ├── styles/            global.css, extra.css, home.css, tools.css,
+│   │                      tests.css, particles.css, perf.css
 │   ├── utilities/         store, dom, modal, theme, scroll, markdown, econ,
 │   │                      catalog-tool (the parser behind /tools)
 │   ├── components/        shell (nav/footer), cards, search, schedule,
