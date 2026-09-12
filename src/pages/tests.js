@@ -607,6 +607,7 @@
 
     snapshot();
     clearNullKeys();
+    running = true;
 
     var steps = [
       ["Static files and styles", suiteFiles],
@@ -635,15 +636,27 @@
       .then(function () {
         unmount();
         restore();
+        running = false;
         done();
       })
       .catch(function (err) {
         unmount();
         restore();
+        running = false;
         ok("the test run completed", false, (err && err.message) || err);
         done();
       });
   }
+
+  /* the run pulls your null:* keys out of the way, so make sure leaving the
+     page mid-run still puts them back */
+  var running = false;
+  window.addEventListener("beforeunload", function () {
+    if (running) restore();
+  });
+  document.addEventListener("visibilitychange", function () {
+    if (running && document.hidden) restore();
+  });
 
   function boot() {
     var again = document.getElementById("testsRun");
