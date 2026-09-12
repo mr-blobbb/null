@@ -366,10 +366,14 @@
               w = window.open("about:blank", "_blank");
             } catch (err) {}
             if (w) {
+              /* the test window opened: popups are allowed, so cloaking is on */
+              if (N.cloak && N.cloak.clear) N.cloak.clear();
               try {
                 w.close();
               } catch (err) {}
             } else {
+              /* remember it — cloaking won't fire another doomed popup */
+              if (N.cloak && N.cloak.markBlocked) N.cloak.markBlocked();
               d.toast("Popup blocked \u2014 allow popups for NULL to enable cloaking.", { type: "err", hold: 5000 });
             }
           },

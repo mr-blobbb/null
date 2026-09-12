@@ -1687,7 +1687,7 @@ body.lb .site-foot {
   background: color-mix(in srgb, var(--ac-1) 84%, transparent);
 }
 .tb.b-hot {
-  background: color-mix(in srgb, #e2704a 86%, transparent);
+  background: color-mix(in srgb, #cb4c66 88%, transparent);
 }
 .vgrid .tname {
   display: none;

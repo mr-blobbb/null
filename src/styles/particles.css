@@ -1,0 +1,49 @@
+/* NULL — particles.css
+   Art for the free "Constellation" set: plain light-gray dots joined by
+   faint lines. The rest of the particle/backdrop art lives in extra.css;
+   this set is kept in its own small sheet so a page only pays for it when
+   the styles are actually shipped. theme.js builds the <b> children and
+   writes their random props inline (--s, --rot, --o, --dur, ...); the
+   rules here turn those into shapes and motion, same as extra.css does. */
+.pt-p-node b {
+  width: calc(var(--s) * 2.4);
+  height: calc(var(--s) * 2.4);
+  border-radius: 50%;
+  background: var(--pt-2);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--pt-2) 55%, transparent);
+  animation-name: pt-node;
+  animation-duration: calc(var(--dur, 5) * 3s);
+  animation-timing-function: ease-in-out;
+}
+.pt-p-link b {
+  width: calc(var(--s) * 26);
+  height: 1px;
+  transform-origin: 0 50%;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--pt-2) 70%, transparent) 22% 78%, transparent);
+  animation-name: pt-link;
+  animation-duration: calc(var(--dur, 5) * 6s);
+  animation-direction: alternate;
+  animation-timing-function: ease-in-out;
+}
+
+@keyframes pt-node {
+  0%,
+  100% {
+    opacity: calc(var(--o, 0.6) * 0.5);
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: var(--o, 0.6);
+    transform: scale(1);
+  }
+}
+@keyframes pt-link {
+  from {
+    opacity: calc(var(--o, 0.6) * 0.28);
+    transform: rotate(var(--rot, 0deg)) scaleX(0.7);
+  }
+  to {
+    opacity: calc(var(--o, 0.6) * 0.62);
+    transform: rotate(calc(var(--rot, 0deg) + 4deg)) scaleX(1.15);
+  }
+}

@@ -347,11 +347,16 @@
         window.open(entry.file, "_blank");
       });
       d.qs("#cloakBlank").addEventListener("click", function () {
+        if (N.cloak && N.cloak.blocked && N.cloak.blocked()) {
+          d.toast("Popups are blocked \u2014 allow popups for NULL, then try again.", { type: "err", hold: 5000 });
+          return;
+        }
         var w = null;
         try {
           w = window.open("about:blank", "_blank");
         } catch (err) {}
         if (!w) {
+          if (N.cloak && N.cloak.markBlocked) N.cloak.markBlocked();
           d.toast("Popup blocked \u2014 allow popups for NULL.", { type: "err" });
           return;
         }
@@ -359,6 +364,10 @@
         d.toast("Opened in an about:blank window", { icon: "ban" });
       });
       d.qs("#cloakBlob").addEventListener("click", function () {
+        if (N.cloak && N.cloak.blocked && N.cloak.blocked()) {
+          d.toast("Popups are blocked \u2014 allow popups for NULL, then try again.", { type: "err", hold: 5000 });
+          return;
+        }
         fetch(entry.file)
           .then(function (r) {
             return r.ok ? r.text() : Promise.reject();
@@ -373,7 +382,10 @@
               );
             var url = URL.createObjectURL(new Blob([out], { type: "text/html" }));
             var w = window.open(url, "_blank");
-            if (!w) d.toast("Popup blocked \u2014 allow popups for NULL.", { type: "err" });
+            if (!w) {
+              if (N.cloak && N.cloak.markBlocked) N.cloak.markBlocked();
+              d.toast("Popup blocked \u2014 allow popups for NULL.", { type: "err" });
+            }
           })
           .catch(function () {
             d.toast("Couldn\u2019t read the file for blob: mode.", { type: "err" });

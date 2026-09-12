@@ -223,7 +223,10 @@
       var home = r[4];
 
       ok("extra.css is reachable", css.length > 1000);
-      ok("glow border inks every card surface", /html\[data-glow\][^{]*\{[^}]*--glow-1/.test(css));
+      ok(
+        "glow border rings the viewport, not the cards",
+        /#null-glow-el/.test(css) && !/html\[data-glow\][^{]*:is\(\.glass/.test(css),
+      );
       ok("Neon glows its cards too", /html\[data-pack="neon"\]\s*:is\(\.glass/.test(css));
       ok("daily crate + progress row styles exist", /\.crate-box \{/.test(css) && /\.pg-bar i \{/.test(css));
       ok("the old marquee is fully removed", css.indexOf("nsScroll") < 0 && css.indexOf(".ns-item") < 0);
@@ -483,7 +486,8 @@
       /* the balance bar and the streak chip */
       ok("the balance bar shows the coin balance", /coins/.test(txt("#ecoBar")));
 
-      /* glow border really reaches the cards */
+      /* the glow border re-inks the viewport ring only — card surfaces stay
+         flat unless the Neon pack is worn */
       var card = q("#shopBody .shop-row") || q("#shopBody .shop-card");
       var before = w.getComputedStyle(card).boxShadow;
       w.N.theme.setGlow("bp");
@@ -492,7 +496,7 @@
       }).then(function () {
         var after = w.getComputedStyle(card).boxShadow;
         ok("glow border is applied to <html>", w.document.documentElement.dataset.glow === "bp");
-        ok("glow paints a shadow on the cards", after !== before && after !== "none", after);
+        eq("glow border leaves card surfaces unlit", after, before);
         ok("the glow palette is published", !!w.document.documentElement.style.getPropertyValue("--glow-1"));
         w.N.theme.setGlow("off");
       });

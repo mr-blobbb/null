@@ -15,8 +15,8 @@
    leaving every page unstyled.
 
    Bump CACHE/RUNTIME when the core file list changes so old caches are dropped. */
-const CACHE = "null-v4";
-const RUNTIME = "null-runtime-v4";
+const CACHE = "null-v5";
+const RUNTIME = "null-runtime-v5";
 
 const CORE = [
   "/",
@@ -37,6 +37,7 @@ const CORE = [
   "/public/icon-512.png",
   "/src/styles/global.css",
   "/src/styles/extra.css",
+  "/src/styles/particles.css",
   "/src/utilities/store.js",
   "/src/utilities/dom.js",
   "/src/utilities/modal.js",

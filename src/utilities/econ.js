@@ -273,6 +273,19 @@
         { k: "flare", n: 10 },
       ],
     },
+    {
+      id: "constellation",
+      name: "Constellation",
+      free: true,
+      price: 0,
+      mono: true,
+      desc: "Plain light-gray dots strung together by faint lines \u2014 a quiet star map.",
+      tags: ["Free", "Dots", "Lines"],
+      parts: [
+        { k: "node", n: 44 },
+        { k: "link", n: 30 },
+      ],
+    },
   ];
 
   var PARTICLES = [

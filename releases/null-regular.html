@@ -1698,7 +1698,7 @@ body.lb .site-foot {
   background: color-mix(in srgb, var(--ac-1) 84%, transparent);
 }
 .tb.b-hot {
-  background: color-mix(in srgb, #e2704a 86%, transparent);
+  background: color-mix(in srgb, #cb4c66 88%, transparent);
 }
 .vgrid .tname {
   display: none;
@@ -4507,12 +4507,11 @@ html[data-perf="1"] .nav-dot {
 }
 
 /* ============================================================
-   glow border — the whole page glows with the ring
-   Every card surface picks up a soft edge glow in the live border
-   palette (theme.js publishes --glow-1..4), so changing the glow
-   preset re-inks the cards, not just the viewport edge.
+   lit edges — Neon only
+   The glow border re-inks the viewport ring on its own; it leaves
+   the panels flat. Card surfaces pick up a lit edge only while the
+   Neon pack is worn (theme.js publishes --glow-1..4 either way).
    ============================================================ */
-html[data-glow] :is(.glass, .panel, .tcard, .rec-row, .ann-card, .set-card, .shop-row),
 html[data-pack="neon"] :is(.glass, .panel, .tcard, .rec-row, .ann-card, .set-card, .shop-row) {
   box-shadow:
     0 0 0 1px color-mix(in srgb, var(--glow-1, #35c3f2) 22%, transparent),
@@ -4522,14 +4521,12 @@ html[data-pack="neon"] :is(.glass, .panel, .tcard, .rec-row, .ann-card, .set-car
     border-color 0.2s var(--ease),
     background 0.18s var(--ease);
 }
-html[data-glow] :is(.glass, .panel, .tcard, .rec-row, .ann-card, .set-card, .shop-row):hover,
 html[data-pack="neon"] :is(.glass, .panel, .tcard, .rec-row, .ann-card, .set-card, .shop-row):hover {
   box-shadow:
     0 0 0 1px color-mix(in srgb, var(--glow-1, #35c3f2) 40%, transparent),
     0 0 26px -4px color-mix(in srgb, var(--glow-2, #a86bff) 62%, transparent);
 }
 /* the dialog is the one surface allowed to glow hard */
-html[data-glow] .modal,
 html[data-pack="neon"] .modal {
   box-shadow:
     0 0 0 1px color-mix(in srgb, var(--glow-1, #35c3f2) 34%, transparent),
@@ -6354,6 +6351,56 @@ html[data-theme="light"] .part-preview {
   border-color: rgba(0, 0, 0, 0.3);
 }
 
+/* NULL — particles.css
+   Art for the free "Constellation" set: plain light-gray dots joined by
+   faint lines. The rest of the particle/backdrop art lives in extra.css;
+   this set is kept in its own small sheet so a page only pays for it when
+   the styles are actually shipped. theme.js builds the <b> children and
+   writes their random props inline (--s, --rot, --o, --dur, ...); the
+   rules here turn those into shapes and motion, same as extra.css does. */
+.pt-p-node b {
+  width: calc(var(--s) * 2.4);
+  height: calc(var(--s) * 2.4);
+  border-radius: 50%;
+  background: var(--pt-2);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--pt-2) 55%, transparent);
+  animation-name: pt-node;
+  animation-duration: calc(var(--dur, 5) * 3s);
+  animation-timing-function: ease-in-out;
+}
+.pt-p-link b {
+  width: calc(var(--s) * 26);
+  height: 1px;
+  transform-origin: 0 50%;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--pt-2) 70%, transparent) 22% 78%, transparent);
+  animation-name: pt-link;
+  animation-duration: calc(var(--dur, 5) * 6s);
+  animation-direction: alternate;
+  animation-timing-function: ease-in-out;
+}
+
+@keyframes pt-node {
+  0%,
+  100% {
+    opacity: calc(var(--o, 0.6) * 0.5);
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: var(--o, 0.6);
+    transform: scale(1);
+  }
+}
+@keyframes pt-link {
+  from {
+    opacity: calc(var(--o, 0.6) * 0.28);
+    transform: rotate(var(--rot, 0deg)) scaleX(0.7);
+  }
+  to {
+    opacity: calc(var(--o, 0.6) * 0.62);
+    transform: rotate(calc(var(--rot, 0deg) + 4deg)) scaleX(1.15);
+  }
+}
+
 /* NULL — release.css
    The few styles the single-file builds need on top of the site's own
    global.css + extra.css: the shell frame around the views, the library grid
@@ -7195,6 +7242,19 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-12T14:50:41.024Z","g
       parts: [
         { k: "spark", n: 34 },
         { k: "flare", n: 10 },
+      ],
+    },
+    {
+      id: "constellation",
+      name: "Constellation",
+      free: true,
+      price: 0,
+      mono: true,
+      desc: "Plain light-gray dots strung together by faint lines \u2014 a quiet star map.",
+      tags: ["Free", "Dots", "Lines"],
+      parts: [
+        { k: "node", n: 44 },
+        { k: "link", n: 30 },
       ],
     },
   ];
@@ -11506,16 +11566,44 @@ return foot;
     }
   }
 
-  /* ---------- cloaking: open the whole site in about:blank / blob: ---------- */
-  function cloakBlocked() {
+  /* ---------- cloaking: open the whole site in about:blank / blob: ----------
+     There is no API for "are popups allowed?", so NULL learns it the one way a
+     page can: the first time a cloak window fails to open, it remembers. From
+     then on it does not fire a doomed window.open at all — it just shows the
+     warning and asks for popups, with a Try again for once they're enabled. */
+  var POPUP_KEY = "popupsBlocked";
+
+  function popupsBlocked() {
+    return !!N.prefs.get(POPUP_KEY);
+  }
+
+  function noteBlocked() {
+    N.prefs.set(POPUP_KEY, true);
+  }
+
+  function noteAllowed() {
+    if (N.prefs.get(POPUP_KEY)) N.prefs.set(POPUP_KEY, false);
+  }
+
+  function cloakBlocked(mode) {
     N.modal.open({
-      title: "Popup blocked",
+      title: "Popups are blocked",
       icon: "warn",
       iconTone: "danger",
       body:
-        "<p>The browser blocked the popup, so the cloaked window <b>won&rsquo;t open</b>.</p>" +
-        "<p>Allow popups for NULL (usually via the icon in the address bar) and try again.</p>",
-      actions: [{ label: "Okay", variant: "primary" }],
+        "<p>Your browser is blocking popups, so cloaked windows <b>can&rsquo;t open</b>. NULL won&rsquo;t keep firing them until that changes.</p>" +
+        "<p>Allow popups for NULL \u2014 usually the icon at the right of the address bar \u2014 then press <b>Try again</b>.</p>",
+      actions: [
+        { label: "Close", variant: "outline" },
+        {
+          label: "Try again",
+          variant: "primary",
+          onClick: function () {
+            noteAllowed();
+            N.cloak.site(mode);
+          },
+        },
+      ],
     });
   }
 
@@ -11548,7 +11636,8 @@ return foot;
       w = null;
     }
     if (!w) {
-      cloakBlocked();
+      noteBlocked();
+      cloakBlocked(mode);
       return;
     }
     if (mode === "blank") {
@@ -11561,14 +11650,19 @@ return foot;
         try {
           w.close();
         } catch (e2) {}
-        cloakBlocked();
+        noteBlocked();
+        cloakBlocked(mode);
         return;
       }
     }
     /* some blockers cancel the tab right after it opens — if the browser
        closed it, don't leave a stray tab and don't pretend it worked */
+    noteAllowed();
     setTimeout(function () {
-      if (w.closed) cloakBlocked();
+      if (w.closed) {
+        noteBlocked();
+        cloakBlocked(mode);
+      }
     }, 800);
     d.toast(mode === "blank" ? "Opened NULL in about:blank" : "Opened NULL in blob:", {
       icon: "ban",
@@ -11576,7 +11670,17 @@ return foot;
   }
 
   N.cloak = {
+    /* has the browser been seen blocking NULL's popups? */
+    blocked: popupsBlocked,
+    markBlocked: noteBlocked,
+    clear: noteAllowed,
     site: function (mode) {
+      /* if popups are known to be blocked, don't even try to open about:blank
+         or blob: — warn, and let the user enable them first */
+      if (popupsBlocked()) {
+        cloakBlocked(mode);
+        return;
+      }
       var shell = cloakShell();
       var url = mode === "blob" ? URL.createObjectURL(new Blob([shell], { type: "text/html" })) : "about:blank";
       cloakOpen(url, mode, shell);
@@ -13040,7 +13144,7 @@ return foot;
   function glowRow(card) {
     var box = d.h("div", { class: "glow-row" });
     var row = d.h("div", { class: "set-row" }, [
-      d.h("div", { class: "lbl-txt" }, [d.h("b", null, "Glow border"), d.h("span", null, "Re-inks the viewport edge and every card.")]),
+      d.h("div", { class: "lbl-txt" }, [d.h("b", null, "Glow border"), d.h("span", null, "Re-inks the viewport edge. Neon lights the cards.")]),
       box
     ]);
     function paintG() {

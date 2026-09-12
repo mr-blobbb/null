@@ -166,7 +166,10 @@ ${t.minify ? transformSync(js, { loader: "js", minify: true, target: "es2020" })
 
 function cssFor(tier) {
   const parts = [read("src/styles/global.css")];
-  if (TIERS[tier].extraCss) parts.push(read("src/styles/extra.css"));
+  if (TIERS[tier].extraCss) {
+    parts.push(read("src/styles/extra.css"));
+    parts.push(read("src/styles/particles.css"));
+  }
   parts.push(read("scripts/release.css"));
   return parts.join("\n");
 }

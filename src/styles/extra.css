@@ -536,12 +536,11 @@ html[data-perf="1"] .nav-dot {
 }
 
 /* ============================================================
-   glow border — the whole page glows with the ring
-   Every card surface picks up a soft edge glow in the live border
-   palette (theme.js publishes --glow-1..4), so changing the glow
-   preset re-inks the cards, not just the viewport edge.
+   lit edges — Neon only
+   The glow border re-inks the viewport ring on its own; it leaves
+   the panels flat. Card surfaces pick up a lit edge only while the
+   Neon pack is worn (theme.js publishes --glow-1..4 either way).
    ============================================================ */
-html[data-glow] :is(.glass, .panel, .tcard, .rec-row, .ann-card, .set-card, .shop-row),
 html[data-pack="neon"] :is(.glass, .panel, .tcard, .rec-row, .ann-card, .set-card, .shop-row) {
   box-shadow:
     0 0 0 1px color-mix(in srgb, var(--glow-1, #35c3f2) 22%, transparent),
@@ -551,14 +550,12 @@ html[data-pack="neon"] :is(.glass, .panel, .tcard, .rec-row, .ann-card, .set-car
     border-color 0.2s var(--ease),
     background 0.18s var(--ease);
 }
-html[data-glow] :is(.glass, .panel, .tcard, .rec-row, .ann-card, .set-card, .shop-row):hover,
 html[data-pack="neon"] :is(.glass, .panel, .tcard, .rec-row, .ann-card, .set-card, .shop-row):hover {
   box-shadow:
     0 0 0 1px color-mix(in srgb, var(--glow-1, #35c3f2) 40%, transparent),
     0 0 26px -4px color-mix(in srgb, var(--glow-2, #a86bff) 62%, transparent);
 }
 /* the dialog is the one surface allowed to glow hard */
-html[data-glow] .modal,
 html[data-pack="neon"] .modal {
   box-shadow:
     0 0 0 1px color-mix(in srgb, var(--glow-1, #35c3f2) 34%, transparent),

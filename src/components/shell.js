@@ -277,16 +277,44 @@ return foot;
     }
   }
 
-  /* ---------- cloaking: open the whole site in about:blank / blob: ---------- */
-  function cloakBlocked() {
+  /* ---------- cloaking: open the whole site in about:blank / blob: ----------
+     There is no API for "are popups allowed?", so NULL learns it the one way a
+     page can: the first time a cloak window fails to open, it remembers. From
+     then on it does not fire a doomed window.open at all — it just shows the
+     warning and asks for popups, with a Try again for once they're enabled. */
+  var POPUP_KEY = "popupsBlocked";
+
+  function popupsBlocked() {
+    return !!N.prefs.get(POPUP_KEY);
+  }
+
+  function noteBlocked() {
+    N.prefs.set(POPUP_KEY, true);
+  }
+
+  function noteAllowed() {
+    if (N.prefs.get(POPUP_KEY)) N.prefs.set(POPUP_KEY, false);
+  }
+
+  function cloakBlocked(mode) {
     N.modal.open({
-      title: "Popup blocked",
+      title: "Popups are blocked",
       icon: "warn",
       iconTone: "danger",
       body:
-        "<p>The browser blocked the popup, so the cloaked window <b>won&rsquo;t open</b>.</p>" +
-        "<p>Allow popups for NULL (usually via the icon in the address bar) and try again.</p>",
-      actions: [{ label: "Okay", variant: "primary" }],
+        "<p>Your browser is blocking popups, so cloaked windows <b>can&rsquo;t open</b>. NULL won&rsquo;t keep firing them until that changes.</p>" +
+        "<p>Allow popups for NULL \u2014 usually the icon at the right of the address bar \u2014 then press <b>Try again</b>.</p>",
+      actions: [
+        { label: "Close", variant: "outline" },
+        {
+          label: "Try again",
+          variant: "primary",
+          onClick: function () {
+            noteAllowed();
+            N.cloak.site(mode);
+          },
+        },
+      ],
     });
   }
 
@@ -319,7 +347,8 @@ return foot;
       w = null;
     }
     if (!w) {
-      cloakBlocked();
+      noteBlocked();
+      cloakBlocked(mode);
       return;
     }
     if (mode === "blank") {
@@ -332,14 +361,19 @@ return foot;
         try {
           w.close();
         } catch (e2) {}
-        cloakBlocked();
+        noteBlocked();
+        cloakBlocked(mode);
         return;
       }
     }
     /* some blockers cancel the tab right after it opens — if the browser
        closed it, don't leave a stray tab and don't pretend it worked */
+    noteAllowed();
     setTimeout(function () {
-      if (w.closed) cloakBlocked();
+      if (w.closed) {
+        noteBlocked();
+        cloakBlocked(mode);
+      }
     }, 800);
     d.toast(mode === "blank" ? "Opened NULL in about:blank" : "Opened NULL in blob:", {
       icon: "ban",
@@ -347,7 +381,17 @@ return foot;
   }
 
   N.cloak = {
+    /* has the browser been seen blocking NULL's popups? */
+    blocked: popupsBlocked,
+    markBlocked: noteBlocked,
+    clear: noteAllowed,
     site: function (mode) {
+      /* if popups are known to be blocked, don't even try to open about:blank
+         or blob: — warn, and let the user enable them first */
+      if (popupsBlocked()) {
+        cloakBlocked(mode);
+        return;
+      }
       var shell = cloakShell();
       var url = mode === "blob" ? URL.createObjectURL(new Blob([shell], { type: "text/html" })) : "about:blank";
       cloakOpen(url, mode, shell);

@@ -974,7 +974,7 @@
   function glowRow(card) {
     var box = d.h("div", { class: "glow-row" });
     var row = d.h("div", { class: "set-row" }, [
-      d.h("div", { class: "lbl-txt" }, [d.h("b", null, "Glow border"), d.h("span", null, "Re-inks the viewport edge and every card.")]),
+      d.h("div", { class: "lbl-txt" }, [d.h("b", null, "Glow border"), d.h("span", null, "Re-inks the viewport edge. Neon lights the cards.")]),
       box
     ]);
     function paintG() {
