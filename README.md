@@ -48,6 +48,9 @@ site can be previewed and the releases rebuilt; see the end of this file.)
 │   └── null-lite.html     Stripped: no theme packs, particles, glow or shop,
 │                          animations off — and compressed, so it is smallest
 ├── scripts/               Build + check tools (dev only, never loaded by a page)
+│   ├── build-catalog.js   Scans the content folders → generated-catalog.js
+│   └── build-releases.js  Rebuilds the three single-file builds
+├── .github/workflows/     update-catalog.yml — refresh + commit on content changes
 ├── sw.js                  Service worker (installable app + offline shell)
 ├── .nojekyll              Serves the repo as plain files on GitHub Pages
 └── package.json, vite.config.js, tsconfig.json   Dev only, see below
@@ -87,8 +90,32 @@ had to skip) and gives you the whole `generated-catalog.js` back to copy or
 download. Paste it over the file and you are done.
 
 You can also just edit `generated-catalog.js` by hand — it is plain data.
-Whichever way you change it, bump the `?v=` number on that `<script>` tag in the
-HTML heads so browsers pick up the new library.
+
+Either way the pages load it as `generated-catalog.js?v=<key>`, and that key is
+a hash of the catalog itself, so nobody stays stuck on a cached copy of
+yesterday's games.
+
+### Or let the repo build it — `bun run catalog`
+
+`scripts/build-catalog.js` walks `games/`, `apps/` and `proxies/`, reads each
+folder's own files and writes the catalog. It uses the same parser as the
+`/tools` page (`src/utilities/catalog-tool.js`), so the two can never disagree:
+
+```
+bun run catalog            # or: node scripts/build-catalog.js
+```
+
+Folders without an HTML file (or without a `Link:` in `proxy.txt`) are skipped
+and listed, an unchanged library leaves the file — and its timestamp — exactly
+as it was, and the cache key on the pages only moves when something changed.
+
+`.github/workflows/update-catalog.yml` runs this for you. Push anything under
+`games/`, `apps/` or `proxies/` and the Action rebuilds the catalog **and** the
+single-file releases, then commits them, ready for Pages to serve. Node runs on
+the runner during that build step only: the deployed site is still just the
+HTML, CSS, JS and data files in this repo — no backend, no server, nothing for a
+visitor to install. (It needs *Settings → Actions → General → Read and write
+permissions*; you can also start it by hand from the Actions tab.)
 
 ### Folder conventions
 
@@ -170,7 +197,9 @@ The three tiers differ only in what the build keeps:
 | `null-lite.html` | no theme packs, particles, glow or shop, performance mode pinned on, minified |
 
 `scripts/check-releases.js` loads all three and drives them (nav, library, the
-player overlay, settings, shop) to catch a bad build before you ship it.
+player overlay, settings, shop) to catch a bad build before you ship it. The
+update Action rebuilds them whenever the library changes, so a game added to
+`games/` shows up in the standalone builds too.
 
 ## Deployment
 
@@ -206,7 +235,8 @@ so the site can be previewed, rebuilt and checked while working on it:
 
 | file | what it is for |
 | --- | --- |
-| `vite.config.js` + `package.json` | the local preview server (`bun run dev`). The editor this project was built in also injects an unused `@vly-ai/integrations` dependency here — no page touches it |
+| `vite.config.js` + `package.json` | the local preview server (`bun run dev`); HMR is off, and the config serves these files exactly as GitHub Pages does |
+| `scripts/build-catalog.js` | scans `games/`, `apps/`, `proxies/` and regenerates the catalog |
 | `scripts/build-releases.js` | regenerates the three single-file builds |
 | `scripts/check-releases.js` | drives the built releases and reports errors |
 | `scripts/check-links.js` | verifies every internal path resolves to a file |
@@ -214,8 +244,9 @@ so the site can be previewed, rebuilt and checked while working on it:
 | `tsconfig.json` | a JS-only stub (`allowJs`, `checkJs: false`) so `bun run check` parses the site's JavaScript and catches syntax errors |
 | `node_modules/` | install output, ignored by git |
 
-Handy commands: `bun run dev` (preview), `bun run check` (syntax check),
-`bun run releases` (rebuild releases), then the two check scripts above. Delete
+Handy commands: `bun run dev` (preview), `bun run catalog` (refresh the
+catalog), `bun run releases` (rebuild the single-file builds), `bun run build`
+(both of those), `bun run check` (syntax check) and the two check scripts. Delete
 any of it and the deployed site is unaffected — GitHub Pages serves the files in
 this folder as they are, and NULL never calls out to anything.
 

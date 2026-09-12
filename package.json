@@ -3,14 +3,20 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "NULL — a plain black-and-white hub for games, apps, proxies and tools. Static HTML/CSS/JS. Vite is only the local preview server; GitHub Pages serves these files as-is.",
+  "description": "NULL — a plain black-and-white hub for games, apps, proxies and tools. Static HTML/CSS/JS: GitHub Pages serves these files as-is, and Node is only the build-time tooling (catalog scan, single-file releases, link check).",
   "scripts": {
     "dev": "vite",
     "preview": "vite preview",
+    "catalog": "node scripts/build-catalog.js",
     "releases": "node scripts/build-releases.js",
+    "build": "node scripts/build-catalog.js && node scripts/build-releases.js",
+    "check:links": "node scripts/check-links.js",
+    "check:releases": "node scripts/check-releases.js",
     "check": "tsc -b"
   },
   "devDependencies": {
+    "esbuild": "^0.28.2",
+    "typescript": "^5.9.3",
     "vite": "^7.3.5"
   },
   "dependencies": {
