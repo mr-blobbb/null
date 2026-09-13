@@ -12,18 +12,18 @@ window.NULL_CONTENT = {
       desc: "NULL is a new alternative to SG Games, built by Mr Blob. Around 2,300 games, plus apps and proxies, all in one place.",
     },
     {
-      id: "welcome",
+      id: "how-to",
       title: "How to use",
       date: "2026-08-26",
       category: "notice",
       desc: "Please read our TOS, Privacy Policy, and District policy to learn more about our rules!",
     },
     {
-     id: "welcome",
-     title: "NULL Shops"
-     date: "2026-09-13",
-     category: "notice",
-     desc: "NULL has added a shop! You earn XP by playing games, which then becomes coins, allowing you to buy themes, beta games, particles, and so much more! No real money involved, ever.",
+      id: "shop",
+      title: "NULL Shop",
+      date: "2026-09-13",
+      category: "update",
+      desc: "NULL has a shop now. You earn XP by playing games, which turns into coins you can spend on themes, beta games, particles, and more. No real money involved, ever.",
     },
   ],
 
