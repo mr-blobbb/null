@@ -68,7 +68,7 @@ games/hollow-knight/
 └── meta.txt               optional name, description, added date, #hot
 ```
 
-Drop a folder in, rebuild the catalog, and the game shows up with its own labels, thumbnail, and badges. There's a browser tool at [Tools](/tools.html) that does the rebuild for you: paste the folder paths, hit scan, copy what it gives you. Folders starting with `.` or `_` get ignored, and a missing thumbnail quietly falls back to NULL's own placeholder art.
+Drop a folder in and push, and the game shows up with its own labels, thumbnail, and badges. Nothing to hand-edit: a GitHub Action walks every folder and rebuilds the library for you. Folders starting with `.` or `_` get ignored, and a missing thumbnail quietly falls back to NULL's own placeholder art.
 
 Proxies work the same way with a `proxy.txt` holding a `Link:` line. There's a [Backups](/backups) page too, for when the main domain decides to stop existing.
 

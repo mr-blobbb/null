@@ -1,8 +1,7 @@
 /* NULL · catalog-tool.js
-   The pure half of the static catalog builder: the same text parsing the old
-   scripts/discover-*.js did, with the filesystem swapped out. The page script
-   (src/pages/tools.js) fetches a folder's files; everything here takes plain
-   text and hands back catalog entries, so it stays testable on its own. */
+   The catalog's parsing rules, with the filesystem left out: everything here
+   takes plain text and hands back catalog entries, so the Node build
+   (scripts/build-catalog.js) and the browser test suite can both drive it. */
 (function () {
   var N = (window.N = window.N || {});
 
@@ -201,10 +200,10 @@
   var HEADER = [
     "/* ============================================================",
     "   NULL · generated-catalog.js",
-    "   The catalog the site reads. Build it with /tools: paste your",
-    "   games/ apps/ proxies/ folders, copy the output over this file.",
-    "   Safe to edit by hand: it is plain data, and it is the only place",
-    "   the library is registered.",
+    "   The catalog the site reads, built from the games/ apps/ proxies/",
+    "   folders by scripts/build-catalog.js. The GitHub Action runs that",
+    "   on every push, so edits here get overwritten: add a game by",
+    "   adding its folder, not by editing this file.",
     "   ============================================================ */",
   ].join("\n");
 

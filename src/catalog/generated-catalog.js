@@ -1,9 +1,9 @@
 /* ============================================================
    NULL · generated-catalog.js
-   The catalog the site reads. Build it with /tools: paste your
-   games/ apps/ proxies/ folders, copy the output over this file.
-   Safe to edit by hand: it is plain data, and it is the only place
-   the library is registered.
+   The catalog the site reads, built from the games/ apps/ proxies/
+   folders by scripts/build-catalog.js. The GitHub Action runs that
+   on every push, so edits here get overwritten: add a game by
+   adding its folder, not by editing this file.
    ============================================================ */
 window.NULL_CATALOG = {
   "site": "NULL",

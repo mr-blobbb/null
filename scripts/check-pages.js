@@ -34,7 +34,6 @@ const PAGES = [
   "license.html",
   "terms.html",
   "district.html",
-  "tools.html",
   "games/index.html",
   "apps/index.html",
   "proxies/index.html",

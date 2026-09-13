@@ -21,7 +21,6 @@ site can be previewed and the releases rebuilt; see the end of this file.)
 /
 ├── index.html             Home dashboard
 ├── 404.html               Custom NULL 404 (leaking barrel)
-├── tools.html             Catalog builder (maintainer page)
 ├── tests.html             The test suite, run in the browser
 ├── games/                 Game library: index.html is the /games page
 │   ├── index.html         The /games library page
@@ -30,10 +29,10 @@ site can be previewed and the releases rebuilt; see the end of this file.)
 ├── apps/                  App library: index.html is the /apps page
 ├── proxies/               Proxy list: index.html is the /proxies page
 ├── src/
-│   ├── styles/            global.css, extra.css, home.css, tools.css,
-│   │                      tests.css, particles.css, perf.css, dev.css
+│   ├── styles/            global.css, extra.css, home.css, tests.css,
+│   │                      particles.css, perf.css, dev.css
 │   ├── utilities/         store, dom, modal, theme, scroll, markdown, econ,
-│   │                      catalog-tool (the parser behind /tools)
+│   │                      catalog-tool (the catalog's parser)
 │   ├── components/        shell (nav/footer), cards, search, schedule,
 │   │                      tab presets, seasons, daily (crate + quests)
 │   ├── catalog/           catalog.js runtime + generated-catalog.js (the catalog)
@@ -55,7 +54,7 @@ site can be previewed and the releases rebuilt; see the end of this file.)
 │   └── build-releases.js  Rebuilds the three single-file builds
 ├── .github/workflows/     update-catalog.yml: refresh + commit on content changes
 ├── sw.js                  Service worker (installable app + offline shell)
-├── robots.txt             Keeps the catalog builder, tests and 404 out of search
+├── robots.txt             Keeps the test suite and the 404 out of search
 ├── .nojekyll              Serves the repo as plain files on GitHub Pages
 ├── LICENSE                AGPL-3.0 notice (the platform code's license)
 └── package.json, vite.config.js, tsconfig.json   Dev only, see below
@@ -76,43 +75,21 @@ The catalog is **one plain data file**:
 src/catalog/generated-catalog.js
 ```
 
-### Build it in the browser: /tools
-
-Open **`/tools.html`** on your deployed (or locally served) copy, paste the
-folders you added, and press **Scan folders**:
-
-```
-games/hollow-knight
-games/crazy-cubes
-apps/paint
-proxies/wiki
-```
-
-The page scans them over HTTP and reads each folder's own files, exactly the way
-the old Node scripts did: `Label.txt`, `Warning.txt`, `meta.txt`, `proxy.txt`
-and the thumbnail. It shows you what it found (with previews and any folders it
-had to skip) and gives you the whole `generated-catalog.js` back to copy or
-download. Paste it over the file and you are done.
-
-You can also just edit `generated-catalog.js` by hand: it is plain data.
-
-Either way the pages load it as `generated-catalog.js?v=<key>`, and that key is
-a hash of the catalog itself, so nobody stays stuck on a cached copy of
-yesterday's games.
-
-### Or let the repo build it: `bun run catalog`
-
-`scripts/build-catalog.js` walks `games/`, `apps/` and `proxies/`, reads each
-folder's own files and writes the catalog. It uses the same parser as the
-`/tools` page (`src/utilities/catalog-tool.js`), so the two can never disagree:
+Nobody edits it by hand. `scripts/build-catalog.js` walks `games/`, `apps/` and
+`proxies/`, reads each folder's own files and writes the catalog:
 
 ```
 bun run catalog            # or: node scripts/build-catalog.js
 ```
 
+The parsing rules sit in `src/utilities/catalog-tool.js`, away from the
+filesystem, so the build and the browser test suite drive the very same code.
+
 Folders without an HTML file (or without a `Link:` in `proxy.txt`) are skipped
 and listed, an unchanged library leaves the file (and its timestamp) exactly
-as it was, and the cache key on the pages only moves when something changed.
+as it was, and the cache key on the pages only moves when something changed. The
+pages load it as `generated-catalog.js?v=<key>`, a hash of the catalog itself, so
+nobody stays stuck on a cached copy of yesterday's games.
 
 `.github/workflows/update-catalog.yml` runs this for you. Push anything under
 `games/`, `apps/` or `proxies/` and the Action rebuilds the catalog, plus the
@@ -276,9 +253,9 @@ Two things make the links behave on Pages:
   for those anyway. If someone types or bookmarks one, it tries
   `/schedule.html`, then `/schedule/index.html`, and hops to whichever exists.
 
-`robots.txt` allows the site but keeps the catalog builder, the test suite and
-`404.html` out of search results: they are tools for whoever runs the site, and
-each carries a `noindex` tag of its own anyway.
+`robots.txt` allows the site but keeps the test suite and `404.html` out of
+search results: they are tools for whoever runs the site, and each carries a
+`noindex` tag of its own anyway.
 
 `.nojekyll` keeps Pages from running Jekyll over the repo, so every file is
 served exactly as it is in git. If you ever host under a sub-path instead,

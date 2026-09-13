@@ -5,8 +5,8 @@
 
    It walks games/, apps/ and proxies/ and reads each folder's own files:
    Label.txt, Warning.txt, meta.txt, proxy.txt and a thumbnail. The parsing
-   rules live in src/utilities/catalog-tool.js, the same file the /tools page
-   uses, so the script and the browser builder always produce the same catalog.
+   rules live in src/utilities/catalog-tool.js, kept on their own so they stay
+   testable without a filesystem.
 
    Folders without an .html file (games/apps) or without a Link: (proxies) are
    skipped and reported. Names starting with "." or "_" are ignored.

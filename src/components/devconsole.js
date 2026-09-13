@@ -688,7 +688,6 @@
         }),
       ] },
       { name: "pages", icon: "wrench", items: [
-        b("Catalog builder", "wrench", function () { location.href = "/tools.html"; }),
         b("Test suite", "beaker", function () { location.href = "/tests.html"; }),
         b("404 page", "warn", function () {
           ok("opening 404.html");

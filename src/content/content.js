@@ -1,29 +1,31 @@
 /* NULL · content.js
    Hand-edited site content that search + the home dashboard read.
    The game/app/proxy library itself lives in src/catalog/generated-catalog.js
-   (built with /tools); announcements and page descriptions live here. */
+   (rebuilt by the updater); announcements and page descriptions live here. */
 window.NULL_CONTENT = {
   announcements: [
     {
-      id: "welcome",
-      title: "Welcome to NULL",
-      date: "2026-08-24",
-      category: "notice",
-      desc: "NULL is a new alternative to SG Games, built by Mr Blob. Around 2,300 games, plus apps and proxies, all in one place.",
-    },
-    {
-      id: "how-to",
-      title: "How to use",
-      date: "2026-08-26",
-      category: "notice",
-      desc: "Please read our TOS, Privacy Policy, and District policy to learn more about our rules!",
-    },
-    {
-      id: "shop",
-      title: "NULL Shop",
+      id: "live",
+      title: "NULL is live",
       date: "2026-09-13",
-      category: "update",
-      desc: "NULL has a shop now. You earn XP by playing games, which turns into coins you can spend on themes, beta games, particles, and more. No real money involved, ever.",
+      category: "notice",
+      desc: "NULL is up. Around 2,300 games, plus apps and proxies, all in one place and all running in your browser. No account, no install, nothing to sign up for. Pick something from the library and it plays.",
+    },
+    {
+      id: "start-here",
+      title: "Start here",
+      date: "2026-09-12",
+      category: "info",
+      link: "/about.html",
+      desc: "New around here? The search bar finds games and apps by name, and the tabs up top split everything into games, apps and proxies. Settings handles your theme, the tab disguise and the panic key. The About page walks through the rest.",
+    },
+    {
+      id: "shop-basics",
+      title: "How the shop works",
+      date: "2026-09-11",
+      category: "info",
+      link: "/shop.html",
+      desc: "Playing games banks XP, XP turns into coins, and coins buy themes, particle effects and a few extras in the Shop. It is all local: no real money, no payment, nothing charged. Open the Shop and see what is in stock.",
     },
   ],
 

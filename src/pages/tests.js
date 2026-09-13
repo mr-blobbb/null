@@ -213,9 +213,7 @@
       fetchText("/sw.js"),
       fetchText("/src/catalog/generated-catalog.js"),
       fetchText("/index.html"),
-      fetchText("/tools.html"),
       fetchText("/src/utilities/catalog-tool.js"),
-      fetchText("/src/styles/tools.css"),
     ]).then(function (r) {
       var css = r[0];
       var sw = r[2];
@@ -230,7 +228,6 @@
       ok("Neon glows its cards too", /html\[data-pack="neon"\]\s*:is\(\.glass/.test(css));
       ok("daily crate + progress row styles exist", /\.crate-box \{/.test(css) && /\.pg-bar i \{/.test(css));
       ok("the old marquee is fully removed", css.indexOf("nsScroll") < 0 && css.indexOf(".ns-item") < 0);
-      ok("tool page styles exist", /\.tool-paths/.test(r[7]) && /\.tool-card/.test(r[7]));
       ok("design tokens load with global.css", /--r-md:/.test(r[1]));
 
       ok("sw.js precaches daily.js", sw.indexOf("/src/components/daily.js") >= 0);
@@ -241,16 +238,15 @@
 
       ok("home has no leftover marquee markup", home.indexOf("newSec") < 0 && home.indexOf("newTrack") < 0);
       ok("home has the daily strip", home.indexOf("dailyStrip") >= 0);
-      ok("tools page is present", r[5].length > 500);
-      ok("catalog tool module is present", r[6].indexOf("catalogTool") >= 0);
+      ok("catalog tool module is present", r[5].indexOf("catalogTool") >= 0);
     });
   }
 
   /* ============================================================
-     Suite 2: the catalog builder's parsing (pure logic)
+     Suite 2: the catalog parser (pure logic, shared with the build)
      ============================================================ */
   function suiteCatalogTool() {
-    group("Catalog builder parsing");
+    group("Catalog parsing");
     return fetchText("/src/utilities/catalog-tool.js").then(function (src) {
       var w = window;
       new Function("window", src)(w);
@@ -590,7 +586,6 @@
       "/cookies.html",
       "/license.html",
       "/district.html",
-      "/tools.html",
       "/404.html",
       "/player.html?k=game&id=snake",
     ];
@@ -605,7 +600,7 @@
             ok(p + " mounts the player", !!d.querySelector("#playerFrame, .player, iframe"), "no player markup");
           } else if (p.indexOf("/games/") === 0 || p.indexOf("/apps/") === 0 || p.indexOf("/proxies/") === 0) {
             ok(p + " keeps its nav", !!d.querySelector(".topbar"));
-          } else if (p.indexOf("404") < 0 && p.indexOf("tools") < 0) {
+          } else if (p.indexOf("404") < 0) {
             ok(p + " mounts its nav and main", !!d.querySelector(".topbar") && !!d.querySelector("#main"));
           } else {
             ok(p + " renders its body", !!d.body.textContent.length);
@@ -632,7 +627,7 @@
 
     var steps = [
       ["Static files and styles", suiteFiles],
-      ["Catalog builder", suiteCatalogTool],
+      ["Catalog parsing", suiteCatalogTool],
       ["Pages boot", suitePages],
       ["Economy", suiteEconomy],
       ["Home", suiteHome],
