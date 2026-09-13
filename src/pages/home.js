@@ -16,18 +16,18 @@
      The games you want on the home page, in order. Type any of these and it
      lands in the Featured rail:
 
-       "snake"        the folder name (games/snake)
-       "Snake"        the display name, case does not matter
-       "hollow knight" spaces, dashes and underscores are ignored
+       "snake"            the folder name (games/snake)
+       "Snake"            the display name, case does not matter
+       "hollow knight"    spaces and dashes are ignored when matching
 
      A name that matches nothing is skipped, so a typo costs you one card
-     instead of the whole rail. List fewer than ten and the rest fills with
-     the first games in the library. Apps are never featured here: this rail
-     is games only. */
+     instead of the whole rail. Leave a slot empty (or list fewer than ten)
+     and the rest fills with the first games in the library. Apps are never
+     featured here: this rail is games only. */
   var FEATURED = [
     "snake",
     "pulse",
-    "trace",
+    "hollow-knight",
   ];
   var FEATURED_MAX = 10;
 
@@ -173,7 +173,7 @@
      One short tip a day about a real NULL feature, picked deterministically
      from the date (same tip all day, fresh tomorrow: no storage needed). */
   var TIPS = [
-    "Type <b>nldev</b> anywhere to open the developer console: confetti, modals, seasons and more.",
+    "Type <b>sggames</b> anywhere to open the silly little easter egg :P",
     "The <b>panic key</b> (backtick by default) jumps you to a safe page instantly. Set it in Settings.",
     "Tab cloaking is free: pick a Google preset in Settings and your tab title + icon change instantly.",
     "Play 30 minutes and you earn <b>10 XP</b>, and every 100 XP banks 30 coins for the Shop.",
@@ -187,6 +187,8 @@
     "Open the <b>daily crate</b> for free coins: the streak bonus grows every day you come back.",
     "Daily quests and achievements pay coins in the <b>Shop</b>: a dot on its icon means something is waiting.",
     "Press <b>/</b> anywhere to jump into search without touching the mouse.",
+    "Want to save, share or protect your progress on your favorite games? Press the save card to download a save file, directly to your device!",
+    "Did you know that you can download offline, singlefile versions of NULL? Just go to our Github Repository, click Releases, and download either regular, lite, or mini versions of our site!",
   ];
   function renderTip() {
     var host = d.qs("#tipCard");

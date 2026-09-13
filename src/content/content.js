@@ -18,6 +18,13 @@ window.NULL_CONTENT = {
       category: "notice",
       desc: "Please read our TOS, Privacy Policy, and District policy to learn more about our rules!",
     },
+    {
+     id: "welcome",
+     title: "NULL Shops"
+     date: "2026-09-13",
+     category: "notice",
+     desc: "NULL has added a shop! You earn XP by playing games, which then becomes coins, allowing you to buy themes, beta games, particles, and so much more! No real money involved, ever.",
+    },
   ],
 
   /* Shop-unlocked beta builds. These never appear in the auto-discovered
