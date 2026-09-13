@@ -202,6 +202,25 @@ for (const page of PAGES) {
         const eco = JSON.parse(win.localStorage.getItem("null:eco") || "{}");
         ok(eco.coins >= 200, "coins from the console are persisted (" + (eco.coins || 0) + ")");
       }
+
+      /* the egg hooks: the blob face forces on then off, and the midnight
+         button fires its modal without waiting for the clock */
+      const orbBtn = buttons.find((b) => /Blob face on\/off/.test(b.textContent));
+      ok(!!orbBtn, "dev console has the blob face toggle");
+      if (orbBtn) {
+        orbBtn.click();
+        ok(!!doc.querySelector(".blob-orb"), "the toggle forces the blob face on");
+        orbBtn.click();
+        ok(!doc.querySelector(".blob-orb"), "...and forces it off again");
+      }
+      const midBtn = buttons.find((b) => /Midnight modal/.test(b.textContent));
+      ok(!!midBtn, "dev console has the midnight modal button");
+      if (midBtn) {
+        midBtn.click();
+        await wait(60);
+        const title = (doc.querySelector(".modal-ov .modal h3") || {}).textContent || "";
+        ok(/midnight/i.test(title), "the midnight button opens its modal (\"" + title + "\")");
+      }
       dev.hide();
     }
   }
