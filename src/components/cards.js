@@ -1,4 +1,4 @@
-/* NULL — cards.js
+/* NULL: cards.js
    Card renderers (games/apps/proxies) plus the viewport-based "chunk"
    virtualization used by the big library pages: rows near the viewport are
    rendered, rows far away are unloaded, and total height is preserved so
@@ -16,8 +16,8 @@
   var KIND = { game: "game", app: "app", proxy: "proxy" };
 
   /* ---------- corner badges (thumbnail pills) ----------
-     NEW — stamped by discovery from meta.txt "Added: YYYY-MM-DD", 14 days
-     HOT — opt-in via a "#hot" line in meta.txt */
+     NEW: stamped by discovery from meta.txt "Added: YYYY-MM-DD", 14 days
+     HOT: opt-in via a "#hot" line in meta.txt */
   function badgeEl(b) {
     var kids = [];
     if (b.icon) kids.push(d.icon(b.icon));
@@ -34,7 +34,7 @@
     return out;
   }
 
-  /* ---------- thumb (games/apps only — proxies use rows) ---------- */
+  /* ---------- thumb (games/apps only: proxies use rows) ---------- */
   function thumbEl(entry, kind) {
     var media = d.h("div", { class: "tmedia" });
     if (entry.thumb) {
@@ -50,7 +50,7 @@
       d.bindImgFallback(img, kind);
       media.appendChild(img);
     }
-    /* name badge — drawn on the thumbnail so the title can never be
+    /* name badge: drawn on the thumbnail so the title can never be
        squeezed out of view (the virtualized grid rows keep the body
        name hidden; featured/recs rails use the body name below) */
     media.appendChild(d.h("span", { class: "tname-badge", title: entry.name }, entry.name));
@@ -66,7 +66,7 @@
     return media;
   }
 
-  /* ---------- proxy row (no images — plain list entry) ---------- */
+  /* ---------- proxy row (no images: plain list entry) ---------- */
   function proxyRow(entry) {
     var el = d.h("div", {
       class: "tcard proxy-row",
@@ -155,7 +155,7 @@
       d.h("p", { class: "tdesc" }, entry.desc || meta.label + " in the NULL library."),
     ]);
 
-    /* no play button — the whole card is the click target (plus a star) */
+    /* no play button: the whole card is the click target (plus a star) */
     var foot = d.h("div", { class: "tfoot tfoot-solo" }, [
       favBtn(entry, kind),
     ]);
@@ -224,7 +224,7 @@
   }
 
   /* ============================================================
-     virtualized grid — Minecraft-chunk style row windows
+     virtualized grid: Minecraft-chunk style row windows
      ============================================================ */
   function vgrid(host, cfg) {
     cfg = cfg || {};
@@ -365,7 +365,7 @@
 
     cols = colsFor();
     build();
-    /* paint once immediately — never leave a full grid of blank rows if a
+    /* paint once immediately: never leave a full grid of blank rows if a
        later hook (rAF / observer) is unavailable in this browser */
     paint();
     schedulePaint();

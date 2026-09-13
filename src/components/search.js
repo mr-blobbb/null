@@ -1,6 +1,6 @@
-/* NULL — search.js
+/* NULL: search.js
    Global search: games, apps, proxies, announcements and site pages.
-   Matching is fuzzy — typos up to a couple of edits on titles still hit,
+   Matching is fuzzy: typos up to a couple of edits on titles still hit,
    word prefixes rank highest, and matches inside descriptions/labels
    count too. Page bodies (About, Privacy, Terms, …) are fetched lazily
    and indexed, so searches can find text written inside those pages. */
@@ -16,7 +16,7 @@
       .replace(/[^a-z0-9\s]/g, " ");
   }
 
-  /* Levenshtein with an early bail — returns max+1 when over the limit */
+  /* Levenshtein with an early bail: returns max+1 when over the limit */
   function editDist(a, b, max) {
     if (a === b) return 0;
     if (Math.abs(a.length - b.length) > max) return max + 1;
@@ -85,7 +85,7 @@
     return total;
   }
 
-  /* ---------- page bodies — fetched once, cached, indexed lazily ---------- */
+  /* ---------- page bodies: fetched once, cached, indexed lazily ---------- */
   var pageText = {}; // url -> text | null (null = failed)
   var live = null; // open overlay: { input, render, rebuild }
 
@@ -106,8 +106,8 @@
       if (live) live.rebuild();
     }
     function miss() {
-      /* clean urls — some hosts only serve the .html file, and the
-         library pages now live at games/index.html, apps/index.html\u2026 */
+      /* clean urls: some hosts only serve the .html file, and the
+         library pages now live at games/index.html, apps/index.html… */
       if (/\.html$/.test(pg.url)) {
         pageText[pg.url] = null;
         return;
@@ -247,7 +247,7 @@
 
     var input = d.h("input", {
       type: "text",
-      placeholder: "Search games, apps, proxies, pages\u2026",
+      placeholder: "Search games, apps, proxies, pages…",
       value: initial || "",
       "aria-label": "Search NULL",
     });
@@ -296,7 +296,7 @@
       }
       if (!hits.length) {
         results.appendChild(d.h("div", { class: "sr-none" }, [
-          "Nothing matches \u201c" + q + "\u201d \u2014 but you got to see this funny guy: •𐃷•",
+          "Nothing matches “" + q + "”, but you got to see this funny guy: •𐃷•",
         ]));
         return;
       }

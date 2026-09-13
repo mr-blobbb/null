@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="color-scheme" content="dark light">
   <meta name="theme-color" content="#09090b">
-  <title>Tools — NULL</title>
+  <title>Tools · NULL</title>
   <meta name="description" content="Build NULL's catalog in the browser: paste your games/, apps/ and proxies/ folders and copy the generated-catalog.js output. No build step.">
   <meta name="robots" content="noindex">
   <link rel="icon" id="favicon" href="/public/favicon.svg" type="image/svg+xml">
@@ -36,11 +36,11 @@
 
   <main id="main" class="page">
     <div class="page-head">
-      <span class="eyebrow"><span data-icon="wrench"></span>tools &middot; no build step</span>
+      <span class="eyebrow"><span data-icon="wrench"></span>tools · no build step</span>
       <h1>Catalog builder</h1>
       <p>
         A browser cannot list a folder, so paste the paths you added and this
-        probes them over HTTP &mdash; reading each folder's
+        probes them over HTTP: reading each folder's
         <b>Label.txt</b>, <b>Warning.txt</b>, <b>meta.txt</b> or <b>proxy.txt</b>
         exactly like the old Node scripts did. Then copy the output over
         <b>src/catalog/generated-catalog.js</b>.
@@ -50,11 +50,11 @@
     <section class="section">
       <div class="panel glass tool-card">
         <div class="panel-head">
-          <h2><span data-icon="list"></span>1 &middot; Your folders</h2>
-          <span class="hint">one per line &middot; &#8984;/Ctrl + Enter to scan</span>
+          <h2><span data-icon="list"></span>1 · Your folders</h2>
+          <span class="hint">one per line · ⌘/Ctrl + Enter to scan</span>
         </div>
         <p class="tool-help">
-          Folder paths, or full file paths &mdash; both work. Copy them from your
+          Folder paths, or full file paths: both work. Copy them from your
           editor's file tree, GitHub's file list, or <code>find games apps proxies -type d</code>.
           This must be served over http(s): open the site from GitHub Pages or a
           local server, not from a <code>file://</code> path.
@@ -76,7 +76,7 @@ proxies/wikipedia"></textarea>
     <section class="section" id="toolOutSec" hidden>
       <div class="panel glass">
         <div class="panel-head">
-          <h2><span data-icon="grid"></span>2 &middot; What was found</h2>
+          <h2><span data-icon="grid"></span>2 · What was found</h2>
           <span class="hint" id="toolCount"></span>
         </div>
         <div id="toolPreview" class="tool-preview"></div>
@@ -87,7 +87,7 @@ proxies/wikipedia"></textarea>
     <section class="section" id="toolCodeSec" hidden>
       <div class="panel glass">
         <div class="panel-head">
-          <h2><span data-icon="code"></span>3 &middot; generated-catalog.js</h2>
+          <h2><span data-icon="code"></span>3 · generated-catalog.js</h2>
           <div class="icon-btn-row">
             <button type="button" class="btn btn-primary btn-sm" id="toolCopy"><span data-icon="check"></span>Copy</button>
             <button type="button" class="btn btn-outline btn-sm" id="toolDownload"><span data-icon="download"></span>Download</button>
@@ -108,12 +108,12 @@ proxies/wikipedia"></textarea>
       <div class="panel glass">
         <div class="panel-head"><h2><span data-icon="info"></span>How NULL reads a folder</h2></div>
         <div class="tool-help">
-          <p><b>games/name/name.html</b> &mdash; the launch file. <b>index.html</b> also works.</p>
-          <p><b>Label.txt</b> &mdash; one or more chips per line; <code>Label: Action Puzzle</code> and a bare <code>Action Puzzle</code> both work, and <code>2 Player</code> stays one label.</p>
-          <p><b>Warning.txt</b> &mdash; <code>Title: &hellip;</code> and a <code>Description:</code> that runs on over following lines; shown before the game launches.</p>
-          <p><b>meta.txt</b> &mdash; <code>Name:</code>, <code>Description:</code>, <code>Added: YYYY-MM-DD</code> (NEW badge for 14 days) and a line containing <code>#hot</code> for a HOT badge.</p>
-          <p><b>Thumbnail</b> &mdash; any <code>png jpg jpeg webp gif svg</code>, named after the folder (<code>snake.svg</code>) or <code>cover.</code>/<code>thumb.</code>; missing thumbs fall back to NULL's placeholder art.</p>
-          <p><b>proxies/name/proxy.txt</b> &mdash; <code>Link:</code> (required), <code>Description:</code>, <code>Status:</code> (All Good | Issue | Blocked).</p>
+          <p><b>games/name/name.html</b>: the launch file. <b>index.html</b> also works.</p>
+          <p><b>Label.txt</b>: one or more chips per line; <code>Label: Action Puzzle</code> and a bare <code>Action Puzzle</code> both work, and <code>2 Player</code> stays one label.</p>
+          <p><b>Warning.txt</b>: <code>Title: …</code> and a <code>Description:</code> that runs on over following lines; shown before the game launches.</p>
+          <p><b>meta.txt</b>: <code>Name:</code>, <code>Description:</code>, <code>Added: YYYY-MM-DD</code> (NEW badge for 14 days) and a line containing <code>#hot</code> for a HOT badge.</p>
+          <p><b>Thumbnail</b>: any <code>png jpg jpeg webp gif svg</code>, named after the folder (<code>snake.svg</code>) or <code>cover.</code>/<code>thumb.</code>; missing thumbs fall back to NULL's placeholder art.</p>
+          <p><b>proxies/name/proxy.txt</b>: <code>Link:</code> (required), <code>Description:</code>, <code>Status:</code> (All Good | Issue | Blocked).</p>
           <p>Folders starting with <code>.</code> or <code>_</code> are ignored.</p>
         </div>
       </div>
@@ -135,7 +135,7 @@ proxies/wikipedia"></textarea>
   <script src="/src/components/seasons.js"></script>
   <script src="/src/utilities/scroll.js"></script>
   <script src="/src/routing/router.js"></script>
-  <script src="/src/catalog/generated-catalog.js?v=65e4d5d3b8"></script>
+  <script src="/src/catalog/generated-catalog.js?v=6b1046d3f3"></script>
   <script src="/src/catalog/catalog.js"></script>
   <script src="/src/content/content.js"></script>
   <script src="/src/components/tabpresets.js"></script>

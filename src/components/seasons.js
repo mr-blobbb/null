@@ -1,8 +1,8 @@
-/* NULL — seasons.js
+/* NULL: seasons.js
    Seasonal theme: a light ambient pass driven by the calendar.
    Sets html[data-season] so CSS can tint the page, and when the user's
    accent is off, fills --ac-* with the season's colors. Also drops a
-   drifting particle layer behind everything — fall leaves, winter snow,
+   drifting particle layer behind everything: fall leaves, winter snow,
    spring petals, summer light motes. Particles are hand-drawn inline
    SVGs (data URIs), so no emoji and no external assets. Skipped on the
    player and 404, in performance mode, and for reduced-motion users.
@@ -28,13 +28,13 @@
 
   /* one SVG shape per season; {C} is swapped for a color per particle */
   var SVG = {
-    /* leaf — Material "eco" glyph, filled */
+    /* leaf: Material "eco" glyph, filled */
     fall: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="{C}" d="M6.05 8.05c-2.73 2.73-2.73 7.15-.02 9.88 1.47-3.4 4.09-6.24 7.36-7.93-2.77 2.34-4.71 5.61-5.39 9.32 2.6 1.23 5.8.78 7.95-1.37C19.43 14.47 20 4 20 4S9.53 4.57 6.05 8.05z"/></svg>',
-    /* snowflake — three crossing lines, 6-point silhouette */
+    /* snowflake: three crossing lines, 6-point silhouette */
     winter: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="{C}" stroke-width="1.6" stroke-linecap="round"><path d="M12 2v20M3.3 7l17.4 10M20.7 7L3.3 17"/></svg>',
-    /* petal — a soft teardrop */
+    /* petal: a soft teardrop */
     spring: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="{C}" d="M12 2C17 8 19.5 12.5 12 22 4.5 12.5 7 8 12 2Z"/></svg>',
-    /* sparkle — Material "auto_awesome" glyph */
+    /* sparkle: Material "auto_awesome" glyph */
     summer: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="{C}" d="M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5z"/></svg>',
   };
 

@@ -1,4 +1,4 @@
-/* NULL — check-releases.js
+/* NULL · check-releases.js
    Smoke test for the single-file builds. Loads each releases/null-*.html with
    its scripts running, fails on any uncaught error, and drives the parts that
    only exist inside a release: the shell renders, the nav switches views, a
@@ -7,7 +7,7 @@
 
      node scripts/check-releases.js
 
-   jsdom has no layout engine, so this checks behaviour and wiring — not how
+   jsdom has no layout engine, so this checks behaviour and wiring: not how
    anything looks. Development tool, not part of the site. */
 
 import fs from "node:fs";
@@ -49,7 +49,7 @@ function load(build) {
   const html = fs.readFileSync(path.join(root, "releases", build), "utf8");
 
   /* the icon font is served from a path that only exists on the site, so a
-     build has to carry the file itself — without it every icon in a standalone
+     build has to carry the file itself: without it every icon in a standalone
      copy renders as nothing */
   ok(html.includes("data:font/woff2;base64,"), "carries the icon font");
 
@@ -132,7 +132,7 @@ for (const build of BUILDS) {
   ok(
     before !== doc.documentElement.dataset.theme,
     "theme switch flips (" + before + " → " + doc.documentElement.dataset.theme +
-      (themeBtn ? " via \"" + themeBtn.textContent.trim() + "\"" : " — no Dark/Light button found") + ")",
+      (themeBtn ? " via \"" + themeBtn.textContent.trim() + "\"" : " - no Dark/Light button found") + ")",
   );
 
   /* shop */

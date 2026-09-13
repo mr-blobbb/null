@@ -1,16 +1,16 @@
-/* NULL — build-releases.js
+/* NULL · build-releases.js
    Regenerates the three single-file builds from the live site sources:
 
      releases/null-regular.html   the whole runtime, readable
      releases/null-mini.html      the same build, compressed
      releases/null-lite.html      full runtime, but stripped: no extra.css
                                   (theme-pack backdrops + particle art), no shop,
-                                  no glow, performance mode pinned on — and
+                                  no glow, performance mode pinned on: and
                                   compressed, so it is the smallest build
 
    Each build inlines global.css, extra.css and release.css, every runtime
    module, the release shell, and a copy of the catalog whose games/apps pair
-   their metadata with their own code as a data: URI — so a build runs from a
+   their metadata with their own code as a data: URI, so a build runs from a
    file:// path, a blob:, an about:blank clone or a GitHub Pages URL with no
    other NULL file present.
 
@@ -19,7 +19,7 @@
      node scripts/build-releases.js        (or: bun run releases)
 
    Node is a build-time tool only. The site itself and everything this script
-   writes are plain HTML/CSS/JS — GitHub Pages needs nothing else. */
+   writes are plain HTML/CSS/JS: GitHub Pages needs nothing else. */
 
 import fs from "node:fs";
 import path from "node:path";
@@ -132,7 +132,7 @@ function page(tier, css, catalogJs) {
   const t = TIERS[tier];
   const js = safe(catalogJs + "\n" + MODULES.map(read).join("\n") + "\n" + read("scripts/release-shell.js"));
   const desc =
-    "NULL — a plain black-and-white hub for games, apps and tools. Self-contained " +
+    "NULL: a plain black-and-white hub for games, apps and tools. Self-contained " +
     "single-file " + tier + " build: no server, no other files, nothing to install.";
   return `<!doctype html>
 <html lang="en">
@@ -165,7 +165,7 @@ ${t.minify ? transformSync(js, { loader: "js", minify: true, target: "es2020" })
 }
 
 /* global.css points the icon font at a path that only exists on the site, so a
-   standalone build carries the file itself — same idea as the games' code. */
+   standalone build carries the file itself: same idea as the games' code. */
 const FONT = "public/fonts/material-symbols-rounded.woff2";
 function inlineFont(css) {
   if (!exists(FONT)) return css;

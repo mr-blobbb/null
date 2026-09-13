@@ -1,4 +1,4 @@
-/* NULL — library.js
+/* NULL · library.js
    Powers the Games, Apps and Proxies pages: label chips + quick filter over
    the discovered catalog, rendered into the chunk-virtualized grid. */
 (function () {
@@ -28,14 +28,14 @@
 
     var activeLabel = "All";
     var query = "";
-    var sortMode = "name"; // name = A–Z, id = folder label, plays = popularity, new = recently added
+    var sortMode = "name"; // name = A-Z, id = folder label, plays = popularity, new = recently added
     var gridApi = null;
 
     function sorted(arr) {
       var copy = arr.slice();
       if (sortMode === "plays") {
         /* popularity: HOT entries lead, then whatever this browser plays most,
-           ties broken A–Z */
+           ties broken A-Z */
         copy.sort(function (a, b) {
           return (
             (b.hot ? 1 : 0) - (a.hot ? 1 : 0) ||
@@ -75,7 +75,7 @@
       return sorted(out);
     }
 
-    /* favorites box — sits above the grid, hides when empty */
+    /* favorites box: sits above the grid, hides when empty */
     function renderFavs() {
       if (!favSec || favKind === "proxy") return;
       var favs = N.favs
@@ -111,7 +111,7 @@
       var items = filtered();
       if (countEl) countEl.textContent = items.length + " / " + list.length;
       if (listMode) {
-        /* plain list — proxies render as one-column rows, no virtualization */
+        /* plain list: proxies render as one-column rows, no virtualization */
         grid.textContent = "";
         items.forEach(function (e) {
           grid.appendChild(N.cards.card(e, "proxy"));
@@ -137,7 +137,7 @@
       grid.style.display = showEmpty ? "none" : "";
     }
 
-    /* ---------- "because you played" — games page only ---------- */
+    /* ---------- "because you played": games page only ---------- */
     function renderRecs() {
       var sec = d.qs("#recSec");
       if (!sec || kind !== "games") return;
@@ -238,7 +238,7 @@
       }
       var min = parseInt(N.prefs.get("marathonMin"), 10) || 0;
       if (!min) {
-        mCount.textContent = "\u2014";
+        mCount.textContent = "-";
         return;
       }
       var left = Math.max(0, Math.ceil((parseInt(N.prefs.get("marathonAt"), 10) || 0) - Date.now()) / 1000);
@@ -248,11 +248,11 @@
       N.prefs.set("marathonMin", min);
       N.prefs.set("marathonAt", min ? Date.now() + min * 60000 : 0);
       marPaint();
-      d.toast(min ? "Marathon on \u2014 next switch in " + min + " min" : "Marathon off", {
+      d.toast(min ? "Marathon on: next switch in " + min + " min" : "Marathon off", {
         icon: min ? "clock2" : "x",
       });
     }
-    /* turning marathon on asks first — Cancel keeps it off */
+    /* turning marathon on asks first: Cancel keeps it off */
     function marathonConfirm(min) {
       N.modal.open({
         title: "Marathon mode",
@@ -262,7 +262,7 @@
           min +
           " minute" +
           (min === 1 ? "" : "s") +
-          ", anywhere on NULL \u2014 even while you\u2019re in the middle of something.</p>" +
+          ", anywhere on NULL, even while you’re in the middle of something.</p>" +
           "<p>Stop it anytime from the games toolbar or in Settings.</p>",
         actions: [
           { label: "Cancel", variant: "outline", onClick: function () { marArm(0); } },
@@ -271,7 +271,7 @@
       });
     }
     function marTurnOn(min) {
-      /* already running? just change the interval — no need to ask again */
+      /* already running? just change the interval: no need to ask again */
       if (parseInt(N.prefs.get("marathonMin"), 10) > 0) marArm(min);
       else marathonConfirm(min);
     }
@@ -339,7 +339,7 @@
             buildChips();
             paint();
           },
-        }, label + (extra ? " \u00b7 " + extra : ""));
+        }, label + (extra ? " · " + extra : ""));
       }
       rowHost.appendChild(chip("All", activeLabel === "All", list.length));
       labels.forEach(function (l) {
@@ -377,7 +377,7 @@
     N.bus.on("recent", renderRecs);
 
     /* the dev console can push placeholder entries into the catalog while a
-       page is open — rebuild the list, chips and grid when it does */
+       page is open: rebuild the list, chips and grid when it does */
     N.bus.on("catalog", function () {
       list = kind === "apps" ? N.catalog.apps() : kind === "proxies" ? N.catalog.proxies() : N.catalog.games();
       if (rowHost) buildChips();

@@ -1,4 +1,4 @@
-/* NULL — release-shell.js
+/* NULL · release-shell.js
    The app inside releases/null-{regular,mini,lite}.html. It is NOT one of the
    site's page scripts: the single-file builds ship the same runtime (store,
    theme, econ, cards, schedule, daily, search…) plus an embedded catalog whose
@@ -6,7 +6,7 @@
    server and no other files.
 
    What the shell owns:
-     · the window chrome — header, page nav, footer
+     · the window chrome: header, page nav, footer
      · the views: home, games/apps/proxies, schedule, announcements, shop,
        backups, settings
      · the player overlay, and the launch hooks that make cards, search results
@@ -41,7 +41,7 @@
     backups: "Backups", settings: "Settings"
   };
 
-  /* the embedded catalog — catalog.js and this shell read the same object */
+  /* the embedded catalog: catalog.js and this shell read the same object */
   function cat() {
     return window.NULL_CATALOG || { games: [], apps: [], proxies: [] };
   }
@@ -87,7 +87,7 @@
 
     h.appendChild(mark);
     h.appendChild(d.h("span", { class: "brand-name" }, "NULL"));
-    h.appendChild(d.h("span", { class: "chip accent" }, TIER.toUpperCase() + " \u00b7 standalone"));
+    h.appendChild(d.h("span", { class: "chip accent" }, TIER.toUpperCase() + " · standalone"));
     h.appendChild(d.h("span", { class: "sp" }));
     h.appendChild(search);
     h.appendChild(theme);
@@ -141,7 +141,7 @@
         var bits = [];
         if (got.xp) bits.push("+" + got.xp + " XP");
         if (got.coins) bits.push("+" + got.coins + " coins");
-        d.toast(bits.join(" \u00b7 "), { icon: "coin" });
+        d.toast(bits.join(" · "), { icon: "coin" });
       }
     }, 5000);
   }
@@ -164,7 +164,7 @@
       var overlay = d.h("div", { class: "player", style: { zIndex: "400" } });
       var load = d.h("div", { class: "player-loading" }, [
         d.h("div", { class: "spin" }),
-        d.h("span", null, "starting\u2026")
+        d.h("span", null, "starting…")
       ]);
       var frame = d.h("iframe", {
         title: entry.name,
@@ -186,7 +186,7 @@
       }, [d.icon("back")]);
       var meta = d.h("div", { class: "player-meta" }, [
         d.h("b", null, entry.name),
-        d.h("span", null, (kind === "game" ? "Game" : "App") + " \u00b7 NULL " + TIER)
+        d.h("span", null, (kind === "game" ? "Game" : "App") + " · NULL " + TIER)
       ]);
       var fs = d.h("button", {
         type: "button",
@@ -229,7 +229,7 @@
   }
 
   /* The site's launches navigate to /player.html. A single file has no such
-     page, so every route into a game goes through the overlay above instead —
+     page, so every route into a game goes through the overlay above instead:
      library cards, search hits, "play random" and the dev console all call
      through N.launch. */
   N.launch.game = function (entry) {
@@ -269,9 +269,9 @@
     var c = cat();
 
     var hero = d.h("div", { class: "rel-hero glass-2" }, [
-      d.h("span", { class: "hero-eyebrow" }, "NULL \u00b7 " + TIER + " \u00b7 standalone single file"),
+      d.h("span", { class: "hero-eyebrow" }, "NULL · " + TIER + " · standalone single file"),
       d.h("h1", null, "Games, apps & tools."),
-      d.h("p", null, "A self-contained NULL build. Everything below runs from this one file \u2014 favorites, history, coins and settings are shared with the main site on this browser.")
+      d.h("p", null, "A self-contained NULL build. Everything below runs from this one file: favorites, history, coins and settings are shared with the main site on this browser.")
     ]);
     hero.appendChild(
       d.h("div", { class: "rel-actions" }, [
@@ -289,13 +289,13 @@
             go("games");
           }
         }, "Browse games"),
-        d.h("span", { class: "chip accent" }, c.games.length + " games \u00b7 " + c.apps.length + " apps \u00b7 " + c.proxies.length + " proxies")
+        d.h("span", { class: "chip accent" }, c.games.length + " games · " + c.apps.length + " apps · " + c.proxies.length + " proxies")
       ]),
     );
     view.appendChild(hero);
 
     /* daily crate + quests (the strip's "Quests" link points at /shop.html,
-       which does not exist here — send it to the Shop view instead) */
+       which does not exist here: send it to the Shop view instead) */
     if (!LITE && N.daily) {
       var strip = d.h("div", { class: "daily-strip glass", id: "dailyStrip" });
       view.appendChild(d.h("div", { class: "section" }, [strip]));
@@ -320,7 +320,7 @@
       view.appendChild(d.h("div", { class: "section" }, [panel]));
     }
 
-    /* recently played — games only, same as the site */
+    /* recently played: games only, same as the site */
     var recent = d.h("div", { class: "panel glass" });
     view.appendChild(d.h("div", { class: "section" }, [recent]));
 
@@ -369,14 +369,14 @@
     var panel = d.h("div", { class: "panel" });
     panel.appendChild(
       d.h("div", { class: "panel-head" }, [
-        d.h("h2", null, [d.icon("sched"), "Today\u2019s schedule"]),
+        d.h("h2", null, [d.icon("sched"), "Today’s schedule"]),
         d.h("button", {
           type: "button",
           class: "more",
           onclick: function () {
             go("schedule");
           }
-        }, "full page \u2192")
+        }, "full page →")
       ]),
     );
     var S = N.schedule;
@@ -386,7 +386,7 @@
     }
     var info = S.todayInfo();
     if (!info.type) {
-      panel.appendChild(d.h("p", { class: "lines", style: { color: "var(--text-2)" } }, info.dayName + " \u2014 no school."));
+      panel.appendChild(d.h("p", { class: "lines", style: { color: "var(--text-2)" } }, info.dayName + ": no school."));
       return panel;
     }
     var blocks = S.blocksFor(info.type);
@@ -410,7 +410,7 @@
           onclick: function () {
             go("announcements");
           }
-        }, "all \u2192")
+        }, "all →")
       ]),
     );
     var list = d.h("div", { class: "ann-list" });
@@ -500,7 +500,7 @@
 
     var info = S.todayInfo();
     if (!info.type) {
-      panel.appendChild(d.h("p", { class: "lines", style: { color: "var(--text-2)" } }, info.dayName + " \u2014 no school. Monday is a Regular day."));
+      panel.appendChild(d.h("p", { class: "lines", style: { color: "var(--text-2)" } }, info.dayName + ": no school. Monday is a Regular day."));
       return view;
     }
     var blocks = S.blocksFor(info.type);
@@ -586,7 +586,7 @@
   }
 
   /* ============================================================
-     shop — economy, crate, quests, unlocks
+     shop: economy, crate, quests, unlocks
      ============================================================ */
   function fmtTime(sec) {
     var m = Math.floor(sec / 60);
@@ -597,7 +597,7 @@
   function buy(type, id, name, price) {
     var st = N.econ.state();
     if (st.coins < price) {
-      d.toast("Not enough coins yet \u2014 keep playing to earn more!", { type: "err", icon: "coin" });
+      d.toast("Not enough coins yet. Keep playing to earn more!", { type: "err", icon: "coin" });
       return;
     }
     N.modal.confirm({
@@ -749,7 +749,7 @@
     view.appendChild(
       d.h("div", { class: "page-head" }, [
         d.h("h2", null, "Shop"),
-        d.h("p", { style: { color: "var(--text-2)" } }, "Play to bank XP and coins \u2014 spend them here. No real money, nothing leaves this browser.")
+        d.h("p", { style: { color: "var(--text-2)" } }, "Play to bank XP and coins: spend them here. No real money, nothing leaves this browser.")
       ]),
     );
     view.appendChild(ecoBar());
@@ -882,7 +882,7 @@
     if (!LITE) {
       var packs = d.h("div", { class: "set-card glass", style: { marginTop: "14px" } }, [
         d.h("h2", { class: "set-title" }, "Theme packs"),
-        d.h("p", { class: "set-sub" }, "A palette and a live animated backdrop. Locked packs show what you get \u2014 nothing is hidden.")
+        d.h("p", { class: "set-sub" }, "A palette and a live animated backdrop. Locked packs show what you get. Nothing is hidden.")
       ]);
       view.appendChild(packs);
       packs.appendChild(d.h("div", { class: "shop-grid" }, N.theme.allPacks().map(packCard)));
@@ -924,7 +924,7 @@
 
   function themeRow(card) {
     var row = d.h("div", { class: "set-row" }, [
-      d.h("div", { class: "lbl-txt" }, [d.h("b", null, "Theme"), d.h("span", null, "Dark or Light \u2014 NULL inverted.")])
+      d.h("div", { class: "lbl-txt" }, [d.h("b", null, "Theme"), d.h("span", null, "Dark or Light: NULL inverted.")])
     ]);
     seg(row, [{ id: "dark", name: "Dark" }, { id: "light", name: "Light" }], N.prefs.get("theme"), function (id) {
       N.prefs.set("theme", id);
@@ -937,7 +937,7 @@
   function accentRow(card) {
     var box = d.h("div", { class: "glow-row" });
     var row = d.h("div", { class: "set-row" }, [
-      d.h("div", { class: "lbl-txt" }, [d.h("b", null, "Accent"), d.h("span", null, "Restrained \u2014 grayscale stays.")]),
+      d.h("div", { class: "lbl-txt" }, [d.h("b", null, "Accent"), d.h("span", null, "Restrained: grayscale stays.")]),
       box
     ]);
     var list = N.theme.ACCENTS.concat(N.theme.extraAccents ? N.theme.extraAccents() : []);
@@ -1020,7 +1020,7 @@
     return row;
   }
 
-  /* perf is false | true | "ultra" — ultra adds no animation at all, no
+  /* perf is false | true | "ultra": ultra adds no animation at all, no
      effect layers and no off-screen paint (perf.css) */
   function perfRow(card) {
     var sw = d.h("input", { type: "checkbox", checked: !!N.prefs.get("perf") });
@@ -1129,7 +1129,7 @@
           n++;
         } catch (e) {}
       });
-      d.toast("Restored " + n + " items \u2014 reloading", { icon: "check" });
+      d.toast("Restored " + n + " items: reloading", { icon: "check" });
       setTimeout(function () {
         location.reload();
       }, 700);
@@ -1148,7 +1148,7 @@
     var row = d.h("div", { class: "set-row" }, [
       d.h("div", { class: "lbl-txt" }, [
         d.h("b", null, "NULL data on this device"),
-        d.h("span", null, N.recent.list().length + " recent \u00b7 " + N.favs.list().length + " favorites \u00b7 " + N.econ.state().coins + " coins")
+        d.h("span", null, N.recent.list().length + " recent · " + N.favs.list().length + " favorites · " + N.econ.state().coins + " coins")
       ]),
       d.h("div", { class: "icon-btn-row" }, [
         d.h("button", { type: "button", class: "btn btn-outline btn-sm", onclick: exportData }, [d.icon("download"), "Download"]),
@@ -1224,7 +1224,7 @@
     render();
 
     var foot = d.h("div", { class: "foot" });
-    foot.appendChild(d.h("span", null, "NULL " + TIER + " \u00b7 single-file build \u00b7 " + new Date().getFullYear()));
+    foot.appendChild(d.h("span", null, "NULL " + TIER + " · single-file build · " + new Date().getFullYear()));
     foot.appendChild(d.h("span", null, "Favorites, history, coins and settings live in this browser."));
     if (N.search) {
       foot.appendChild(

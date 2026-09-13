@@ -1,4 +1,4 @@
-/* NULL — store.js
+/* NULL · store.js
    localStorage-backed user data: preferences, flags, recent items, favorites.
    Everything for a given visitor lives under four keys. */
 (function () {
@@ -16,7 +16,7 @@
     try {
       localStorage.setItem(key, JSON.stringify(val));
     } catch (err) {
-      /* private mode / quota — ignore */
+      /* private mode / quota: ignore */
     }
   }
   function del(key) {
@@ -218,7 +218,7 @@
     };
   })();
 
-  /* ---------- play counts (local per browser — powers "most played") ---------- */
+  /* ---------- play counts (local per browser: powers "most played") ---------- */
   var PLAYS_KEY = "null:plays";
   N.plays = (function () {
     var data = read(PLAYS_KEY, {});
@@ -240,7 +240,7 @@
   /* ---------- weekly play log (games/apps launched per week) ----------
      Powers the weekly wrap-up modal: every launch is stamped with the week
      it happened in (Monday-keyed), so once a week rolls over the previous
-     week's log can be summarized and shown — then the log resets. */
+     week's log can be summarized and shown, then the log resets. */
   function mondayOf(date) {
     var x = new Date(date.getTime());
     x.setHours(0, 0, 0, 0);
@@ -370,8 +370,8 @@
      NULL shares it: a second tab, the installed app window, and the cloaked
      about:blank / blob: windows (they frame the real site). The browser fires
      `storage` in the *other* windows whenever one of them writes, so they can
-     stay in step with no server. A genuinely different origin — another host
-     or a preview link — can never see it; that is what the Settings backup
+     stay in step with no server. A genuinely different origin: another host
+     or a preview link: can never see it; that is what the Settings backup
      file is for. */
   var reloaders = [
     N.prefs.reload,

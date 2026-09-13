@@ -1,4 +1,4 @@
-/* NULL — schedule.js (page)
+/* NULL · schedule.js (page)
    Full schedule view: today card (Regular vs Homeroom/WIN), live now/next
    countdown, the per-day block list, and the editor for period names and
    the lunch period (4 / 5 / 6). Names + lunch choice persist locally. */
@@ -63,7 +63,7 @@
     hosts.today.textContent = "";
     hosts.today.appendChild(S.todayCard(chosen));
 
-    /* live strip — only when looking at the real today */
+    /* live strip: only when looking at the real today */
     hosts.live.textContent = "";
     hosts.live.style.display = isRealToday() && S.weekType(chosen) ? "" : "none";
     if (isRealToday() && S.weekType(chosen)) {
@@ -153,7 +153,7 @@
     var lunchRow = d.h("div", { class: "ed-row ed-lunch" }, [
       d.h("div", { class: "ed-txt" }, [
         d.h("b", null, "Lunch period"),
-        d.h("span", null, "Pick which of periods 4\u20136 you have lunch. That block reads Lunch; the others stay editable."),
+        d.h("span", null, "Pick which of periods 4-6 you have lunch. That block reads Lunch; the others stay editable."),
       ]),
       d.h("div", { class: "seg lunch-seg", role: "group", "aria-label": "Lunch period" }, [4, 5, 6].map(function (n) {
         return d.h("button", {
@@ -175,7 +175,7 @@
       var label;
       var input = null;
       if (b.fixed) {
-        label = d.h("span", { class: "s-name fixed" }, b.name + (b.lunch ? "" : " \u2014 fixed"));
+        label = d.h("span", { class: "s-name fixed" }, b.name + (b.lunch ? "" : ": fixed"));
       } else {
         input = d.h("input", {
           type: "text",
@@ -188,7 +188,7 @@
         label = input;
       }
       var row = d.h("div", { class: "sched-row ed-row" + (b.lunch ? " lunch" : "") }, [
-        d.h("span", { class: "s-no" }, b.n ? "P" + b.n : "\u2014"),
+        d.h("span", { class: "s-no" }, b.n ? "P" + b.n : "-"),
         label,
         d.h("span", { class: "s-time" }, S.spanText(b)),
       ]);

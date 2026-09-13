@@ -1,4 +1,4 @@
-/* NULL — tests.js
+/* NULL · tests.js
    The static test runner behind /tests. It replaces the old Node + jsdom
    scripts/*.cjs suite: the real pages are loaded into same-origin iframes and
    asserted on what they actually render, and the economy / catalog logic is
@@ -58,7 +58,7 @@
   }
 
   function done() {
-    SUM.textContent = counts.fail ? counts.pass + " passed \u00b7 " + counts.fail + " FAILED" : counts.pass + " checks passed";
+    SUM.textContent = counts.fail ? counts.pass + " passed · " + counts.fail + " FAILED" : counts.pass + " checks passed";
     SUM.className = "tsum " + (counts.fail ? "bad" : "ok");
   }
 
@@ -203,7 +203,7 @@
   }
 
   /* ============================================================
-     Suite 1 — files, styles and the service worker
+     Suite 1: files, styles and the service worker
      ============================================================ */
   function suiteFiles() {
     group("Files, styles and the service worker");
@@ -247,7 +247,7 @@
   }
 
   /* ============================================================
-     Suite 2 — the catalog builder's parsing (pure logic)
+     Suite 2: the catalog builder's parsing (pure logic)
      ============================================================ */
   function suiteCatalogTool() {
     group("Catalog builder parsing");
@@ -312,7 +312,7 @@
   }
 
   /* ============================================================
-     Suite 3 — economy: playtime, quests, achievements, the crate
+     Suite 3: economy: playtime, quests, achievements, the crate
      ============================================================ */
   function suiteEconomy() {
     group("Economy, quests, achievements and the daily crate");
@@ -406,7 +406,7 @@
   }
 
   /* ============================================================
-     Suite 4 — the home page
+     Suite 4: the home page
      ============================================================ */
   function suiteHome() {
     group("Home: daily strip, recents and random");
@@ -461,7 +461,7 @@
   }
 
   /* ============================================================
-     Suite 5 — the shop
+     Suite 5: the shop
      ============================================================ */
   function suiteShop() {
     group("Shop: sections, counts and the glow");
@@ -486,7 +486,7 @@
       /* the balance bar and the streak chip */
       ok("the balance bar shows the coin balance", /coins/.test(txt("#ecoBar")));
 
-      /* the glow border re-inks the viewport ring only — card surfaces stay
+      /* the glow border re-inks the viewport ring only: card surfaces stay
          flat unless the Neon pack is worn */
       var card = q("#shopBody .shop-row") || q("#shopBody .shop-card");
       var before = w.getComputedStyle(card).boxShadow;
@@ -504,7 +504,7 @@
   }
 
   /* ============================================================
-     Suite 6 — settings and the library pages
+     Suite 6: settings and the library pages
      ============================================================ */
   function suiteSettings() {
     group("Settings");
@@ -539,7 +539,7 @@
         ok("the label filter row is built", qa("#labelRow button").length > 0);
         ok("the count is shown", /\d/.test(txt("#count")));
 
-        /* popularity leads with HOT entries — the sort select is upgraded to a
+        /* popularity leads with HOT entries: the sort select is upgraded to a
            custom dropdown, but it still drives the hidden native one */
         var hot = w.N.catalog.games().filter(function (g) {
           return g.hot;
@@ -570,7 +570,7 @@
   }
 
   /* ============================================================
-     Suite 7 — every page boots and keeps its styling
+     Suite 7: every page boots and keeps its styling
      ============================================================ */
   function suitePages() {
     group("Every page boots");
@@ -623,7 +623,7 @@
     OUT.textContent = "";
     counts.pass = 0;
     counts.fail = 0;
-    SUM.textContent = "Running\u2026";
+    SUM.textContent = "Running…";
     SUM.className = "tsum";
 
     snapshot();

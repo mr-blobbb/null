@@ -1,4 +1,4 @@
-/* NULL — shell.js
+/* NULL · shell.js
    Shared chrome: top navigation (icon-only links + mobile drawer), search
    trigger, theme toggle, footer, custom scrollbar attachment, back-to-top
    and the global keyboard bits (SGGAMES, panic key, "/" to search). */
@@ -26,7 +26,7 @@
 
     bar.appendChild(brandEl());
 
-    /* primary links — icon-only, no Home (the brand mark is home) */
+    /* primary links: icon-only, no Home (the brand mark is home) */
     var links = d.h("nav", { class: "nav-links" });
     N.router.PRIMARY.forEach(function (l) {
       var a = d.h("a", {
@@ -115,7 +115,7 @@
       });
     });
     drawer.appendChild(
-      d.h("div", { class: "drawer-foot" }, "Local-first \u2014 nothing leaves your browser."),
+      d.h("div", { class: "drawer-foot" }, "Local-first: nothing leaves your browser."),
     );
     var drawerOv = d.h("div", { class: "drawer-ov" }, [drawer]);
     drawerOv.addEventListener("mousedown", function (e) {
@@ -161,7 +161,7 @@
   N.bus.on("daily", paintShopDot);
 
   /* another NULL window sharing this origin (a second tab, the installed app,
-     a cloaked about:blank / blob: copy) just changed the stored settings —
+     a cloaked about:blank / blob: copy) just changed the stored settings:
      adopt them here instead of looking stale until the next reload */
   N.bus.on("sync", function () {
     if (N.theme) N.theme.applyAll();
@@ -198,7 +198,7 @@
 var foot = d.h("footer", { class: "site-foot" }, [inner]); 
 foot.appendChild( 
   d.h("div", { class: "bottom" }, [ 
-    "\u00a9 " + new Date().getFullYear() + " NULL Labs \u00b7 Developed by Mr Blob", 
+    "© " + new Date().getFullYear() + " NULL Labs · Developed by Mr Blob", 
   ]), 
 ); 
 return foot; 
@@ -280,7 +280,7 @@ return foot;
   /* ---------- cloaking: open the whole site in about:blank / blob: ----------
      There is no API for "are popups allowed?", so NULL learns it the one way a
      page can: the first time a cloak window fails to open, it remembers. From
-     then on it does not fire a doomed window.open at all — it just shows the
+     then on it does not fire a doomed window.open at all: it just shows the
      warning and asks for popups, with a Try again for once they're enabled. */
   var POPUP_KEY = "popupsBlocked";
 
@@ -302,8 +302,8 @@ return foot;
       icon: "warn",
       iconTone: "danger",
       body:
-        "<p>Your browser is blocking popups, so cloaked windows <b>can&rsquo;t open</b>. NULL won&rsquo;t keep firing them until that changes.</p>" +
-        "<p>Allow popups for NULL \u2014 usually the icon at the right of the address bar \u2014 then press <b>Try again</b>.</p>",
+        "<p>Your browser is blocking popups, so cloaked windows <b>can’t open</b>. NULL won’t keep firing them until that changes.</p>" +
+        "<p>Allow popups for NULL (usually the icon at the right of the address bar), then press <b>Try again</b>.</p>",
       actions: [
         { label: "Close", variant: "outline" },
         {
@@ -338,7 +338,7 @@ return foot;
 
   /* Popup blockers can refuse the open but still hand back a WindowProxy
      (or kill the tab a moment later). In every failure case we make sure
-     nothing is left open — close the window, show the warning only.
+     nothing is left open: close the window, show the warning only.
      `to` is the preset's real site: once the cloaked window is up, this tab
      navigates there so the address bar matches the name on the tab. */
   function cloakOpen(url, mode, shell, to) {
@@ -354,7 +354,7 @@ return foot;
       return;
     }
     if (mode === "blank") {
-      /* about:blank windows share the opener's origin — write the shell in */
+      /* about:blank windows share the opener's origin: write the shell in */
       try {
         w.document.open();
         w.document.write(shell);
@@ -368,7 +368,7 @@ return foot;
         return;
       }
     }
-    /* some blockers cancel the tab right after it opens — if the browser
+    /* some blockers cancel the tab right after it opens: if the browser
        closed it, don't leave a stray tab and don't pretend it worked */
     noteAllowed();
     setTimeout(function () {
@@ -391,7 +391,7 @@ return foot;
     });
   }
 
-  /* the host of a redirect target, for the toast — never throws on junk */
+  /* the host of a redirect target, for the toast: never throws on junk */
   function hostOf(url) {
     try {
       return new URL(url).hostname;
@@ -412,11 +412,11 @@ return foot;
     blocked: popupsBlocked,
     markBlocked: noteBlocked,
     clear: noteAllowed,
-    /* the address this tab would become — settings shows it before you click */
+    /* the address this tab would become: settings shows it before you click */
     target: cloakTarget,
     site: function (mode) {
       /* if popups are known to be blocked, don't even try to open about:blank
-         or blob: — warn, and let the user enable them first */
+         or blob:: warn, and let the user enable them first */
       if (popupsBlocked()) {
         cloakBlocked(mode);
         return;
@@ -436,7 +436,7 @@ return foot;
     confettiBusy = true;
     setTimeout(function () { confettiBusy = false; }, 2600);
     var ov = d.h("div", { class: "cf-ov", "aria-hidden": "true" });
-    /* golden confetti is a shop unlock — otherwise stay grayscale */
+    /* golden confetti is a shop unlock: otherwise stay grayscale */
     var cols =
       N.econ && N.econ.isUnlocked("fx", "goldconfetti")
         ? ["#ffd45e", "#ffb020", "#ffe9a8", "#f5c542", "#ffdf8a"]
@@ -465,7 +465,7 @@ return foot;
      Confetti has to land ON the bell, not within half a minute of it: the
      schedule is read to find the seconds left in the current block (or in
      the passing period) and a single timer is aimed at that instant. Both
-     bells fire — a period ending (which is when the passing period starts)
+     bells fire: a period ending (which is when the passing period starts)
      and the passing period ending (which is when class starts). The key of
      the block we're in changes at each one, so "it changed" is the trigger. */
   var schedTimer = null;
@@ -499,7 +499,7 @@ return foot;
   function ring() {
     schedTimer = null;
     var key = blockKey();
-    /* only a real bell — never the end of the day, never a first reading */
+    /* only a real bell: never the end of the day, never a first reading */
     if (lastKey !== null && key && key !== "end" && key !== lastKey) {
       if (N.prefs.get("confetti") !== false && !document.hidden) confetti();
     }
@@ -512,7 +512,7 @@ return foot;
     lastKey = blockKey();
     armBell();
     /* timers are throttled in a background tab, so never celebrate a bell
-       that went by while this window was hidden — just re-sync and re-aim */
+       that went by while this window was hidden: just re-sync and re-aim */
     document.addEventListener("visibilitychange", function () {
       if (document.hidden) return;
       lastKey = blockKey();
@@ -521,7 +521,7 @@ return foot;
   }
 
   /* ============================================================
-     screensaver — after two idle minutes a dim glass overlay fades
+     screensaver: after two idle minutes a dim glass overlay fades
      in: drifting grayscale game art, a live clock and a wake hint.
      Any pointer or key wakes it. Skipped on the player / 404 and
      whenever an overlay is already open.
@@ -594,7 +594,7 @@ return foot;
     }
     ov.appendChild(art);
     ov.appendChild(d.h("div", { class: "ss-brand" }, [d.icon("ban"), "NULL"]));
-    ov.appendChild(d.h("div", { class: "ss-clock" }, "\u2014:--"));
+    ov.appendChild(d.h("div", { class: "ss-clock" }, "-:--"));
     ov.appendChild(
       d.h("div", { class: "ss-date" },
         new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })),
@@ -619,7 +619,7 @@ return foot;
     ssArm();
   }
 
-  /* immediate screensaver (dev console button) — bypasses the idle wait */
+  /* immediate screensaver (dev console button): bypasses the idle wait */
   function ssNow() {
     ssHide();
     ssShow();
@@ -655,7 +655,7 @@ return foot;
     }
     var at = parseInt(N.prefs.get("marathonAt"), 10) || 0;
     if (!at || Date.now() < at) return;
-    /* due — launch a random game directly, no warning modal mid-marathon */
+    /* due: launch a random game directly, no warning modal mid-marathon */
     N.prefs.set("marathonAt", Date.now() + min * 60000);
     var g = N.catalog.games();
     if (!g.length) return;
@@ -671,11 +671,11 @@ return foot;
 
   /* ---------- performance-mode suggestion ----------
      Weak devices (low device memory / few cores) get a one-time nudge to
-     turn on performance mode — plus a friendly "close some tabs" tip. */
+     turn on performance mode, plus a friendly "close some tabs" tip. */
   function perfSuggest() {
     if (N.prefs.get("perf")) return;
     if (N.flags.get("perfSuggest")) return;
-    var mem = navigator.deviceMemory; // Chrome only — undefined elsewhere
+    var mem = navigator.deviceMemory; // Chrome only: undefined elsewhere
     var cores = navigator.hardwareConcurrency;
     var weak =
       (mem && mem <= 4) ||
@@ -722,7 +722,7 @@ return foot;
     d.toast("Ultra-Performance mode on", { icon: "zap" });
   }
 
-  /* returns true once the offer is spent — or already was. While another
+  /* returns true once the offer is spent, or already was. While another
      modal owns the screen we hold off and try again next window, so the one
      and only ask never gets swallowed. */
   function fpsOffer(fps) {
@@ -749,7 +749,7 @@ return foot;
   function fpsWatch() {
     if (N.prefs.get("perf") === "ultra") return;
     if (N.flags.get("ultraSuggest")) return;
-    /* the player runs real games — heavy there is normal, not a problem */
+    /* the player runs real games: heavy there is normal, not a problem */
     if (document.body.classList.contains("no-chrome")) return;
     if (!window.requestAnimationFrame) return;
     var frames = 0;
@@ -786,17 +786,17 @@ return foot;
     end.setDate(end.getDate() + 6);
     var range =
       mon.toLocaleDateString(undefined, { month: "short", day: "numeric" }) +
-      " \u2013 " +
+      " - " +
       end.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 
     var html =
-      "<p style='margin:0 0 4px;color:#a3a3a3;font-size:14px;'>Your NULL week \u2014 <b style='color:var(--text)'>" +
+      "<p style='margin:0 0 4px;color:#a3a3a3;font-size:14px;'>Your NULL week: <b style='color:var(--text)'>" +
       range +
       "</b>. Everything below is local to your browser.</p>";
     html +=
       "<div class='wu-stats'>" +
       "<div class='wu-stat'><b>" + s.total + "</b><span>plays</span></div>" +
-      "<div class='wu-stat'><b>" + s.distinct + "</b><span>games &amp; apps</span></div>" +
+      "<div class='wu-stat'><b>" + s.distinct + "</b><span>games & apps</span></div>" +
       "<div class='wu-stat'><b>" + (s.top.length ? s.top[0].n : 0) + "</b><span>top item</span></div>" +
       "</div>";
     if (s.top.length) {
@@ -809,12 +809,12 @@ return foot;
           (i + 1) +
           "</span>" +
           d.escHtml(name) +
-          "<span class='wu-count'>" + t.n + "\u00d7</span></div>";
+          "<span class='wu-count'>" + t.n + "×</span></div>";
       });
       html += "</div>";
     }
     html +=
-      "<p style='margin:14px 0 0;font-size:12.5px;color:#737373;'>New week \u2014 the log restarts today. See you next Monday.</p>";
+      "<p style='margin:14px 0 0;font-size:12.5px;color:#737373;'>New week: the log restarts today. See you next Monday.</p>";
 
     N.modal.open({
       title: "Your week in NULL",
@@ -874,7 +874,7 @@ return foot;
     initSs();
     watchPeriodEnd();
 
-    /* weekly wrap-up — slightly delayed so it stacks above (never under)
+    /* weekly wrap-up: slightly delayed so it stacks above (never under)
        the first-run welcome chain on the home page */
     setTimeout(wrapupCheck, 1200);
     perfSuggest();
@@ -885,7 +885,7 @@ return foot;
 
     /* PWA: register the root service worker so NULL is installable and the
        shell works offline. Dev/preview hosts skip it *and* clean up after
-       themselves — a cached shell there means stale assets (a cached
+       themselves: a cached shell there means stale assets (a cached
        JS-wrapped stylesheet leaves every page unstyled). */
     if ("serviceWorker" in navigator) {
       var host = location.hostname;

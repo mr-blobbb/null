@@ -3,7 +3,7 @@ HOW TO ADD A GAME
 
 Create a folder inside games/, e.g. games/my-game/, containing:
 
-  my-game.html      the game itself (fully standalone — no NULL files needed)
+  my-game.html      the game itself (fully standalone, no NULL files needed)
   my-game.png       optional thumbnail (png/jpg/jpeg/webp/gif/svg all work)
   Label.txt         optional tags, e.g.
                     Label: Action Puzzle Singleplayer WebGL
@@ -16,7 +16,7 @@ Then run:
 
   bun run catalog     (or: node scripts/build-catalog.js)
 
-The game appears automatically on /games — no JSON, no manual registry.
+The game appears automatically on /games: no JSON, no manual registry.
 
 Notes
 -----

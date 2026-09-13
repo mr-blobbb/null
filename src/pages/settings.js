@@ -1,6 +1,6 @@
-/* NULL — settings.js
+/* NULL · settings.js
    Binds every control on /settings. Recently played has its own clear
-   button on the home page — it is not duplicated here. The Danger Zone only
+   button on the home page: it is not duplicated here. The Danger Zone only
    holds whole-app resets. */
 (function () {
   var N = (window.N = window.N || {});
@@ -29,7 +29,7 @@
     }
     paintGlow();
 
-    /* performance switches — perf is false | true | "ultra" */
+    /* performance switches: perf is false | true | "ultra" */
     var sw = d.qs("#perfSwitch");
     if (sw) sw.checked = !!p.perf;
     var usw = d.qs("#ultraSwitch");
@@ -79,9 +79,9 @@
       } catch (err) {}
       di.textContent =
         N.recent.list().length +
-        " recent \u00b7 " +
+        " recent · " +
         N.favs.list().length +
-        " favorites \u00b7 ~" +
+        " favorites · ~" +
         (size / 1024).toFixed(1) +
         " KB stored locally";
     }
@@ -130,11 +130,11 @@
     var to = N.cloak && N.cloak.target ? N.cloak.target() : null;
     var preset = N.tab.current() || {};
     if (N.prefs.get("cloakRedirect") === false) {
-      info.textContent = "Off — after cloaking, this tab stays on NULL.";
+      info.textContent = "Off. After cloaking, this tab stays on NULL.";
     } else if (!to) {
       info.textContent =
         "This tab preset has no real site of its own" +
-        (preset.id === "custom" ? " — add one under Browser tab presets." : ", so this tab stays on NULL.");
+        (preset.id === "custom" ? ". Add one under Browser tab presets." : ", so this tab stays on NULL.");
     } else {
       info.textContent =
         "The cloaked window opens first, then this tab goes to " + to +
@@ -155,7 +155,7 @@
     if (gc2) gc2.value = N.prefs.get("glowColor2") || "#a86bff";
   }
 
-  /* seasonal theme row — label reads "Turn on Fall theme?" while off and
+  /* seasonal theme row: label reads "Turn on Fall theme?" while off and
      "Fall theme on" while on, with the current season as a chip */
   function paintSeason() {
     var on = N.prefs.data.seasonal !== false;
@@ -168,7 +168,7 @@
       var hint = d.qs("#seasonalHint");
       if (hint) {
         hint.textContent =
-          s.hint + " \u00b7 switches automatically with the seasons";
+          s.hint + " · switches automatically with the seasons";
       }
       var chip = d.qs("#seasonalChip");
       if (chip) {
@@ -322,19 +322,19 @@
       var paintInstall = function () {
         inBtn.hidden = true;
         if (N.install.installed()) {
-          inHint.textContent = "Installed \u2014 NULL is running as its own app.";
+          inHint.textContent = "Installed: NULL is running as its own app.";
         } else if (N.install.ready()) {
           inBtn.hidden = false;
           inHint.textContent = "This browser can install NULL right now.";
         } else {
           inHint.textContent =
-            "Not offered by the browser yet \u2014 it appears once NULL is served over https, or use \"How?\".";
+            "Not offered by the browser yet. It appears once NULL is served over https, or use \"How?\".";
         }
       };
       N.bus.on("installReady", paintInstall);
       inBtn.addEventListener("click", function () {
         N.install.prompt().then(function (outcome) {
-          if (outcome === "accepted") d.toast("Installing NULL\u2026", { icon: "check" });
+          if (outcome === "accepted") d.toast("Installing NULL…", { icon: "check" });
           paintInstall();
         });
       });
@@ -369,7 +369,7 @@
       msw.addEventListener("change", function () {
         N.prefs.set("marathon", msw.checked);
         if (!msw.checked) {
-          /* fully disarm — the games toolbar won't show any controls */
+          /* fully disarm: the games toolbar won't show any controls */
           N.prefs.set("marathonMin", 0);
           N.prefs.set("marathonAt", 0);
         }
@@ -505,7 +505,7 @@
       });
     }
 
-    /* another NULL window edited something — show its values here too */
+    /* another NULL window edited something: show its values here too */
     N.bus.on("sync", refresh);
 
     /* danger zone */
@@ -543,7 +543,7 @@
           iconTone: "danger",
       body:
         "<p>This permanently removes everything stored on this device for NULL:</p>" +
-        "<p>\u2022 Recently played<br>\u2022 Preferences &amp; settings<br>\u2022 Seen-flag markers (welcome modal etc.)</p>" +
+        "<p>• Recently played<br>• Preferences & settings<br>• Seen-flag markers (welcome modal etc.)</p>" +
         "<p>There is no undo.</p>",
           actions: [
             { label: "Cancel", variant: "outline" },
@@ -796,7 +796,7 @@
   /* ---------- export / import ----------
      localStorage is scoped to one origin, so a NULL profile cannot follow you
      from googleslides2026.github.io to an about:blank clone, a blob: window or
-     a preview URL without a server — which NULL deliberately doesn't have.
+     a preview URL without a server: which NULL deliberately doesn't have.
      A backup file is the honest way to carry the profile across. */
   var PREFIX = "null:";
 
@@ -853,7 +853,7 @@
         icon: "upload",
         body:
           "<p>This swaps the NULL data stored in this browser for what's in the file, then reloads.</p>" +
-          "<p style='color:var(--text-2)'>There is no undo &mdash; the file is your backup.</p>",
+          "<p style='color:var(--text-2)'>There is no undo: the file is your backup.</p>",
         actions: [
           { label: "Cancel", variant: "outline" },
           {
@@ -873,7 +873,7 @@
                   localStorage.setItem(k, String(bag[k]));
                 });
               } catch (err) {
-                d.toast("Could not write the backup \u2014 storage may be full.", { type: "err" });
+                d.toast("Could not write the backup. Storage may be full.", { type: "err" });
                 return;
               }
               location.reload();
@@ -889,7 +889,7 @@
     if (inited) return;
     inited = true;
 
-    /* accent swatches — plain single-color accents; full theme packs get
+    /* accent swatches: plain single-color accents; full theme packs get
        their own card below, with previews. */
     var row = d.qs("#accentRow");
     if (row) {
@@ -930,8 +930,8 @@
     }
     var sel = d.qs("#tabSelect");
     if (sel) {
-      /* show the actual tab name the preset produces — "Untitled document -
-         Google Docs", not "Google Docs \u2014 Untitled document - Google Docs" */
+      /* show the actual tab name the preset produces: "Untitled document -
+         Google Docs", not "Google Docs: Untitled document - Google Docs" */
       N.tab.list.forEach(function (p) {
         var label = p.id === "custom" ? p.name : N.tab.titleFor(p);
         sel.appendChild(d.h("option", { value: p.id }, label));

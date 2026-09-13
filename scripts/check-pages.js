@@ -1,4 +1,4 @@
-/* NULL — check-pages.js
+/* NULL · check-pages.js
    Smoke test for the real, multi-file site. Each page is loaded with its own
    stylesheets dropped and its scripts inlined, so jsdom (which has no network
    here, on purpose) still runs the page exactly as a browser loads it. Fails
@@ -9,7 +9,7 @@
 
      node scripts/check-pages.js
 
-   jsdom has no layout engine, so this checks behaviour and wiring — not how
+   jsdom has no layout engine, so this checks behaviour and wiring: not how
    anything looks. Development tool, not part of the site. */
 
 import fs from "node:fs";
@@ -124,7 +124,7 @@ for (const page of PAGES) {
   }
 
   /* the dev console (type nldev) has to build, filter, and actually seed a
-     library — it is the tool used to stress the grid */
+     library: it is the tool used to stress the grid */
   if (page === "games/index.html") {
     const dev = win.N && win.N.dev;
     ok(!!dev && typeof dev.show === "function", "dev console is exposed as N.dev");
@@ -172,8 +172,8 @@ for (const page of PAGES) {
       if (seedBtn) {
         seedBtn.click();
         const after = win.N.catalog.games().length;
-        ok(after === before + 250, "seeding adds placeholders (" + before + " \u2192 " + after + ")");
-        /* jsdom has no layout, so the virtual grid renders nothing to count —
+        ok(after === before + 250, "seeding adds placeholders (" + before + " → " + after + ")");
+        /* jsdom has no layout, so the virtual grid renders nothing to count:
            the library's own counter is the honest signal that it refreshed */
         const counter = doc.querySelector("#count");
         ok(!!counter && new RegExp(after + " / " + after).test(counter.textContent), "the library page re-counts itself (\"" + (counter ? counter.textContent : "") + "\")");
@@ -262,7 +262,7 @@ for (const page of PAGES) {
    The icon table has to hold codepoints, not the ligature names the glyphs came
    from. NULL ships a cut of the font with no letters in it (see
    scripts/build-font.js), so a name left written as words renders as nothing at
-   all — worth catching here rather than by eye. */
+   all: worth catching here rather than by eye. */
 console.log("\nicon font");
 {
   const dom = fs.readFileSync(path.join(root, "src", "utilities", "dom.js"), "utf8");
@@ -278,7 +278,7 @@ console.log("\nicon font");
   ok(
     spelled.length === 0,
     spelled.length
-      ? "every icon is a codepoint — " + spelled.map((e) => e.name).join(", ") + ": run `bun run font`"
+      ? "every icon is a codepoint: " + spelled.map((e) => e.name).join(", ") + ": run `bun run font`"
       : "every icon is a codepoint",
   );
 

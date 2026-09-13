@@ -22,12 +22,12 @@
 </style>
 </head>
 <body>
-  <div class="hud"><span id="moves">MOVES 0</span><button id="new">new game</button><span id="best">BEST —</span></div>
+  <div class="hud"><span id="moves">MOVES 0</span><button id="new">new game</button><span id="best">BEST -</span></div>
   <div id="grid"></div>
   <div id="status">flip a pair of matching tiles</div>
 <script>
 (function () {
-  var GLYPHS = ["\u25C9","\u25CB","\u25A0","\u25A1","\u25C6","\u25C7","\u25B2","\u25B3","\u2731","\u2295","\u2296","\u2261"];
+  var GLYPHS = ["◉","○","■","□","◆","◇","▲","△","✱","⊕","⊖","≡"];
   var grid = document.getElementById("grid");
   var movesEl = document.getElementById("moves");
   var statusEl = document.getElementById("status");

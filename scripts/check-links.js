@@ -1,4 +1,4 @@
-/* NULL — check-links.js
+/* NULL · check-links.js
    Every internal path the site points at must exist on disk, because GitHub
    Pages serves files literally: a link to /whatever.html is a 404 unless that
    file is there, and an extensionless /whatever only works through 404.html.

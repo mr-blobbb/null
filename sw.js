@@ -1,17 +1,17 @@
-/* NULL — sw.js
+/* NULL · sw.js
    Root service worker: makes NULL installable (Chrome "Install app") and
    keeps the shell usable offline.
 
    Strategy:
-     · navigations  — network first, so updates always land; cached page on
+     · navigations: network first, so updates always land; cached page on
                       failure, falling back to the cached home shell.
-     · same-origin  — network first too (a static host serves the raw files;
+     · same-origin: network first too (a static host serves the raw files;
        GET assets     a cached copy is only ever a fallback), filling the
                       runtime cache on success.
 
    Cache writes are type-checked: a stylesheet URL may only be stored when the
    response really is text/css. Without that guard a dev server's JS-wrapped
-   CSS gets cached and then served to <link> tags, which browsers reject —
+   CSS gets cached and then served to <link> tags, which browsers reject:
    leaving every page unstyled.
 
    Bump CACHE/RUNTIME when the core file list changes so old caches are dropped. */
@@ -152,7 +152,7 @@ self.addEventListener("fetch", (e) => {
     return;
   }
 
-  /* network first — fresh, correctly-typed files always win; the cache is
+  /* network first: fresh, correctly-typed files always win; the cache is
      only a fallback for offline use */
   e.respondWith(
     fetch(req)

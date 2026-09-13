@@ -1,4 +1,4 @@
-/* NULL — legal.js
+/* NULL · legal.js
    Each info page (about / privacy / terms / cookies / district / license)
    ships raw markdown inside a <script type="text/markdown"> block. This
    renders it into the .md-out container. Owners never write <h1>/<p> by hand. */

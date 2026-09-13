@@ -17,7 +17,7 @@
 </style>
 </head>
 <body>
-  <div class="hud"><span id="round">ROUND 0</span><button id="new">new game</button><span id="best">BEST —</span></div>
+  <div class="hud"><span id="round">ROUND 0</span><button id="new">new game</button><span id="best">BEST -</span></div>
   <div id="board">
     <button class="pad" data-i="0" aria-label="pad 1"></button>
     <button class="pad" data-i="1" aria-label="pad 2"></button>
@@ -71,7 +71,7 @@
     if (idx !== seq[pos]) {
       accepting = false;
       board.classList.add("locked");
-      statusEl.textContent = "wrong pad — round " + seq.length;
+      statusEl.textContent = "wrong pad, round " + seq.length;
       if (!best || seq.length - 1 > best) {
         best = seq.length - 1;
         try { localStorage.setItem("simon.best", best); } catch (e) {}
@@ -82,7 +82,7 @@
     pos++;
     if (pos === seq.length) {
       accepting = false;
-      statusEl.textContent = "nice — round " + seq.length + " cleared";
+      statusEl.textContent = "nice, round " + seq.length + " cleared";
       setTimeout(next, 900);
     }
   }

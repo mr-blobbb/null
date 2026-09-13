@@ -14,7 +14,7 @@
 </style>
 </head>
 <body>
-  <div class="hud"><span id="score">SCORE 0</span><button id="new">new game</button><span id="best">BEST —</span></div>
+  <div class="hud"><span id="score">SCORE 0</span><button id="new">new game</button><span id="best">BEST -</span></div>
   <canvas id="board" width="460" height="460"></canvas>
   <div id="status">arrows or swipe to steer</div>
 <script>
@@ -65,7 +65,7 @@
     if (head.x < 0 || head.y < 0 || head.x >= GRID || head.y >= GRID ||
         snake.some(function (s) { return s.x === head.x && s.y === head.y; })) {
       dead = true;
-      statusEl.textContent = "game over — score " + score;
+      statusEl.textContent = "game over, score " + score;
       clearInterval(timer);
       if (!best || score > best) {
         best = score;

@@ -1,14 +1,14 @@
 # NULL
 
 A plain black-and-white web hub for **games**, **apps**, **proxies** and useful
-tools. Flat surfaces, hairline borders, a grayscale identity — built as plain
+tools. Flat surfaces, hairline borders, a grayscale identity, built as plain
 static HTML/CSS/JS, deployable straight to GitHub Pages.
 
 ```
 Primary deployment: https://googleslides2026.github.io
 ```
 
-No backend, no database, no framework, and **no build step for the site** —
+No backend, no database, no framework, and **no build step for the site**:
 there is nothing to compile and nothing to deploy beyond these files. Open the
 folder on a static host and it runs. (A small dev-only toolchain exists so the
 site can be previewed and the releases rebuilt; see the end of this file.)
@@ -23,12 +23,12 @@ site can be previewed and the releases rebuilt; see the end of this file.)
 ├── 404.html               Custom NULL 404 (leaking barrel)
 ├── tools.html             Catalog builder (maintainer page)
 ├── tests.html             The test suite, run in the browser
-├── games/                 Game library — index.html is the /games page
+├── games/                 Game library: index.html is the /games page
 │   ├── index.html         The /games library page
 │   ├── pulse/ …           One folder per game
-│   └── hollow-knight/     Placeholder — drop the real files in, then rebuild the catalog
-├── apps/                  App library — index.html is the /apps page
-├── proxies/               Proxy list — index.html is the /proxies page
+│   └── hollow-knight/     Placeholder: drop the real files in, then rebuild the catalog
+├── apps/                  App library: index.html is the /apps page
+├── proxies/               Proxy list: index.html is the /proxies page
 ├── src/
 │   ├── styles/            global.css, extra.css, home.css, tools.css,
 │   │                      tests.css, particles.css, perf.css, dev.css
@@ -48,12 +48,12 @@ site can be previewed and the releases rebuilt; see the end of this file.)
 │   ├── null-regular.html  The whole thing, readable
 │   ├── null-mini.html     Same build, compressed
 │   └── null-lite.html     Stripped: no theme packs, particles, glow or shop,
-│                          animations off — and compressed, so it is smallest
+│                          animations off, and compressed, so it is smallest
 ├── scripts/               Build + check tools (dev only, never loaded by a page)
 │   ├── build-catalog.js   Scans the content folders → generated-catalog.js
 │   ├── build-font.js      Cuts the icon font down to the glyphs the site uses
 │   └── build-releases.js  Rebuilds the three single-file builds
-├── .github/workflows/     update-catalog.yml — refresh + commit on content changes
+├── .github/workflows/     update-catalog.yml: refresh + commit on content changes
 ├── sw.js                  Service worker (installable app + offline shell)
 ├── robots.txt             Keeps the catalog builder, tests and 404 out of search
 ├── .nojekyll              Serves the repo as plain files on GitHub Pages
@@ -63,7 +63,7 @@ site can be previewed and the releases rebuilt; see the end of this file.)
 Pages are ordinary HTML files. The library pages live as `games/index.html`,
 `apps/index.html` and `proxies/index.html` (served at `/games`, `/apps`,
 `/proxies`); the rest sit at the root. All share the same stylesheets and a
-handful of plain-JS modules — normal page navigation, no SPA router tricks.
+handful of plain-JS modules: normal page navigation, no SPA router tricks.
 
 ---
 
@@ -75,7 +75,7 @@ The catalog is **one plain data file**:
 src/catalog/generated-catalog.js
 ```
 
-### Build it in the browser — /tools
+### Build it in the browser: /tools
 
 Open **`/tools.html`** on your deployed (or locally served) copy, paste the
 folders you added, and press **Scan folders**:
@@ -88,18 +88,18 @@ proxies/wiki
 ```
 
 The page scans them over HTTP and reads each folder's own files, exactly the way
-the old Node scripts did — `Label.txt`, `Warning.txt`, `meta.txt`, `proxy.txt`
+the old Node scripts did: `Label.txt`, `Warning.txt`, `meta.txt`, `proxy.txt`
 and the thumbnail. It shows you what it found (with previews and any folders it
 had to skip) and gives you the whole `generated-catalog.js` back to copy or
 download. Paste it over the file and you are done.
 
-You can also just edit `generated-catalog.js` by hand — it is plain data.
+You can also just edit `generated-catalog.js` by hand: it is plain data.
 
 Either way the pages load it as `generated-catalog.js?v=<key>`, and that key is
 a hash of the catalog itself, so nobody stays stuck on a cached copy of
 yesterday's games.
 
-### Or let the repo build it — `bun run catalog`
+### Or let the repo build it: `bun run catalog`
 
 `scripts/build-catalog.js` walks `games/`, `apps/` and `proxies/`, reads each
 folder's own files and writes the catalog. It uses the same parser as the
@@ -110,15 +110,15 @@ bun run catalog            # or: node scripts/build-catalog.js
 ```
 
 Folders without an HTML file (or without a `Link:` in `proxy.txt`) are skipped
-and listed, an unchanged library leaves the file — and its timestamp — exactly
+and listed, an unchanged library leaves the file (and its timestamp) exactly
 as it was, and the cache key on the pages only moves when something changed.
 
 `.github/workflows/update-catalog.yml` runs this for you. Push anything under
-`games/`, `apps/` or `proxies/` and the Action rebuilds the catalog — plus the
-`?v=` cache key on every page that loads it — **and** the single-file releases,
+`games/`, `apps/` or `proxies/` and the Action rebuilds the catalog, plus the
+`?v=` cache key on every page that loads it: **and** the single-file releases,
 then commits all of it, ready for Pages to serve. Node runs on
 the runner during that build step only: the deployed site is still just the
-HTML, CSS, JS and data files in this repo — no backend, no server, nothing for a
+HTML, CSS, JS and data files in this repo: no backend, no server, nothing for a
 visitor to install. (It needs *Settings → Actions → General → Read and write
 permissions*; you can also start it by hand from the Actions tab.)
 
@@ -128,9 +128,9 @@ permissions*; you can also start it by hand from the Actions tab.)
 games/hollow-knight/
 ├── hollow-knight.html     Standalone game file (index.html also works)
 ├── hollow-knight.png      Optional thumbnail (any image works)
-├── Label.txt              Optional — tags, one per line
-├── Warning.txt            Optional — Title: / Description:
-└── meta.txt               Optional — Name: / Description: / Added: / #hot
+├── Label.txt              Optional: tags, one per line
+├── Warning.txt            Optional: Title: / Description:
+└── meta.txt               Optional: Name: / Description: / Added: / #hot
 ```
 
 - `Label.txt`: every non-empty line becomes one or more chips.
@@ -150,7 +150,7 @@ games/hollow-knight/
 proxies/my-link/proxy.txt:
     Link: https://example.com/
     Description: What it is.
-    Status: All Good        (All Good | Issue | Blocked — maintained by hand)
+    Status: All Good        (All Good | Issue | Blocked: maintained by hand)
 ```
 
 Proxies always open the external destination in a new tab (with a NULL redirect
@@ -158,11 +158,11 @@ confirmation); they are never wrapped in the player.
 
 ### Everything else
 
-- **Announcements / pages** — edit `src/content/content.js` (also feeds search).
-- **Legal pages** — edit the markdown inside each page file
+- **Announcements / pages**: edit `src/content/content.js` (also feeds search).
+- **Legal pages**: edit the markdown inside each page file
   (`about.html`, `privacy.html`, …); look for the `<!-- WRITE MARKDOWN HERE -->` marker.
-- **Schedule** — edit the `SCHEDULE` object at the top of `src/components/schedule.js`.
-- **Backup links / statuses** — edit `backups.html`. Statuses are manual.
+- **Schedule**: edit the `SCHEDULE` object at the top of `src/components/schedule.js`.
+- **Backup links / statuses**: edit `backups.html`. Statuses are manual.
 
 ---
 
@@ -177,7 +177,7 @@ it and nothing else:
 bun run font            # or: node scripts/build-font.js
 ```
 
-`src/utilities/dom.js` holds the table — a name (`home`, `coin`, `warn`…) and the
+`src/utilities/dom.js` holds the table: a name (`home`, `coin`, `warn`…) and the
 glyph's codepoint, with the ligature it came from in the comment. Add a name, run
 the script, and it tells you the codepoint to paste, then re-cuts the font. It
 writes nothing unless every icon still draws exactly what the full font draws,
@@ -196,7 +196,7 @@ Two things to know before touching it:
 
 ---
 
-## Tests — /tests
+## Tests: /tests
 
 Open **`/tests.html`**. It loads each real page into a same-origin frame and
 asserts on what it renders, then drives the economy (playtime → XP → coins,
@@ -206,22 +206,22 @@ stylesheets, the service worker and the catalog are all wired up.
 
 Your `null:*` localStorage keys are snapshotted before a run and put back
 afterwards; **Restore my data** does it again on demand. Like the rest of the
-site it needs to be served over http(s) — the frames cannot load from `file://`.
+site it needs to be served over http(s): the frames cannot load from `file://`.
 
-## Dev console — type `nldev`
+## Dev console: type `nldev`
 
 Type **`nldev`** on any page (no input focused) for a full-screen tool panel. It
-asks for a password first — it lives in `devconsole.js`, which is a speed bump
+asks for a password first: it lives in `devconsole.js`, which is a speed bump
 and not security: anything served to the browser can be read. It is grouped into
-one card per job — stress test, launch, look, theme packs,
-particles, fx, modals, tab presets, seasonal, economy, data, pages — with a
+one card per job: stress test, launch, look, theme packs,
+particles, fx, modals, tab presets, seasonal, economy, data, pages: with a
 filter box in the header and a lit state on whichever setting is currently
 active. The lists of packs, particle sets, accents, glow palettes and tab
 presets come straight out of the modules that own them, so adding one to the
 site adds it here automatically.
 
-**Stress test** pushes placeholder entries into the live catalog — *250 games*,
-*1,000 games*, apps, proxies — so the virtualized grid, search and the featured
+**Stress test** pushes placeholder entries into the live catalog: *250 games*,
+*1,000 games*, apps and proxies, so the virtualized grid, search and the featured
 rail can be loaded up without touching a single file. Placeholders carry a
 `placeholder` label (filter for them on any library page), a share of the NEW
 and HOT badges, some deliberately empty and some deliberately long
@@ -235,7 +235,7 @@ load, so the seeded build survives a reload or a page change until you press
 `releases/null-{regular,mini,lite}.html` are self-contained single-file builds.
 Each one inlines the stylesheets, the whole runtime and the release shell, plus
 a copy of the catalog whose games and apps carry their own code as a `data:`
-URI — copy one anywhere and it runs with no other NULL file, on `file://`, in a
+URI: copy one anywhere and it runs with no other NULL file, on `file://`, in a
 blob or on a hosted page.
 
 They are **generated**, so rebuild them after changing anything they should
@@ -266,17 +266,17 @@ no build step or special Pages config is needed.
 
 Two things make the links behave on Pages:
 
-- Library links point at directories (`/games`, `/apps`, `/proxies`) — Pages
+- Library links point at directories (`/games`, `/apps`, `/proxies`): Pages
   resolves those to `games/index.html` and redirects to the trailing-slash form,
   and the nav lights up for either shape.
 - Root pages are linked as their real files (`/schedule.html`, `/settings.html`,
   …). Pages serves an exact file or a directory index and nothing else, so an
   extensionless `/schedule` would 404 there. `404.html` doubles as a redirect
-  for those anyway: if someone types or bookmarks one, it tries
+  for those anyway. If someone types or bookmarks one, it tries
   `/schedule.html`, then `/schedule/index.html`, and hops to whichever exists.
 
 `robots.txt` allows the site but keeps the catalog builder, the test suite and
-`404.html` out of search results — they are tools for whoever runs the site, and
+`404.html` out of search results: they are tools for whoever runs the site, and
 each carries a `noindex` tag of its own anyway.
 
 `.nojekyll` keeps Pages from running Jekyll over the repo, so every file is
@@ -288,7 +288,7 @@ the shipped JavaScript exists as a real file before you push.
 
 ---
 
-## Dev only — nothing here is needed to deploy
+## Dev only: nothing here is needed to deploy
 
 The **site itself** is only HTML, CSS and plain JavaScript (plus the static
 `public/manifest.webmanifest`). No page loads any of the following; they exist
@@ -312,7 +312,7 @@ single-file builds), `bun run build`
 (catalog + releases), `bun run check` (syntax check) and the three check scripts (`check:links` for
 broken internal paths, `check:pages` for the real pages, `check:releases` for
 the single-file builds). Delete
-any of it and the deployed site is unaffected — GitHub Pages serves the files in
+any of it and the deployed site is unaffected: GitHub Pages serves the files in
 this folder as they are, and NULL never calls out to anything.
 
 ## Features at a glance
@@ -326,7 +326,7 @@ this folder as they are, and NULL never calls out to anything.
   cloaked copy first and then hands this tab to the real site behind the tab
   preset, so the address bar matches the title the tab is wearing.
 - Virtualized library grid: rows render around the viewport and unload far away,
-  while scroll height/position stay stable — built for huge libraries on
+  while scroll height/position stay stable: built for huge libraries on
   Chromebooks.
 - Recently played (games only), favorites, Random Game, instant clears.
 - Global search over games, apps, proxies, announcements and pages.
@@ -334,7 +334,7 @@ this folder as they are, and NULL never calls out to anything.
   unread-count support; presets override game/app titles inside the player.
 - Permanent school schedule (home + /schedule.html) with live now/next, passing
   periods and period-end confetti.
-- Shop + local economy: 30 minutes of play banks 10 XP, 100 XP banks 30 coins —
+- Shop + local economy: 30 minutes of play banks 10 XP, 100 XP banks 30 coins,
   spent on beta games, theme packs with real animated backdrops, particle sets,
   boosts and effects.
 - **Daily crate** (a modal with a spinning reel, streak bonuses), three rotating

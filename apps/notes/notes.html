@@ -56,7 +56,7 @@
   var sel = null;
   try { notes = JSON.parse(localStorage.getItem("notes.docs") || "[]"); } catch (e) {}
   if (!notes.length) {
-    notes = [{ title: "Welcome", body: "This is your first note.\n\nEverything is stored locally in your browser — nothing leaves this device.", at: Date.now() }];
+    notes = [{ title: "Welcome", body: "This is your first note.\n\nEverything is stored locally in your browser. Nothing leaves this device.", at: Date.now() }];
   }
 
   function save() {

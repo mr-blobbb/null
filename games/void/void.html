@@ -122,9 +122,9 @@
 
     if (ball.y > H + 12) {
       lives--;
-      livesEl.textContent = "LIVES " + (lives > 0 ? new Array(lives + 1).join("●") : "—");
+      livesEl.textContent = "LIVES " + (lives > 0 ? new Array(lives + 1).join("●") : "-");
       if (lives <= 0) {
-        statusEl.textContent = "game over — score " + score;
+        statusEl.textContent = "game over, score " + score;
         running = false;
         ball.stuck = true;
         ball.x = paddle.x + paddle.w / 2;

@@ -1,18 +1,18 @@
 /* ============================================================
-   NULL — generated-catalog.js
-   The catalog the site reads. Build it with /tools — paste your
+   NULL · generated-catalog.js
+   The catalog the site reads. Build it with /tools: paste your
    games/ apps/ proxies/ folders, copy the output over this file.
    Safe to edit by hand: it is plain data, and it is the only place
    the library is registered.
    ============================================================ */
 window.NULL_CATALOG = {
   "site": "NULL",
-  "generatedAt": "2026-09-12T14:50:41.024Z",
+  "generatedAt": "2026-09-13T13:08:04.835Z",
   "games": [
     {
       "id": "flip",
       "name": "Flip",
-      "desc": "Found automatically in games/flip — part of the NULL library.",
+      "desc": "Auto-discovered in games/flip, part of the NULL library.",
       "file": "/games/flip/flip.html",
       "thumb": "/games/flip/flip.svg",
       "labels": [
@@ -25,14 +25,14 @@ window.NULL_CATALOG = {
     {
       "id": "pulse",
       "name": "Pulse",
-      "desc": "Found automatically in games/pulse — part of the NULL library.",
+      "desc": "Auto-discovered in games/pulse, part of the NULL library.",
       "file": "/games/pulse/pulse.html",
       "thumb": "/games/pulse/pulse.svg",
       "labels": [
         "Test"
       ],
       "warning": {
-        "title": "Heads up — PULSE",
+        "title": "Heads up: PULSE",
         "description": "PULSE uses the keyboard (W/S or arrows) and has sound-free retro vibes. First to 7 wins.\nSpace serves the ball. Touch devices can drag on the left/right half of the screen."
       },
       "at": null,
@@ -41,7 +41,7 @@ window.NULL_CATALOG = {
     {
       "id": "simon",
       "name": "Simon",
-      "desc": "Found automatically in games/simon — part of the NULL library.",
+      "desc": "Auto-discovered in games/simon, part of the NULL library.",
       "file": "/games/simon/simon.html",
       "thumb": "/games/simon/simon.svg",
       "labels": [
@@ -54,7 +54,7 @@ window.NULL_CATALOG = {
     {
       "id": "snake",
       "name": "Snake",
-      "desc": "Found automatically in games/snake — part of the NULL library.",
+      "desc": "Auto-discovered in games/snake, part of the NULL library.",
       "file": "/games/snake/snake.html",
       "thumb": "/games/snake/snake.svg",
       "labels": [
@@ -67,7 +67,7 @@ window.NULL_CATALOG = {
     {
       "id": "trace",
       "name": "Trace",
-      "desc": "Found automatically in games/trace — part of the NULL library.",
+      "desc": "Auto-discovered in games/trace, part of the NULL library.",
       "file": "/games/trace/trace.html",
       "thumb": "/games/trace/trace.svg",
       "labels": [
@@ -80,7 +80,7 @@ window.NULL_CATALOG = {
     {
       "id": "void",
       "name": "Void",
-      "desc": "Found automatically in games/void — part of the NULL library.",
+      "desc": "Auto-discovered in games/void, part of the NULL library.",
       "file": "/games/void/void.html",
       "thumb": "/games/void/void.svg",
       "labels": [
@@ -95,7 +95,7 @@ window.NULL_CATALOG = {
     {
       "id": "calc",
       "name": "Calculator",
-      "desc": "Found automatically in apps/calc — part of the NULL library.",
+      "desc": "Auto-discovered in apps/calc, part of the NULL library.",
       "file": "/apps/calc/calc.html",
       "thumb": "/apps/calc/calc.svg",
       "labels": [
@@ -112,7 +112,7 @@ window.NULL_CATALOG = {
     {
       "id": "notes",
       "name": "Notes",
-      "desc": "Found automatically in apps/notes — part of the NULL library.",
+      "desc": "Auto-discovered in apps/notes, part of the NULL library.",
       "file": "/apps/notes/notes.html",
       "thumb": "/apps/notes/notes.svg",
       "labels": [
@@ -128,7 +128,7 @@ window.NULL_CATALOG = {
     {
       "id": "pad",
       "name": "Pad",
-      "desc": "Found automatically in apps/pad — part of the NULL library.",
+      "desc": "Auto-discovered in apps/pad, part of the NULL library.",
       "file": "/apps/pad/pad.html",
       "thumb": "/apps/pad/pad.svg",
       "labels": [
@@ -145,7 +145,7 @@ window.NULL_CATALOG = {
     {
       "id": "stopwatch",
       "name": "Stopwatch",
-      "desc": "Found automatically in apps/stopwatch — part of the NULL library.",
+      "desc": "Auto-discovered in apps/stopwatch, part of the NULL library.",
       "file": "/apps/stopwatch/stopwatch.html",
       "thumb": "/apps/stopwatch/stopwatch.svg",
       "labels": [
@@ -178,7 +178,7 @@ window.NULL_CATALOG = {
       "id": "wikipedia",
       "name": "Wikipedia",
       "url": "https://www.wikipedia.org/",
-      "desc": "The free encyclopedia — quick research and reading.",
+      "desc": "The free encyclopedia: quick research and reading.",
       "status": "All Good"
     }
   ]

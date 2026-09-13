@@ -1,5 +1,5 @@
-/* NULL — tabpresets.js
-   Configurable browser-tab presets. One preset list, hardcoded here — no
+/* NULL · tabpresets.js
+   Configurable browser-tab presets. One preset list, hardcoded here: no
    per-preset folders. Each preset has a favicon reference and a tab title.
    The selected preset overrides every NULL page title/favicon, including
    game/app pages opened inside the player (same-origin).
@@ -28,7 +28,7 @@
   /* `url` is where the real site lives. When a cloak window opens, this tab
      can hand over to that address so the address bar matches the tab the
      site is calling itself (see N.tab.url and shell.js). NULL itself has no
-     url — cloaking it and redirecting would just point back here. */
+     url: cloaking it and redirecting would just point back here. */
   var PRESETS = [
     { id: "slides", name: "Google Slides", title: "Untitled Slide - Google Slides", icon: G.slides, url: "https://docs.google.com/presentation/u/0/" },
     { id: "null", name: "NULL", title: "NULL", icon: "/public/favicon.svg", url: null },
@@ -49,7 +49,7 @@
     { id: "gclass", name: "Google Classroom", title: "Home", icon: G.classroom, url: "https://classroom.google.com/" },
     { id: "gcal", name: "Google Calendar", title: "Google Calendar", icon: G.calendar, url: "https://calendar.google.com/" },
     { id: "gmail", name: "Gmail", title: null, icon: G.gmail, url: "https://mail.google.com/mail/u/0/" },
-    /* custom preset — title/favicon/url come from prefs.tabCustom, edited in settings */
+    /* custom preset: title/favicon/url come from prefs.tabCustom, edited in settings */
     { id: "custom", name: "Custom tab", title: null, icon: null, url: null },
   ];
 

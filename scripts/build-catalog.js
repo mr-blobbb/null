@@ -1,9 +1,9 @@
-/* NULL — build-catalog.js
+/* NULL · build-catalog.js
    Regenerates src/catalog/generated-catalog.js from the content folders.
 
      node scripts/build-catalog.js        (or: bun run catalog)
 
-   It walks games/, apps/ and proxies/ and reads each folder's own files —
+   It walks games/, apps/ and proxies/ and reads each folder's own files:
    Label.txt, Warning.txt, meta.txt, proxy.txt and a thumbnail. The parsing
    rules live in src/utilities/catalog-tool.js, the same file the /tools page
    uses, so the script and the browser builder always produce the same catalog.
@@ -11,7 +11,7 @@
    Folders without an .html file (games/apps) or without a Link: (proxies) are
    skipped and reported. Names starting with "." or "_" are ignored.
 
-   Build-time tool only — the deployed site never runs Node. GitHub Actions
+   Build-time tool only: the deployed site never runs Node. GitHub Actions
    runs this on pushes that touch the content folders (see
    .github/workflows/update-catalog.yml) and commits the refreshed catalog,
    which is why an unchanged library leaves the file (and the timestamp)
@@ -69,7 +69,7 @@ function entryFor(dir, slug) {
   const folder = path.join(root, dir, slug);
   const html = firstFile(folder, tool.htmlCandidates(slug));
   if (!html) return null;
-  /* the parser wants the folder name — "games", not "game" — because it
+  /* the parser wants the folder name ("games", not "game") because it
      builds /games/<slug>/<file> straight from it */
   return tool.entry(dir, slug, {
     html: html,
@@ -101,7 +101,7 @@ for (const { dir, key, kind } of kinds) {
   }
 }
 
-/* keep the hand-written stamp when the library itself did not change — the
+/* keep the hand-written stamp when the library itself did not change: the
    auto-updater commits this file, and a fresh timestamp on every run would
    mean a commit on every run */
 const next = tool.source(cat);
@@ -122,15 +122,15 @@ const changed = shape(prev) !== shape(next);
 if (changed) {
   fs.writeFileSync(path.join(root, CATALOG), next);
   console.log(
-    "· wrote " + CATALOG + " — " + cat.games.length + " games, " + cat.apps.length + " apps, " + cat.proxies.length + " proxies",
+    "· wrote " + CATALOG + ": " + cat.games.length + " games, " + cat.apps.length + " apps, " + cat.proxies.length + " proxies",
   );
 } else {
-  console.log("· catalog is up to date — " + cat.games.length + " games, " + cat.apps.length + " apps, " + cat.proxies.length + " proxies");
+  console.log("· catalog is up to date: " + cat.games.length + " games, " + cat.apps.length + " apps, " + cat.proxies.length + " proxies");
 }
 
 /* ---------- cache key ----------
    Every page loads the catalog as generated-catalog.js?v=<key>, so the key has
-   to move whenever the library does — otherwise a game added today stays
+   to move whenever the library does: otherwise a game added today stays
    invisible to anyone whose browser still holds yesterday's copy. The key is
    a hash of the catalog itself: the same library always gets the same key, so
    re-running this (or the Action) leaves the pages untouched. */
@@ -156,7 +156,7 @@ for (const file of pages()) {
     bumped++;
   }
 }
-console.log("· catalog cache key " + key + (bumped ? " — updated " + bumped + " page(s)" : " — pages already current"));
+console.log("· catalog cache key " + key + (bumped ? ": updated " + bumped + " page(s)" : ": pages already current"));
 
 if (skipped.length) {
   console.log("· skipped " + skipped.length + " folder(s):");

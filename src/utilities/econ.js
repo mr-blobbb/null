@@ -1,7 +1,7 @@
-/* NULL — econ.js
+ /* NULL · econ.js
    The NULL economy, fully local. Playtime banks XP (10 XP per full 30
    minutes in the player, 20 while a boost is active); every 100 XP banks
-   30 coins. Coins unlock shop items — beta games, custom theme accents,
+   30 coins. Coins unlock shop items: beta games, custom theme accents,
    the XP boost and effects. Nothing ever leaves the browser.
 
    Unlock state lives in null:eco:
@@ -84,7 +84,7 @@
   }
 
   /* another NULL window (a second tab, the installed app, a cloaked copy)
-     may have spent coins or earned XP — re-read so the two agree */
+     may have spent coins or earned XP: re-read so the two agree */
   function reload() {
     var fresh = N.store.read(KEY, null);
     if (fresh) data = fresh;
@@ -108,7 +108,7 @@
       bg: "horizon",
       parts: [],
       tint: ["#2a1140", "#07091b"],
-      desc: "Neon '86 — perspective grid floor, glowing horizon and a magenta sun.",
+      desc: "Neon '86: perspective grid floor, glowing horizon and a magenta sun.",
       tags: ["Grid floor", "Neon sun", "4 colors"],
     },
     {
@@ -121,7 +121,7 @@
       bg: "rain",
       parts: [{ k: "rain", n: 48, sp: "top" }],
       tint: ["#04180c", "#02060a"],
-      desc: "Phosphor terminal — glyph rain falls behind a faint scanline haze.",
+      desc: "Phosphor terminal: glyph rain falls behind a faint scanline haze.",
       tags: ["Code rain", "Scanlines", "Terminal"],
     },
     {
@@ -134,7 +134,7 @@
       bg: "rays",
       parts: [],
       tint: ["#1d1403", "#0a0a0b"],
-      desc: "Award-show gold — sweeping light shafts over warm film grain.",
+      desc: "Award-show gold: sweeping light shafts over warm film grain.",
       tags: ["Light shafts", "Film grain", "Warm tint"],
     },
     {
@@ -147,7 +147,7 @@
       bg: "aurora",
       parts: [{ k: "ribbon", n: 14 }, { k: "star", n: 28 }],
       tint: ["#06181e", "#05060f"],
-      desc: "Polar curtains — shimmering ribbons and glowing stars drift past.",
+      desc: "Polar curtains: shimmering ribbons and glowing stars drift past.",
       tags: ["Aurora ribbons", "Stars", "Calm"],
     },
     {
@@ -160,7 +160,7 @@
       bg: "stars",
       parts: [{ k: "star", n: 96 }, { k: "starfar", n: 44 }, { k: "dust", n: 16 }],
       tint: ["#0b0a22", "#04040c"],
-      desc: "Deep field — a dense twinkling starfield over a slow nebula bloom.",
+      desc: "Deep field: a dense twinkling starfield over a slow nebula bloom.",
       tags: ["Starfield", "Drifting dust", "Nebula"],
     },
     {
@@ -173,7 +173,7 @@
       bg: "waves",
       parts: [{ k: "smoke", n: 22, sp: "bottom" }, { k: "cloud", n: 7 }],
       tint: ["#120f2a", "#07121a"],
-      desc: "Smoke lounge — soft puffs rise and drift through pastel cloud banks.",
+      desc: "Smoke lounge: soft puffs rise and drift through pastel cloud banks.",
       tags: ["Smoke", "Cloud banks", "Silky"],
     },
     /* the flagship pack, and the only one that ignores its own palette: it is
@@ -190,12 +190,12 @@
       bg: "neon",
       parts: [{ k: "neonTube", n: 12 }, { k: "neonPulse", n: 16 }, { k: "star", n: 22 }],
       tint: ["#050512", "#010103"],
-      desc: "A glowing wireframe room lit by your glow border — tubes, halo blooms and floor grid all take the border's colours.",
+      desc: "A glowing wireframe room lit by your glow border: tubes, halo blooms and floor grid all take the border's colours.",
       tags: ["Glow tubes", "Follows your glow", "Most expensive"],
     },
   ];
 
-  /* Free packs — always available, deliberately quieter than the shop's.
+  /* Free packs: always available, deliberately quieter than the shop's.
      They reuse the same backdrop engine with fewer particles. */
   var FREE_PACKS = [
     {
@@ -223,11 +223,11 @@
       bg: "mist",
       parts: [{ k: "cloud", n: 5 }],
       tint: ["#101820", "#080b0f"],
-      desc: "Cold morning haze — a few slow clouds, nothing else moving.",
+      desc: "Cold morning haze: a few slow clouds, nothing else moving.",
       tags: ["Free", "Haze", "Slow"],
     },
   ];
-  /* Ambient background particles — a layer of motion that runs behind every
+  /* Ambient background particles: a layer of motion that runs behind every
      page, on its own or over a theme pack. `parts` lists the kinds and how
      many: theme.js turns that into DOM and extra.css draws each kind. Free
      particles are monochrome (mono) so they read in both site themes; shop
@@ -279,7 +279,7 @@
       free: true,
       price: 0,
       mono: true,
-      desc: "Plain light-gray dots strung together by faint lines \u2014 a quiet star map.",
+      desc: "Plain light-gray dots strung together by faint lines: a quiet star map.",
       tags: ["Free", "Dots", "Lines"],
       parts: [
         { k: "node", n: 44 },
@@ -359,7 +359,7 @@
       name: "Warp",
       price: 120,
       colors: ["#ffffff", "#9fe6ff", "#c9c2ff", "#ffffff"],
-      desc: "Rings zoom out of dead centre while stars streak past \u2014 lightspeed.",
+      desc: "Rings zoom out of dead centre while stars streak past: lightspeed.",
       tags: ["Speed", "Radial", "Tunnel"],
       parts: [
         { k: "tunnel", n: 26, sp: "center" },
@@ -370,7 +370,7 @@
   ];
 
   var BOOSTS = [
-    { id: "xpboost", name: "XP boost", price: 30, desc: "Double XP for 24 hours — every 30 minutes banks 20 XP." },
+    { id: "xpboost", name: "XP boost", price: 30, desc: "Double XP for 24 hours: every 30 minutes banks 20 XP." },
   ];
   var FX = [
     { id: "goldconfetti", name: "Golden confetti", price: 30, desc: "Period-end confetti drops in gold instead of grayscale." },
@@ -626,7 +626,7 @@
 
   /* ---------- unlocks ----------
      "game" unlocks are the shop's beta builds, which come from the
-     hand-maintained content.js list — the same list the Shop page renders. */
+     hand-maintained content.js list: the same list the Shop page renders. */
   function listFor(type) {
     if (type === "theme") return THEMES;
     if (type === "particle") return PARTICLES;
@@ -672,7 +672,7 @@
     return item.price || (type === "game" ? 60 : 0);
   }
 
-  /* Buy an item. Returns { ok, reason } — no partial state on failure. */
+  /* Buy an item. Returns { ok, reason }: no partial state on failure. */
   function buy(type, id) {
     var price = priceFor(type, id);
     if (!price) return { ok: false, reason: isFree(type, id) ? "free" : "unknown item" };

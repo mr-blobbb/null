@@ -1,10 +1,10 @@
-# Dev-only leftovers (not needed to build or deploy — see README)
+# Dev-only leftovers (not needed to build or deploy: see README)
 node_modules
 dist
 tsconfig.tsbuildinfo
 .cache
 
-# Host/editor secrets — never publish (NULL needs no keys to run)
+# Host/editor secrets: never publish (NULL needs no keys to run)
 .env.local
 .env*.local
 .env

@@ -1,7 +1,7 @@
-/* NULL — router.js
+/* NULL · router.js
    Single source of truth for the navigation model: which links exist, where
    they point, and which one is active on the current page. Pages are plain
-   HTML files — this just keeps their menus/footers consistent.
+   HTML files: this just keeps their menus/footers consistent.
 
    Root pages are linked with their real .html files. GitHub Pages only serves
    exact files and directory indexes (/games/), so an extensionless /schedule
@@ -9,7 +9,7 @@
 (function () {
   var N = (window.N = window.N || {});
 
-  /* top nav — icon-only destinations. Home is the NULL brand mark itself,
+  /* top nav: icon-only destinations. Home is the NULL brand mark itself,
      so it is not a separate link. The mobile drawer shows all of these. */
   var PRIMARY = [
     { id: "games", t: "Games", url: "/games/", icon: "game" },
@@ -45,7 +45,7 @@
   ];
 
   /* About / District / License / Privacy / Terms / Cookies live only in the
-     footer bottom links — they are not menu destinations. */
+     footer bottom links: they are not menu destinations. */
   var FOOT = [
     {
       name: "Explore",

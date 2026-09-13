@@ -1,4 +1,4 @@
-# NULL — a static hub, served straight from the repository by GitHub Pages.
+# NULL: a static hub, served straight from the repository by GitHub Pages.
 
 User-agent: *
 Allow: /

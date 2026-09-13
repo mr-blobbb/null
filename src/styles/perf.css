@@ -1,8 +1,8 @@
-/* NULL — perf.css
+/* NULL · perf.css
    Ultra-Performance mode. Performance mode (data-perf="1") shortens
    animation; this is the floor: no motion, no effect layers, no blur and
    no paint work for anything off screen. Meant for machines that cannot
-   hold a frame — shell.js only turns it on with the user's say-so.
+   hold a frame: shell.js only turns it on with the user's say-so.
 
    Kept in its own file rather than appended to global.css so the rule set
    can be read (and shipped or dropped) on its own. Loaded after
@@ -25,7 +25,7 @@ html[data-perf="ultra"] :focus-visible {
   outline-offset: 2px;
 }
 
-/* effect layers are pure decoration — drop them entirely */
+/* effect layers are pure decoration: drop them entirely */
 html[data-perf="ultra"] .part-fx,
 html[data-perf="ultra"] .pack-fx,
 html[data-perf="ultra"] .pack-preview,

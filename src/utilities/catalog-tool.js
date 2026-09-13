@@ -1,4 +1,4 @@
-/* NULL — catalog-tool.js
+/* NULL · catalog-tool.js
    The pure half of the static catalog builder: the same text parsing the old
    scripts/discover-*.js did, with the filesystem swapped out. The page script
    (src/pages/tools.js) fetches a folder's files; everything here takes plain
@@ -28,7 +28,7 @@
       .filter(Boolean);
   }
 
-  /* Label.txt — every line is one or more chips. "Label: Action Puzzle" and a
+  /* Label.txt: every line is one or more chips. "Label: Action Puzzle" and a
      bare "Action Puzzle" both work, and "2 Player" stays one label. */
   function parseLabels(text) {
     var out = [];
@@ -52,7 +52,7 @@
     return out;
   }
 
-  /* Warning.txt — Title: … plus a Description: that runs on over following lines */
+  /* Warning.txt: Title: … plus a Description: that runs on over following lines */
   function parseWarning(text) {
     var ls = lines(text);
     if (!ls.length) return null;
@@ -74,7 +74,7 @@
     return { title: title || "Heads up", description: desc.join("\n") };
   }
 
-  /* meta.txt — Name: / Description: / Added: YYYY-MM-DD, and any #hot line */
+  /* meta.txt: Name: / Description: / Added: YYYY-MM-DD, and any #hot line */
   function parseMeta(text) {
     var meta = {};
     lines(text).forEach(function (line) {
@@ -92,7 +92,7 @@
     return meta;
   }
 
-  /* proxies/<slug>/proxy.txt — Link: (or Url:), Description:, Status: */
+  /* proxies/<slug>/proxy.txt: Link: (or Url:), Description:, Status: */
   function parseProxy(text) {
     if (text == null) return null;
     var out = { link: "", desc: "", status: "" };
@@ -125,13 +125,13 @@
       id: slug,
       name: pretty(slug),
       url: conf.link,
-      desc: conf.desc || "External destination \u2014 opens in a new tab.",
+      desc: conf.desc || "External destination, opens in a new tab.",
       status: STATUSES.indexOf(conf.status) >= 0 ? conf.status : "",
     };
   }
 
   /* a game or app entry. `files` holds whatever the page managed to fetch:
-     { html, thumb, labels, warning, meta } — any of them may be missing. */
+     { html, thumb, labels, warning, meta }: any of them may be missing. */
   function entry(kind, slug, files) {
     files = files || {};
     var meta = parseMeta(files.meta);
@@ -140,7 +140,7 @@
       name: meta.name || pretty(slug),
       desc:
         meta.description ||
-        "Found automatically in " + kind + "/" + slug + " \u2014 part of the NULL library.",
+        "Auto-discovered in " + kind + "/" + slug + ", part of the NULL library.",
       file: "/" + kind + "/" + slug + "/" + (files.html || slug + ".html"),
       thumb: files.thumb ? "/" + kind + "/" + slug + "/" + files.thumb : null,
       labels: parseLabels(files.labels),
@@ -200,8 +200,8 @@
 
   var HEADER = [
     "/* ============================================================",
-    "   NULL — generated-catalog.js",
-    "   The catalog the site reads. Build it with /tools — paste your",
+    "   NULL · generated-catalog.js",
+    "   The catalog the site reads. Build it with /tools: paste your",
     "   games/ apps/ proxies/ folders, copy the output over this file.",
     "   Safe to edit by hand: it is plain data, and it is the only place",
     "   the library is registered.",

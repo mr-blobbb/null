@@ -1,4 +1,4 @@
-/* NULL — catalog.js
+/* NULL: catalog.js
    Runtime view of the auto-generated catalog (window.NULL_CATALOG).
    Also owns the launch flows: game/app warning modals, proxy redirect
    confirmations and recently-played tracking. */
@@ -12,7 +12,7 @@
 
   /* shop-unlocked beta games merge into the live library at runtime. They
      stay out of the auto-discovered catalog until a player buys them, then
-     they behave like any other entry — library, search, featured, recents. */
+     they behave like any other entry: library, search, featured, recents. */
   function betaGames() {
     if (!N.econ || !N.econ.unlockedBetas) return [];
     return N.econ.unlockedBetas().map(function (b) {
@@ -65,7 +65,7 @@
   function go(kind, entry) {
     var id = entry.id;
     if (!entry.file && kind !== "proxy") {
-      d.toast("The files for \u201c" + entry.name + "\u201d are missing.", { type: "err" });
+      d.toast("The files for “" + entry.name + "” are missing.", { type: "err" });
       return;
     }
     N.recent.add(kind, id);
@@ -112,9 +112,9 @@
       d.escHtml(host || "an external site") +
       "</b>.</p>" +
       (blocked
-        ? '<p style="color:var(--bad)">Its status is marked <b>Blocked</b> \u2014 it may be unavailable right now.</p>'
+        ? '<p style="color:var(--bad)">Its status is marked <b>Blocked</b>: it may be unavailable right now.</p>'
         : "") +
-      "<p>This can trigger a popup / redirect prompt \u2014 that\u2019s NULL asking the browser for permission, and it\u2019s not malicious.</p>";
+      "<p>This can trigger a popup / redirect prompt: that’s NULL asking the browser for permission, and it’s not malicious.</p>";
     N.modal.open({
       title: "Leave NULL?",
       icon: "ext",
@@ -129,7 +129,7 @@
             try {
               w = window.open(url, "_blank", "noopener");
             } catch (err) {}
-            if (!w) d.toast("The browser blocked the popup \u2014 allow popups for NULL.", { type: "err" });
+            if (!w) d.toast("The browser blocked the popup. Allow popups for NULL.", { type: "err" });
           },
         },
       ],
@@ -149,7 +149,7 @@
     },
     openExternal: openExternal,
     randomGame: function () {
-      /* games only — a beta build labelled "app" must never turn up here */
+      /* games only: a beta build labelled "app" must never turn up here */
       var g = N.catalog.games().filter(function (e) {
         return !e.labels || e.labels[0] !== "app";
       });

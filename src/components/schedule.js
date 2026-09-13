@@ -1,17 +1,17 @@
-/* NULL — schedule.js
+/* NULL · schedule.js
    The school schedule component.
 
    Three day types:
-     • reg  — Monday / Friday: seven 46-minute class periods, 7:45 start.
-     • win  — Tuesday / Thursday: same periods with a Homeroom/WIN block
+     • reg: Monday / Friday: seven 46-minute class periods, 7:45 start.
+     • win: Tuesday / Thursday: same periods with a Homeroom/WIN block
               added after Period 2 (the following bells shift to fit it).
-     • late — Wednesday: late arrival, first bell at 9:00.
+     • late: Wednesday: late arrival, first bell at 9:00.
 
    One of periods 4/5/6 is your lunch period (settable on /schedule/,
    default 5). That row reads "Lunch" instead of a class name.
 
    Times below are sample data. To match the real bell schedule, edit the
-   TEMPLATES object — that is the only thing that needs to change.
+   TEMPLATES object: that is the only thing that needs to change.
 
    Rendered compact on the home dashboard and full-size on /schedule,
    which also exposes the editor (rename periods, pick a lunch period). */
@@ -106,14 +106,14 @@
 
   /* ---------- time helpers ---------- */
   /* Bell times are 12-hour strings ("7:45", "12:41", "1:31"). All blocks
-     fall between 7 AM and ~3 PM, so hours 1–6 mean afternoon and 12 means noon. */
+     fall between 7 AM and ~3 PM, so hours 1-6 mean afternoon and 12 means noon. */
   function parseHM(s) {
     var m = /^(\d{1,2}):(\d{2})$/.exec(String(s).trim());
     if (!m) return -1;
     var h = parseInt(m[1], 10);
     var min = parseInt(m[2], 10);
     if (h === 12) h = 12; // noon, not midnight
-    else if (h < 7) h += 12; // 1–6 → PM
+    else if (h < 7) h += 12; // 1-6 → PM
     return h * 60 + min;
   }
 
@@ -127,7 +127,7 @@
   }
 
   function spanText(b) {
-    return fmtHM(parseHM(b.start)) + " – " + fmtHM(parseHM(b.end));
+    return fmtHM(parseHM(b.start)) + " - " + fmtHM(parseHM(b.end));
   }
 
   function nowMinutes() {
@@ -206,7 +206,7 @@
         return out;
       }
       if (secs < s) {
-        /* gap between the previous block and this one — passing period */
+        /* gap between the previous block and this one: passing period */
         if (i > 0) {
           out.i = i;
           out.passing = true;
@@ -238,7 +238,7 @@
   function rowEl(b, idx, isNow, opts) {
     opts = opts || {};
     var cells = [
-      d.h("span", { class: "s-no" }, b.n ? "P" + b.n : "\u2014"),
+      d.h("span", { class: "s-no" }, b.n ? "P" + b.n : "-"),
       d.h("span", { class: "s-name" }, b.name),
       d.h("span", { class: "s-time" }, spanText(b)),
     ];
@@ -264,7 +264,7 @@
             onclick: function () {
               onChange(wi);
             },
-          }, [WEEKDAYS[wi].slice(0, 3), " \u00b7 ", t ? KIND[t].short : "Regular"]),
+          }, [WEEKDAYS[wi].slice(0, 3), " · ", t ? KIND[t].short : "Regular"]),
         );
       })(wi);
     }
@@ -294,11 +294,11 @@
   function liveStrip(blocks) {
     var badge = d.h("div", { class: "ls-badge" }, [
       d.h("span", { class: "dot" }),
-      d.h("b", { class: "ls-name" }, "\u2014"),
+      d.h("b", { class: "ls-name" }, "-"),
       d.h("span", { class: "ls-time" }, ""),
     ]);
     var count = d.h("div", { class: "ls-count" }, [d.h("span", { class: "ls-left" }, "0:00"), d.h("span", { class: "ls-cap" }, "left")]);
-    var next = d.h("div", { class: "ls-next" }, [d.h("span", { class: "ls-cap" }, "next"), d.h("b", null, "\u2014")]);
+    var next = d.h("div", { class: "ls-next" }, [d.h("span", { class: "ls-cap" }, "next"), d.h("b", null, "-")]);
     var el = d.h("div", { class: "live-strip" }, [badge, count, next]);
     function paint(lv) {
       var b = lv.block;
@@ -313,15 +313,15 @@
         badge.classList.remove("on");
         var nx = lv.next;
         /* more than an hour until the next block (before school, long gap)
-           — a 437:38 countdown is noise, so just say "Before school" */
+         : a 437:38 countdown is noise, so just say "Before school" */
         var early = nx && lv.secToNext > 3600;
         badge.querySelector(".ls-name").textContent = nx
           ? early
             ? "Before school"
-            : "Up next \u2014 " + nx.name
-          : "School\u2019s out";
+            : "Up next: " + nx.name
+          : "School’s out";
         badge.querySelector(".ls-time").textContent = nx ? spanText(nx) : "See you tomorrow";
-        count.querySelector(".ls-left").textContent = nx && !early ? fmtClock(lv.secToNext) : "\u2014";
+        count.querySelector(".ls-left").textContent = nx && !early ? fmtClock(lv.secToNext) : "-";
         count.classList.add("idle");
         if (nx && !early && lv.secToNext > 0) count.querySelector(".ls-cap").textContent = "until it starts";
         else if (nx && !early) count.querySelector(".ls-cap").textContent = "left";
@@ -330,7 +330,7 @@
       }
       var nb = lv.next;
       if (nb) {
-        next.querySelector("b").textContent = nb.name + " \u00b7 " + fmtHM(parseHM(nb.start));
+        next.querySelector("b").textContent = nb.name + " · " + fmtHM(parseHM(nb.start));
       } else {
         next.querySelector("b").textContent = "No more blocks today";
       }
@@ -363,7 +363,7 @@
     );
     card.appendChild(d.h("b", { class: "tc-date" }, label));
     card.appendChild(
-      d.h("span", { class: "tc-note" }, type ? KIND[type].note : "Weekend \u2014 see you on Monday."),
+      d.h("span", { class: "tc-note" }, type ? KIND[type].note : "Weekend: see you on Monday."),
     );
     return card;
   }

@@ -1,4 +1,4 @@
-/* NULL — daily.js
+/* NULL: daily.js
    The daily loop on top of the economy: a once-a-day crate (a real modal
    with a spinning reel), three rotating daily quests and the permanent
    achievement list. Everything pays coins; nothing is bought or uploaded. */
@@ -135,13 +135,13 @@
     var can = N.econ.canSpin();
     var st = N.econ.state();
 
-    var reel = d.h("div", { class: "crate-num" }, can ? "?" : "\u2014");
+    var reel = d.h("div", { class: "crate-num" }, can ? "?" : "-");
     var note = d.h(
       "p",
       { class: "crate-note" },
       can
-        ? "Day " + st.spinStreak + " streak \u00b7 +" + Math.min(25, (st.spinStreak - 1) * 5) + " bonus coins"
-        : "Streak: " + st.spinStreak + " day" + (st.spinStreak === 1 ? "" : "s") + " \u00b7 back tomorrow",
+        ? "Day " + st.spinStreak + " streak · +" + Math.min(25, (st.spinStreak - 1) * 5) + " bonus coins"
+        : "Streak: " + st.spinStreak + " day" + (st.spinStreak === 1 ? "" : "s") + " · back tomorrow",
     );
     var btn = d.h(
       "button",
@@ -164,7 +164,7 @@
         var res = N.econ.spin();
         if (!res.ok) return;
         btn.disabled = true;
-        btn.textContent = "Opening\u2026";
+        btn.textContent = "Opening…";
         box.classList.add("rolling");
         reel.classList.add("rolling");
 
@@ -184,7 +184,7 @@
           note.textContent =
             "Nice!" +
             (res.bonus ? " +" + res.bonus + " streak bonus" : "") +
-            " \u00b7 spend it in the Shop";
+            " · spend it in the Shop";
           btn.textContent = "See you tomorrow";
           d.toast("Crate: +" + res.amount + (res.type === "xp" ? " XP" : " coins"), { icon: "coin" });
           if (N.fx && N.fx.confetti) N.fx.confetti();
@@ -226,8 +226,8 @@
           "span",
           null,
           st.canSpin
-            ? "One free open today \u00b7 day " + st.spinStreak + " streak"
-            : "Opened today \u00b7 streak " + st.spinStreak,
+            ? "One free open today · day " + st.spinStreak + " streak"
+            : "Opened today · streak " + st.spinStreak,
         ),
       ]),
     );

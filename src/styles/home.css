@@ -1,4 +1,4 @@
-/* NULL — home.css
+/* NULL · home.css
    Home-page only styles. Loaded after global.css, so these win over the
    shared `.mast` rules there: the header is a full-width band (edge-to-edge
    hairlines, content on the same grid as every other page) rather than the

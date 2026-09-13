@@ -43,7 +43,7 @@
   });
   addEventListener("keyup", function (e) { keys[e.key.toLowerCase()] = false; });
 
-  // touch drag — two halves of the screen
+  // touch drag: two halves of the screen
   var drag = { on: false, side: 0, y: 0 };
   cv.addEventListener("pointerdown", function (e) {
     drag.on = true;

@@ -1,4 +1,4 @@
-/* NULL — content.js
+/* NULL · content.js
    Hand-edited site content that search + the home dashboard read.
    The game/app/proxy library itself lives in src/catalog/generated-catalog.js
    (built with /tools); announcements and page descriptions live here. */
@@ -21,14 +21,14 @@ window.NULL_CONTENT = {
   ],
 
   /* Shop-unlocked beta builds. These never appear in the auto-discovered
-     library — buying them in /shop merges them in at runtime (see
+     library: buying them in /shop merges them in at runtime (see
      catalog.js). Point `file` at the real beta build whenever one exists. */
   betas: [
     {
       id: "beta-simon",
       name: "Simon: Deluxe",
       date: "2026-09-08",
-      desc: "Beta branch of SIMON \u2014 faster rounds and double-tap combos. Beta-only, unlocked in the Shop.",
+      desc: "Beta branch of SIMON: faster rounds and double-tap combos. Beta-only, unlocked in the Shop.",
       file: "/games/simon/simon.html",
       labels: ["beta", "memory"],
       price: 60,
@@ -46,7 +46,7 @@ window.NULL_CONTENT = {
       id: "beta-trace",
       name: "Trace: Ghost Mode",
       date: "2026-09-08",
-      desc: "Beta branch of TRACE \u2014 trails linger longer. Beta-only, unlocked in the Shop.",
+      desc: "Beta branch of TRACE: trails linger longer. Beta-only, unlocked in the Shop.",
       file: "/games/trace/trace.html",
       labels: ["beta", "precision"],
       price: 60,
@@ -86,14 +86,14 @@ window.NULL_CONTENT = {
       title: "Announcements",
       url: "/announcements.html",
       grp: "Pages",
-      desc: "What\u2019s new on NULL.",
+      desc: "What’s new on NULL.",
       kw: "news updates changelog posts",
     },
     {
       title: "Schedule",
       url: "/schedule.html",
       grp: "Pages",
-      desc: "The school schedule \u2014 Regular and Homeroom/WIN days, live countdown, editable period names and lunch period.",
+      desc: "The school schedule: Regular and Homeroom/WIN days, live countdown, editable period names and lunch period.",
       kw: "school bell time class period day lunch homeroom win",
     },
     {
@@ -156,7 +156,7 @@ window.NULL_CONTENT = {
       title: "License",
       url: "/license.html",
       grp: "Info",
-      desc: "NULL\u2019s open license.",
+      desc: "NULL’s open license.",
       kw: "license mit open source",
     },
   ],

@@ -1,7 +1,7 @@
-/* NULL — shop.js
+/* NULL · shop.js
    The Shop page: shows the local economy (playtime → XP → coins) and lets
    coins unlock beta games, theme accents, the XP boost and effects. All
-   state lives in null:eco — nothing is purchased with real money. */
+   state lives in null:eco: nothing is purchased with real money. */
 (function () {
   var N = (window.N = window.N || {});
   var d = N.dom;
@@ -33,7 +33,7 @@
   function buy(type, id, name, price) {
     var st = N.econ.state();
     if (st.coins < price) {
-      d.toast("Not enough coins yet — keep playing to earn more!", { type: "err", icon: "coin" });
+      d.toast("Not enough coins yet. Keep playing to earn more!", { type: "err", icon: "coin" });
       return;
     }
     N.modal.confirm({
@@ -41,7 +41,7 @@
       icon: "coin",
       body:
         "<p>This spends <b>" + price + " coins</b>. You have <b>" + st.coins + "</b>.</p>" +
-        "<p style='color:var(--text-2)'>Everything is local — reloading or switching devices keeps your unlocks in this browser only.</p>",
+        "<p style='color:var(--text-2)'>Everything is local: reloading or switching devices keeps your unlocks in this browser only.</p>",
       okLabel: "Buy for " + price,
       onOk: function () {
         var r = N.econ.buy(type, id);
@@ -337,7 +337,7 @@
           d.h(
             "span",
             null,
-            "Day " + st.spinStreak + " streak \u00b7 5\u201375 coins or 20 XP, with a streak bonus",
+            "Day " + st.spinStreak + " streak · 5-75 coins or 20 XP, with a streak bonus",
           ),
         ]),
         foot,
@@ -399,7 +399,7 @@
     partSec.appendChild(partGrid);
     partSec.appendChild(
       d.h("p", { class: "eco-note" }, [
-        "Motes, Haze and Twinkle are free in Settings \u2014 these ones are the loud stuff.",
+        "Motes, Haze and Twinkle are free in Settings: these ones are the loud stuff.",
       ]),
     );
     body.appendChild(partSec);

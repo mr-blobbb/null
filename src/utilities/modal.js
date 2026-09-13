@@ -1,4 +1,4 @@
-/* NULL — modal.js
+/* NULL · modal.js
    One shared modal system. Every dialog (welcome, warning, SGGAMES, danger,
    redirect confirm…) uses the exact same shell: same size, spacing, borders.
    Long content scrolls inside the modal; it never resizes the window. */
@@ -123,7 +123,7 @@
     });
   }
 
-  /* SGGAMES — typed anywhere on the site (case-insensitive) */
+  /* SGGAMES: typed anywhere on the site (case-insensitive) */
   var sg = null;
   function armSgGames() {
     if (sg) return;

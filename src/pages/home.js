@@ -1,4 +1,4 @@
-/* NULL — home.js
+/* NULL · home.js
    Dashboard logic: the featured rail (first 10 library items), the daily
    crate strip, recently played games with random/clear, a live "today"
    schedule card, announcements, the first-launch welcome modal and the
@@ -41,7 +41,7 @@
       n(N.catalog.apps().length, "app", "apps"),
       n(N.catalog.proxies().length, "proxy", "proxies"),
     ].filter(Boolean);
-    el.textContent = parts.join(" \u00b7 ");
+    el.textContent = parts.join(" · ");
     el.hidden = !parts.length;
   }
 
@@ -63,13 +63,13 @@
     }
     if (!list.length) {
       track.appendChild(
-        d.h("div", { class: "feat-empty" }, "The library is empty \u2014 add folders to games/ and rebuild the catalog."),
+        d.h("div", { class: "feat-empty" }, "The library is empty: add folders to games/ and rebuild the catalog."),
       );
       if (hint) hint.textContent = "";
       return;
     }
     if (hint) {
-      var extra = list.length > games.length ? " \u00b7 games first, then apps" : "";
+      var extra = list.length > games.length ? " · games first, then apps" : "";
       hint.textContent = games.length + " game" + (games.length === 1 ? "" : "s") + extra;
     }
     list.forEach(function (it) {
@@ -124,7 +124,7 @@
       ]),
       d.h("h3", { class: "gotd-name", title: g.name }, g.name),
       d.h("div", { class: "chips-row" }, N.cards.chipsFor(g)),
-      d.h("p", { class: "gotd-desc" }, g.desc || "A game in the NULL library \u2014 fresh pick every day."),
+      d.h("p", { class: "gotd-desc" }, g.desc || "A game in the NULL library: fresh pick every day."),
       d.h("div", { class: "gotd-actions" }, [
         d.h("button", { type: "button", class: "btn btn-primary", onclick: function () {
             N.launch.game(g);
@@ -137,21 +137,21 @@
 
   /* ---------- daily tip ----------
      One short tip a day about a real NULL feature, picked deterministically
-     from the date (same tip all day, fresh tomorrow — no storage needed). */
+     from the date (same tip all day, fresh tomorrow: no storage needed). */
   var TIPS = [
-    "Type <b>nldev</b> anywhere to open the developer console — confetti, modals, seasons and more.",
+    "Type <b>nldev</b> anywhere to open the developer console: confetti, modals, seasons and more.",
     "The <b>panic key</b> (backtick by default) jumps you to a safe page instantly. Set it in Settings.",
     "Tab cloaking is free: pick a Google preset in Settings and your tab title + icon change instantly.",
-    "Play 30 minutes and you earn <b>10 XP</b> — every 100 XP banks 30 coins for the Shop.",
-    "The <b>screensaver</b> kicks in after two idle minutes — move the mouse or press any key to wake it.",
+    "Play 30 minutes and you earn <b>10 XP</b>, and every 100 XP banks 30 coins for the Shop.",
+    "The <b>screensaver</b> kicks in after two idle minutes. Move the mouse or press any key to wake it.",
     "Star a game to favorite it; favorites show up in the drawer and are searchable.",
-    "Seasonal mode is off by default — flip it on in Settings for falling leaves, snow or petals.",
-    "Smart tab cloak rotates your tab preset on a timer while you play — pauses when the tab is hidden.",
+    "Seasonal mode is off by default. Flip it on in Settings for falling leaves, snow or petals.",
+    "Smart tab cloak rotates your tab preset on a timer while you play. It pauses when the tab is hidden.",
     "Game saves that live in localStorage can be downloaded and even shared with a friend from the player bar.",
-    "Search understands labels: try \u201carcade\u201d, \u201cmemory\u201d or \u201ccalculator\u201d to filter results.",
-    "Marathon mode auto-switches games on a timer — the games page owns the controls.",
-    "Open the <b>daily crate</b> for free coins — the streak bonus grows every day you come back.",
-    "Daily quests and achievements pay coins in the <b>Shop</b> — a dot on its icon means something is waiting.",
+    "Search understands labels: try “arcade”, “memory” or “calculator” to filter results.",
+    "Marathon mode auto-switches games on a timer: the games page owns the controls.",
+    "Open the <b>daily crate</b> for free coins: the streak bonus grows every day you come back.",
+    "Daily quests and achievements pay coins in the <b>Shop</b>: a dot on its icon means something is waiting.",
     "Press <b>/</b> anywhere to jump into search without touching the mouse.",
   ];
   function renderTip() {
@@ -198,7 +198,7 @@
     var listEl = d.h("div", { class: "rec-list" });
     items.forEach(function (it) {
       var row = N.cards.row(it.e, it.k, {
-        sub: (N.KIND_LABEL[it.k] || "") + " \u00b7 " + N.dt.ago(it.at),
+        sub: (N.KIND_LABEL[it.k] || "") + " · " + N.dt.ago(it.at),
       });
       var x = d.h("button", {
         type: "button",
@@ -228,7 +228,7 @@
         d.h("div", { class: "ric" }, [d.icon("ann")]),
         d.h("div", { class: "rtxt" }, [
           d.h("b", null, a.title),
-          d.h("span", null, N.dt.fmt(a.date) + " \u00b7 " + a.desc),
+          d.h("span", null, N.dt.fmt(a.date) + " · " + a.desc),
         ]),
       ]);
       card.addEventListener("click", function () {
@@ -250,7 +250,7 @@
     if (!info.type) {
       wrap.appendChild(
         d.h("div", { class: "sched-nodays" }, [
-          d.h("b", null, info.dayName + " \u2014 no school."),
+          d.h("b", null, info.dayName + ": no school."),
           d.h("span", null, " Monday is a Regular day."),
         ]),
       );
@@ -318,12 +318,12 @@
       icon: "ban",
       dismissible: false,
       body:
-"<p style='font-size:15px; color:#a3a3a3; margin-top:0; margin-bottom:16px;'>The ultimate browser-based hub \u2014 unblocked, fast, and built for you.</p>" +
+"<p style='font-size:15px; color:#a3a3a3; margin-top:0; margin-bottom:16px;'>The ultimate browser-based hub: unblocked, fast, and built for you.</p>" +
 "<p style='font-size:14px; margin-bottom:16px;'>Dive into over <b>2,300 games</b>, tons of premium apps, built-in proxies, and reliable backup links. NULL constantly updates in real-time to always stay ahead.</p>" +
 "<p style='font-size:13.5px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; color:#737373; margin-bottom:8px;'>Everything runs locally in your browser:</p>" +
-"<p style='font-size:13.5px; margin-top:0; line-height:1.5;'>\u2022 Recently played games and tools save automatically to your device<br>" +
-"\u2022 Open <b>Settings</b> to toggle instant tab cloaking, custom panic keys, themes, and deep visual customization<br>" +
-"\u2022 NULL never uploads anything \u2014 no external servers, no tracking, and zero accounts required</p>"
+"<p style='font-size:13.5px; margin-top:0; line-height:1.5;'>• Recently played games and tools save automatically to your device<br>" +
+"• Open <b>Settings</b> to toggle instant tab cloaking, custom panic keys, themes, and deep visual customization<br>" +
+"• NULL never uploads anything: no external servers, no tracking, and zero accounts required</p>"
 ,
       actions: [
         {
@@ -336,7 +336,7 @@
         },
       ],
     });
-    /* 5-second cooldown on Continue — the copy is worth reading */
+    /* 5-second cooldown on Continue: the copy is worth reading */
     var m = Array.prototype.slice.call(document.querySelectorAll(".modal-ov")).pop();
     var foot = m && m.querySelector(".modal-foot");
     var btn = foot && foot.querySelector("button");
@@ -370,8 +370,8 @@
       title: "Popups & redirects",
       icon: "ext",
       body:
-        "<p>Some NULL features \u2014 cloaking, about:blank / blob: modes, and opening external proxies \u2014 ask the browser to allow <b>popups</b> and <b>redirects</b>.</p>" +
-        "<p>That\u2019s NULL requesting permission for its own functionality. It is <b>not</b> malicious, and the browser stays in control of every permission prompt.</p>",
+        "<p>Some NULL features (cloaking, about:blank / blob: modes, and opening external proxies) ask the browser to allow <b>popups</b> and <b>redirects</b>.</p>" +
+        "<p>That’s NULL requesting permission for its own functionality. It is <b>not</b> malicious, and the browser stays in control of every permission prompt.</p>",
       onClose: customizeNote,
       actions: [
         {
@@ -390,9 +390,9 @@
                 w.close();
               } catch (err) {}
             } else {
-              /* remember it — cloaking won't fire another doomed popup */
+              /* remember it: cloaking won't fire another doomed popup */
               if (N.cloak && N.cloak.markBlocked) N.cloak.markBlocked();
-              d.toast("Popup blocked \u2014 allow popups for NULL to enable cloaking.", { type: "err", hold: 5000 });
+              d.toast("Popup blocked. Allow popups for NULL to enable cloaking.", { type: "err", hold: 5000 });
             }
           },
         },
@@ -410,8 +410,8 @@
       dismissible: false,
       body:
         "<p style='font-size:15px; color:#a3a3a3; margin-top:0; margin-bottom:14px;'>Would you like to customize NULL's look?</p>" +
-        "<p style='font-size:13.5px; margin-top:0; margin-bottom:14px; line-height:1.55;'>Pick <b>accent colors</b> and <b>glow borders</b>, flip between <b>dark &amp; light mode</b>, cloak your tab with a <b>preset</b>, and arm a <b>panic key</b> \u2014 all in Settings, saved locally on your device.</p>" +
-        "<div style='margin:0 0 14px; padding:10px 12px; border-radius:12px; background: color-mix(in srgb, var(--ac-1) 9%, transparent); border:1px solid color-mix(in srgb, var(--ac-1) 26%, transparent); font-size:13.5px; line-height:1.5;'><b>Introducing seasonal mode</b> \u2014 fall leaves, winter snow, spring petals and summer light drift behind everything, following the real seasons. Flip it on or off in Settings.</div>" +
+        "<p style='font-size:13.5px; margin-top:0; margin-bottom:14px; line-height:1.55;'>Pick <b>accent colors</b> and <b>glow borders</b>, flip between <b>dark & light mode</b>, cloak your tab with a <b>preset</b>, and arm a <b>panic key</b>, all in Settings, saved locally on your device.</p>" +
+        "<div style='margin:0 0 14px; padding:10px 12px; border-radius:12px; background: color-mix(in srgb, var(--ac-1) 9%, transparent); border:1px solid color-mix(in srgb, var(--ac-1) 26%, transparent); font-size:13.5px; line-height:1.5;'><b>Introducing seasonal mode</b>: fall leaves, winter snow, spring petals and summer light drift behind everything, following the real seasons. Flip it on or off in Settings.</div>" +
         "<p style='font-size:13px; color:#737373; margin:0;'>Everything can be changed anytime later.</p>",
       actions: [
         {
@@ -461,7 +461,7 @@
     renderSchedHome();
     bind();
     N.bus.on("recent", renderRecents);
-    /* the dev console can change the catalog under us — keep the counts and
+    /* the dev console can change the catalog under us: keep the counts and
        the featured rail honest */
     N.bus.on("catalog", function () {
       renderMastStats();

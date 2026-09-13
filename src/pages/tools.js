@@ -1,4 +1,4 @@
-/* NULL — tools.js
+/* NULL · tools.js
    The static catalog builder (/tools). The browser cannot list a directory, so
    you paste your content folders; this probes them over HTTP, reads the same
    Label.txt / Warning.txt / meta.txt / proxy.txt the old Node scripts read, and
@@ -126,7 +126,7 @@
     ];
     groups.forEach(function (g) {
       if (!g.list.length) return;
-      prev.appendChild(d.h("div", { class: "tool-group" }, g.label + " \u00b7 " + g.list.length));
+      prev.appendChild(d.h("div", { class: "tool-group" }, g.label + " · " + g.list.length));
       g.list.forEach(function (e) {
         prev.appendChild(previewRow(g.kind, e));
       });
@@ -134,7 +134,7 @@
 
     var total = cat.games.length + cat.apps.length + cat.proxies.length;
     d.qs("#toolCount").textContent =
-      total + " entr" + (total === 1 ? "y" : "ies") + " \u00b7 built " + cat.generatedAt.slice(0, 10);
+      total + " entr" + (total === 1 ? "y" : "ies") + " · built " + cat.generatedAt.slice(0, 10);
 
     if (skipped.length) {
       notes.appendChild(d.h("b", null, "Skipped"));
@@ -171,12 +171,12 @@
         cat.proxies.sort(byName);
         btn.disabled = false;
         var total = paint(cat, skipped);
-        var skippedNote = skipped.length ? " \u00b7 " + skipped.length + " skipped" : "";
-        setStatus("Scanned " + found.length + " folder" + (found.length === 1 ? "" : "s") + " \u2192 " + total + " entries" + skippedNote + ".", "ok");
+        var skippedNote = skipped.length ? " · " + skipped.length + " skipped" : "";
+        setStatus("Scanned " + found.length + " folder" + (found.length === 1 ? "" : "s") + " → " + total + " entries" + skippedNote + ".", "ok");
         return;
       }
       var it = found[i];
-      setStatus("Scanning " + (i + 1) + " / " + found.length + " \u2014 " + it.kind + "/" + it.slug + "\u2026");
+      setStatus("Scanning " + (i + 1) + " / " + found.length + ": " + it.kind + "/" + it.slug + "…");
       scanFolder(it)
         .then(function (entry) {
           if (!entry) {
@@ -213,7 +213,7 @@
       out.push("proxies/" + p.id);
     });
     d.qs("#toolPaths").value = out.join("\n");
-    setStatus(out.length + " folders filled in from the current catalog \u2014 add or remove lines, then scan.", "ok");
+    setStatus(out.length + " folders filled in from the current catalog: add or remove lines, then scan.", "ok");
   }
 
   function copyCode() {
@@ -230,7 +230,7 @@
     }
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(code.value).then(function () {
-        d.toast("Catalog copied \u2014 paste it into src/catalog/generated-catalog.js", { icon: "check" });
+        d.toast("Catalog copied. Paste it into src/catalog/generated-catalog.js", { icon: "check" });
       }, fallback);
     } else {
       fallback();

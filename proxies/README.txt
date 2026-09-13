@@ -9,7 +9,7 @@ proxies/, e.g. proxies/my-link/, containing a proxy.txt file:
   Status: All Good
 
 Statuses are one of: All Good / Issue / Blocked.
-They are maintained BY HAND — nothing auto-verifies them.
+They are maintained BY HAND: nothing auto-verifies them.
 
 Then run:
 

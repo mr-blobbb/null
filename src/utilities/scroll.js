@@ -1,4 +1,4 @@
-/* NULL — scroll.js
+/* NULL · scroll.js
    Custom overlay scrollbar for the library pages (games / apps / proxies).
    The native page scrollbar is hidden; a slim frosted pill tracks scroll.
    The page itself keeps scrolling normally. */

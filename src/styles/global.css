@@ -1,9 +1,9 @@
 /* ============================================================
-   NULL — global.css
+   NULL: global.css
    Shared black-and-white / grayscale design system for every page.
    ============================================================ */
 
-/* Material Symbols — one uniform icon font for every glyph on NULL.
+/* Material Symbols: one uniform icon font for every glyph on NULL.
    NULL serves its own ~88 KB cut of it (scripts/build-font.js) rather than
    asking Google for the full 5 MB one, so the interface renders the same
    offline, behind a network that blocks fonts.googleapis.com, and with no
@@ -27,7 +27,7 @@
   --text-2: rgba(245, 245, 246, 0.58);
   --line: rgba(255, 255, 255, 0.13);
   --line-2: rgba(255, 255, 255, 0.26);
-  --glass-bg: #161618; /* flat surfaces — no translucency, no blur */
+  --glass-bg: #161618; /* flat surfaces: no translucency, no blur */
   --glass-bg-2: #1c1c1f;
   --glass-bg-3: #26262b;
   --elev: #17171a;
@@ -179,7 +179,7 @@ textarea {
   left: 0;
 }
 
-/* old ambient-glow layer — intentionally inert (plain flat background),
+/* old ambient-glow layer: intentionally inert (plain flat background),
    but the seasonal theme paints its soft wash on it */
 .glow-bg {
   position: fixed;
@@ -318,7 +318,7 @@ main.sview > * {
 }
 
 /* ============================================================
-   flat surfaces — solid fills, hairline borders only
+   flat surfaces: solid fills, hairline borders only
    ============================================================ */
 .glass {
   background: var(--glass-bg);
@@ -769,7 +769,7 @@ label.lbl {
 }
 
 /* ============================================================
-   Material Symbols — icon base + per-context sizing/colors.
+   Material Symbols: icon base + per-context sizing/colors.
    d.icon() now returns <span class="msr">ligature</span>, so all
    glyph styling lives here (old svg rules are inert leftovers).
    ============================================================ */
@@ -899,7 +899,7 @@ label.lbl {
 }
 
 /* ============================================================
-   top nav — icon-only links, no Home link, no More dropdown
+   top nav: icon-only links, no Home link, no More dropdown
    ============================================================ */
 .nav-links {
   gap: 2px;
@@ -926,7 +926,7 @@ label.lbl {
 }
 
 /* ============================================================
-   dev console (type nldev — full-screen glass terminal overlay)
+   dev console (type nldev: full-screen glass terminal overlay)
    ============================================================ */
 .dc-ov {
   position: fixed;
@@ -1237,7 +1237,7 @@ html[data-perf='1'] .dc-ov {
 }
 
 /* ============================================================
-   library extras (games page) — "because you played", favorites,
+   library extras (games page): "because you played", favorites,
    marathon status, and the plain list view for proxies
    ============================================================ */
 .fav-sec {
@@ -1289,13 +1289,13 @@ html[data-perf='1'] .dc-ov {
 }
 
 /* ============================================================
-   glow border — slim neon ring at the viewport edge: a 5px border
+   glow border: slim neon ring at the viewport edge: a 5px border
    with a soft 5px glow hugging it. No blur filters: the glow is two
    stepped bands, so corners stay complete and it stays GPU-cheap.
    Corner radii are matched per layer (inner arc is always the same
    radius) so the glow follows the ring perfectly around corners.
    The gradient rotates in a loop (--nga); comet mode adds a bright
-   streak. The border is uniform all the way round — it does not react
+   streak. The border is uniform all the way round: it does not react
    to the cursor.
    ============================================================ */
 @property --nga {
@@ -1332,7 +1332,7 @@ html[data-perf='1'] .dc-ov {
   opacity: 0.95;
   animation: nga 8s linear infinite;
 }
-/* soft glow — inner step (7px) and outer step (10px) fall off like a blur */
+/* soft glow: inner step (7px) and outer step (10px) fall off like a blur */
 #null-glow-el .ng-glow2 {
   padding: 7px;
   border-radius: 14px;
@@ -1345,14 +1345,14 @@ html[data-perf='1'] .dc-ov {
   opacity: 0.22;
   animation: nga 17s linear infinite reverse;
 }
-/* comet streak — same geometry as the ring so it hugs the border */
+/* comet streak: same geometry as the ring so it hugs the border */
 #null-glow-el .ng-comet {
   padding: 6px;
   border-radius: 13px;
   opacity: 0.95;
   animation: nga 5s linear infinite;
 }
-/* crossfade helpers — theme.js toggles these when a preset changes */
+/* crossfade helpers: theme.js toggles these when a preset changes */
 #null-glow-el .ng-in {
   opacity: 0 !important;
 }
@@ -1581,7 +1581,7 @@ body.lb .site-foot {
   opacity: 1;
 }
 
-/* proxy rows — image-free list entries */
+/* proxy rows: image-free list entries */
 .tcard.proxy-row {
   display: flex;
   flex-direction: row;
@@ -1627,7 +1627,7 @@ body.lb .site-foot {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-/* name badge — a glass title pill pinned to the thumbnail. Lives on the
+/* name badge: a glass title pill pinned to the thumbnail. Lives on the
    fixed-height media block, so no grid/flex sizing can ever hide it. */
 .tname-badge {
   position: absolute;
@@ -1656,7 +1656,7 @@ body.lb .site-foot {
   display: block;
 }
 
-/* corner badges on card thumbnails — NEW (added recently), HOT (meta.txt #hot) */
+/* corner badges on card thumbnails: NEW (added recently), HOT (meta.txt #hot) */
 .tbadges {
   position: absolute;
   top: 8px;
@@ -1733,7 +1733,7 @@ body.lb .site-foot {
   flex: 1;
   font-size: 13px;
 }
-/* card footer with only the star — buttonless cards, click anywhere to play */
+/* card footer with only the star: buttonless cards, click anywhere to play */
 .tfoot-solo {
   padding: 2px 12px 12px;
 }
@@ -2153,7 +2153,7 @@ body.lb .site-foot {
 /* ============================================================
    announcements
    ============================================================ */
-/* unread dot — pulsing green marker before the eyebrow when a new
+/* unread dot: pulsing green marker before the eyebrow when a new
    announcement hasn't been seen yet. Fades out once it's marked seen. */
 .ann-dot {
   width: 8px;
@@ -2181,7 +2181,7 @@ body.lb .site-foot {
   }
 }
 
-/* weekly wrap-up modal — stat tiles + most-played list */
+/* weekly wrap-up modal: stat tiles + most-played list */
 .wu-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

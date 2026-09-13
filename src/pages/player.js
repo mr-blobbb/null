@@ -1,8 +1,8 @@
-/* NULL — player.js
+/* NULL · player.js
    The shared NULL player. A frosted chrome bar surrounds the game/app iframe;
    the game fills the rest of the screen. Handles fullscreen, tab-preset
    overrides inside the iframe, and the about:blank / blob: cloaking modes
-   (popup permissions permitting — the browser stays in control). */
+   (popup permissions permitting: the browser stays in control). */
 (function () {
   var N = (window.N = window.N || {});
   var d = N.dom;
@@ -36,7 +36,7 @@
     }
 
     if (nameEl) nameEl.textContent = entry.name;
-    if (kindEl) kindEl.textContent = (N.KIND_LABEL[p.k] || "Item") + " \u00b7 NULL";
+    if (kindEl) kindEl.textContent = (N.KIND_LABEL[p.k] || "Item") + " · NULL";
 
     N.recent.add(p.k, entry.id);
     N.tab.apply();
@@ -75,7 +75,7 @@
           acc = 0;
           if (got.coins) {
             paintCoins();
-            d.toast("+" + got.coins + " coins \u2014 spend them in the Shop", { icon: "coin" });
+            d.toast("+" + got.coins + " coins: spend them in the Shop", { icon: "coin" });
             if (N.fx && N.fx.confetti) N.fx.confetti();
           }
         }
@@ -98,7 +98,7 @@
         n.remove();
       });
     }
-    var note = d.h("div", { class: "player-note" }, "Esc exits fullscreen \u00b7 arrow/WASD keys work when the game is focused");
+    var note = d.h("div", { class: "player-note" }, "Esc exits fullscreen · arrow/WASD keys work when the game is focused");
     playerRoot.appendChild(note);
 
     frame.src = entry.file;
@@ -114,10 +114,10 @@
           if (ic && pset.icon) ic.href = pset.icon;
         }
       } catch (err) {
-        /* cross-origin content — skip, the outer tab still shows the preset */
+        /* cross-origin content: skip, the outer tab still shows the preset */
       }
     });
-    /* mobile note (once, touch devices — keyboard-friendly, nothing disabled) */
+    /* mobile note (once, touch devices: keyboard-friendly, nothing disabled) */
     var touch = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
     if (touch && !N.flags.get(MOBILE_NOTE)) {
       setTimeout(function () {
@@ -126,14 +126,14 @@
           title: "NULL on your phone",
           icon: "info",
           body:
-            "<p>This game runs in the NULL player. Bluetooth or attached keyboards keep working wherever the browser allows \u2014 nothing here disables keyboard controls.</p>" +
+            "<p>This game runs in the NULL player. Bluetooth or attached keyboards keep working wherever the browser allows. Nothing here disables keyboard controls.</p>" +
             "<p>Fullscreen gives you the biggest view.</p>",
           actions: [{ label: "Continue", variant: "primary" }],
         });
       }, 800);
     }
 
-    /* fullscreen — the bar docks to the bottom edge and auto-hides;
+    /* fullscreen: the bar docks to the bottom edge and auto-hides;
        moving the mouse (or tapping) brings it back */
     var fsBtn = d.qs("#btnFull");
     var fsIc = d.qs("#btnFull .msr");
@@ -242,11 +242,11 @@
           d.h("span", { class: "chip" }, fmtBytes(bytes) + " on this device"),
         ]),
         d.h("div", { class: "saves-actions" }, [dlBtn, ulBtn, file]),
-        d.h("p", { class: "saves-note", html: "Downloads a plain <b>.json</b> snapshot of the localStorage keys this " + what + " uses. NULL&rsquo;s own settings are never included, so the file is safe to share \u2014 a friend can upload it and pick up right where you left off." }),
+        d.h("p", { class: "saves-note", html: "Downloads a plain <b>.json</b> snapshot of the localStorage keys this " + what + " uses. NULL’s own settings are never included, so the file is safe to share: a friend can upload it and pick up right where you left off." }),
       ]);
 
       N.modal.open({
-        title: "Game saves \u00b7 localStorage",
+        title: "Game saves · localStorage",
         icon: "save",
         body: body,
         actions: [{ label: "Done", variant: "primary" }],
@@ -254,7 +254,7 @@
 
       dlBtn.addEventListener("click", function () {
         if (!keys.length) {
-          d.toast("Nothing saved yet \u2014 play a bit and progress lands here automatically.", { type: "err" });
+          d.toast("Nothing saved yet. Play a bit and progress lands here automatically.", { type: "err" });
           return;
         }
         var snap = {
@@ -300,9 +300,9 @@
               d.toast("That file had no game save keys.", { type: "err" });
               return;
             }
-            d.toast("Restored " + n + " key" + (n === 1 ? "" : "s") + " \u2014 reload the game if it doesn\u2019t pick them up", { icon: "check" });
+            d.toast("Restored " + n + " key" + (n === 1 ? "" : "s") + ". Reload the game if it doesn’t pick them up", { icon: "check" });
           } catch (err) {
-            d.toast("That doesn\u2019t look like valid save data.", { type: "err" });
+            d.toast("That doesn’t look like valid save data.", { type: "err" });
           }
         };
         reader.readAsText(f);
@@ -348,7 +348,7 @@
       });
       d.qs("#cloakBlank").addEventListener("click", function () {
         if (N.cloak && N.cloak.blocked && N.cloak.blocked()) {
-          d.toast("Popups are blocked \u2014 allow popups for NULL, then try again.", { type: "err", hold: 5000 });
+          d.toast("Popups are blocked. Allow popups for NULL, then try again.", { type: "err", hold: 5000 });
           return;
         }
         var w = null;
@@ -357,7 +357,7 @@
         } catch (err) {}
         if (!w) {
           if (N.cloak && N.cloak.markBlocked) N.cloak.markBlocked();
-          d.toast("Popup blocked \u2014 allow popups for NULL.", { type: "err" });
+          d.toast("Popup blocked. Allow popups for NULL.", { type: "err" });
           return;
         }
         writeBlank(w, N.tab.titleFor(pset()), pset().icon);
@@ -365,7 +365,7 @@
       });
       d.qs("#cloakBlob").addEventListener("click", function () {
         if (N.cloak && N.cloak.blocked && N.cloak.blocked()) {
-          d.toast("Popups are blocked \u2014 allow popups for NULL, then try again.", { type: "err", hold: 5000 });
+          d.toast("Popups are blocked. Allow popups for NULL, then try again.", { type: "err", hold: 5000 });
           return;
         }
         fetch(entry.file)
@@ -384,11 +384,11 @@
             var w = window.open(url, "_blank");
             if (!w) {
               if (N.cloak && N.cloak.markBlocked) N.cloak.markBlocked();
-              d.toast("Popup blocked \u2014 allow popups for NULL.", { type: "err" });
+              d.toast("Popup blocked. Allow popups for NULL.", { type: "err" });
             }
           })
           .catch(function () {
-            d.toast("Couldn\u2019t read the file for blob: mode.", { type: "err" });
+            d.toast("Couldn’t read the file for blob: mode.", { type: "err" });
           });
       });
       d.qs("#cloakCopy").addEventListener("click", function () {

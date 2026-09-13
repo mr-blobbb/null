@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "NULL — a plain black-and-white hub for games, apps, proxies and tools. Static HTML/CSS/JS: GitHub Pages serves these files as-is, and Node is only the build-time tooling (catalog scan, icon font subset, single-file releases, link check).",
+  "description": "NULL: a plain black-and-white hub for games, apps, proxies and tools. Static HTML/CSS/JS: GitHub Pages serves these files as-is, and Node is only the build-time tooling (catalog scan, icon font subset, single-file releases, link check).",
   "scripts": {
     "dev": "vite",
     "preview": "vite preview",

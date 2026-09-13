@@ -1,4 +1,4 @@
-/* NULL — markdown.js
+/* NULL · markdown.js
    Minimal markdown renderer used by the info pages (about / privacy / terms /
    cookies / district / license). Owners edit plain markdown; it renders here. */
 (function () {

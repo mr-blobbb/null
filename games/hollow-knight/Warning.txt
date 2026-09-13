@@ -1,2 +1,2 @@
 Title: Hold on
-Description: This is a placeholder folder — drop hollow-knight.html and hollow-knight.png (or another thumbnail) in here, then rebuild the catalog. The game will appear automatically.
+Description: This is a placeholder folder: drop hollow-knight.html and hollow-knight.png (or another thumbnail) in here, then rebuild the catalog. The game will appear automatically.

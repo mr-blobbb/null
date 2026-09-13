@@ -1,4 +1,4 @@
-/* NULL — dom.js
+/* NULL · dom.js
    Tiny DOM helpers + inline SVG icon set (drawn, no icon font, no network). */
 (function () {
   var N = (window.N = window.N || {});
@@ -51,7 +51,7 @@
      Each name maps to a codepoint in the icon font NULL ships, rather than to
      the ligature it was written as. NULL carries a ~90 KB cut of Material
      Symbols instead of the full 5 MB font (see scripts/build-font.js), and a
-     cut that small only keeps the icons themselves — ligature formation needs
+     cut that small only keeps the icons themselves: ligature formation needs
      every letter, and the font's layout closure then drags all ~3,600 Google
      icons back in. The ligature each codepoint came from is in the comment,
      which is also what the build script reads to find a glyph when a name is

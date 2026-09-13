@@ -1,4 +1,4 @@
-/* NULL — announcements.js */
+/* NULL · announcements.js */
 (function () {
   var N = (window.N = window.N || {});
   var d = N.dom;
@@ -6,7 +6,7 @@
 
   var TONE = { update: "ok", notice: "accent", event: "accent", info: "" };
 
-  /* Unread dot — a small green pulse sits at the top-left (before the
+  /* Unread dot: a small green pulse sits at the top-left (before the
      eyebrow) when an announcement is newer than the last one seen. Being
      on this page means it's been seen, so after a moment it's recorded
      (which also clears the nav icon dot via the annSeen bus event) and the

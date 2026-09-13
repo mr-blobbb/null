@@ -1,4 +1,4 @@
-/* NULL — build-font.js
+/* NULL · build-font.js
    Builds the icon font NULL ships, from the upstream Material Symbols Rounded
    variable font.
 
@@ -7,14 +7,14 @@
    Every icon in the interface is drawn by that font: the P map in
    src/utilities/dom.js names a glyph and d.icon() prints it into a
    <span class="msr">. Upstream the font is one 5 MB file covering all ~3,600
-   Google icons. NULL uses 67, so this cuts it down to those glyphs — 90 KB —
-   and writes public/fonts/. Run it after adding a name to the P map.
+   Google icons. NULL uses 67, so this cuts it down to those glyphs (about
+   90 KB) and writes public/fonts/. Run it after adding a name to the P map.
 
    Three things decided how this works, and all three are load-bearing:
 
      · The P map holds codepoints, not ligature names. Naming icons by their
        ligature means keeping every letter, and HarfBuzz's layout closure then
-       pulls all ~3,600 ligature glyphs back in — the "subset" comes out at
+       pulls all ~3,600 ligature glyphs back in: the "subset" comes out at
        4.7 MB. Naming them by codepoint keeps 67 glyphs plus the filled
        variants the FILL axis substitutes to, and nothing else.
      · Layout closure stays ON for the same reason: the filled heart and star
@@ -28,7 +28,7 @@
    quietly lost the filled glyphs fails the build instead of shipping.
 
    The upstream file is cached in .cache/ so a rerun works offline; neither it
-   nor the cache is ever committed. Node is a build-time tool here — the .woff2
+   nor the cache is ever committed. Node is a build-time tool here: the .woff2
    it writes is a plain static file that GitHub Pages serves like any other.
 
    The full font is fetched through the Google Fonts CSS API rather than a
@@ -56,7 +56,7 @@ const UA =
 /* ---------- what the site asks for ---------- */
 
 /* the ICON pane of the P map in dom.js: a name, and either a codepoint escape
-   or — for a name that is still written as words — the ligature to look up */
+   or: for a name that is still written as words: the ligature to look up */
 function iconTable() {
   const src = fs.readFileSync(path.join(root, "src", "utilities", "dom.js"), "utf8");
   const start = src.indexOf("var P = {");
@@ -92,7 +92,7 @@ async function upstream() {
 
 /* ---------- working with the font ----------
    HarfBuzz is handed the .ttf form because the wasm build cannot decode woff2
-   itself — it reads an empty face out of one, which would quietly fail every
+   itself: it reads an empty face out of one, which would quietly fail every
    glyph. fontverter converts, the same way subset-font feeds it. */
 
 function fontFrom(ttf) {
@@ -136,7 +136,7 @@ function fontFrom(ttf) {
    paste into the P map. */
 function codepointsByGlyph(api) {
   /* harfbuzzjs hands back a VIEW into wasm memory, and reading it throws once
-     that memory grows — so the heap is warmed up front, then copied at once */
+     that memory grows, so the heap is warmed up front, then copied at once */
   new hb.Blob(new Uint8Array(32 * 1024 * 1024));
 
   const byGlyph = new Map();
@@ -168,7 +168,7 @@ for (const entry of table) {
     console.error("· the font has no glyph for \"" + entry.value + "\" (" + entry.name + ")");
     process.exit(1);
   }
-  /* a name written as words still works, but the map wants the codepoint —
+  /* a name written as words still works, but the map wants the codepoint:
      saying so here is easier than reading it out of the font by hand */
   console.log(
     "· " + entry.name + ": paste \\u" + cp.toString(16) + "  (" + entry.value + ")",
@@ -180,7 +180,7 @@ const text = String.fromCodePoint(...resolved.map((e) => e.cp));
 const subset = await subsetFont(upstreamWoff2, text, { targetFormat: "woff2" });
 const small = fontFrom(await fontverter.convert(subset, "truetype"));
 
-/* every icon has to survive the cut and draw exactly what the full font drew —
+/* every icon has to survive the cut and draw exactly what the full font drew:
    at both ends of the FILL axis, since that is the filled heart/star state */
 const broke = [];
 for (const fill of [0, 1]) {
@@ -211,7 +211,7 @@ fs.writeFileSync(OUT, subset);
 
 const kb = (n) => Math.round(n / 1024) + " KB";
 console.log(
-  "· wrote public/fonts/material-symbols-rounded.woff2 — " +
+  "· wrote public/fonts/material-symbols-rounded.woff2: " +
     kb(subset.length) +
     " (from " +
     kb(upstreamWoff2.length) +

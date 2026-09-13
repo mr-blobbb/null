@@ -1,9 +1,9 @@
-/* NULL — extra.css
+/* NULL · extra.css
    Additions kept out of global.css on purpose. Linked on every page after
    global.css so these rules win when they need to. */
 
 /* ============================================================
-   player fullscreen — the bar docks to the bottom and auto-hides
+   player fullscreen: the bar docks to the bottom and auto-hides
    ============================================================ */
 body.player-page.fs .player-bar {
   position: absolute;
@@ -44,7 +44,7 @@ body.player-page.fs .player-note {
 }
 
 /* ============================================================
-   mobile chrome — no More dropdown, search is an icon
+   mobile chrome: no More dropdown, search is an icon
    ============================================================ */
 @media (max-width: 860px) {
   .searchbox {
@@ -60,7 +60,7 @@ body.player-page.fs .player-note {
 }
 
 /* ============================================================
-   library pages — favorites section + sort toolbar
+   library pages: favorites section + sort toolbar
    ============================================================ */
 .fav-sec {
   margin-bottom: 28px;
@@ -77,14 +77,14 @@ body.player-page.fs .player-note {
   margin-left: auto;
 }
 
-/* 404 — the art piece is a Material glyph now, sized like the old svg */
+/* 404: the art piece is a Material glyph now, sized like the old svg */
 .not-found .art {
   font-size: clamp(96px, 22vw, 170px);
   line-height: 1;
   color: var(--text);
 }
 
-/* settings — panic key + cloak buttons */
+/* settings: panic key + cloak buttons */
 .keycap {
   min-width: 74px;
   text-align: center;
@@ -100,7 +100,7 @@ body.player-page.fs .player-note {
   margin-top: 10px;
 }
 
-/* 404 — drip particles removed; hero-style search sizing */
+/* 404: drip particles removed; hero-style search sizing */
 .not-found .leak {
   display: none;
 }
@@ -204,7 +204,7 @@ body.player-page.fs .player-note {
 }
 
 /* ============================================================
-   hidden-attribute guards — display rules on these components
+   hidden-attribute guards: display rules on these components
    must never resurrect a box that JS explicitly hid (empty
    game-of-the-day card, marathon controls when off)
    ============================================================ */
@@ -216,7 +216,7 @@ body.player-page.fs .player-note {
 }
 
 /* The glow ring is drawn with mask-composite. In browsers without it the
-   full-viewport gradient would paint over the whole screen — disable the
+   full-viewport gradient would paint over the whole screen: disable the
    glow entirely instead. theme.js also guards for this, so the two checks
    agree. */
 @supports not ((mask-composite: exclude) or (-webkit-mask-composite: xor)) {
@@ -226,7 +226,7 @@ body.player-page.fs .player-note {
 }
 
 /* ============================================================
-   screensaver — dim glass overlay, drifting grayscale game art,
+   screensaver: dim glass overlay, drifting grayscale game art,
    live clock. Sits under the glow border (9997) so the neon ring
    still wraps the screen while it runs.
    ============================================================ */
@@ -364,7 +364,7 @@ html[data-perf="1"] .ss-ov {
 }
 
 /* ============================================================
-   period-end confetti (grayscale) — toggle in settings
+   period-end confetti (grayscale): toggle in settings
    ============================================================ */
 .cf-ov {
   position: fixed;
@@ -443,7 +443,7 @@ html[data-perf="1"] .ss-ov {
 }
 
 /* ============================================================
-   unread announcements dot — top nav icon
+   unread announcements dot: top nav icon
    ============================================================ */
 .nav-links .nav-link {
   position: relative;
@@ -475,7 +475,7 @@ html[data-perf="1"] .nav-dot {
 }
 
 /* ============================================================
-   settings — fit + finish
+   settings: fit + finish
    Long labels shrink rather than shoving their control off the card, and
    every card is allowed to shrink inside the grid. Lives here (not
    global.css) so it always loads after the base settings rules.
@@ -492,7 +492,7 @@ html[data-perf="1"] .nav-dot {
 }
 
 /* ============================================================
-   home — tip of the day
+   home: tip of the day
    ============================================================ */
 .tip-card {
   display: flex;
@@ -536,7 +536,7 @@ html[data-perf="1"] .nav-dot {
 }
 
 /* ============================================================
-   lit edges — Neon only
+   lit edges: Neon only
    The glow border re-inks the viewport ring on its own; it leaves
    the panels flat. Card surfaces pick up a lit edge only while the
    Neon pack is worn (theme.js publishes --glow-1..4 either way).
@@ -563,7 +563,7 @@ html[data-pack="neon"] .modal {
 }
 
 /* ============================================================
-   daily — crate strip, quests, achievements
+   daily: crate strip, quests, achievements
    ============================================================ */
 .daily-strip {
   display: flex;
@@ -601,7 +601,7 @@ html[data-pack="neon"] .modal {
   gap: 2px;
   min-width: 0;
 }
-.daily-txt b {
+.daily-txt b{
   font-size: 15px;
 }
 .daily-txt span {
@@ -621,7 +621,7 @@ html[data-pack="neon"] .modal {
   flex: none;
 }
 
-/* the crate itself — a box that shakes while opening, then pops */
+/* the crate itself: a box that shakes while opening, then pops */
 .crate {
   display: flex;
   flex-direction: column;
@@ -706,7 +706,7 @@ html[data-pack="neon"] .modal {
   justify-content: center;
 }
 
-/* progress rows — shared by daily quests and achievements */
+/* progress rows: shared by daily quests and achievements */
 .pg-list {
   display: flex;
   flex-direction: column;
@@ -821,7 +821,7 @@ html[data-pack="neon"] .modal {
 }
 
 /* ============================================================
-   player — NULL branded boot spinner
+   player: NULL branded boot spinner
    ============================================================ */
 .player-loading .pl-mark {
   position: relative;
@@ -880,7 +880,7 @@ html[data-perf="1"] .pl-core {
 }
 
 /* ============================================================
-   shop — local economy (playtime → XP → coins)
+   shop: local economy (playtime → XP → coins)
    ============================================================ */
 .eco-bar {
   display: flex;
@@ -992,7 +992,7 @@ html[data-perf="1"] .pl-core {
   border-color: var(--line-2);
 }
 
-/* list layout — the Settings cards stretch the full width as compact rows
+/* list layout: the Settings cards stretch the full width as compact rows
    instead of a wall of chunky tile cards */
 .shop-grid--list {
   grid-template-columns: 1fr;
@@ -1177,7 +1177,7 @@ html[data-perf="1"] .pl-core {
 }
 
 /* ============================================================
-   theme packs — animated shop backdrops
+   theme packs: animated shop backdrops
    Every pack shares one generic layer set (pf-a / pf-b / pf-c plus
    an optional particle host), so the live full-screen layer and the
    little preview on a shop card run the exact same rules. All art is
@@ -1230,7 +1230,7 @@ html[data-theme="light"] .pack-fx {
 }
 /* ...but the particle hosts are pale-on-dark art (white stars, white dust,
    white rain specks) and would disappear over the daylight wash. Darkening
-   only the particle hosts — never the backdrop — keeps the tint soft while
+   only the particle hosts: never the backdrop: keeps the tint soft while
    the same shapes stay visible. */
 html[data-theme="light"] .pack-fx .pf-p,
 html[data-theme="light"] .pack-preview .pf-p {
@@ -1312,7 +1312,7 @@ html[data-perf="1"] .pack-fx {
   background-image: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.3) 0 1px, transparent 1px 3px);
   opacity: 0.45;
 }
-/* rain — thin streaks of light falling */
+/* rain: thin streaks of light falling */
 .pf-p-rain b {
   width: calc(var(--s) * 0.9);
   height: calc(var(--s) * 9);
@@ -1322,7 +1322,7 @@ html[data-perf="1"] .pack-fx {
   opacity: 0.75;
   animation-name: pk-fall;
 }
-/* star — bright twinkling points */
+/* star: bright twinkling points */
 .pf-p-star b {
   width: var(--s);
   height: var(--s);
@@ -1332,7 +1332,7 @@ html[data-perf="1"] .pack-fx {
   animation-name: pk-twinkle;
   animation-timing-function: ease-in-out;
 }
-/* starFar — dimmer stars that slowly slide across, giving the field depth */
+/* starFar: dimmer stars that slowly slide across, giving the field depth */
 .pf-p-starfar b {
   width: calc(var(--s) * 0.7);
   height: calc(var(--s) * 0.7);
@@ -1343,7 +1343,7 @@ html[data-perf="1"] .pack-fx {
   animation-timing-function: ease-in-out;
   animation-direction: alternate;
 }
-/* dust — tiny specks floating through the light */
+/* dust: tiny specks floating through the light */
 .pf-p-dust b {
   width: calc(var(--s) * 0.6);
   height: calc(var(--s) * 0.6);
@@ -1355,7 +1355,7 @@ html[data-perf="1"] .pack-fx {
   animation-direction: alternate;
   animation-timing-function: ease-in-out;
 }
-/* ribbon — the aurora curtains themselves: tall blurred bands of light */
+/* ribbon: the aurora curtains themselves: tall blurred bands of light */
 .pf-p-ribbon b {
   width: calc(var(--s) * 6);
   height: calc(28% + var(--s) * 14);
@@ -1368,7 +1368,7 @@ html[data-perf="1"] .pack-fx {
   animation-direction: alternate;
   animation-timing-function: ease-in-out;
 }
-/* smoke — puffs rising, swelling and fading out */
+/* smoke: puffs rising, swelling and fading out */
 .pf-p-smoke b {
   width: calc(var(--s) * 9);
   height: calc(var(--s) * 9);
@@ -1379,7 +1379,7 @@ html[data-perf="1"] .pack-fx {
   animation-duration: calc(var(--dur, 5) * 3.4s);
   animation-timing-function: ease-out;
 }
-/* cloud — wide, slow banks of haze drifting sideways */
+/* cloud: wide, slow banks of haze drifting sideways */
 .pf-p-cloud b {
   width: calc(var(--s) * 46);
   height: calc(var(--s) * 26);
@@ -1680,7 +1680,7 @@ html[data-perf="1"] .pack-fx {
     transform: rotate(360deg) scale(1);
   }
 }
-/* neonTube — standing bars of light, flickering like a bad sign */
+/* neonTube: standing bars of light, flickering like a bad sign */
 .pf-p-neontube b {
   width: calc(var(--s) * 1.8);
   height: calc(var(--s) * 40);
@@ -1711,7 +1711,7 @@ html[data-perf="1"] .pack-fx {
     transform: translate3d(calc(var(--dx, 40px) * 0.35), calc(var(--dx, 40px) * -0.25), 0) scaleY(1.12);
   }
 }
-/* neonPulse — rings of light swelling across the room */
+/* neonPulse: rings of light swelling across the room */
 .pf-p-neonpulse b {
   width: calc(var(--s) * 80);
   height: calc(var(--s) * 80);
@@ -1767,13 +1767,13 @@ html[data-perf="1"] .pack-fx {
 }
 
 /* ============================================================
-   ambient particles — the extended set
+   ambient particles: the extended set
    The layered kinds the Shop's particles are built from (bloom, trail,
    wisp, flare, glint, swirl, speck) plus the warp core. The warp rules
    carry an extra ancestor so they beat the base kind whichever order the
    two blocks end up in.
    ============================================================ */
-/* warp — a bright core at dead centre. theme.js pins left/top to 50%, and
+/* warp: a bright core at dead centre. theme.js pins left/top to 50%, and
    the negative margin centres each streak's box on that point, so with
    transform-origin at the left edge every streak really does leave the
    exact middle of the viewport. */
@@ -1793,7 +1793,7 @@ html[data-perf="1"] .pack-fx {
   margin-top: calc(var(--s) * -0.7);
   transform-origin: 0 50%;
 }
-/* tunnel — rings rushing out of the exact centre as well */
+/* tunnel: rings rushing out of the exact centre as well */
 .pt-p-tunnel b {
   width: calc(var(--s) * 44);
   height: calc(var(--s) * 44);
@@ -1804,7 +1804,7 @@ html[data-perf="1"] .pack-fx {
   animation-name: pt-tunnel;
   animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
 }
-/* bloom — wide halos that give the field depth */
+/* bloom: wide halos that give the field depth */
 .pt-p-bloom b {
   width: calc(var(--s) * 54);
   height: calc(var(--s) * 54);
@@ -1816,7 +1816,7 @@ html[data-perf="1"] .pack-fx {
   animation-direction: alternate;
   animation-timing-function: ease-in-out;
 }
-/* trail — motion streaks with a hot head */
+/* trail: motion streaks with a hot head */
 .pt-p-trail b {
   width: calc(var(--s) * 34);
   height: calc(var(--s) * 0.9);
@@ -1828,7 +1828,7 @@ html[data-perf="1"] .pack-fx {
   animation-duration: calc(var(--dur, 5) * 3.8s);
   animation-timing-function: ease-in-out;
 }
-/* wisp — curling ribbons of smoke */
+/* wisp: curling ribbons of smoke */
 .pt-p-wisp b {
   width: calc(var(--s) * 11);
   height: calc(var(--s) * 48);
@@ -1840,7 +1840,7 @@ html[data-perf="1"] .pack-fx {
   animation-direction: alternate;
   animation-timing-function: ease-in-out;
 }
-/* flare — four-ray crosses that bloom and twist */
+/* flare: four-ray crosses that bloom and twist */
 .pt-p-flare b {
   width: calc(var(--s) * 30);
   height: calc(var(--s) * 30);
@@ -1853,7 +1853,7 @@ html[data-perf="1"] .pack-fx {
   animation-duration: calc(var(--dur, 5) * 5s);
   animation-timing-function: ease-in-out;
 }
-/* glint — hard little highlights */
+/* glint: hard little highlights */
 .pt-p-glint b {
   width: calc(var(--s) * 1.8);
   height: calc(var(--s) * 1.8);
@@ -1864,7 +1864,7 @@ html[data-perf="1"] .pack-fx {
   animation-duration: calc(var(--dur, 5) * 1.7s);
   animation-timing-function: ease-out;
 }
-/* swirl — huge spinning colour fields */
+/* swirl: huge spinning colour fields */
 .pt-p-swirl b {
   width: calc(var(--s) * 200);
   height: calc(var(--s) * 200);
@@ -1881,7 +1881,7 @@ html[data-perf="1"] .pack-fx {
   animation-name: pt-swirl;
   animation-duration: calc(var(--dur, 5) * 16s);
 }
-/* speck — tiny depth-of-field motes */
+/* speck: tiny depth-of-field motes */
 .pt-p-speck b {
   width: calc(var(--s) * 1.1);
   height: calc(var(--s) * 1.1);
@@ -1991,7 +1991,7 @@ html[data-perf="1"] .pack-fx {
 }
 
 /* ============================================================
-   ambient particles — NULL's standalone background motion
+   ambient particles: NULL's standalone background motion
    One layer, one family of shapes. theme.js writes the random
    numbers inline; every kind here turns them into motion. Mono
    particles read their colour from CSS so they follow the site
@@ -2034,7 +2034,7 @@ html[data-perf="1"] .part-fx {
   animation-play-state: paused !important;
 }
 
-/* ---- free: motes — soft glowing dust rising ---- */
+/* ---- free: motes: soft glowing dust rising ---- */
 .pt-p-mote b {
   width: calc(var(--s) * 3.4);
   height: calc(var(--s) * 3.4);
@@ -2044,7 +2044,7 @@ html[data-perf="1"] .part-fx {
   animation-name: pt-rise;
   animation-duration: calc(var(--dur, 5) * 3.4s);
 }
-/* ---- free: haze — wide slow clouds ---- */
+/* ---- free: haze: wide slow clouds ---- */
 .pt-p-haze b {
   width: calc(var(--s) * 62);
   height: calc(var(--s) * 40);
@@ -2056,7 +2056,7 @@ html[data-perf="1"] .part-fx {
   animation-direction: alternate;
   animation-timing-function: ease-in-out;
 }
-/* ---- free: twinkle — pin-prick lights ---- */
+/* ---- free: twinkle: pin-prick lights ---- */
 .pt-p-spark b {
   width: calc(var(--s) * 2.4);
   height: calc(var(--s) * 2.4);
@@ -2067,7 +2067,7 @@ html[data-perf="1"] .part-fx {
   animation-duration: calc(var(--dur, 5) * 2.2s);
   animation-timing-function: ease-in-out;
 }
-/* ---- fireflies — glowing orbs that wander and pulse ---- */
+/* ---- fireflies: glowing orbs that wander and pulse ---- */
 .pt-p-firefly b {
   width: calc(var(--s) * 5);
   height: calc(var(--s) * 5);
@@ -2081,7 +2081,7 @@ html[data-perf="1"] .part-fx {
     pt-glow calc(var(--dur, 5) * 0.7s) ease-in-out infinite;
   animation-delay: calc(var(--delay, 0) * -1s);
 }
-/* ---- embers — rising flames that flicker as they cool ---- */
+/* ---- embers: rising flames that flicker as they cool ---- */
 .pt-p-ember b {
   width: calc(var(--s) * 3);
   height: calc(var(--s) * 4.6);
@@ -2090,14 +2090,14 @@ html[data-perf="1"] .part-fx {
   box-shadow:
     0 0 20px color-mix(in srgb, var(--pt-1) 90%, transparent),
     0 0 52px color-mix(in srgb, var(--pt-3) 60%, transparent);
-  /* pt-flicker owns the opacity, so the rise only moves + shrinks — an ember
+  /* pt-flicker owns the opacity, so the rise only moves + shrinks: an ember
      that cools as it climbs instead of popping in and out */
   animation:
     pt-ember-rise calc(var(--dur, 5) * 3.2s) linear infinite,
     pt-flicker calc(var(--dur, 5) * 0.5s) ease-in-out infinite;
   animation-delay: calc(var(--delay, 0) * -1s);
 }
-/* ---- bubbles — flat rings that rise and swell (NULL is a flat UI, so
+/* ---- bubbles: flat rings that rise and swell (NULL is a flat UI, so
    these are outlined hoops rather than glossy glass spheres) ---- */
 .pt-p-bubble b {
   width: calc(var(--s) * 8);
@@ -2109,7 +2109,7 @@ html[data-perf="1"] .part-fx {
   animation-duration: calc(var(--dur, 5) * 4.6s);
   animation-delay: calc(var(--delay, 0) * -1s);
 }
-/* ---- starlight — real four-point stars that bloom and fade ---- */
+/* ---- starlight: real four-point stars that bloom and fade ---- */
 .pt-p-sparkle b {
   width: calc(var(--s) * 10);
   height: calc(var(--s) * 10);
@@ -2120,7 +2120,7 @@ html[data-perf="1"] .part-fx {
   animation-duration: calc(var(--dur, 5) * 2.4s);
   animation-timing-function: ease-in-out;
 }
-/* ---- plasma — huge colour fields bleeding into each other ---- */
+/* ---- plasma: huge colour fields bleeding into each other ---- */
 .pt-p-plasma b {
   width: calc(var(--s) * 180);
   height: calc(var(--s) * 180);
@@ -2138,7 +2138,7 @@ html[data-perf="1"] .part-fx {
   animation-direction: alternate;
   animation-timing-function: ease-in-out;
 }
-/* ---- warp — stars streaking outward from the middle ---- */
+/* ---- warp: stars streaking outward from the middle ---- */
 .pt-p-warp::before {
   content: "";
   position: absolute;
@@ -2232,7 +2232,7 @@ html[data-perf="1"] .part-fx {
     opacity: calc(var(--o, 0.6) * 0.7);
   }
 }
-/* a bubble rises, swells and fades — the whole motion lives in one
+/* a bubble rises, swells and fades: the whole motion lives in one
    keyframe so the ring can scale without fighting a translate */
 @keyframes pt-bubble {
   from {
@@ -2319,7 +2319,7 @@ html[data-theme="light"] .part-preview {
 }
 
 /* ============================================================
-   shop — theme pack cards + settings swatches
+   shop: theme pack cards + settings swatches
    ============================================================ */
 .pack-thumb {
   position: relative;
@@ -2335,7 +2335,7 @@ html[data-theme="light"] .part-preview {
   --pf-rise: 200px;
   --pf-blur: 24px;
 }
-/* a locked preview stays fully visible — nobody buys what they can't see.
+/* a locked preview stays fully visible: nobody buys what they can't see.
    The lock is just a badge in the corner of the thumbnail. */
 .pack-lock,
 .part-lock {

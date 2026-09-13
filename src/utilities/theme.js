@@ -1,4 +1,4 @@
-/* NULL — theme.js
+/* NULL · theme.js
    Applies theme / accent / glow / performance prefs to <html>.
    Accent palettes are mid-tone so they read on both dark and light surfaces.
 
@@ -44,8 +44,8 @@
   /* ---------- theme packs ----------
      A shop theme does more than recolor the accent: it sets a whole palette
      (--pk-1..4), a page tint (--pk-bg-1/2), html[data-pack] and an animated
-     backdrop. Backdrops are generic layers — three <i> layers plus an
-     optional particle host — that extra.css styles per data-pack id. They
+     backdrop. Backdrops are generic layers: three <i> layers plus an
+     optional particle host: that extra.css styles per data-pack id. They
      are skipped in performance mode, for reduced motion, and on the player
      and 404 pages, same as the seasonal particles. */
   var packEl = null;
@@ -126,7 +126,7 @@
   }
 
   /* one builder for both the live full-screen layer and the shop/settings
-     previews — same markup, same CSS, so a preview never lies */
+     previews: same markup, same CSS, so a preview never lies */
   function packArt(p, cls, opts) {
     opts = opts || {};
     var el = document.createElement("div");
@@ -167,7 +167,7 @@
     return thumb;
   }
 
-  /* every pack that exists — free first, then the Shop's */
+  /* every pack that exists: free first, then the Shop's */
   function allPacks() {
     if (!N.econ) return [];
     return (N.econ.FREE_PACKS || []).concat(N.econ.THEMES || []);
@@ -229,7 +229,7 @@
     return !!p && (p.free || (N.econ && N.econ.isUnlocked("particle", p.id)));
   }
 
-  /* NB: named ptHost, not partHost — the theme-pack builder above owns that
+  /* NB: named ptHost, not partHost: the theme-pack builder above owns that
      name, and a second declaration would shadow it for the whole file. */
   function ptHost(part, scale) {
     var host = document.createElement("span");
@@ -419,7 +419,7 @@
     return changed;
   }
 
-  /* seamless conic gradient — equal stops around the circle, ending on the
+  /* seamless conic gradient: equal stops around the circle, ending on the
      first color so the wrap point is invisible */
   function conic(colors) {
     var stops = colors
@@ -545,7 +545,7 @@
   function setGlow(raw) {
     var id = normalize(raw);
     /* the Neon pack is drawn from the glow palette, so a palette change has
-       to rebuild it — no other pack cares */
+       to rebuild it: no other pack cares */
     if (publishGlowVars(id) && curPack === "neon") {
       killPack();
       buildPack(packFor("neon"));
@@ -605,7 +605,7 @@
   }
 
   /* perf is false | true | "ultra". Ultra is performance mode plus no
-     animation, no effect layers and no off-screen paint — see perf.css. */
+     animation, no effect layers and no off-screen paint: see perf.css. */
   function setPerf(level) {
     var ultra = level === "ultra";
     var on = !!level;
@@ -640,12 +640,12 @@
     GLOWS: GLOWS,
     extraAccents: extraAccents,
     /* shop + settings share this so a preview can never drift from the real
-       thing — same builder, same CSS, different container class */
+       thing: same builder, same CSS, different container class */
     packPreview: packPreview,
     packThumb: packThumb,
     allPacks: allPacks,
     packVars: packVars,
-    /* particles — same builder-and-preview deal as packs */
+    /* particles: same builder-and-preview deal as packs */
     partPreview: partPreview,
     partThumb: partThumb,
     allParticles: allParticles,
