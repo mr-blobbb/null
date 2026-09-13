@@ -57,6 +57,19 @@
 
         <div class="set-row" style="display:block">
           <div class="lbl-txt" style="margin-bottom:10px">
+            <b>Layout compactness</b>
+            <span>How much room the whole site gives everything: nav, page margins, sections, cards and tiles. Regular is the default.</span>
+          </div>
+          <div class="seg" id="densitySeg" role="group" aria-label="Layout compactness">
+            <button type="button" data-val="regular">Regular</button>
+            <button type="button" data-val="comfy">Comfy</button>
+            <button type="button" data-val="spacious">Spacious</button>
+            <button type="button" data-val="compact">Compact</button>
+          </div>
+        </div>
+
+        <div class="set-row" style="display:block">
+          <div class="lbl-txt" style="margin-bottom:10px">
             <b>Accent</b>
             <span>A single accent, or a full theme pack from the Shop with its own palette and live backdrop.</span>
           </div>
@@ -92,6 +105,22 @@
           </div>
           <label class="switch">
             <input type="checkbox" id="ultraSwitch" aria-label="Ultra-Performance mode">
+            <span class="track"></span>
+          </label>
+        </div>
+
+        <div class="set-row">
+          <div class="lbl-txt">
+            <b>Mini-Perf mode</b>
+            <span>
+              Strips nothing. Every theme, particle, glow and animation stays
+              exactly as it is, the browser just skips the blocks that are off
+              screen and brings them straight back when you scroll to them. Easiest
+              way to speed NULL up without losing the look.
+            </span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="miniPerfSwitch" aria-label="Mini-Perf mode">
             <span class="track"></span>
           </label>
         </div>
@@ -152,6 +181,10 @@
           Free packs are always available, the better ones unlock in the Shop.
         </p>
         <div id="packGrid" class="shop-grid shop-grid--list"></div>
+        <div class="toolbar" id="packEditorRow" style="margin:0;display:none">
+          <button type="button" class="btn btn-outline btn-sm" id="openEditor"><span data-icon="wrench"></span>Build your own</button>
+          <span class="set-sub" style="margin:0">Make your own theme pack and particle set.</span>
+        </div>
       </section>
 
       <!-- background particles -->
@@ -163,6 +196,63 @@
           Click the applied card to switch particles off.
         </p>
         <div id="partGrid" class="shop-grid shop-grid--list"></div>
+      </section>
+
+      <!-- background image (Shop unlock) -->
+      <section class="set-card glass set-card--wide" aria-label="Background image" id="bgCard">
+        <h2 class="set-title"><span data-icon="file"></span>Background image</h2>
+        <p class="set-sub">
+          Put your own picture behind everything: paste a link or upload one from
+          this device. It sits under your theme pack and particles, and the page
+          tint is laid over it so the text stays readable. Off in performance mode.
+        </p>
+
+        <p class="set-sub" id="bgLocked">
+          Locked. The background image unlocks in the Shop with coins you earn by
+          playing. <a href="/shop.html">Open the Shop →</a>
+        </p>
+
+        <div id="bgBody" hidden>
+          <label class="lbl" for="bgUrl">Image link or upload</label>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <span class="field" style="flex:1;min-width:220px">
+              <input id="bgUrl" type="text" inputmode="url" spellcheck="false" autocomplete="off" placeholder="https://example.com/picture.jpg">
+            </span>
+            <button type="button" class="btn btn-outline" id="bgUpload"><span data-icon="upload"></span>Upload</button>
+            <button type="button" class="btn btn-outline" id="bgClear"><span data-icon="trash"></span>Remove</button>
+            <input type="file" id="bgFile" accept="image/*" hidden>
+          </div>
+          <p class="set-sub" style="margin-top:8px" id="bgHint">
+            Uploads are stored in this browser, so keep them small: a link is lighter.
+          </p>
+
+          <div class="set-row" style="display:block;margin-top:6px">
+            <label class="lbl" for="bgFit">How it fits</label>
+            <span class="select-field">
+              <select id="bgFit" aria-label="Background fit">
+                <option value="cover">Fill the screen (cover)</option>
+                <option value="contain">Fit the whole picture (contain)</option>
+                <option value="tile">Repeat it (tile)</option>
+              </select>
+            </span>
+          </div>
+
+          <div class="set-row">
+            <div class="lbl-txt">
+              <b>Dim behind the page</b>
+              <span>How strongly the page tint covers the picture. Higher keeps text easier to read.</span>
+            </div>
+            <input type="range" id="bgDim" min="0" max="0.95" step="0.05" aria-label="Background dim">
+          </div>
+
+          <div class="set-row">
+            <div class="lbl-txt">
+              <b>Softness</b>
+              <span>Blurs the picture a little so it reads as a background instead of a photo.</span>
+            </div>
+            <input type="range" id="bgBlur" min="0" max="24" step="1" aria-label="Background blur">
+          </div>
+        </div>
       </section>
 
       <!-- seasonal theme -->
@@ -183,6 +273,17 @@
             <input type="checkbox" id="seasonalSwitch" aria-label="Seasonal theme">
             <span class="track"></span>
           </label>
+        </div>
+
+        <div class="set-row" style="display:block" id="seasonPickRow">
+          <div class="lbl-txt" style="margin-bottom:10px">
+            <b>Which theme</b>
+            <span id="seasonPickHint">
+              Every theme for the season you're in. Holidays sit right next to
+              their season, so Fall and Halloween (or Winter and Holidays) are both here.
+            </span>
+          </div>
+          <div class="seg" id="seasonSeg" role="group" aria-label="Season theme"></div>
         </div>
       </section>
 
@@ -474,6 +575,7 @@
   <script src="/src/components/search.js"></script>
   <script src="/src/components/shell.js"></script>
   <script src="/src/components/devconsole.js"></script>
+  <script src="/src/components/editor.js"></script>
   <script src="/src/pages/settings.js"></script>
 </body>
 </html>

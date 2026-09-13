@@ -60,3 +60,41 @@ html[data-perf="ultra"] .section {
   content-visibility: auto;
   contain-intrinsic-size: auto 300px;
 }
+
+/* ============================================================
+   Mini-Perf mode (Settings → Appearance)
+   The opposite trade to Ultra-Perf: nothing is stripped, nothing is
+   turned off, no effect layer is dropped and no animation is shortened.
+   The only thing it does is tell the browser to skip layout, paint and
+   animation for the blocks that are off screen, then restore them the
+   moment they scroll back in. Full visuals, less work per frame.
+
+   `contain-intrinsic-size: auto <size>` is the important half: `auto`
+   remembers each block's own last size, so the scrollbar does not jump
+   on the way past. Skipped on the effect layers and the fixed nav, which
+   must stay painted at all times. */
+html[data-mini="1"] .section,
+html[data-mini="1"] .panel,
+html[data-mini="1"] .set-card,
+html[data-mini="1"] .shop-card,
+html[data-mini="1"] .shop-row,
+html[data-mini="1"] .tcard,
+html[data-mini="1"] .mirror,
+html[data-mini="1"] .ann-card,
+html[data-mini="1"] .rec-row,
+html[data-mini="1"] .tip-card,
+html[data-mini="1"] .home-cols > *,
+html[data-mini="1"] .shop-grid > *,
+html[data-mini="1"] .home-grid > * {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 320px;
+}
+
+/* a tile in a grid is short: a smaller remembered size keeps the estimate
+   close to the real thing on the first pass */
+html[data-mini="1"] .tcard,
+html[data-mini="1"] .mirror,
+html[data-mini="1"] .shop-card,
+html[data-mini="1"] .ann-card {
+  contain-intrinsic-size: auto 260px;
+}

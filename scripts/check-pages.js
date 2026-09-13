@@ -291,6 +291,78 @@ for (const page of PAGES) {
     ok(win.N.prefs.get("perf") === false && !doc.documentElement.dataset.perf, "plain switch then clears it",);
     ok(!usw.checked, "ultra switch follows the pref back off");
 
+    /* density: one scale on <html>, and it goes back off */
+    const dseg = q("#densitySeg");
+    ok(!!dseg && dseg.querySelectorAll("button").length === 4, "four compactness options exist");
+    const compact = Array.from(dseg.querySelectorAll("button")).find((b) => b.dataset.val === "compact");
+    compact.click();
+    ok(
+      win.N.prefs.get("density") === "compact" && doc.documentElement.dataset.density === "compact",
+      "compact sets html[data-density=compact]",
+    );
+    dseg.querySelector("button").click();
+    ok(!doc.documentElement.dataset.density, "regular clears the density attribute");
+
+    /* mini-perf: same attribute deal, nothing else touched */
+    const mp = q("#miniPerfSwitch");
+    mp.checked = true;
+    fire(mp);
+    ok(
+      win.N.prefs.get("miniPerf") === true && doc.documentElement.dataset.mini === "1",
+      "Mini-Perf sets html[data-mini=1]",
+    );
+    ok(!doc.documentElement.dataset.perf, "Mini-Perf never turns performance mode on");
+    mp.checked = false;
+    fire(mp);
+    ok(!doc.documentElement.dataset.mini, "Mini-Perf off clears it");
+
+    /* the season picker offers the season and its holiday together */
+    const seasonBtns = Array.from(q("#seasonSeg").querySelectorAll("button"));
+    const seasonIds = seasonBtns.map((b) => b.dataset.val);
+    ok(
+      seasonIds.indexOf("fall") >= 0 && seasonIds.indexOf("halloween") >= 0,
+      "Fall and Halloween are offered together (" + seasonIds.filter(Boolean).join(", ") + ")",
+    );
+    seasonBtns.find((b) => b.dataset.val === "halloween").click();
+    ok(
+      win.N.prefs.get("seasonVariant") === "halloween" && doc.documentElement.dataset.season === "halloween",
+      "picking Halloween wears it",
+    );
+
+    /* the background image is a Shop unlock: locked here, and the controls
+       only appear once it is owned */
+    ok(!!q("#bgUrl") && q("#bgBody").hidden, "background controls stay hidden while locked");
+    win.N.econ.grant("fx", "custombg");
+    win.N.bus.emit("sync");
+    win.N.theme.setBg({ bgImage: "https://example.com/wall.png", bgFit: "tile", bgDim: 0.5 });
+    const bg = doc.querySelector(".bg-fx");
+    ok(!!bg && bg.style.backgroundImage.indexOf("wall.png") > 0, "the background layer takes the picture");
+    ok(!!bg && bg.style.backgroundRepeat === "repeat", "…and its fit");
+    win.N.theme.setBg({ bgImage: "" });
+    ok(!doc.querySelector(".bg-fx"), "removing the picture drops the layer");
+
+    /* the editor: one fx unlock, and with it the crafted pack + particle set
+       become real, ownable definitions */
+    ok(win.N.econ.isUnlocked("theme", "mypack") === false, "no crafted pack before the editor is owned");
+    ok(!!q("#openEditor") && !!win.N.editor, "the editor button and module are on the page");
+    win.N.econ.grant("fx", "editor");
+    win.N.bus.emit("sync");
+    ok(
+      win.N.econ.isUnlocked("theme", "mypack") && win.N.econ.isUnlocked("particle", "mypart"),
+      "owning the editor owns what it builds",
+    );
+    const packsBefore = win.N.theme.allPacks().length;
+    win.N.theme.craftWrite({
+      pack: { name: "Check pack", art: "aurora", colors: ["#111", "#222", "#333", "#444"], tint: ["#050505", "#000"], parts: [{ k: "star", n: 8, sp: "spread" }] },
+      part: { name: "Check bits", mono: true, colors: ["#aaa", "#bbb", "#ccc", "#ddd"], parts: [{ k: "mote", n: 8, sp: "bottom" }] },
+    });
+    ok(win.N.theme.allPacks().length === packsBefore + 1, "a crafted pack joins the pack list");
+    ok(win.N.theme.allParticles().some((p) => p.id === "mypart"), "a crafted particle set joins the particle list");
+    win.N.theme.setAccent("mypack");
+    const cfx = doc.querySelector(".pack-fx");
+    ok(!!cfx && !!cfx.querySelector(".pf-p-star b"), "the crafted pack draws its borrowed art and its parts");
+    win.N.theme.setAccent("off");
+
     ok(typeof win.N.perf === "object" && typeof win.N.perf.ultra === "function", "N.perf.ultra() is exposed");
     ok(typeof win.N.cloak.target === "function", "cloak target is queryable");
     ok(typeof win.N.tab.url === "function" && /docs\.google\.com/.test(win.N.tab.url()), "the default preset has a real site");

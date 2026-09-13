@@ -3,6 +3,215 @@
    global.css so these rules win when they need to. */
 
 /* ============================================================
+   layout compactness (Settings → Appearance)
+   global.css sets the scale behind html[data-density]; these are the
+   handful of rules that live later in the cascade, so they re-take it
+   here. One scale, every page: no per-page density styling.
+   ============================================================ */
+html[data-density] .set-grid,
+html[data-density] .shop-grid,
+html[data-density] .home-cols {
+  gap: var(--grid-gap);
+}
+html[data-density] .set-card {
+  padding: var(--card-pad);
+  gap: var(--card-gap);
+}
+html[data-density] .shop-grid {
+  grid-template-columns: repeat(auto-fill, minmax(var(--tile), 1fr));
+}
+html[data-density] .shop-grid--list {
+  grid-template-columns: 1fr;
+}
+html[data-density] .shop-rows {
+  gap: calc(var(--grid-gap) * 0.55);
+}
+html[data-density] .set-row {
+  padding: calc(var(--card-gap) * 0.66) 0;
+}
+html[data-density="compact"] .shop-grid--list .pack-thumb,
+html[data-density="compact"] .shop-grid--list .part-thumb {
+  width: 128px;
+  flex-basis: 128px;
+}
+
+/* the density and season pickers hold four or more options: wrap them
+   instead of pushing the card wider than the screen */
+.seg {
+  flex-wrap: wrap;
+}
+
+/* ============================================================
+   custom background image (Shop unlock)
+   A fixed layer behind the theme pack and the particles, holding
+   whatever picture the visitor set in Settings: a link or an upload.
+   --bg-dim lays the page's own background colour over it as a tint,
+   so text stays readable on any picture. */
+.bg-fx {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+.bg-fx::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--bg);
+  opacity: var(--bg-dim, 0.35);
+}
+html[data-perf="ultra"] .bg-fx,
+html[data-perf="1"] .bg-fx {
+  display: none;
+}
+
+/* ============================================================
+   theme & particle editor (Shop unlock)
+   The preview is a real .pack-thumb / .part-thumb, so it is painted by
+   the same rules a Shop card is: the editor never shows a mock-up.
+   ============================================================ */
+.ed {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+.ed-tabs {
+  display: flex;
+  gap: 5px;
+  padding: 4px;
+  border-radius: 13px;
+  background: var(--glass-bg-2);
+  border: 1px solid var(--line);
+}
+.ed-tabs button {
+  flex: 1;
+  height: 33px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+  transition: background 0.16s, color 0.16s;
+}
+.ed-tabs button.on {
+  background: var(--ac-1);
+  color: var(--bg);
+}
+.ed-preview {
+  width: 100%;
+  max-width: 360px;
+  margin: 0 auto;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+.ed-preview .pack-thumb,
+.ed-preview .part-thumb {
+  border-bottom: 0;
+}
+.ed-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 0;
+  border-top: 1px solid var(--line);
+}
+.ed-row > b {
+  font-size: 13.5px;
+  font-weight: 600;
+  flex: none;
+}
+.ed-row .select-field,
+.ed-row .field {
+  max-width: 220px;
+}
+.ed-colors {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+.ed-colors input[type="color"] {
+  width: 38px;
+  height: 33px;
+  padding: 2px;
+  border: 1px solid var(--line-2);
+  border-radius: 9px;
+  background: var(--glass-bg);
+  cursor: pointer;
+}
+.ed-part-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ed-part-head {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+.ed-part-head:empty {
+  display: none;
+}
+.ed-part {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 74px 128px;
+  gap: 8px;
+  align-items: center;
+}
+.ed-note {
+  font-size: 12.5px;
+  color: var(--text-2);
+  line-height: 1.5;
+}
+@media (max-width: 520px) {
+  .ed-part {
+    grid-template-columns: minmax(0, 1fr) 70px;
+  }
+  .ed-part .select-field:last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ============================================================
+   Neon's tubes and pulse rings
+   econ.js names these two kinds neonTube / neonPulse, so theme.js writes the
+   classes pf-p-neonTube / pf-p-neonPulse. The rules further down this sheet
+   spell the same selectors in lowercase, which never matched a class: the
+   Neon pack's tubes and rings were quietly drawing as bare dots. Same
+   declarations, correct case. The keyframes they share (pk-neon-flicker,
+   pk-neon-bob, pk-neon-pulse) are the ones already defined down there.
+   ============================================================ */
+.pf-p-neonTube b {
+  width: calc(var(--s) * 1.8);
+  height: calc(var(--s) * 40);
+  border-radius: 999px;
+  background: linear-gradient(180deg, transparent, var(--glow-4, #6cff9e) 26%, #fff 74%, var(--glow-1, #00e5ff));
+  box-shadow:
+    0 0 12px color-mix(in srgb, var(--glow-1, #00e5ff) 85%, transparent),
+    0 0 40px color-mix(in srgb, var(--glow-4, #6cff9e) 55%, transparent);
+  animation:
+    pk-neon-flicker calc(var(--dur, 5) * 0.5s) steps(2, end) infinite,
+    pk-neon-bob calc(var(--dur, 5) * 6s) ease-in-out infinite alternate;
+  animation-delay: calc(var(--delay, 0) * -1s);
+}
+.pf-p-neonPulse b {
+  width: calc(var(--s) * 80);
+  height: calc(var(--s) * 80);
+  border-radius: 50%;
+  border: calc(var(--s) * 0.5) solid color-mix(in srgb, var(--glow-2, #b14bff) 60%, transparent);
+  box-shadow: 0 0 30px color-mix(in srgb, var(--glow-2, #b14bff) 55%, transparent);
+  animation-name: pk-neon-pulse;
+  animation-duration: calc(var(--dur, 5) * 4.4s);
+  animation-timing-function: ease-out;
+  animation-delay: calc(var(--delay, 0) * -1s);
+}
+
+/* ============================================================
    hidden-page triggers (shell.js)
    hold Backspace wipes the page into /void, and the period-four
    orb leads to /blob.

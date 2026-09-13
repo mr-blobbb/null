@@ -315,6 +315,64 @@
     ]);
   }
 
+  /* the two fx unlocks that need somewhere to go once they're owned: the
+     background image is set in Settings, the editor opens right here */
+  function fxRow(f) {
+    var owned = N.econ.isUnlocked("fx", f.id);
+    var box = row(f, "fx");
+    if (owned && f.id === "custombg") {
+      box.querySelector(".shop-foot").appendChild(
+        d.h("a", { class: "btn btn-outline btn-sm", href: "/settings.html" }, [d.icon("settings"), "Settings"]),
+      );
+    }
+    return box;
+  }
+
+  /* the editor, once it's owned: one row that says what's built and opens it */
+  function editorSection() {
+    var sec = section("Your theme & particles", "wrench", "built here, saved to this browser");
+    var mine = N.theme.craftPack ? N.theme.craftPack() : null;
+    var mineP = N.theme.craftPart ? N.theme.craftPart() : null;
+    var art = (N.theme.ART || []).find(function (a) {
+      return mine && a.id === mine.art;
+    });
+    var what = [];
+    if (mine) what.push(mine.name + " (" + (art ? art.name : "backdrop") + ")");
+    if (mineP) what.push(mineP.name);
+    var foot = d.h("div", { class: "shop-foot" }, [
+      d.h(
+        "button",
+        {
+          type: "button",
+          class: "btn btn-primary btn-sm",
+          onclick: function () {
+            if (N.editor) N.editor.open(render);
+          },
+        },
+        [d.icon("wrench"), mine || mineP ? "Open editor" : "Build something"],
+      ),
+    ]);
+    sec.appendChild(
+      d.h("div", { class: "shop-rows" }, [
+        d.h("div", { class: "shop-row glass ready" }, [
+          d.h("div", { class: "shop-row-ic" }, [d.icon("pen")]),
+          d.h("div", { class: "shop-row-txt" }, [
+            d.h("b", null, "Theme & particle editor"),
+            d.h(
+              "span",
+              null,
+              what.length
+                ? "Yours so far: " + what.join(" · ")
+                : "Nothing built yet. Pick four colors, a backdrop and what drifts through it.",
+            ),
+          ]),
+          foot,
+        ]),
+      ]),
+    );
+    return sec;
+  }
+
   /* ---------- daily loop ---------- */
   function dailyRow() {
     var st = N.econ.state();
@@ -423,10 +481,17 @@
     var fxSec = section("Effects", "sparkle", "cosmetic unlocks");
     var fxBox = d.h("div", { class: "shop-rows" });
     N.econ.FX.forEach(function (f) {
-      fxBox.appendChild(row(f, "fx"));
+      fxBox.appendChild(fxRow(f));
     });
     fxSec.appendChild(fxBox);
+    fxSec.appendChild(
+      d.h("p", { class: "eco-note" }, [
+        "The background image unlocks a picture picker in Settings; the editor unlocks the section right below this one.",
+      ]),
+    );
     body.appendChild(fxSec);
+
+    if (N.econ.isUnlocked("fx", "editor") && N.editor) body.appendChild(editorSection());
 
     var achSec = section(
       "Achievements",

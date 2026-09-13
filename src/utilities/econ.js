@@ -375,7 +375,17 @@
   var FX = [
     { id: "goldconfetti", name: "Golden confetti", price: 30, desc: "Period-end confetti drops in gold instead of grayscale." },
     { id: "customaccent", name: "Custom accent color", price: 80, desc: "Unlocks a color picker in Settings, so your accent can be any color at all." },
+    { id: "custombg", name: "Custom background image", price: 100, desc: "Unlocks a background picture in Settings: paste a link or upload a file, then set how it fits, how far it dims behind the page and how soft it is." },
+    { id: "editor", name: "Theme & particle editor", price: 150, desc: "Unlocks the editor in the Shop: build your own theme pack and particle set, pick the colours, tint, backdrop art and exactly what drifts through it." },
   ];
+
+  /* the editor's two creations are stored by theme.js (null:craft) and owned
+     for as long as the editor is. They are never bought on their own. */
+  var CRAFT_PACK = "mypack";
+  var CRAFT_PART = "mypart";
+  function editorOn() {
+    return ownedList("fx").indexOf("editor") >= 0;
+  }
 
   function boosted() {
     return data.boostUntil > Date.now();
@@ -660,6 +670,8 @@
   }
   function isUnlocked(type, id) {
     if (type === "boost") return boosted();
+    if (type === "theme" && id === CRAFT_PACK) return editorOn();
+    if (type === "particle" && id === CRAFT_PART) return editorOn();
     if (isFree(type, id)) return true;
     return ownedList(type).indexOf(id) >= 0;
   }

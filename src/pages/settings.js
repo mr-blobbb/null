@@ -47,8 +47,15 @@
     var csw = d.qs("#cometSwitch");
     if (csw) csw.checked = !!p.glowComet;
 
-    /* seasonal theme */
+    /* seasonal theme + the themes on offer this season */
     paintSeason();
+    paintSeasonPick();
+
+    /* layout, Mini-Perf, background image, editor */
+    paintDensity();
+    paintMini();
+    paintBg();
+    paintEditorRow();
 
     /* smart tab cloak */
     paintSmart();
@@ -178,6 +185,95 @@
     }
   }
 
+  /* layout compactness: one segment, four scales. theme.js owns the actual
+     scale, so the page just says which one is on. */
+  function paintDensity() {
+    var cur = N.prefs.get("density") || "regular";
+    d.qsa("#densitySeg button").forEach(function (b) {
+      b.classList.toggle("on", b.dataset.val === cur);
+    });
+  }
+
+  function paintMini() {
+    var sw = d.qs("#miniPerfSwitch");
+    if (sw) sw.checked = !!N.prefs.get("miniPerf");
+  }
+
+  /* the themes that go with the season we're in: Fall offers Fall and
+     Halloween, Winter offers Winter and Holidays. Automatic follows the
+     calendar, holiday windows included. */
+  function paintSeasonPick() {
+    var row = d.qs("#seasonSeg");
+    if (!row || !N.seasons || !N.seasons.options) return;
+    var on = N.prefs.data.seasonal !== false;
+    var wrap = d.qs("#seasonPickRow");
+    if (wrap) wrap.style.display = on ? "" : "none";
+    var picked = N.prefs.get("seasonVariant") || "";
+    var opts = N.seasons.options();
+    row.textContent = "";
+    var auto = d.h(
+      "button",
+      { type: "button", "data-val": "", title: "Follow the calendar" },
+      "Automatic",
+    );
+    if (!picked) auto.classList.add("on");
+    row.appendChild(auto);
+    opts.forEach(function (t) {
+      var b = d.h("button", { type: "button", "data-val": t.id, title: t.hint }, t.label);
+      if (picked === t.id) b.classList.add("on");
+      row.appendChild(b);
+    });
+    var hint = d.qs("#seasonPickHint");
+    if (hint && opts.length) {
+      var autoNow = opts.filter(function (t) {
+        return t.auto;
+      })[0];
+      hint.textContent =
+        "Every theme for the season you're in: " +
+        opts
+          .map(function (t) {
+            return t.label;
+          })
+          .join(", ") +
+        ". " +
+        (autoNow ? autoNow.label + " is what the calendar would pick today." : "");
+    }
+  }
+
+  /* ---------- background image (Shop unlock) ---------- */
+  function bgOn() {
+    return !!(N.econ && N.econ.isUnlocked("fx", "custombg"));
+  }
+
+  function paintBg() {
+    var body = d.qs("#bgBody");
+    var locked = d.qs("#bgLocked");
+    if (!body || !locked) return;
+    var on = bgOn();
+    body.hidden = !on;
+    locked.hidden = on;
+    if (!on) return;
+    var p = N.prefs.data;
+    var url = d.qs("#bgUrl");
+    if (url && document.activeElement !== url) url.value = p.bgImage || "";
+    var fit = d.qs("#bgFit");
+    if (fit) {
+      fit.value = p.bgFit || "cover";
+      N.dom.selSync(fit);
+    }
+    var dim = d.qs("#bgDim");
+    if (dim) dim.value = String(p.bgDim == null ? 0.35 : p.bgDim);
+    var blur = d.qs("#bgBlur");
+    if (blur) blur.value = String(p.bgBlur || 0);
+  }
+
+  /* the editor is a Shop unlock too: show the button once it's owned */
+  function paintEditorRow() {
+    var row = d.qs("#packEditorRow");
+    if (!row) return;
+    row.style.display = N.econ && N.econ.isUnlocked("fx", "editor") ? "" : "none";
+  }
+
   function paintSmart() {
     var on = !!N.prefs.get("smartTab");
     var sw = d.qs("#smartTabSwitch");
@@ -290,8 +386,124 @@
         N.prefs.set("seasonOverride", null); /* settings follows the calendar */
         if (N.seasons) N.seasons.refresh();
         paintSeason();
+        paintSeasonPick();
         var s = N.seasons ? N.seasons.now() : null;
         d.toast(ssw.checked && s ? s.label + " theme on" : "Seasonal theme off");
+      });
+    }
+
+    /* which seasonal or holiday theme is worn */
+    var seg = d.qs("#seasonSeg");
+    if (seg) {
+      seg.addEventListener("click", function (e) {
+        var b = e.target.closest("button");
+        if (!b || !N.seasons) return;
+        var t = N.seasons.setVariant(b.dataset.val || null);
+        paintSeason();
+        paintSeasonPick();
+        d.toast(t && N.prefs.get("seasonVariant") ? t.label + " theme on" : "Seasonal theme follows the calendar");
+      });
+    }
+
+    /* layout compactness */
+    var dseg = d.qs("#densitySeg");
+    if (dseg) {
+      dseg.addEventListener("click", function (e) {
+        var b = e.target.closest("button");
+        if (!b) return;
+        N.theme.setDensity(b.dataset.val);
+        paintDensity();
+        d.toast("Layout: " + b.textContent);
+      });
+    }
+
+    /* Mini-Perf */
+    var mp = d.qs("#miniPerfSwitch");
+    if (mp) {
+      mp.addEventListener("change", function () {
+        N.theme.setMiniPerf(mp.checked);
+        d.toast(mp.checked ? "Mini-Perf on: only what's on screen is drawn" : "Mini-Perf off");
+      });
+    }
+
+    /* background image */
+    var bgUrl = d.qs("#bgUrl");
+    var bgTimer = null;
+    if (bgUrl) {
+      bgUrl.addEventListener("input", function () {
+        clearTimeout(bgTimer);
+        bgTimer = setTimeout(function () {
+          N.theme.setBg({ bgImage: bgUrl.value.trim() });
+        }, 350);
+      });
+      bgUrl.addEventListener("change", function () {
+        clearTimeout(bgTimer);
+        N.theme.setBg({ bgImage: bgUrl.value.trim() });
+        d.toast(bgUrl.value.trim() ? "Background image set" : "Background image cleared", { icon: "check" });
+      });
+    }
+    var bgUp = d.qs("#bgUpload");
+    var bgFile = d.qs("#bgFile");
+    if (bgUp && bgFile) {
+      bgUp.addEventListener("click", function () {
+        bgFile.click();
+      });
+      bgFile.addEventListener("change", function () {
+        var f = bgFile.files && bgFile.files[0];
+        bgFile.value = "";
+        if (!f) return;
+        if (f.size > 1200000) {
+          d.toast("That picture is too big to keep in this browser. Try one under about 1 MB, or paste a link.", {
+            type: "err",
+          });
+          return;
+        }
+        var reader = new FileReader();
+        reader.onerror = function () {
+          d.toast("Could not read that file.", { type: "err" });
+        };
+        reader.onload = function () {
+          N.theme.setBg({ bgImage: String(reader.result) });
+          paintBg();
+          d.toast("Background image set", { icon: "check" });
+        };
+        reader.readAsDataURL(f);
+      });
+    }
+    var bgClr = d.qs("#bgClear");
+    if (bgClr) {
+      bgClr.addEventListener("click", function () {
+        N.theme.setBg({ bgImage: "" });
+        paintBg();
+        d.toast("Background image removed");
+      });
+    }
+    var bgFit = d.qs("#bgFit");
+    if (bgFit) {
+      N.dom.upgradeSelect(bgFit);
+      bgFit.addEventListener("change", function () {
+        N.theme.setBg({ bgFit: bgFit.value });
+      });
+    }
+    var bgDim = d.qs("#bgDim");
+    if (bgDim) {
+      bgDim.addEventListener("input", function () {
+        N.theme.setBg({ bgDim: parseFloat(bgDim.value) });
+      });
+    }
+    var bgBlur = d.qs("#bgBlur");
+    if (bgBlur) {
+      bgBlur.addEventListener("input", function () {
+        N.theme.setBg({ bgBlur: parseFloat(bgBlur.value) });
+      });
+    }
+
+    /* the theme & particle editor (Shop unlock) */
+    var opEd = d.qs("#openEditor");
+    if (opEd) {
+      opEd.addEventListener("click", function () {
+        if (N.editor && N.editor.open) N.editor.open(refresh);
+        else d.toast("The editor could not load here.", { type: "err" });
       });
     }
 

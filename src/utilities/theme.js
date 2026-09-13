@@ -34,10 +34,12 @@
     if (!N.econ) return [];
     var free = N.econ.FREE_PACKS || [];
     var paid = N.econ.THEMES || [];
+    var mine = craftedPack();
     return free.concat(
       paid.filter(function (t) {
         return N.econ.isUnlocked("theme", t.id);
       }),
+      mine ? [mine] : [],
     );
   }
 
@@ -69,6 +71,114 @@
       return false;
     if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return false;
     return true;
+  }
+
+  /* ---------- crafted pack + particle (Shop: theme & particle editor) ----------
+     The editor builds two things and keeps them in null:craft: a theme pack
+     (palette, tint, which backdrop art to borrow, drifting parts) and a
+     particle set (kinds, counts, own palette or the site's). Once loaded both
+     are ordinary definitions: allPacks()/allParticles() hand them to the very
+     same builders a Shop pack goes through, so a crafted theme previews,
+     applies and is styled like a bought one and nothing downstream needs to
+     know it was made by hand. */
+  var CRAFT_KEY = "null:craft";
+  var CRAFT_PACK = "mypack";
+  var CRAFT_PART = "mypart";
+
+  /* the art a crafted backdrop can borrow, by the pack that draws it. The
+     pack's own CSS is driven by --pk-1..4 and the tint, so a borrowed
+     backdrop takes the crafted palette without a line of new CSS. */
+  var ART = [
+    { id: "synthwave", name: "Grid horizon" },
+    { id: "matrix", name: "Code rain" },
+    { id: "gold", name: "Light rays" },
+    { id: "aurora", name: "Aurora ribbons" },
+    { id: "cosmos", name: "Starfield" },
+    { id: "vapor", name: "Smoke + waves" },
+    { id: "neon", name: "Wireframe room" },
+    { id: "dawn", name: "Plain glow" },
+    { id: "mist", name: "Haze" },
+  ];
+
+  /* every particle kind the sheets can actually draw, split by layer: pf-*
+     rides with a theme pack, pt-* is the ambient layer. The editor offers
+     these lists, so it can never hand the painter a shape that doesn't exist. */
+  var PF_KINDS = [
+    "star", "starfar", "dust", "ribbon", "rain", "smoke", "cloud", "neonTube", "neonPulse",
+  ];
+  var PT_KINDS = [
+    "mote", "bloom", "spark", "sparkle", "flare", "speck", "haze", "wisp", "firefly",
+    "trail", "ember", "bubble", "glint", "node", "link", "plasma", "swirl", "tunnel", "warp",
+  ];
+
+  var craftCache = null;
+
+  function craftRaw() {
+    return N.store.read(CRAFT_KEY, {}) || {};
+  }
+  function craftWrite(patch) {
+    N.store.write(CRAFT_KEY, Object.assign(craftRaw(), patch));
+    craftCache = null;
+  }
+  /* the editor is a Shop unlock: without it the crafted pair is ignored
+     everywhere, so a leftover pair in storage can't outlive the unlock */
+  function craftOn() {
+    return !!(N.econ && N.econ.isUnlocked("fx", "editor"));
+  }
+  function craftPartList(p) {
+    return (p || []).filter(function (x) {
+      return x && PF_KINDS.concat(PT_KINDS).indexOf(x.k) >= 0 && x.n > 0;
+    });
+  }
+  function crafted() {
+    if (craftCache) return craftCache;
+    var out = { pack: null, part: null };
+    var raw = craftRaw();
+    if (craftOn() && raw.pack && raw.pack.colors && raw.pack.colors.length) {
+      var d = raw.pack;
+      var art = ART.some(function (a) {
+        return a.id === d.art;
+      })
+        ? d.art
+        : ART[0].id;
+      var tint = d.tint && d.tint.length === 2 ? d.tint : ["#101016", "#08080b"];
+      out.pack = {
+        id: CRAFT_PACK,
+        name: d.name || "My theme",
+        crafted: true,
+        bg: art,
+        art: art,
+        c1: d.colors[0],
+        c2: d.colors[1] || d.colors[0],
+        colors: d.colors,
+        tint: tint,
+        parts: craftPartList(d.parts),
+        desc: "Your own theme pack: palette, tint and backdrop, built in the editor.",
+        tags: ["Crafted", (ART.find(function (a) { return a.id === art; }) || {}).name, d.colors.length + " colors"],
+      };
+    }
+    if (craftOn() && raw.part && raw.part.parts && raw.part.parts.length) {
+      var q = raw.part;
+      var mono = !!q.mono;
+      out.part = {
+        id: CRAFT_PART,
+        name: q.name || "My particles",
+        crafted: true,
+        mono: mono,
+        colors: mono ? null : q.colors,
+        parts: craftPartList(q.parts),
+        desc: "Your own particle set: shapes, counts and colours, built in the editor.",
+        tags: ["Crafted", mono ? "Follows the theme" : "Own palette"],
+      };
+    }
+    craftCache = out;
+    return out;
+  }
+  function craftedPack() {
+    return crafted().pack;
+  }
+  function craftedPart() {
+    return crafted().part;
   }
 
   /* ---------- palette ---------- */
@@ -131,7 +241,9 @@
     opts = opts || {};
     var el = document.createElement("div");
     el.className = cls;
-    el.setAttribute("data-pack", p.id);
+    /* a crafted pack carries the id of the pack whose art it borrows, so the
+       layer is painted by that pack's CSS with the crafted palette */
+    el.setAttribute("data-pack", p.art || p.id);
     el.setAttribute("aria-hidden", "true");
     ["a", "b", "c"].forEach(function (k) {
       var i = document.createElement("i");
@@ -167,10 +279,11 @@
     return thumb;
   }
 
-  /* every pack that exists: free first, then the Shop's */
+  /* every pack that exists: free first, then the Shop's, then your own */
   function allPacks() {
     if (!N.econ) return [];
-    return (N.econ.FREE_PACKS || []).concat(N.econ.THEMES || []);
+    var mine = craftedPack();
+    return (N.econ.FREE_PACKS || []).concat(N.econ.THEMES || [], mine ? [mine] : []);
   }
 
   function killPack() {
@@ -180,7 +293,7 @@
 
   function buildPack(p) {
     if (!p || !p.bg || !packAllowed()) return;
-    if (packEl && packEl.isConnected && packEl.dataset.pack === p.id) return;
+    if (packEl && packEl.isConnected && packEl.dataset.pack === (p.art || p.id)) return;
     killPack();
     packEl = packArt(p, "pack-fx");
     document.body.appendChild(packEl);
@@ -198,7 +311,7 @@
     }
     var vars = packVars(p);
     for (var k in vars) root.style.setProperty(k, vars[k]);
-    root.dataset.pack = p.id;
+    root.dataset.pack = p.art || p.id;
     buildPack(p);
   }
 
@@ -213,7 +326,8 @@
 
   function allParticles() {
     if (!N.econ) return [];
-    return (N.econ.FREE_PARTICLES || []).concat(N.econ.PARTICLES || []);
+    var mine = craftedPart();
+    return (N.econ.FREE_PARTICLES || []).concat(N.econ.PARTICLES || [], mine ? [mine] : []);
   }
 
   function particleFor(id) {
@@ -224,9 +338,13 @@
     );
   }
 
-  /* free particles are everyone's; the rest must be unlocked in the Shop */
+  /* free particles are everyone's; the rest must be unlocked in the Shop,
+     and a crafted one comes with the editor */
   function partOwned(p) {
-    return !!p && (p.free || (N.econ && N.econ.isUnlocked("particle", p.id)));
+    if (!p) return false;
+    if (p.free) return true;
+    if (p.crafted) return craftOn();
+    return !!(N.econ && N.econ.isUnlocked("particle", p.id));
   }
 
   /* NB: named ptHost, not partHost: the theme-pack builder above owns that
@@ -617,16 +735,91 @@
     if (on) {
       killPack();
       killPart();
+      killBg();
     } else {
       buildPack(packFor(curPack));
       buildPart(particleFor(curPart));
+      buildBg();
     }
+  }
+
+  /* ---------- layout prefs ----------
+     Density is one CSS scale (global.css), Mini-Perf is one attribute
+     (perf.css). Both are read here so every page gets them, whether or not it
+     has a Settings screen on it. */
+  function applyLayout() {
+    var p = N.prefs.data;
+    if (p.density && p.density !== "regular") root.dataset.density = p.density;
+    else delete root.dataset.density;
+    if (p.miniPerf) root.dataset.mini = "1";
+    else delete root.dataset.mini;
+    applyBg();
+  }
+
+  /* ---------- custom background image ----------
+     A Shop unlock (fx "custombg"). The picture gets its own fixed layer
+     behind the theme pack and the particles: a link the visitor pasted or a
+     file they uploaded, with the page's own background colour laid over it
+     as a tint (--bg-dim), so any picture stays readable behind the text.
+     Gated like every other backdrop: off in performance mode. */
+  var bgEl = null;
+  var bgSig = null;
+
+  function bgAllowed() {
+    return !!(N.econ && N.econ.isUnlocked("fx", "custombg") && !N.prefs.data.perf);
+  }
+
+  function killBg() {
+    if (bgEl && bgEl.parentNode) bgEl.parentNode.removeChild(bgEl);
+    bgEl = null;
+    bgSig = null;
+  }
+
+  function buildBg() {
+    var p = N.prefs.data;
+    var url = (p.bgImage || "").trim();
+    if (!url || !bgAllowed()) {
+      killBg();
+      return;
+    }
+    var fit = p.bgFit === "contain" || p.bgFit === "tile" ? p.bgFit : "cover";
+    var dim = Math.min(0.95, Math.max(0, Number(p.bgDim) || 0));
+    var blur = Math.min(30, Math.max(0, Number(p.bgBlur) || 0));
+    var sig = [url, fit, dim, blur].join("|");
+    if (bgEl && bgSig === sig) return;
+    if (!bgEl) {
+      bgEl = document.createElement("div");
+      bgEl.className = "bg-fx";
+      bgEl.setAttribute("aria-hidden", "true");
+      document.body.appendChild(bgEl);
+    }
+    bgSig = sig;
+    bgEl.style.backgroundImage = "url(" + JSON.stringify(url) + ")";
+    bgEl.style.backgroundSize = fit === "tile" ? "auto" : fit;
+    bgEl.style.backgroundRepeat = fit === "tile" ? "repeat" : "no-repeat";
+    bgEl.style.filter = blur ? "blur(" + blur + "px)" : "";
+    /* a blurred layer fades out at its own edges, so it is grown past the
+       viewport to keep the blur off the border */
+    bgEl.style.inset = blur ? "-" + blur * 2 + "px" : "";
+    bgEl.style.setProperty("--bg-dim", String(dim));
+  }
+
+  /* re-check the layer: it clears itself when it shouldn't show, and builds
+     or updates itself when it should */
+  function applyBg() {
+    buildBg();
+  }
+
+  function setBg(patch) {
+    N.prefs.patch(patch);
+    applyBg();
   }
 
   function applyAll() {
     var p = N.prefs.data;
     setTheme(p.theme);
     setPerf(p.perf);
+    applyLayout();
     /* glow first: Neon's backdrop is built from the glow palette, so the
        vars have to exist before the pack is built (avoids a rebuild) */
     cometOn = !!p.glowComet;
@@ -635,10 +828,42 @@
     setParticles(p.particles);
   }
 
+  /* a second window may have bought the editor or set a background: keep the
+     layers in step without a reload */
+  if (N.bus) {
+    N.bus.on("sync", function () {
+      craftCache = null;
+      applyLayout();
+    });
+    N.bus.on("eco", function () {
+      craftCache = null;
+      applyLayout();
+    });
+  }
+
   N.theme = {
     ACCENTS: ACCENTS,
     GLOWS: GLOWS,
     extraAccents: extraAccents,
+    /* the editor's palette of real backdrops and real particle kinds */
+    ART: ART,
+    PF_KINDS: PF_KINDS,
+    PT_KINDS: PT_KINDS,
+    craftPack: craftedPack,
+    craftPart: craftedPart,
+    craftWrite: craftWrite,
+    craftOn: craftOn,
+    /* layout + background */
+    setDensity: function (id) {
+      N.prefs.set("density", id);
+      applyLayout();
+    },
+    setMiniPerf: function (on) {
+      N.prefs.set("miniPerf", !!on);
+      applyLayout();
+    },
+    setBg: setBg,
+    applyLayout: applyLayout,
     /* shop + settings share this so a preview can never drift from the real
        thing: same builder, same CSS, different container class */
     packPreview: packPreview,

@@ -18,7 +18,7 @@
 .mast-in {
   max-width: var(--maxw);
   margin: 0 auto;
-  padding: calc(var(--nh) + 22px) 22px 30px;
+  padding: calc(var(--nh) + var(--pad-top) - 12px) var(--pad-x) 30px;
 }
 
 /* meta row: credits left, live counts right */
@@ -103,7 +103,7 @@
 
 /* the band already clears the fixed nav, so the page below starts tight */
 .home-page {
-  padding-top: 30px;
+  padding-top: calc(var(--pad-top) - 4px);
 }
 
 @media (max-width: 900px) {

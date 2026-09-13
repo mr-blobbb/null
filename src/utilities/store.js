@@ -73,6 +73,13 @@
     seasonOverride: null, // dev-console season preview: "fall" | "winter" | ... | null = calendar
     smartTab: false, // smart tab cloak: rotate tab presets on a timer
     smartTabMin: 5, // smart tab cloak: minutes between rotations
+    density: "regular", // layout compactness: regular | comfy | spacious | compact
+    miniPerf: false, // Mini-Perf: unload off-screen blocks, strip nothing
+    seasonVariant: null, // seasonal/holiday pick; null follows the calendar
+    bgImage: "", // custom page background (Shop unlock): a URL or a data URL
+    bgFit: "cover", // cover | contain | tile
+    bgDim: 0.35, // 0..1 tint over the image so the page stays readable
+    bgBlur: 0, // px of blur on the image
   };
 
   N.prefs = (function () {

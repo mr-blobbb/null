@@ -34,7 +34,8 @@ site can be previewed and the releases rebuilt; see the end of this file.)
 │   ├── utilities/         store, dom, modal, theme, scroll, markdown, econ,
 │   │                      catalog-tool (the catalog's parser)
 │   ├── components/        shell (nav/footer), cards, search, schedule,
-│   │                      tab presets, seasons, daily (crate + quests)
+│   │                      tab presets, seasons, daily (crate + quests),
+│   │                      editor (the theme & particle editor)
 │   ├── catalog/           catalog.js runtime + generated-catalog.js (the catalog)
 │   ├── content/content.js Hand-written content (announcements, page index)
 │   ├── routing/router.js  Shared navigation model
@@ -298,6 +299,12 @@ this folder as they are, and NULL never calls out to anything.
 - Minimal flat design system, dark + light themes, configurable accents, and a
   **glow border** that re-inks the viewport edge in the palette you pick (the
   Neon theme pack is the one that also lights its cards).
+- **Layout compactness** in Settings: regular, comfy, spacious or compact:
+  one spacing scale (nav height, page gutters, section rhythm, grid gaps, card
+  padding, tile width) behind `html[data-density]`, so every page follows it.
+- **Mini-Perf mode** in Settings: strips nothing, it just lets the browser skip
+  the blocks that are off screen (`content-visibility`, in perf.css) and brings
+  them right back on scroll. Full visuals, less work per frame.
 - Catalog with labels, warnings, fallback thumbs, NEW/HOT badges and popularity.
 - Shared NULL player (fullscreen, favorites, tab-preset override, about:blank /
   blob: cloaking within browser limits). Cloaking from Settings opens the
@@ -315,9 +322,24 @@ this folder as they are, and NULL never calls out to anything.
 - Shop + local economy: 30 minutes of play banks 10 XP, 100 XP banks 30 coins,
   spent on beta games, theme packs with real animated backdrops, particle sets,
   boosts and effects.
+- **Custom background image** (Shop unlock, `fx custombg`): paste a link or
+  upload a file in Settings, then set the fit (cover / contain / tile), how far
+  it dims behind the page and how soft it is. It gets its own fixed layer
+  (`--bg-dim` lays the page colour over it) behind the theme pack and particles.
+- **Theme & particle editor** (Shop unlock, `fx editor`): build your own theme
+  pack (four palette colours, a tint, which backdrop art to borrow, drifting
+  parts) and your own particle set (kinds, counts, start points, own palette or
+  the site's), with a live preview. Both are stored in `null:craft` and merged
+  into `allPacks()` / `allParticles()`, so a crafted theme applies through the
+  same code a bought one does.
 - **Daily crate** (a modal with a spinning reel, streak bonuses), three rotating
   **daily quests** and permanent **achievements**, all paid in coins.
-- Seasonal mode, performance mode, and an **Ultra-Performance** floor (no
+- Seasonal mode with **holiday variants**: a holiday is a variant of the season
+  it lands in, so Fall offers Fall and Halloween (last two weeks of October by
+  itself) and Winter offers Winter and Holidays. Pick either in Settings, or let
+  the calendar choose (`prefs.seasonVariant`, `null` = automatic; the dev
+  console still previews via `seasonOverride`).
+- Performance mode, **Mini-Perf**, and an **Ultra-Performance** floor (no
   animation at all, no effects, no off-screen paint) that NULL offers by itself
   when it measures a low frame rate. Plus panic key, screensaver, smart tab
   cloak.
