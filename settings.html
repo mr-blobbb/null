@@ -58,7 +58,7 @@
         <div class="set-row" style="display:block">
           <div class="lbl-txt" style="margin-bottom:10px">
             <b>Accent</b>
-            <span>A single accent — or a full theme pack from the Shop with its own palette and live backdrop.</span>
+            <span>A single accent, or a full theme pack from the Shop with its own palette and live backdrop.</span>
           </div>
           <div id="accentRow" class="accent-row"></div>
         </div>
@@ -66,7 +66,7 @@
         <div class="set-row" id="accentCustomRow" style="display:none">
           <div class="lbl-txt">
             <b>Custom color</b>
-            <span>Unlocked in the Shop — make the accent any color you like.</span>
+            <span>Unlocked in the shop. Makes accent any color you want!</span>
           </div>
           <input type="color" id="accentCustom" aria-label="Custom accent color" style="width:54px;height:38px;padding:3px;border:1px solid var(--line-2);border-radius:10px;background:var(--glass-bg);cursor:pointer">
         </div>
@@ -86,10 +86,8 @@
           <div class="lbl-txt">
             <b>Ultra-Performance mode</b>
             <span>
-              The floor: no animation or transition at all, no particles, no
-              glow, no blur, and only what&rsquo;s on screen is drawn. NULL looks
-              plain and runs as light as it can. NULL also offers this on its
-              own if it measures a low frame rate.
+              What is changed: no animation or transition at all, no particles, no
+              glow, no blur, and only what&rsquo;s on screen is drawn. Unfortunately, most visual settings do not work whilst this is on.
             </span>
           </div>
           <label class="switch">
@@ -103,9 +101,7 @@
       <section class="set-card glass" aria-label="Glow border">
         <h2 class="set-title"><span data-icon="zap"></span>Glow border</h2>
         <p class="set-sub">
-          A slim 5px neon border around the whole screen edge with a soft
-          glow hugging it. The colors drift in a continuous loop around the
-          whole frame. Off by default.
+          A slim 5px neon border around the whole screen edge, glowing softly.
         </p>
         <div class="set-row" style="display:block">
           <label class="lbl" for="glowSelect">Preset</label>
@@ -123,7 +119,7 @@
         <div class="set-row">
           <div class="lbl-txt">
             <b>Comet mode</b>
-            <span>A bright streak travels around the border. Slightly heavier on the GPU.</span>
+            <span>A bright streak travels around the border.</span>
           </div>
           <label class="switch">
             <input type="checkbox" id="cometSwitch" aria-label="Comet mode">
@@ -152,8 +148,8 @@
       <section class="set-card glass set-card--wide" aria-label="Theme packs" id="packSection">
         <h2 class="set-title"><span data-icon="pen"></span>Theme packs</h2>
         <p class="set-sub">
-          Full themes: a whole palette plus a drifting backdrop behind everything.
-          Free packs are always available — the louder ones unlock in the Shop.
+          Full themes: a whole palette plus cool built-in particles.
+          Free packs are always available, the better ones unlock in the Shop.
         </p>
         <div id="packGrid" class="shop-grid shop-grid--list"></div>
       </section>
@@ -163,7 +159,7 @@
         <h2 class="set-title"><span data-icon="sparkle"></span>Background particles</h2>
         <p class="set-sub">
           A layer of drifting motion behind every page, on its own or over a theme
-          pack. The three basics are free &mdash; the loud ones unlock in the Shop.
+          pack. The three basics are free, and the better ones unlock in the Shop.
           Click the applied card to switch particles off.
         </p>
         <div id="partGrid" class="shop-grid shop-grid--list"></div>
@@ -173,9 +169,9 @@
       <section class="set-card glass" aria-label="Seasonal theme">
         <h2 class="set-title"><span data-icon="leaf"></span>Seasonal theme</h2>
         <p class="set-sub">
-          NULL quietly follows the seasons &mdash; fall leaves, winter snow, spring
-          petals, summer light &mdash; drifting behind everything. Turn it off if you
-          want the pure look back.
+          NULL quietly follows the seasons: fall leaves, winter snow, spring
+          petals, summer light drifting behind everything. Turn it off if you
+          want the original look back.
         </p>
         <div class="set-row">
           <div class="lbl-txt">
@@ -194,7 +190,7 @@
       <section class="set-card glass" aria-label="Install NULL">
         <h2 class="set-title"><span data-icon="download"></span>Install NULL</h2>
         <p class="set-sub">
-          NULL installs as its own app in Chrome &mdash; its own window and icon
+          NULL installs as its own app in Chrome, its own window and icon
           in your launcher, and the shell keeps working offline.
         </p>
         <div class="set-row">
@@ -213,7 +209,7 @@
       <section class="set-card glass set-card--wide" aria-label="Browser tab">
         <h2 class="set-title"><span data-icon="tab"></span>Browser tab presets</h2>
         <p class="set-sub">
-          The preset overrides NULL&rsquo;s tab title and favicon everywhere — including
+          The preset overrides NULL&rsquo;s tab title and favicon everywhere, including
           games/apps inside the player. Default is Google Slides&ndash;style.
         </p>
 
@@ -258,7 +254,7 @@
         <div id="tabCustomWrap" style="display:none;margin-top:14px">
           <div class="lbl-txt" style="margin-bottom:10px">
             <b>Custom tab</b>
-            <span>Your own title and favicon &mdash; applied everywhere like any other preset.</span>
+            <span>Your own title and favicon, applied everywhere like any other preset.</span>
           </div>
           <label class="lbl" for="tabCustomTitle">Tab title</label>
           <span class="field">
@@ -345,7 +341,7 @@
             <span>
               Opens the whole site in a window whose address bar shows
               <b>about:blank</b> or a <b>blob:</b> URL. If the browser blocks
-              the popup, nothing opens — NULL shows a warning instead.
+              the popup, nothing opens, NULL shows a warning instead.
             </span>
           </div>
           <div class="cloak-actions">
@@ -394,7 +390,7 @@
         <div class="set-row">
           <div class="lbl-txt">
             <b>Load data back</b>
-            <span>Pick a NULL backup file &mdash; it replaces what's stored here and reloads NULL.</span>
+            <span>Pick a NULL backup file, it replaces what's stored here and reloads NULL.</span>
           </div>
           <div class="toolbar" style="margin:0">
             <button type="button" class="btn btn-outline btn-sm" id="btnDataImport"><span data-icon="upload"></span>Upload</button>
@@ -444,7 +440,7 @@
         <div class="dz-head"><span data-icon="warn"></span>Danger zone</div>
         <p class="set-sub">
           Whole-NULL resets. Recently played has its own clear button on the
-          home page — this is only for full resets.
+          home page, this is only for full resets.
         </p>
         <div class="toolbar" style="margin:0">
           <button type="button" class="btn btn-outline" id="dangerReset">Reset appearance</button>
