@@ -42,21 +42,21 @@
     <script type="text/markdown">
 # What is NULL?
 
-NULL is a plain black-and-white web hub for **games**, **apps**, **proxies** and useful tools. It is designed to feel like one cohesive platform: flat surfaces, hairline borders and a grayscale identity that keeps its focus on the content.
+NULL is a black-and-white hub for games, apps, proxies and a few handy tools. It runs in your browser and it all stays in one place: same flat look, same thin borders, same grayscale throughout. Nothing here shouts for attention.
 
-## The idea
+## How it works
 
-- **Games & apps** are discovered automatically from their folders. Drop a folder with an HTML file into `games/`, rebuild the catalog, and it appears with its own labels, thumbnail and optional warning.
-- **Proxies** are treated differently on purpose: they link out to external sites in a new tab. NULL never pretends an external site is part of NULL.
-- **The player** is shared. Games and apps open inside the same NULL shell with fullscreen, warnings and tab-preset overrides.
-- **Your data stays local.** Favorites, recently played, themes and settings are stored with `localStorage` on the device you are using. No server, no account, nothing uploaded.
+- **Games and apps** are read straight from their folders. Drop a folder with an HTML file into `games/`, rebuild the catalog, and it turns up with its own labels, thumbnail and optional warning.
+- **Proxies** are handled differently on purpose. They open in a new tab, because they aren't ours. NULL won't dress an outside site up as part of NULL.
+- **The player** is shared. Games and apps open in the same shell, with fullscreen, warnings and tab-preset overrides.
+- **Your data stays on your device.** Favorites, recently played, themes and settings live in `localStorage`, right where you are. No server, no account, nothing uploaded.
 
-## Nice-to-know details
+## Small details
 
-- Pages ship as plain HTML with a shared CSS design system: no framework required.
-- The site is fully static and runs on GitHub Pages. The "releases" folder contains single-file builds: NULL Mini, NULL Lite and NULL Regular.
-- If the domain ever goes down, check the [Backups](/backups) page for the next places to look.
-- Tab presets (Google Slides style by default), accents and a performance mode are all configurable in [Settings](/settings).
+- Pages are plain HTML over one shared CSS file. No framework, no build step to run the site.
+- It's fully static and runs on GitHub Pages. The `releases/` folder has single-file builds: NULL Mini, NULL Lite and NULL Regular.
+- If the domain ever goes down, [Backups](/backups) lists the next places to look.
+- Tab presets (Google Slides by default), accents and performance mode are all in [Settings](/settings).
     </script>
   </main>
 
@@ -76,7 +76,7 @@ NULL is a plain black-and-white web hub for **games**, **apps**, **proxies** and
   <script src="/src/utilities/scroll.js"></script>
   <script src="/src/utilities/markdown.js"></script>
   <script src="/src/routing/router.js"></script>
-  <script src="/src/catalog/generated-catalog.js?v=6b1046d3f3"></script>
+  <script src="/src/catalog/generated-catalog.js?v=ed9344c76e"></script>
   <script src="/src/catalog/catalog.js"></script>
   <script src="/src/content/content.js"></script>
   <script src="/src/components/tabpresets.js"></script>

@@ -9,7 +9,7 @@ window.NULL_CONTENT = {
       title: "Welcome to NULL",
       date: "2026-08-24",
       category: "notice",
-      desc: "Welcome to NULL, a new alternative to SG Games developed by Mr Blob, hosting over 2,300 games, apps, and proxies, prioritizing the user first, always.",
+      desc: "NULL is a new alternative to SG Games, built by Mr Blob. Around 2,300 games, plus apps and proxies, all in one place.",
     },
     {
       id: "welcome",
@@ -65,7 +65,7 @@ window.NULL_CONTENT = {
       title: "Games",
       url: "/games/",
       grp: "Library",
-      desc: "Auto-discovered game library with warnings, labels and a player shell.",
+      desc: "The whole game library, built from what's in the folders, with warnings, labels and a player shell.",
       kw: "play game arcade fun library",
     },
     {

@@ -399,7 +399,7 @@
     partSec.appendChild(partGrid);
     partSec.appendChild(
       d.h("p", { class: "eco-note" }, [
-        "Motes, Haze and Twinkle are free in Settings: these ones are the loud stuff.",
+        "Motes, Haze, Twinkle and Constellation are free in Settings. These ones are the loud stuff.",
       ]),
     );
     body.appendChild(partSec);

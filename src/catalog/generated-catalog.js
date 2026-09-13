@@ -7,12 +7,12 @@
    ============================================================ */
 window.NULL_CATALOG = {
   "site": "NULL",
-  "generatedAt": "2026-09-13T13:08:04.835Z",
+  "generatedAt": "2026-09-13T13:32:21.808Z",
   "games": [
     {
       "id": "flip",
       "name": "Flip",
-      "desc": "Auto-discovered in games/flip, part of the NULL library.",
+      "desc": "Found in games/flip. No description written yet.",
       "file": "/games/flip/flip.html",
       "thumb": "/games/flip/flip.svg",
       "labels": [
@@ -25,7 +25,7 @@ window.NULL_CATALOG = {
     {
       "id": "pulse",
       "name": "Pulse",
-      "desc": "Auto-discovered in games/pulse, part of the NULL library.",
+      "desc": "Found in games/pulse. No description written yet.",
       "file": "/games/pulse/pulse.html",
       "thumb": "/games/pulse/pulse.svg",
       "labels": [
@@ -41,7 +41,7 @@ window.NULL_CATALOG = {
     {
       "id": "simon",
       "name": "Simon",
-      "desc": "Auto-discovered in games/simon, part of the NULL library.",
+      "desc": "Found in games/simon. No description written yet.",
       "file": "/games/simon/simon.html",
       "thumb": "/games/simon/simon.svg",
       "labels": [
@@ -54,7 +54,7 @@ window.NULL_CATALOG = {
     {
       "id": "snake",
       "name": "Snake",
-      "desc": "Auto-discovered in games/snake, part of the NULL library.",
+      "desc": "Found in games/snake. No description written yet.",
       "file": "/games/snake/snake.html",
       "thumb": "/games/snake/snake.svg",
       "labels": [
@@ -67,7 +67,7 @@ window.NULL_CATALOG = {
     {
       "id": "trace",
       "name": "Trace",
-      "desc": "Auto-discovered in games/trace, part of the NULL library.",
+      "desc": "Found in games/trace. No description written yet.",
       "file": "/games/trace/trace.html",
       "thumb": "/games/trace/trace.svg",
       "labels": [
@@ -80,7 +80,7 @@ window.NULL_CATALOG = {
     {
       "id": "void",
       "name": "Void",
-      "desc": "Auto-discovered in games/void, part of the NULL library.",
+      "desc": "Found in games/void. No description written yet.",
       "file": "/games/void/void.html",
       "thumb": "/games/void/void.svg",
       "labels": [
@@ -95,7 +95,7 @@ window.NULL_CATALOG = {
     {
       "id": "calc",
       "name": "Calculator",
-      "desc": "Auto-discovered in apps/calc, part of the NULL library.",
+      "desc": "Found in apps/calc. No description written yet.",
       "file": "/apps/calc/calc.html",
       "thumb": "/apps/calc/calc.svg",
       "labels": [
@@ -112,7 +112,7 @@ window.NULL_CATALOG = {
     {
       "id": "notes",
       "name": "Notes",
-      "desc": "Auto-discovered in apps/notes, part of the NULL library.",
+      "desc": "Found in apps/notes. No description written yet.",
       "file": "/apps/notes/notes.html",
       "thumb": "/apps/notes/notes.svg",
       "labels": [
@@ -128,7 +128,7 @@ window.NULL_CATALOG = {
     {
       "id": "pad",
       "name": "Pad",
-      "desc": "Auto-discovered in apps/pad, part of the NULL library.",
+      "desc": "Found in apps/pad. No description written yet.",
       "file": "/apps/pad/pad.html",
       "thumb": "/apps/pad/pad.svg",
       "labels": [
@@ -145,7 +145,7 @@ window.NULL_CATALOG = {
     {
       "id": "stopwatch",
       "name": "Stopwatch",
-      "desc": "Auto-discovered in apps/stopwatch, part of the NULL library.",
+      "desc": "Found in apps/stopwatch. No description written yet.",
       "file": "/apps/stopwatch/stopwatch.html",
       "thumb": "/apps/stopwatch/stopwatch.svg",
       "labels": [

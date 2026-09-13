@@ -318,12 +318,12 @@
       icon: "ban",
       dismissible: false,
       body:
-"<p style='font-size:15px; color:#a3a3a3; margin-top:0; margin-bottom:16px;'>The ultimate browser-based hub: unblocked, fast, and built for you.</p>" +
-"<p style='font-size:14px; margin-bottom:16px;'>Dive into over <b>2,300 games</b>, tons of premium apps, built-in proxies, and reliable backup links. NULL constantly updates in real-time to always stay ahead.</p>" +
-"<p style='font-size:13.5px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; color:#737373; margin-bottom:8px;'>Everything runs locally in your browser:</p>" +
-"<p style='font-size:13.5px; margin-top:0; line-height:1.5;'>• Recently played games and tools save automatically to your device<br>" +
-"• Open <b>Settings</b> to toggle instant tab cloaking, custom panic keys, themes, and deep visual customization<br>" +
-"• NULL never uploads anything: no external servers, no tracking, and zero accounts required</p>"
+"<p style='font-size:15px; color:#a3a3a3; margin-top:0; margin-bottom:16px;'>Around 2,300 games, plus apps, proxies and backup links, all in one place.</p>" +
+"<p style='font-size:14px; margin-bottom:16px;'>NULL is a school project, so it changes whenever there's time to add something. Worth checking the announcements every so often.</p>" +
+"<p style='font-size:13.5px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; color:#737373; margin-bottom:8px;'>A few things worth knowing:</p>" +
+"<p style='font-size:13.5px; margin-top:0; line-height:1.5;'>• Games you open show up under <b>Recently played</b>, and you can star the ones you like<br>" +
+"• <b>Settings</b> covers tab cloaking, a panic key, themes and a lot more<br>" +
+"• Coins, XP and the Shop run on local progress. Nothing leaves your device, and there are no accounts</p>"
 ,
       actions: [
         {
@@ -409,10 +409,10 @@
       icon: "pen",
       dismissible: false,
       body:
-        "<p style='font-size:15px; color:#a3a3a3; margin-top:0; margin-bottom:14px;'>Would you like to customize NULL's look?</p>" +
-        "<p style='font-size:13.5px; margin-top:0; margin-bottom:14px; line-height:1.55;'>Pick <b>accent colors</b> and <b>glow borders</b>, flip between <b>dark & light mode</b>, cloak your tab with a <b>preset</b>, and arm a <b>panic key</b>, all in Settings, saved locally on your device.</p>" +
-        "<div style='margin:0 0 14px; padding:10px 12px; border-radius:12px; background: color-mix(in srgb, var(--ac-1) 9%, transparent); border:1px solid color-mix(in srgb, var(--ac-1) 26%, transparent); font-size:13.5px; line-height:1.5;'><b>Introducing seasonal mode</b>: fall leaves, winter snow, spring petals and summer light drift behind everything, following the real seasons. Flip it on or off in Settings.</div>" +
-        "<p style='font-size:13px; color:#737373; margin:0;'>Everything can be changed anytime later.</p>",
+        "<p style='font-size:15px; color:#a3a3a3; margin-top:0; margin-bottom:14px;'>Want to make NULL look how you like?</p>" +
+        "<p style='font-size:13.5px; margin-top:0; margin-bottom:14px; line-height:1.55;'>Settings has <b>accent colors</b>, <b>glow borders</b>, <b>dark and light mode</b>, tab <b>presets</b> and a <b>panic key</b>. Everything saves to this device as you change it.</p>" +
+        "<div style='margin:0 0 14px; padding:10px 12px; border-radius:12px; background: color-mix(in srgb, var(--ac-1) 9%, transparent); border:1px solid color-mix(in srgb, var(--ac-1) 26%, transparent); font-size:13.5px; line-height:1.5;'><b>Seasonal mode</b> is in there too: leaves in fall, snow in winter, petals in spring, extra light in summer. It follows the calendar on its own.</div>" +
+        "<p style='font-size:13px; color:#737373; margin:0;'>You can change any of it later.</p>",
       actions: [
         {
           label: "Not right now",

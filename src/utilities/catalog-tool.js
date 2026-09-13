@@ -140,7 +140,7 @@
       name: meta.name || pretty(slug),
       desc:
         meta.description ||
-        "Auto-discovered in " + kind + "/" + slug + ", part of the NULL library.",
+        "Found in " + kind + "/" + slug + ". No description written yet.",
       file: "/" + kind + "/" + slug + "/" + (files.html || slug + ".html"),
       thumb: files.thumb ? "/" + kind + "/" + slug + "/" + files.thumb : null,
       labels: parseLabels(files.labels),
