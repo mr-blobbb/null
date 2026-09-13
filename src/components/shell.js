@@ -237,8 +237,7 @@ return foot;
   /* ---------- keyboard ---------- */
   function shortcuts() {
     document.addEventListener("keydown", function (e) {
-      var t = e.target;
-      var typing = t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable);
+      var typing = isTyping(e.target);
       if (e.key === "/" && !typing) {
         e.preventDefault();
         N.search.open();
@@ -275,6 +274,291 @@ return foot;
         window.location.href = url;
       }
     }
+  }
+
+  /* ============================================================
+     the hidden pages, and how you fall into them
+       /void     hold Backspace and the page erases line by line
+       /blob     a small orb sits in the corner during period four
+       /time     type the current half of the day, or outlast midnight
+       /credits  the shop's completion reward (see shop.js)
+     ============================================================ */
+  var VOID_URL = "/void.html";
+  var BLOB_URL = "/blob.html";
+  var TIME_URL = "/time.html";
+
+  function isTyping(t) {
+    return (
+      !!t &&
+      (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable)
+    );
+  }
+
+  /* the eggs stay off the player, and nothing fires over another overlay */
+  function eggsAllowed() {
+    var b = document.body;
+    return !b.classList.contains("player-page") && !b.classList.contains("no-chrome");
+  }
+  function eggsReady() {
+    return (
+      eggsAllowed() &&
+      !d.qs(".modal-ov.open") &&
+      !d.qs(".search-ov.open") &&
+      !d.qs(".dc-ov") &&
+      !d.qs(".dc-gate")
+    );
+  }
+
+  /* ---------- /void: hold Backspace ----------
+     A tap does nothing. Keep holding and the page is wiped away in thin
+     horizontal lines, bottom to top; let go early and it snaps back. The
+     hold has to run to the end (or the void is not impressed). */
+  var HOLD_MS = 150; // a tap never starts the wipe
+  var ERASE_MS = 1900; // hold this long to finish it
+  var LINE_PX = 12; // one erased line (matches the stripe period in extra.css)
+  var eraseEl = null;
+  var eraseRaf = 0;
+  var eraseAt = 0;
+  var holdTimer = 0;
+
+  function eraseBegin() {
+    if (eraseEl) return;
+    var ov = d.h("div", { class: "erase-ov", "aria-hidden": "true" }, [
+      d.h("div", { class: "erase-fill" }),
+      d.h("div", { class: "erase-edge" }),
+      d.h("div", { class: "erase-hint" }, "keep holding to erase"),
+    ]);
+    document.body.appendChild(ov);
+    eraseEl = ov;
+    eraseAt = Date.now();
+    requestAnimationFrame(eraseStep);
+    setTimeout(function () {
+      if (eraseEl === ov) ov.classList.add("holding");
+    }, 220);
+  }
+
+  function eraseStep() {
+    if (!eraseEl) return;
+    var p = Math.min(1, (Date.now() - eraseAt) / ERASE_MS);
+    /* snap to whole lines so it reads as one line at a time, not a slide */
+    var h = Math.min(window.innerHeight, Math.round((p * window.innerHeight) / LINE_PX) * LINE_PX);
+    var fill = d.qs(".erase-fill", eraseEl);
+    var edge = d.qs(".erase-edge", eraseEl);
+    if (fill) fill.style.height = h + "px";
+    if (edge) edge.style.bottom = h + "px";
+    if (p >= 1) {
+      eraseFinish();
+      return;
+    }
+    eraseRaf = requestAnimationFrame(eraseStep);
+  }
+
+  function eraseFinish() {
+    cancelAnimationFrame(eraseRaf);
+    var ov = eraseEl;
+    eraseEl = null;
+    if (ov) {
+      /* last line falls: drop the stripes and close the screen out */
+      ov.classList.add("filled");
+      var fill = d.qs(".erase-fill", ov);
+      var edge = d.qs(".erase-edge", ov);
+      if (fill) fill.style.height = "100%";
+      if (edge) edge.style.bottom = "100%";
+    }
+    setTimeout(function () {
+      location.href = VOID_URL;
+    }, 150);
+  }
+
+  function eraseCancel() {
+    cancelAnimationFrame(eraseRaf);
+    var ov = eraseEl;
+    eraseEl = null;
+    if (!ov) return;
+    ov.classList.add("out");
+    var fill = d.qs(".erase-fill", ov);
+    var edge = d.qs(".erase-edge", ov);
+    if (fill) fill.style.height = "0px";
+    if (edge) edge.style.bottom = "0px";
+    setTimeout(function () {
+      if (ov.parentNode) ov.parentNode.removeChild(ov);
+    }, 260);
+  }
+
+  function armErase() {
+    document.addEventListener("keydown", function (e) {
+      if (e.key !== "Backspace" || e.repeat) return;
+      if (isTyping(e.target) || !eggsReady()) return;
+      e.preventDefault();
+      if (eraseEl || holdTimer) return;
+      holdTimer = setTimeout(function () {
+        holdTimer = 0;
+        eraseBegin();
+      }, HOLD_MS);
+    });
+    function stop() {
+      if (holdTimer) {
+        clearTimeout(holdTimer);
+        holdTimer = 0;
+      }
+      if (eraseEl) eraseCancel();
+    }
+    document.addEventListener("keyup", function (e) {
+      if (e.key === "Backspace") stop();
+    });
+    window.addEventListener("blur", stop);
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden) stop();
+    });
+  }
+
+  /* ---------- /time: type the current half of the day ----------
+     "am" before noon, "pm" after. The chunk resets on any non-letter so a
+     word that merely ends in am/pm does not count. */
+  function armTimeCode() {
+    var chunk = "";
+    document.addEventListener("keydown", function (e) {
+      if (e.repeat) return;
+      var k = e.key;
+      if (!k || k.length !== 1 || !/[a-z]/i.test(k)) {
+        chunk = "";
+        return;
+      }
+      if (isTyping(e.target)) {
+        chunk = "";
+        return;
+      }
+      chunk = (chunk + k.toLowerCase()).slice(-8);
+      var frame = new Date().getHours() < 12 ? "am" : "pm";
+      if (chunk === frame && eggsReady()) {
+        chunk = "";
+        location.href = TIME_URL;
+      }
+    });
+  }
+
+  /* ---------- midnight: the day rolls over with confetti ---------- */
+  function midnightParty() {
+    N.modal.open({
+      title: "Midnight",
+      icon: "clock",
+      body:
+        "<p>It is officially a new day. NULL is awake from <b>midnight to 8:00 AM</b>, so the halls are yours.</p>" +
+        "<p style='color:var(--text-2)'>The <b>/time</b> page has the live clock, if you want to watch it with us.</p>",
+      actions: [
+        { label: "Stay up", variant: "outline" },
+        {
+          label: "Open /time",
+          variant: "primary",
+          onClick: function () {
+            location.href = TIME_URL;
+          },
+        },
+      ],
+    });
+    /* confetti() guards itself for ~2.6 s, so space the bursts out past it */
+    confetti();
+    setTimeout(confetti, 2700);
+    setTimeout(confetti, 5400);
+  }
+
+  function midnightTick() {
+    var now = new Date();
+    if (now.getHours() !== 0 || now.getMinutes() !== 0) return;
+    if (!eggsReady()) return; /* another overlay owns the screen: try again */
+    var key = "midnight:" + now.toDateString();
+    if (N.flags.get(key)) return;
+    N.flags.set(key);
+    midnightParty();
+  }
+
+  function armMidnight() {
+    midnightTick();
+    setInterval(midnightTick, 10000);
+    document.addEventListener("visibilitychange", function () {
+      if (!document.hidden) midnightTick();
+    });
+  }
+
+  /* ---------- /blob: the orb that shows up in period four ----------
+     One click swaps the face to -𐃷-; a second, at least a second later,
+     drops you on /blob. */
+  var orbEl = null;
+  var orbArmedAt = 0;
+  /* the dev console can force the orb on or off, or hand it back to the
+     schedule (null) */
+  var orbForced = null;
+
+  function periodFourNow() {
+    if (!N.schedule || !N.schedule.blocksFor) return false;
+    var info = N.schedule.todayInfo();
+    if (!info || !info.type) return false;
+    var blocks = N.schedule.blocksFor(info.type);
+    var now = new Date();
+    var secs = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+    for (var i = 0; i < blocks.length; i++) {
+      if (blocks[i].n !== 4) continue;
+      var s = N.schedule.parseHM(blocks[i].start) * 60;
+      var e = N.schedule.parseHM(blocks[i].end) * 60;
+      return secs >= s && secs < e;
+    }
+    return false;
+  }
+
+  function paintOrb() {
+    var want = orbForced === null ? periodFourNow() : !!orbForced;
+    if (want && eggsAllowed()) orbShow();
+    else if (orbEl) orbHide();
+  }
+
+  /* nldev: force the face on, force it off, then back on the schedule */
+  function orbToggle() {
+    orbForced = orbForced === null ? true : orbForced ? false : null;
+    paintOrb();
+    return orbForced;
+  }
+
+  function orbShow() {
+    if (orbEl) return;
+    var face = d.h("span", { class: "orb-face" }, "•𐃷•");
+    var btn = d.h(
+      "button",
+      {
+        type: "button",
+        class: "blob-orb",
+        title: "•𐃷•",
+        "aria-label": "blob",
+        onclick: function () {
+          var now = Date.now();
+          if (!orbArmedAt) {
+            orbArmedAt = now;
+            face.textContent = "-𐃷-";
+            btn.classList.add("armed");
+            return;
+          }
+          if (now - orbArmedAt < 1000) return; // cooldown between the two clicks
+          location.href = BLOB_URL;
+        },
+      },
+      [face],
+    );
+    document.body.appendChild(btn);
+    orbEl = btn;
+  }
+
+  function orbHide() {
+    var el = orbEl;
+    orbEl = null;
+    orbArmedAt = 0;
+    if (el && el.parentNode) el.parentNode.removeChild(el);
+  }
+
+  function armOrb() {
+    paintOrb();
+    setInterval(paintOrb, 10000);
+    document.addEventListener("visibilitychange", function () {
+      if (!document.hidden) paintOrb();
+    });
   }
 
   /* ---------- cloaking: open the whole site in about:blank / blob: ----------
@@ -874,6 +1158,12 @@ return foot;
     initSs();
     watchPeriodEnd();
 
+    /* the hidden pages: hold Backspace, the period-four orb, the clock codes */
+    armErase();
+    armTimeCode();
+    armOrb();
+    armMidnight();
+
     /* weekly wrap-up: slightly delayed so it stacks above (never under)
        the first-run welcome chain on the home page */
     setTimeout(wrapupCheck, 1200);
@@ -966,7 +1256,13 @@ return foot;
     },
   };
 
-  N.shell = { init: init, screensaverNow: ssNow };
+  N.shell = {
+    init: init,
+    screensaverNow: ssNow,
+    /* dev console: the blob orb and the midnight party on demand */
+    orb: orbToggle,
+    midnightNow: midnightParty,
+  };
   N.fx = { confetti: confetti };
   N.perf = { ultra: ultraOn, watchFps: fpsWatch, floor: FPS_FLOOR };
 

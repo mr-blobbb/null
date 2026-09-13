@@ -701,6 +701,23 @@
     });
   }
 
+  /* everything permanent in the shop, owned. Boosts are excluded on purpose:
+     they are a timed consumable, not an unlock. shop.js watches this for the
+     credits hand-off. */
+  function shopComplete() {
+    var kinds = { theme: THEMES, particle: PARTICLES, fx: FX };
+    var done = Object.keys(kinds).every(function (type) {
+      return kinds[type].every(function (it) {
+        return !it.price || isUnlocked(type, it.id);
+      });
+    });
+    if (!done) return false;
+    var betas = (window.NULL_CONTENT && window.NULL_CONTENT.betas) || [];
+    return betas.every(function (b) {
+      return isUnlocked("game", b.id);
+    });
+  }
+
   /* dev console / debugging: unlock an item without spending coins, so a
      backdrop can be checked without grinding 20 hours of playtime first. */
   function grant(type, id) {
@@ -751,6 +768,7 @@
     grant: grant,
     reload: reload,
     isUnlocked: isUnlocked,
+    shopComplete: shopComplete,
     unlockedBetas: unlockedBetas,
     /* progress: quests, achievements and the daily crate */
     trackPlay: trackPlay,

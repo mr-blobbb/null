@@ -52,6 +52,14 @@
         d.toast("Unlocked: " + name, { icon: "check" });
         if (N.fx && N.fx.confetti) N.fx.confetti();
         render();
+        /* owning every last thing in the shop rolls the credits, once */
+        if (N.econ.shopComplete && N.econ.shopComplete() && !N.flags.get("credits:shop")) {
+          N.flags.set("credits:shop");
+          d.toast("That was the last one. Rolling credits.", { icon: "star" });
+          setTimeout(function () {
+            location.href = "/credits.html";
+          }, 1100);
+        }
       },
     });
   }

@@ -714,6 +714,14 @@
           ok("opening credits");
           location.href = "/credits.html";
         }),
+        b("Blob face on/off", "eye", function () {
+          var st = N.shell && N.shell.orb ? N.shell.orb() : null;
+          ok(st === true ? "blob face forced on" : st === false ? "blob face forced off" : "blob face back on the schedule");
+        }),
+        b("Midnight modal", "clock", function () {
+          if (N.shell && N.shell.midnightNow) N.shell.midnightNow();
+          ok("midnight modal + confetti fired");
+        }),
       ] },
     ];
   }
