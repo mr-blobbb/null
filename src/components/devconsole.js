@@ -695,6 +695,26 @@
         }),
         b("Reload", "refresh", function () { location.reload(); }),
       ] },
+      /* the hidden pages: nothing on the site links them, so this card is how
+         you get there without typing the address */
+      { name: "eggs", icon: "eye", items: [
+        b("Void", "ban", function () {
+          ok("opening the void");
+          location.href = "/void.html";
+        }),
+        b("Blob", "code", function () {
+          ok("opening blob");
+          location.href = "/blob.html";
+        }),
+        b("Time", "clock", function () {
+          ok("opening time");
+          location.href = "/time.html";
+        }),
+        b("Credits", "star", function () {
+          ok("opening credits");
+          location.href = "/credits.html";
+        }),
+      ] },
     ];
   }
 

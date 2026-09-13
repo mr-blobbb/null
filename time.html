@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#0a0a0b">
+  <meta name="robots" content="noindex">
+  <title>time · NULL</title>
+  <meta name="description" content="NULL keeps vampire hours: open from midnight to 8:00 AM.">
+  <link rel="icon" id="favicon" href="/public/favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="/public/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/public/icon-192.png">
+  <link rel="stylesheet" href="/src/styles/global.css">
+  <link rel="stylesheet" href="/src/styles/extra.css">
+  <link rel="stylesheet" href="/src/styles/perf.css">
+  <link rel="stylesheet" href="/src/styles/eggs.css">
+  <script>
+    /* same pre-paint theme read the rest of the site does */
+    (function () {
+      try {
+        var p = JSON.parse(localStorage.getItem("null:prefs") || "{}");
+        var t = p.theme === "light" ? "light" : "dark";
+        document.documentElement.dataset.theme = t;
+        if (p.perf) document.documentElement.dataset.perf = p.perf === "ultra" ? "ultra" : "1";
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body data-page="time" class="no-chrome">
+  <!-- no nav, no footer: this one is just the clock -->
+  <main id="main" class="egg egg-time">
+    <div class="clock" id="clock">--:--:-- --</div>
+    <div class="win">
+      <span class="lamp" aria-hidden="true"></span>
+      <span id="winTxt">Open midnight to 8:00 AM</span>
+    </div>
+    <p class="state" id="state"></p>
+    <p class="count" id="count"></p>
+  </main>
+
+  <script>
+    (function () {
+      /* NULL is up from midnight until 8 in the morning, and asleep after
+         that. Nothing is gated: the page just tells you where you stand. */
+      var OPEN_HOUR = 8;
+
+      var main = document.getElementById("main");
+      var clock = document.getElementById("clock");
+      var winTxt = document.getElementById("winTxt");
+      var state = document.getElementById("state");
+      var count = document.getElementById("count");
+
+      function pad(n) {
+        return (n < 10 ? "0" : "") + n;
+      }
+
+      function clockText(d) {
+        var ap = d.getHours() < 12 ? "AM" : "PM";
+        return (d.getHours() % 12 || 12) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds()) + " " + ap;
+      }
+
+      function leftText(ms) {
+        var s = Math.max(0, Math.floor(ms / 1000));
+        var h = Math.floor(s / 3600);
+        var m = Math.floor((s % 3600) / 60);
+        if (h) return h + "h " + m + "m " + (s % 60) + "s";
+        if (m) return m + "m " + (s % 60) + "s";
+        return s + "s";
+      }
+
+      function render() {
+        var now = new Date();
+        var open = now.getHours() < OPEN_HOUR;
+
+        clock.textContent = clockText(now);
+        main.classList.toggle("closed", !open);
+        winTxt.textContent = open ? "Open now, until 8:00 AM" : "Closed, back at midnight";
+
+        if (open) {
+          state.innerHTML =
+            "You are awake at an unreasonable hour and NULL is here for it. " +
+            "The doors are open from <b>midnight to 8:00 AM</b>, so the halls are yours.";
+          var closeAt = new Date(now);
+          closeAt.setHours(OPEN_HOUR, 0, 0, 0);
+          count.textContent = "closes in " + leftText(closeAt - now);
+        } else {
+          state.innerHTML =
+            "NULL keeps vampire hours. It sleeps from <b>8:00 AM to midnight</b>, " +
+            "so the games are still here, but the lights are off.";
+          var openAt = new Date(now);
+          openAt.setHours(24, 0, 0, 0);
+          count.textContent = "opens in " + leftText(openAt - now);
+        }
+      }
+
+      render();
+      setInterval(render, 1000);
+    })();
+  </script>
+</body>
+</html>

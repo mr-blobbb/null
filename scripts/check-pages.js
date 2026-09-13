@@ -21,6 +21,10 @@ const { JSDOM, VirtualConsole } = jsdom;
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
+/* the hidden pages: no page links to them, you get there by typing the
+   address (or from the dev console's eggs card), so the list is the link */
+const EGGS = ["void.html", "blob.html", "time.html", "credits.html"];
+
 const PAGES = [
   "index.html",
   "announcements.html",
@@ -39,6 +43,7 @@ const PAGES = [
   "proxies/index.html",
   "player.html",
   "404.html",
+  ...EGGS,
 ];
 
 let failed = 0;
@@ -111,7 +116,8 @@ for (const page of PAGES) {
     !!doc.querySelector(".site-foot") === !!doc.querySelector('[data-mount="foot"]'),
     "footer mounts exactly where the page asks for one",
   );
-  if (page !== "player.html") {
+  /* the eggs skip the tab preset on purpose: their own title stays put */
+  if (page !== "player.html" && !EGGS.includes(page)) {
     ok(doc.title === "Untitled Slide - Google Slides", "tab preset owns the title (\"" + doc.title + "\")");
   }
 
@@ -209,6 +215,24 @@ for (const page of PAGES) {
   }
   if (page === "404.html") {
     ok(!!doc.querySelector(".not-found"), "404 renders its panel");
+  }
+  if (page === "void.html") {
+    ok(!!doc.querySelector(".egg-void .await"), "void renders its one line");
+    doc.querySelector(".egg-void").click();
+    ok(doc.querySelectorAll(".egg-pop").length === 1, "clicking the void pops its reply");
+  }
+  if (page === "blob.html") {
+    ok(doc.querySelectorAll(".blob-line").length > 0, "blob starts typing on load");
+  }
+  if (page === "time.html") {
+    const line = (doc.querySelector(".clock") || {}).textContent || "";
+    ok(/\d{1,2}:\d{2}:\d{2}/.test(line), "time paints a live clock (\"" + line + "\")");
+    ok(!!doc.querySelector(".egg-time .win .lamp"), "time shows its open/closed window");
+  }
+  if (page === "credits.html") {
+    ok(doc.querySelectorAll(".c-sec").length > 0, "credits roll has sections to scroll");
+    doc.querySelector("#skip").click();
+    ok(doc.querySelectorAll(".egg-pop").length === 1, "skip does not skip: it pops the joke");
   }
   if (page.endsWith("index.html") && page !== "index.html") {
     ok(!!doc.querySelector("#libSearch") && !!doc.querySelector("#grid"), "library page mounts its controls");

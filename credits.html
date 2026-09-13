@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#0a0a0b">
+  <meta name="robots" content="noindex">
+  <title>credits · NULL</title>
+  <meta name="description" content="The people behind NULL, in no particular order.">
+  <link rel="icon" id="favicon" href="/public/favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="/public/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/public/icon-192.png">
+  <link rel="stylesheet" href="/src/styles/global.css">
+  <link rel="stylesheet" href="/src/styles/extra.css">
+  <link rel="stylesheet" href="/src/styles/perf.css">
+  <link rel="stylesheet" href="/src/styles/eggs.css">
+  <script>
+    /* same pre-paint theme read the rest of the site does */
+    (function () {
+      try {
+        var p = JSON.parse(localStorage.getItem("null:prefs") || "{}");
+        var t = p.theme === "light" ? "light" : "dark";
+        document.documentElement.dataset.theme = t;
+        if (p.perf) document.documentElement.dataset.perf = p.perf === "ultra" ? "ultra" : "1";
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body data-page="credits" class="no-chrome">
+  <!-- no nav, no footer: the roll owns the whole screen -->
+  <main id="main" class="egg egg-credits">
+    <div class="stage">
+      <div class="roll" style="--dur:92s">
+        <div class="c-sec">
+          <div class="c-role">Presented by</div>
+          <div class="c-lead">NULL</div>
+          <div class="c-sub">a black and white corner of the internet</div>
+        </div>
+
+        <div class="c-sec">
+          <div class="c-role">Created by</div>
+          <div class="c-name">Mr Blob</div>
+          <div class="c-sub">games, apps, proxies, and one very confident school schedule</div>
+        </div>
+
+        <div class="c-sec">
+          <div class="c-role">Written in</div>
+          <div class="c-name">HTML, CSS and JavaScript</div>
+          <div class="c-sub">no framework, no tracking, no server</div>
+        </div>
+
+        <div class="c-sec">
+          <div class="c-role">Games, apps and proxies</div>
+          <div class="c-name">NULL Labs</div>
+          <div class="c-sub">found in folders, listed by a build script</div>
+        </div>
+
+        <div class="c-sec">
+          <div class="c-role">Quality assurance</div>
+          <div class="c-name">Everyone who clicked every button</div>
+          <div class="c-sub">including the ones that were probably not meant to be clicked</div>
+        </div>
+
+        <div class="c-sec">
+          <div class="c-role">Moral support</div>
+          <div class="c-name">The snack machine by the gym</div>
+        </div>
+
+        <div class="c-sec">
+          <div class="c-role">Filmed on location</div>
+          <div class="c-name">A school Chromebook</div>
+          <div class="c-sub">running one tab and a dream</div>
+        </div>
+
+        <div class="c-sec">
+          <div class="c-role">Special thanks</div>
+          <div class="c-list">
+            <span>everyone who typed nldev</span>
+            <span>the person who kept asking if it was unblocked yet</span>
+            <span>whoever found this page</span>
+            <span>the letter N, the letter U, and both Ls</span>
+            <span>you, for reading this far</span>
+          </div>
+        </div>
+
+        <div class="c-sec">
+          <div class="c-fin">NULL</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="skip-bar">
+      <button type="button" class="btn btn-outline btn-sm" id="skip">Skip</button>
+      <span class="skip-note">There is a skip button. It is not a useful button.</span>
+    </div>
+  </main>
+
+  <script src="/src/utilities/dom.js"></script>
+  <script src="/src/utilities/eggs.js"></script>
+  <script>
+    (function () {
+      var skip = document.getElementById("skip");
+      if (!skip || !window.N || !N.eggs) return;
+      skip.addEventListener("click", function () {
+        N.eggs.pop("lmao u rly thought it would work :P");
+      });
+    })();
+  </script>
+</body>
+</html>
