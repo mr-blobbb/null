@@ -168,5 +168,50 @@ window.NULL_CONTENT = {
       desc: "NULL’s open license, the GNU AGPL version 3.",
       kw: "license agpl gnu copyleft open source",
     },
+
+    /* The hidden pages. Nothing links them from the nav, but they are typed
+       in like any other page so search can turn them up. `body: false` keeps
+       the page text out of the index: blob alone would otherwise match half
+       the site's vocabulary. */
+    {
+      title: "Void",
+      url: "/void.html",
+      grp: "Hidden",
+      kind: "egg",
+      icon: "eye",
+      body: false,
+      desc: "An entirely black page with one small line in the middle. The void awaits, and it does not explain itself.",
+      kw: "void black blank dark nothing easter egg hidden lmao",
+    },
+    {
+      title: "Blob",
+      url: "/blob.html",
+      grp: "Hidden",
+      kind: "egg",
+      icon: "eye",
+      body: false,
+      desc: "A page that types blob lines at you, semi fast, forever. Not a mascot. A lifestyle.",
+      kw: "blob typing stream wobble easter egg hidden joke nldev",
+    },
+    {
+      title: "Time",
+      url: "/time.html",
+      grp: "Hidden",
+      kind: "egg",
+      icon: "clock",
+      body: false,
+      desc: "The clock page. NULL is open from midnight to 8:00 AM, and this tells you exactly where you stand.",
+      kw: "time clock midnight 8am vampire hours schedule easter egg hidden",
+    },
+    {
+      title: "Credits",
+      url: "/credits.html",
+      grp: "Hidden",
+      kind: "egg",
+      icon: "star",
+      body: false,
+      desc: "The credits roll, and a skip button that does not skip anything.",
+      kw: "credits roll thanks people skip easter egg hidden",
+    },
   ],
 };

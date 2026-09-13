@@ -187,8 +187,8 @@
     (C.pages || []).forEach(function (pg) {
       var raw = pg.title + " " + pg.desc + " " + pg.kw + " " + pg.grp;
       idx.push({
-        kind: "page",
-        icon: "list",
+        kind: pg.kind || "page",
+        icon: pg.icon || "list",
         title: pg.title,
         _t: norm(pg.title),
         _h: norm(raw),
@@ -197,7 +197,9 @@
           location.href = pg.url;
         },
       });
-      fetchPageText(pg);
+      /* the hidden pages skip body indexing: their text is the joke, and
+         blob's wall of lines would match half the site's vocabulary */
+      if (pg.body !== false) fetchPageText(pg);
     });
     (C.announcements || []).forEach(function (a) {
       var raw = a.title + " " + a.desc + " " + a.category + " announcement news";
@@ -237,6 +239,7 @@
     app: "Apps",
     proxy: "Proxies",
     page: "Pages",
+    egg: "Hidden",
     announcement: "Announcements",
   };
 
