@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="dark light">
   <meta name="theme-color" content="#09090b">
   <title>About · NULL</title>
-  <meta name="description" content="About NULL.">
+  <meta name="description" content="What NULL is, who made it, what's in it, and how to add your own games to it.">
   <link rel="icon" id="favicon" href="/public/favicon.svg" type="image/svg+xml">
   <link rel="manifest" href="/public/manifest.webmanifest">
   <link rel="apple-touch-icon" href="/public/icon-192.png">
@@ -40,23 +40,71 @@
     <!-- WRITE MARKDOWN HERE -->
     <article class="md-out glass" aria-label="About content"></article>
     <script type="text/markdown">
-# What is NULL?
+# Hey, you found NULL
 
-NULL is a black-and-white hub for games, apps, proxies and a few handy tools. It runs in your browser and it all stays in one place: same flat look, same thin borders, same grayscale throughout. Nothing here shouts for attention.
+NULL is a black-and-white little corner of the internet holding a few thousand games, a handful of apps, some proxy links, and a school schedule that actually knows what period it is. Everything runs in your browser. Everything matches: same flat gray, same thin borders, same glass panels. Nothing blinks at you begging for a click.
 
-## How it works
+It was built by a student, for students, mostly because the alternatives were ugly or blocked. So this one is neither.
 
-- **Games and apps** are read straight from their folders. Drop a folder with an HTML file into `games/`, rebuild the catalog, and it turns up with its own labels, thumbnail and optional warning.
-- **Proxies** are handled differently on purpose. They open in a new tab, because they aren't ours. NULL won't dress an outside site up as part of NULL.
-- **The player** is shared. Games and apps open in the same shell, with fullscreen, warnings and tab-preset overrides.
-- **Your data stays on your device.** Favorites, recently played, themes and settings live in `localStorage`, right where you are. No server, no account, nothing uploaded.
+## The fast version
 
-## Small details
+- **Games**: about 2,300 of them, with labels, warnings where they matter, and a player that just works.
+- **Apps**: small tools that open in the same player, like notes and a calculator.
+- **Proxies**: links out to other sites. They open in a new tab, because we don't own them and we're not going to pretend we do.
+- **Schedule**: your periods, live, with a countdown and a bit of confetti when one ends.
+- **Shop**: earn coins by playing, then spend them on themes, particle effects, and beta games. No real money involved, ever.
+- **Settings**: theme, accent color, glow border, particles, tab disguise, performance mode, and a backup button.
 
-- Pages are plain HTML over one shared CSS file. No framework, no build step to run the site.
-- It's fully static and runs on GitHub Pages. The `releases/` folder has single-file builds: NULL Mini, NULL Lite and NULL Regular.
-- If the domain ever goes down, [Backups](/backups) lists the next places to look.
-- Tab presets (Google Slides by default), accents and performance mode are all in [Settings](/settings).
+## Where it all comes from
+
+The library isn't a giant hand-written list. It's built by looking at folders:
+
+```
+games/hollow-knight/
+├── hollow-knight.html     the game itself (index.html works too)
+├── hollow-knight.png      optional thumbnail, any image format
+├── Label.txt              optional tags, one per line
+├── Warning.txt            optional title + description shown before launch
+└── meta.txt               optional name, description, added date, #hot
+```
+
+Drop a folder in, rebuild the catalog, and the game shows up with its own labels, thumbnail, and badges. There's a browser tool at [Tools](/tools.html) that does the rebuild for you: paste the folder paths, hit scan, copy what it gives you. Folders starting with `.` or `_` get ignored, and a missing thumbnail quietly falls back to NULL's own placeholder art.
+
+Proxies work the same way with a `proxy.txt` holding a `Link:` line. There's a [Backups](/backups) page too, for when the main domain decides to stop existing.
+
+## How it's built
+
+Here is the part that surprises people: there's no server. None. No backend, no database, no accounts, no login, no analytics, no framework, no build step you have to run to use the site.
+
+- Plain **HTML**, **CSS**, and **JavaScript**. That's the whole thing.
+- Your data never leaves your browser. Favorites, history, coins, settings: all in `localStorage`, all on your device. There is nothing to hack because there is nothing of yours stored on our side.
+- It's hosted as static files on GitHub Pages, so it loads fast and stays up even when nothing else does.
+- The icon font ships with the site, so icons work offline and behind networks that block Google Fonts.
+- It's an installable app, and the service worker keeps the shell usable with no connection at all.
+- There are three single-file builds in `releases/`: **Regular** (the whole thing, readable), **Mini** (the whole thing, squashed), and **Lite** (no themes, particles, or shop, tuned for the slowest machines).
+
+## Stuff you might not have noticed
+
+- **The panic key.** One keypress hides everything. Find it in Settings and pick your own.
+- **Tab disguises.** Make the tab look like a Google Slides doc, a Gmail inbox with an unread count, or a handful of other things.
+- **Cloaking.** Open NULL in an `about:blank` or `blob:` tab when a network gets fussy.
+- **Marathon mode.** It switches to a random game on a timer so you don't have to pick.
+- **Ultra-Performance mode.** If NULL notices the frame rate falling apart, it offers to strip out every animation and effect. Say yes on a tired Chromebook.
+- **Daily stuff.** A crate to open, quests to clear, and achievements that stay unlocked forever.
+- **Search everything.** Press `/` anywhere. It digs through games, apps, proxies, announcements, and pages.
+- **Seasonal mode.** Off by default, fun when it's on.
+
+## Who made this
+
+NULL is maintained by Mr Blob, with help from everyone who drops a game in a folder. The platform is open source under the [AGPL-3.0](https://www.gnu.org/licenses/agpl-3.0.txt), which is a fancy way of saying: take it, change it, share it, just keep it open and don't pretend you wrote it.
+
+The games inside it belong to whoever made them, not to us.
+
+## The boring but important part
+
+Read the [Terms](/terms.html) and the [Privacy Policy](/privacy.html) if you want the lawyer version. The short version is: be decent, follow your school's rules, and remember that we can't see or save anything you do here.
+
+*Last updated: September 13, 2026.*
     </script>
   </main>
 

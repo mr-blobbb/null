@@ -57,6 +57,7 @@ site can be previewed and the releases rebuilt; see the end of this file.)
 ├── sw.js                  Service worker (installable app + offline shell)
 ├── robots.txt             Keeps the catalog builder, tests and 404 out of search
 ├── .nojekyll              Serves the repo as plain files on GitHub Pages
+├── LICENSE                AGPL-3.0 notice (the platform code's license)
 └── package.json, vite.config.js, tsconfig.json   Dev only, see below
 ```
 
@@ -346,3 +347,18 @@ this folder as they are, and NULL never calls out to anything.
 - Installable PWA with an offline shell, and a Service Worker that keeps the
   shell usable without a network.
 - Single-file releases: NULL Mini / Lite / Regular.
+
+---
+
+## License
+
+The NULL platform (HTML, CSS, JavaScript, design system, catalog tooling and
+build scripts) is released under the **GNU Affero General Public License,
+version 3 or later**. `LICENSE` carries the copyright notice and disclaimer,
+and the verbatim terms live at <https://www.gnu.org/licenses/agpl-3.0.txt>.
+
+In short: use it, change it, share it, keep your version open, and if you run a
+modified copy as a network service, offer your users its source. Third-party
+games, apps and proxy content are not covered by this license and stay with
+their own owners. The License page in the site (`license.html`) spells this out
+in more detail.

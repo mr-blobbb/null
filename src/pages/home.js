@@ -1,8 +1,8 @@
 /* NULL · home.js
-   Dashboard logic: the featured rail (first 10 library items), the daily
-   crate strip, recently played games with random/clear, a live "today"
-   schedule card, announcements, the first-launch welcome modal and the
-   popup/redirect explanation. */
+   Dashboard logic: the featured rail, the daily crate strip, recently
+   played games with random/clear, a live "today" schedule card,
+   announcements, the first-launch welcome modal and the popup/redirect
+   explanation. */
 (function () {
   var N = (window.N = window.N || {});
   var d = N.dom;
@@ -11,6 +11,25 @@
 
   var inited = false;
   var schedTimer = null;
+
+  /* ---------- featured picks ----------
+     The games you want on the home page, in order. Type any of these and it
+     lands in the Featured rail:
+
+       "snake"        the folder name (games/snake)
+       "Snake"        the display name, case does not matter
+       "hollow knight" spaces, dashes and underscores are ignored
+
+     A name that matches nothing is skipped, so a typo costs you one card
+     instead of the whole rail. List fewer than ten and the rest fills with
+     the first games in the library. Apps are never featured here: this rail
+     is games only. */
+  var FEATURED = [
+    "snake",
+    "pulse",
+    "trace",
+  ];
+  var FEATURED_MAX = 10;
 
   /* ---------- search ---------- */
   function bindSearch() {
@@ -46,21 +65,37 @@
   }
 
   /* ---------- featured rail ---------- */
+  function key(s) {
+    return String(s == null ? "" : s).toLowerCase().replace(/[\s_-]/g, "");
+  }
+
+  function pickFeatured(games) {
+    var out = [];
+    function taken(g) {
+      return out.indexOf(g) >= 0;
+    }
+    FEATURED.forEach(function (want) {
+      var k = key(want);
+      if (!k) return;
+      var hit = games.find(function (g) {
+        return key(g.id) === k || key(g.name) === k;
+      });
+      if (hit && !taken(hit)) out.push(hit);
+    });
+    /* unused slots go to the front of the library so the rail stays full */
+    games.forEach(function (g) {
+      if (out.length < FEATURED_MAX && !taken(g)) out.push(g);
+    });
+    return out.slice(0, FEATURED_MAX);
+  }
+
   function renderFeatured() {
     var track = d.qs("#featTrack");
     var hint = d.qs("#featHint");
     if (!track) return;
     track.textContent = "";
     var games = N.catalog.games();
-    var apps = N.catalog.apps();
-    var list = games.slice(0, 10).map(function (g) {
-      return { e: g, k: "game" };
-    });
-    if (list.length < 10) {
-      apps.slice(0, 10 - list.length).forEach(function (a) {
-        list.push({ e: a, k: "app" });
-      });
-    }
+    var list = pickFeatured(games);
     if (!list.length) {
       track.appendChild(
         d.h("div", { class: "feat-empty" }, "The library is empty: add folders to games/ and rebuild the catalog."),
@@ -69,11 +104,10 @@
       return;
     }
     if (hint) {
-      var extra = list.length > games.length ? " · games first, then apps" : "";
-      hint.textContent = games.length + " game" + (games.length === 1 ? "" : "s") + extra;
+      hint.textContent = "Hand-picked · " + games.length + " game" + (games.length === 1 ? "" : "s") + " in the library";
     }
-    list.forEach(function (it) {
-      track.appendChild(N.cards.card(it.e, it.k));
+    list.forEach(function (g) {
+      track.appendChild(N.cards.card(g, "game"));
     });
   }
 

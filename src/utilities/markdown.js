@@ -13,7 +13,8 @@
 
   function inline(s) {
     var out = "";
-    var re = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|\[([^\]]+)\]\((https?:[^)\s]+)\))/g;
+    /* links accept http(s) URLs and site-relative paths like [Tools](/tools.html) */
+    var re = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|\[([^\]]+)\]\(((?:https?:)?\/[^)\s]+)\))/g;
     var last = 0;
     var m;
     while ((m = re.exec(s))) {
