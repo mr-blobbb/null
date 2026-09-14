@@ -1,2 +1,0 @@
-Name: Calculator
-Added: 2026-09-04

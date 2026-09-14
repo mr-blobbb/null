@@ -269,8 +269,8 @@
       ok("warning description runs on", warn && /flashing lights/.test(warn.description));
       ok("an empty warning is null", T.parseWarning("") === null);
 
-      var meta = T.parseMeta("Name: Snake\nDescription: Eat apples\nAdded: 2026-08-24\n#hot");
-      ok("meta name overrides", meta.name === "Snake");
+      var meta = T.parseMeta("Name: Demo Game\nDescription: Eat apples\nAdded: 2026-08-24\n#hot");
+      ok("meta name overrides", meta.name === "Demo Game");
       ok("meta added date parses", typeof meta.at === "number" && meta.at > 0);
       ok("#hot flips the badge", meta.hot === true);
 
@@ -279,26 +279,26 @@
       ok("proxy status parses", px.status === "All Good");
       ok("a proxy without a Link: is rejected", T.proxyEntry("x", "Status: All Good") === null);
 
-      var found = T.folders("games/snake\ngames/hollow-knight/snake.html\napps/calc\nproxies/wiki\n_drafts/sneaky\nREADME.md\nnonsense/thing");
+      var found = T.folders("games/demo\ngames/demo/demo.html\napps/tool-app\nproxies/wiki\n_drafts/sneaky\nREADME.md\nnonsense/thing");
       eq("folders() keeps games + apps + proxies", found.length, 4);
       ok("folders() skips hidden and unknown paths", !found.some(function (f) {
         return f.slug === "sneaky" || f.slug === "thing";
       }));
 
-      var e = T.entry("games", "snake", {
-        html: "snake.html",
-        thumb: "snake.svg",
+      /* everything below is a made-up folder, not a real game: the two path
+         literals are marked so check-links does not look for them on disk */
+      var e = T.entry("games", "demo", {
+        html: "demo.html",
+        thumb: "demo.svg",
         labels: "Label: Arcade",
-        meta: "Name: Snake\nDescription: Eat apples\n#hot",
+        meta: "Name: Demo\nDescription: Eat apples\n#hot",
       });
-      /* "snake" here is a made-up slug, not a folder: the two path literals
-         below are marked so check-links does not look for them on disk */
-      ok("entry builds the launch path", e.file === "/games/snake/snake.html"); // check-links: fixture
-      ok("entry builds the thumb path", e.thumb === "/games/snake/snake.svg"); // check-links: fixture
+      ok("entry builds the launch path", e.file === "/games/demo/demo.html"); // check-links: fixture
+      ok("entry builds the thumb path", e.thumb === "/games/demo/demo.svg"); // check-links: fixture
       ok("entry carries labels + hot", e.labels[0] === "Arcade" && e.hot === true);
 
       var out = T.source({ games: [e], apps: [], proxies: [] }, "2026-01-01T00:00:00.000Z");
-      ok("source() emits runnable catalog JS", /window\.NULL_CATALOG = \{/.test(out) && /"snake"/.test(out));
+      ok("source() emits runnable catalog JS", /window\.NULL_CATALOG = \{/.test(out) && /"demo"/.test(out));
       var parsed = null;
       try {
         var win = {};
@@ -338,12 +338,12 @@
       return q.goal > 0 && q.reward > 0;
     }));
 
-    ["snake", "simon", "pulse", "void", "trace"].forEach(function (id) {
+    ["alpha", "bravo", "charlie", "delta", "echo"].forEach(function (id) {
       econ.trackPlay("game", id);
     });
     eq("every launch is counted", econ.stats().plays, 5);
     eq("different games are counted once each", econ.stats().diff, 5);
-    econ.trackPlay("app", "calc");
+    econ.trackPlay("app", "a-tool");
     eq("apps do not count as games played", econ.stats().diff, 5);
 
     var q = econ.quests().filter(function (x) {
@@ -398,7 +398,7 @@
     }, 0), 0);
     ok("the crate is available again", st2.canSpin === true);
     eq("the crate streak grows", st2.spinStreak, 2);
-    econ.trackPlay("game", "snake");
+    econ.trackPlay("game", "alpha");
     eq("playing on a new day extends the streak", econ.state().streak, 2);
     ok("coins, XP and unlocks survive the rollover", econ.state().coins > 0 && econ.state().xp > 0);
   }
@@ -433,10 +433,13 @@
         } catch (err) {}
       }
       N().recent.add = realAdd;
-      eq("play random always picks a game", picked.length, 25);
+      eq("play random always picks a game", picked.length, ids.length ? 25 : 0);
       ok("every random pick is in the game list", picked.every(function (p) {
         return p.kind === "game" && ids.indexOf(p.id) >= 0;
       }));
+      if (!ids.length) {
+        note("The library is empty, so Random Game had nothing to pick. Drop a folder into games/ and rebuild the catalog.");
+      }
 
       return Promise.resolve();
     });
@@ -444,17 +447,21 @@
 
   function suiteRecents() {
     group("Recently played is games only");
-    var g = window.__testGameId;
+    var games = (N().catalog || {}).games ? N().catalog.games() : [];
+    if (!window.__testGameId || !games.length) {
+      note("No games in the library yet, so there is nothing to seed. This suite picks up again as soon as games/ has a folder in it.");
+      return Promise.resolve();
+    }
     seed({
       "null:recent": JSON.stringify([
-        { k: "game", id: g, at: Date.now() },
-        { k: "app", id: "calc", at: Date.now() - 1000 },
+        { k: "game", id: window.__testGameId, at: Date.now() },
+        { k: "app", id: "a-tool", at: Date.now() - 1000 },
       ]),
     });
     return mount("/index.html").then(function () {
       var t = txt("#recList");
       ok("the game you opened is listed", t.indexOf(window.__testGameName) >= 0, t.slice(0, 80));
-      ok("an opened app is not listed", t.indexOf("Calculator") < 0, t.slice(0, 80));
+      eq("an opened app never reaches the list", qa("#recList .rec-row").length, 1);
     });
   }
 
@@ -466,7 +473,7 @@
     return mount("/shop.html").then(function () {
       var w = W();
       var body = txt("#shopBody");
-      ["Daily crate", "Daily quests", "Beta games", "Theme packs", "Background particles", "Boosts", "Effects", "Achievements"].forEach(
+      ["Daily crate", "Daily quests", "Theme packs", "Background particles", "Boosts", "Effects", "Achievements"].forEach(
         function (name) {
           ok("shop renders the " + name + " section", body.indexOf(name) >= 0);
         },
@@ -535,8 +542,11 @@
         var w = W();
         games = w.N.catalog.games().length;
         ok("games page mounts the scroll view", !!q("#scrollview"));
-        ok("games cards render", qa("#grid .tcard").length > 0, qa("#grid .tcard").length + " cards");
-        ok("the label filter row is built", qa("#labelRow button").length > 0);
+        /* the grid is virtualized, so a full library only renders the cards
+           near the viewport: ask for some, not for all of them */
+        if (games) ok("games cards render", qa("#grid .tcard").length > 0, qa("#grid .tcard").length + " cards");
+        else ok("an empty games folder shows the empty state", /Nothing here yet/.test(txt("#empty")), txt("#empty").slice(0, 60));
+        if (games) ok("the label filter row is built", qa("#labelRow button").length > 0);
         ok("the count is shown", /\d/.test(txt("#count")));
 
         /* popularity leads with HOT entries: the sort select is upgraded to a
@@ -563,9 +573,9 @@
         return mount("/apps/index.html");
       })
       .then(function () {
-        var w = W();
-        eq("apps page lists every app", qa("#grid .tcard").length, w.N.catalog.apps().length);
-        ok("the games catalog is non-empty", games > 0);
+        var apps = W().N.catalog.apps().length;
+        if (apps) ok("apps page lists its apps", qa("#grid .tcard").length > 0, qa("#grid .tcard").length + " cards");
+        else ok("an empty apps folder shows the empty state", /Nothing here yet/.test(txt("#empty")), txt("#empty").slice(0, 60));
       });
   }
 
@@ -591,7 +601,7 @@
       "/license.html",
       "/district.html",
       "/404.html",
-      "/player.html?k=game&id=snake",
+      "/player.html?k=game&id=demo",
     ];
     var chain = Promise.resolve();
     pages.forEach(function (p) {
@@ -695,11 +705,11 @@
       try {
         new Function("window", src)(win);
         var g = (win.NULL_CATALOG && win.NULL_CATALOG.games) || [];
-        window.__testGameId = g.length ? g[0].id : "snake";
-        window.__testGameName = g.length ? g[0].name : "Snake";
+        window.__testGameId = g.length ? g[0].id : "";
+        window.__testGameName = g.length ? g[0].name : "";
       } catch (err) {
-        window.__testGameId = "snake";
-        window.__testGameName = "Snake";
+        window.__testGameId = "";
+        window.__testGameName = "";
       }
       run();
     });

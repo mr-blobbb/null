@@ -1,2 +1,0 @@
-Label: Utility Timer Tools
-Label: Offline

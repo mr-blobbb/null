@@ -95,6 +95,56 @@ html[data-theme="light"] {
   --shadow-2: 0 18px 52px rgba(20, 20, 28, 0.16);
 }
 
+/* ---------- layout compactness ----------
+   One spacing scale the whole site shares: nav height, page gutters, the
+   rhythm between sections, grid gaps and card padding. Settings writes
+   html[data-density]; every value below is a plain multiple of the regular
+   one, so nothing drifts apart and no page needs its own override. */
+:root {
+  --nh: 60px;
+  --pad-x: 22px;
+  --pad-top: 34px;
+  --pad-bottom: 90px;
+  --sec-gap: 42px;
+  --grid-gap: 18px;
+  --card-pad: 20px;
+  --card-gap: 18px;
+  --tile: 230px;
+}
+html[data-density="comfy"] {
+  --nh: 64px;
+  --pad-x: 30px;
+  --pad-top: 44px;
+  --pad-bottom: 110px;
+  --sec-gap: 54px;
+  --grid-gap: 24px;
+  --card-pad: 26px;
+  --card-gap: 22px;
+  --tile: 260px;
+}
+html[data-density="spacious"] {
+  --nh: 68px;
+  --pad-x: 40px;
+  --pad-top: 54px;
+  --pad-bottom: 132px;
+  --sec-gap: 68px;
+  --grid-gap: 30px;
+  --card-pad: 32px;
+  --card-gap: 26px;
+  --tile: 290px;
+}
+html[data-density="compact"] {
+  --nh: 52px;
+  --pad-x: 15px;
+  --pad-top: 24px;
+  --pad-bottom: 64px;
+  --sec-gap: 26px;
+  --grid-gap: 11px;
+  --card-pad: 14px;
+  --card-gap: 13px;
+  --tile: 200px;
+}
+
 /* ---------- base ---------- */
 *,
 *::before,
@@ -218,6 +268,18 @@ html[data-season="summer"] .glow-bg {
     radial-gradient(130% 70% at 50% -15%, rgba(240, 217, 140, 0.26), transparent 55%),
     radial-gradient(90% 50% at 50% 115%, rgba(240, 217, 140, 0.10), transparent 60%);
 }
+/* the two holiday variants ride along with their season, with a wash of
+   their own so picking one visibly changes the page */
+html[data-season="halloween"] .glow-bg {
+  background:
+    radial-gradient(120% 60% at 50% -10%, rgba(255, 138, 61, 0.16), transparent 58%),
+    radial-gradient(90% 55% at 50% 112%, rgba(150, 92, 235, 0.14), transparent 62%);
+}
+html[data-season="holidays"] .glow-bg {
+  background:
+    radial-gradient(120% 60% at 50% -10%, rgba(201, 79, 79, 0.15), transparent 58%),
+    radial-gradient(90% 55% at 50% 112%, rgba(120, 200, 150, 0.13), transparent 62%);
+}
 
 .season-fx {
   position: fixed;
@@ -240,6 +302,12 @@ html[data-season="summer"] .sf-p {
 }
 html[data-season="winter"] .sf-p {
   filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.35));
+}
+html[data-season="halloween"] .sf-p {
+  filter: drop-shadow(0 0 5px rgba(255, 138, 61, 0.5));
+}
+html[data-season="holidays"] .sf-p {
+  filter: drop-shadow(0 0 5px rgba(242, 217, 140, 0.5));
 }
 .season-fx.sf-hidden .sf-p {
   animation-play-state: paused;
@@ -265,7 +333,7 @@ body > main {
   width: 100%;
   max-width: var(--maxw);
   margin: 0 auto;
-  padding: calc(var(--nh) + 34px) 22px 90px;
+  padding: calc(var(--nh) + var(--pad-top)) var(--pad-x) var(--pad-bottom);
 }
 
 .page-narrow {
@@ -282,7 +350,7 @@ body.lb main.sview {
   overflow-y: auto;
   overscroll-behavior: contain;
   max-width: none;
-  padding: calc(var(--nh) + 30px) 22px 120px;
+  padding: calc(var(--nh) + var(--pad-top)) var(--pad-x) calc(var(--pad-bottom) + 30px);
   scrollbar-width: none;
 }
 body.lb main.sview::-webkit-scrollbar {
@@ -298,7 +366,7 @@ main.sview > * {
 }
 
 .section {
-  margin-top: 42px;
+  margin-top: var(--sec-gap);
 }
 
 .section-head {
@@ -2019,12 +2087,12 @@ body.lb .site-foot {
 .home-cols {
   display: grid;
   grid-template-columns: 1.25fr 1fr;
-  gap: 18px;
+  gap: var(--grid-gap);
   align-items: start;
 }
 .panel {
   border-radius: var(--r-lg);
-  padding: 20px;
+  padding: var(--card-pad);
 }
 .panel-head {
   display: flex;
@@ -4033,9 +4101,359 @@ html[data-perf="ultra"] .section {
   contain-intrinsic-size: auto 300px;
 }
 
+/* ============================================================
+   Mini-Perf mode (Settings → Appearance)
+   The opposite trade to Ultra-Perf: nothing is stripped, nothing is
+   turned off, no effect layer is dropped and no animation is shortened.
+   The only thing it does is tell the browser to skip layout, paint and
+   animation for the blocks that are off screen, then restore them the
+   moment they scroll back in. Full visuals, less work per frame.
+
+   `contain-intrinsic-size: auto <size>` is the important half: `auto`
+   remembers each block's own last size, so the scrollbar does not jump
+   on the way past. Skipped on the effect layers and the fixed nav, which
+   must stay painted at all times. */
+html[data-mini="1"] .section,
+html[data-mini="1"] .panel,
+html[data-mini="1"] .set-card,
+html[data-mini="1"] .shop-card,
+html[data-mini="1"] .shop-row,
+html[data-mini="1"] .tcard,
+html[data-mini="1"] .mirror,
+html[data-mini="1"] .ann-card,
+html[data-mini="1"] .rec-row,
+html[data-mini="1"] .tip-card,
+html[data-mini="1"] .home-cols > *,
+html[data-mini="1"] .shop-grid > *,
+html[data-mini="1"] .home-grid > * {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 320px;
+}
+
+/* a tile in a grid is short: a smaller remembered size keeps the estimate
+   close to the real thing on the first pass */
+html[data-mini="1"] .tcard,
+html[data-mini="1"] .mirror,
+html[data-mini="1"] .shop-card,
+html[data-mini="1"] .ann-card {
+  contain-intrinsic-size: auto 260px;
+}
+
 /* NULL · extra.css
    Additions kept out of global.css on purpose. Linked on every page after
    global.css so these rules win when they need to. */
+
+/* The `hidden` attribute is how this site hides things, but any author
+   `display` rule beats the browser's own [hidden], and almost every element
+   here is a flex or grid box. Say it once, loudly, and `hidden` means hidden. */
+[hidden] {
+  display: none !important;
+}
+
+/* ============================================================
+   layout compactness (Settings → Appearance)
+   global.css sets the scale behind html[data-density]; these are the
+   handful of rules that live later in the cascade, so they re-take it
+   here. One scale, every page: no per-page density styling.
+   ============================================================ */
+html[data-density] .set-grid,
+html[data-density] .shop-grid,
+html[data-density] .home-cols {
+  gap: var(--grid-gap);
+}
+html[data-density] .set-card {
+  padding: var(--card-pad);
+  gap: var(--card-gap);
+}
+html[data-density] .shop-grid {
+  grid-template-columns: repeat(auto-fill, minmax(var(--tile), 1fr));
+}
+html[data-density] .shop-grid--list {
+  grid-template-columns: 1fr;
+}
+html[data-density] .shop-rows {
+  gap: calc(var(--grid-gap) * 0.55);
+}
+html[data-density] .set-row {
+  padding: calc(var(--card-gap) * 0.66) 0;
+}
+html[data-density="compact"] .shop-grid--list .pack-thumb,
+html[data-density="compact"] .shop-grid--list .part-thumb {
+  width: 128px;
+  flex-basis: 128px;
+}
+
+/* the density and season pickers hold four or more options: wrap them
+   instead of pushing the card wider than the screen */
+.seg {
+  flex-wrap: wrap;
+}
+
+/* ============================================================
+   custom background image (Shop unlock)
+   A fixed layer behind the theme pack and the particles, holding
+   whatever picture the visitor set in Settings: a link or an upload.
+   --bg-dim lays the page's own background colour over it as a tint,
+   so text stays readable on any picture. */
+.bg-fx {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+.bg-fx::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--bg);
+  opacity: var(--bg-dim, 0.35);
+}
+html[data-perf="ultra"] .bg-fx,
+html[data-perf="1"] .bg-fx {
+  display: none;
+}
+
+/* ============================================================
+   theme & particle editor (Shop unlock)
+   The preview is a real .pack-thumb / .part-thumb, so it is painted by
+   the same rules a Shop card is: the editor never shows a mock-up.
+   ============================================================ */
+.ed {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+.ed-tabs {
+  display: flex;
+  gap: 5px;
+  padding: 4px;
+  border-radius: 13px;
+  background: var(--glass-bg-2);
+  border: 1px solid var(--line);
+}
+.ed-tabs button {
+  flex: 1;
+  height: 33px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+  transition: background 0.16s, color 0.16s;
+}
+.ed-tabs button.on {
+  background: var(--ac-1);
+  color: var(--bg);
+}
+.ed-preview {
+  width: 100%;
+  max-width: 360px;
+  margin: 0 auto;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+.ed-preview .pack-thumb,
+.ed-preview .part-thumb {
+  border-bottom: 0;
+}
+.ed-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 0;
+  border-top: 1px solid var(--line);
+}
+.ed-row > b {
+  font-size: 13.5px;
+  font-weight: 600;
+  flex: none;
+}
+.ed-row .select-field,
+.ed-row .field {
+  max-width: 220px;
+}
+.ed-colors {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+.ed-colors .cdot {
+  width: 32px;
+  height: 32px;
+}
+.ed-part-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ed-part-head {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+.ed-part-head:empty {
+  display: none;
+}
+.ed-part {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 74px 128px;
+  gap: 8px;
+  align-items: center;
+}
+.ed-note {
+  font-size: 12.5px;
+  color: var(--text-2);
+  line-height: 1.5;
+}
+@media (max-width: 520px) {
+  .ed-part {
+    grid-template-columns: minmax(0, 1fr) 70px;
+  }
+  .ed-part .select-field:last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ============================================================
+   Neon's tubes and pulse rings
+   econ.js names these two kinds neonTube / neonPulse, so theme.js writes the
+   classes pf-p-neonTube / pf-p-neonPulse. The rules further down this sheet
+   spell the same selectors in lowercase, which never matched a class: the
+   Neon pack's tubes and rings were quietly drawing as bare dots. Same
+   declarations, correct case. The keyframes they share (pk-neon-flicker,
+   pk-neon-bob, pk-neon-pulse) are the ones already defined down there.
+   ============================================================ */
+.pf-p-neonTube b {
+  width: calc(var(--s) * 1.8);
+  height: calc(var(--s) * 40);
+  border-radius: 999px;
+  background: linear-gradient(180deg, transparent, var(--glow-4, #6cff9e) 26%, #fff 74%, var(--glow-1, #00e5ff));
+  box-shadow:
+    0 0 12px color-mix(in srgb, var(--glow-1, #00e5ff) 85%, transparent),
+    0 0 40px color-mix(in srgb, var(--glow-4, #6cff9e) 55%, transparent);
+  animation:
+    pk-neon-flicker calc(var(--dur, 5) * 0.5s) steps(2, end) infinite,
+    pk-neon-bob calc(var(--dur, 5) * 6s) ease-in-out infinite alternate;
+  animation-delay: calc(var(--delay, 0) * -1s);
+}
+.pf-p-neonPulse b {
+  width: calc(var(--s) * 80);
+  height: calc(var(--s) * 80);
+  border-radius: 50%;
+  border: calc(var(--s) * 0.5) solid color-mix(in srgb, var(--glow-2, #b14bff) 60%, transparent);
+  box-shadow: 0 0 30px color-mix(in srgb, var(--glow-2, #b14bff) 55%, transparent);
+  animation-name: pk-neon-pulse;
+  animation-duration: calc(var(--dur, 5) * 4.4s);
+  animation-timing-function: ease-out;
+  animation-delay: calc(var(--delay, 0) * -1s);
+}
+
+/* ============================================================
+   hidden-page triggers (shell.js)
+   hold Backspace wipes the page into /void, and the period-four
+   orb leads to /blob.
+   ============================================================ */
+.erase-ov {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  overflow: hidden;
+  pointer-events: none;
+}
+.erase-fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 0;
+  background: var(--bg);
+  will-change: height;
+  -webkit-mask-image: repeating-linear-gradient(to top, #000 0 7px, transparent 7px 12px);
+  mask-image: repeating-linear-gradient(to top, #000 0 7px, transparent 7px 12px);
+}
+.erase-edge {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--text-2);
+  opacity: 0.5;
+}
+.erase-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 26px;
+  transform: translateX(-50%);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  opacity: 0;
+  transition: opacity 0.3s var(--ease);
+}
+.erase-ov.holding .erase-hint {
+  opacity: 0.7;
+}
+/* released early: the wipe unwinds back down */
+.erase-ov.out .erase-fill {
+  transition: height 0.2s var(--ease);
+}
+.erase-ov.out .erase-edge {
+  transition: bottom 0.2s var(--ease);
+}
+/* held to the end: the stripes close up and the screen goes blank */
+.erase-ov.filled .erase-fill {
+  -webkit-mask-image: none;
+  mask-image: none;
+  transition: height 0.12s linear;
+}
+
+.blob-orb {
+  position: fixed;
+  left: 18px;
+  bottom: 18px;
+  z-index: 70;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--line-2);
+  background: var(--glass-bg-2);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-1);
+  color: var(--text-2);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.18s var(--ease), color 0.18s var(--ease), border-color 0.18s var(--ease);
+}
+.blob-orb:hover {
+  transform: scale(1.06);
+  color: var(--text);
+}
+.blob-orb.armed {
+  color: var(--text);
+  border-color: var(--ac-1);
+}
+.orb-face {
+  letter-spacing: 0.02em;
+}
+@media (hover: none) {
+  .blob-orb {
+    width: 48px;
+    height: 48px;
+  }
+}
 
 /* ============================================================
    player fullscreen: the bar docks to the bottom and auto-hides
@@ -4524,6 +4942,563 @@ html[data-perf="1"] .nav-dot {
 }
 .set-grid .set-card--wide {
   grid-column: 1 / -1;
+}
+
+/* ============================================================
+   settings: rail + grouped, foldable cards
+   The page is a sticky rail of sections beside the cards. Cards that are
+   set once wear a header button with their current value on the right and
+   fold away, so the state of every setting fits on a screen or two and
+   nothing has to be hunted for.
+   ============================================================ */
+.set-page {
+  max-width: 1220px;
+}
+.set-wrap {
+  display: grid;
+  grid-template-columns: 216px minmax(0, 1fr);
+  gap: var(--grid-gap);
+  align-items: start;
+}
+
+/* ---------- rail ---------- */
+/* the rail's column has to be as tall as the cards for sticky to have any
+   room to travel, which the grid's align-items: start would deny it */
+.set-rail {
+  align-self: stretch;
+}
+.rail-stick {
+  position: sticky;
+  top: calc(var(--nh) + 16px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 13px;
+  border-radius: var(--r-lg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.rail-find {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 11px;
+  border-radius: 11px;
+  border: 1px solid var(--line);
+  background: var(--glass-bg-2);
+  transition: border-color 0.16s;
+}
+.rail-find:focus-within {
+  border-color: var(--ac-1);
+}
+.rail-find .msr {
+  font-size: 15px;
+  color: var(--text-2);
+  flex: none;
+}
+.rail-find input {
+  width: 100%;
+  min-width: 0;
+  background: none;
+  border: 0;
+  outline: 0;
+  font-size: 13px;
+  color: var(--text);
+}
+.rail-find input::-webkit-search-cancel-button {
+  display: none;
+}
+.rail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.rail-link {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+  text-align: left;
+  transition: background 0.16s, color 0.16s, border-color 0.16s;
+}
+.rail-link .msr {
+  font-size: 15px;
+  color: var(--ac-1);
+  flex: none;
+}
+.rail-link:hover {
+  background: var(--glass-bg-2);
+  color: var(--text);
+}
+.rail-link.on {
+  color: var(--text);
+  background: color-mix(in srgb, var(--ac-1) 14%, transparent);
+  border-color: color-mix(in srgb, var(--ac-1) 34%, transparent);
+}
+.rail-note {
+  padding: 0 3px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+
+/* ---------- groups ---------- */
+.set-group {
+  margin-bottom: var(--sec-gap);
+  scroll-margin-top: calc(var(--nh) + 22px);
+}
+.set-group:last-child {
+  margin-bottom: 0;
+}
+.grp {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 15px;
+}
+.grp-ic {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: 11px;
+  border: 1px solid var(--line);
+  background: var(--glass-bg-2);
+}
+.grp-ic .msr {
+  font-size: 17px;
+  color: var(--ac-1);
+}
+.grp-txt {
+  min-width: 0;
+}
+.grp-t {
+  font-size: 15.5px;
+  letter-spacing: 0.01em;
+}
+.grp-s {
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+
+/* ---------- card header ---------- */
+.set-card {
+  gap: var(--card-gap);
+}
+.set-h {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  width: 100%;
+}
+.set-h .set-ic {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  margin-top: 1px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: var(--glass-bg-2);
+}
+.set-h .set-ic .msr {
+  font-size: 16px;
+  color: var(--ac-1);
+}
+.set-htxt {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+.set-htxt b {
+  font-size: 15px;
+  font-weight: 640;
+  transition: color 0.16s;
+}
+.set-htxt > span {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--text-2);
+}
+.set-val {
+  flex: none;
+  margin-left: auto;
+  max-width: 200px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--glass-bg-2);
+  font-size: 11.5px;
+  font-weight: 620;
+  color: var(--text-2);
+}
+
+/* ---------- fold ---------- */
+.set-toggle {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 0;
+  border-radius: 12px;
+  text-align: left;
+}
+.set-toggle:hover .set-htxt b {
+  color: var(--ac-1);
+}
+.set-chev {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  color: var(--text-2);
+  transition: transform 0.24s cubic-bezier(0.3, 0.8, 0.3, 1);
+}
+.set-chev .msr {
+  font-size: 19px;
+}
+.fold[data-open="1"] .set-chev {
+  transform: rotate(180deg);
+}
+.set-fold {
+  display: flex;
+  flex-direction: column;
+  gap: var(--card-gap);
+  animation: foldIn 0.2s ease;
+}
+.fold[data-open="0"] .set-fold {
+  display: none;
+}
+@keyframes foldIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+html[data-perf] .set-fold {
+  animation: none;
+}
+
+/* a row that stacks its label over its control: segments, sliders and the
+   bigger pickers need the whole width, not a squeezed right-hand column */
+.set-row--stack {
+  display: block;
+}
+.set-row--stack > .lbl-txt,
+.set-row--stack > .lbl {
+  margin-bottom: 10px;
+}
+.set-row--stack .select-field {
+  display: block;
+}
+.set-row--stack > .tab-preview {
+  margin-top: 10px;
+}
+/* .set-sub ships pulled up tight under a card title. Away from one it needs
+   real space instead: inside a fold body the column gap already spaces it. */
+.set-card .set-sub {
+  margin-top: 0;
+}
+/* a field stacked under another one needs the room the old inline margin-top
+   used to give it (custom tab fields, the gmail address) */
+.set-card .field + .lbl,
+.set-card .set-inline + .lbl {
+  margin-top: 12px;
+}
+
+/* the first row in a card, or in a fold, has nothing above it to divide */
+.set-h + .set-row,
+.set-fold > .set-row:first-child,
+.set-fold > .set-sub:first-child + .set-row {
+  border-top: 0;
+  padding-top: 0;
+}
+.set-fold > .set-sub:first-child {
+  margin-top: 0;
+}
+.set-sub--inline {
+  margin: 0;
+}
+.set-note {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+.set-inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+/* ---------- theme toggle ---------- */
+.theme-tgl {
+  display: inline-flex;
+  flex: none;
+  cursor: pointer;
+}
+.theme-tgl input {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+}
+.tt-track {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 66px;
+  height: 34px;
+  padding: 0 7px;
+  border-radius: 999px;
+  border: 1px solid var(--line-2);
+  background: var(--glass-bg-2);
+  transition: background 0.2s, border-color 0.2s;
+}
+.tt-ic {
+  display: grid;
+  place-items: center;
+  z-index: 1;
+  color: var(--text-2);
+  transition: color 0.2s;
+}
+.tt-ic .msr {
+  font-size: 15px;
+}
+.tt-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+  background: linear-gradient(160deg, #2e2f36, #14151a);
+  border: 1px solid var(--line-2);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45);
+  transition: transform 0.24s cubic-bezier(0.3, 0.8, 0.3, 1);
+}
+.theme-tgl input:checked + .tt-track .tt-thumb {
+  transform: translateX(31px);
+}
+.theme-tgl input:checked + .tt-track {
+  background: color-mix(in srgb, var(--ac-1) 16%, transparent);
+  border-color: color-mix(in srgb, var(--ac-1) 42%, transparent);
+}
+.theme-tgl input:checked + .tt-track .tt-b .msr {
+  color: var(--ac-1);
+}
+.theme-tgl input:not(:checked) + .tt-track .tt-a .msr {
+  color: var(--ac-1);
+}
+.theme-tgl input:focus-visible + .tt-track {
+  outline: 2px solid var(--ac-1);
+  outline-offset: 3px;
+}
+
+/* ---------- segments ---------- */
+.seg--wide {
+  display: flex;
+  width: 100%;
+  flex-wrap: nowrap;
+}
+.seg--wide button {
+  flex: 1;
+  justify-content: center;
+}
+
+/* a live sample of the spacing scale, so the choice is visible */
+.dens-prev {
+  display: flex;
+  flex-direction: column;
+  gap: var(--card-gap);
+  width: 100%;
+  padding: var(--card-pad);
+  border-radius: var(--r-md);
+  border: 1px dashed var(--line-2);
+  background: var(--glass-bg-2);
+}
+.dens-prev i {
+  display: block;
+  height: 9px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--ac-1) 55%, transparent), transparent 72%);
+}
+.dens-prev i:nth-child(2) {
+  width: 74%;
+}
+.dens-prev i:nth-child(3) {
+  width: 47%;
+}
+
+/* ---------- colour dots ----------
+   A circle showing the colour, with the real <input type="color"> stretched
+   invisibly over it: clicking the circle opens the browser's own picker. */
+.cdot {
+  position: relative;
+  display: inline-block;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: 50%;
+  border: 1px solid var(--line-2);
+  background: var(--cdot, #6cc7ff);
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16), 0 2px 9px rgba(0, 0, 0, 0.35);
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+.cdot::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  border: 1px dashed color-mix(in srgb, var(--ac-1) 75%, transparent);
+  opacity: 0;
+  transition: opacity 0.16s ease;
+}
+.cdot:hover {
+  transform: scale(1.08);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.24), 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+.cdot:hover::after,
+.cdot:focus-within::after {
+  opacity: 1;
+}
+.cdot--lg {
+  width: 42px;
+  height: 42px;
+}
+.cdot input[type="color"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  opacity: 0;
+  cursor: pointer;
+}
+.cdot-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.cdot-lab {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+.cdot-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 620;
+  color: var(--text-2);
+}
+
+/* ---------- your own pack / particle set ----------
+   A crafted card can be recoloured in place and thrown away, without
+   opening the editor for either one. */
+.craft-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  width: 100%;
+  margin-top: 10px;
+  padding-top: 11px;
+  border-top: 1px solid var(--line);
+}
+.craft-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.craft-acts {
+  display: flex;
+  gap: 7px;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+.pack-card.crafted {
+  border-color: color-mix(in srgb, var(--ac-1) 32%, var(--line));
+}
+
+/* ---------- narrow screens: rail becomes a chip row ---------- */
+@media (max-width: 1000px) {
+  .set-wrap {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .rail-stick {
+    position: static;
+    padding: 11px;
+  }
+  .rail-list {
+    flex-direction: row;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+  .rail-list::-webkit-scrollbar {
+    display: none;
+  }
+  .rail-link {
+    flex: none;
+    white-space: nowrap;
+  }
+  .rail-note {
+    display: none;
+  }
+}
+@media (max-width: 560px) {
+  .set-val,
+  .set-h .set-ic {
+    display: none;
+  }
+}
+
+/* ---------- the rail filter, and its empty state ---------- */
+.set-card.gone,
+.set-group.gone {
+  display: none;
+}
+.set-end {
+  padding: 26px 0 8px;
+  font-size: 13px;
+  text-align: center;
+  color: var(--text-2);
+}
+.link-btn {
+  color: var(--ac-1);
+  font-weight: 620;
+  text-decoration: underline;
 }
 
 /* ============================================================
@@ -6617,7 +7592,7 @@ window.RELEASE_TIER = "regular";
 <div class="glow-bg" aria-hidden="true"></div>
 <div id="rel" class="rel-shell"></div>
 <script>
-window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-13T13:32:21.808Z","games":[{"id":"flip","name":"Flip","desc":"Found in games/flip. No description written yet.","file":"/games/flip/flip.html","thumb":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMjAgMTgwIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCBzbGljZSI+CiAgPHJlY3Qgd2lkdGg9IjMyMCIgaGVpZ2h0PSIxODAiIGZpbGw9IiMwYzBjMGYiLz4KICA8Zz4KICAgIDxyZWN0IHg9IjE4IiB5PSIxOCIgd2lkdGg9IjEyNiIgaGVpZ2h0PSIxNDQiIHJ4PSIxMiIgZmlsbD0iIzE4MTgxZCIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utb3BhY2l0eT0iMC4yIiBzdHJva2Utd2lkdGg9IjEuNSIvPgogICAgPHJlY3QgeD0iMTc2IiB5PSIxOCIgd2lkdGg9IjEyNiIgaGVpZ2h0PSIxNDQiIHJ4PSIxMiIgZmlsbD0iIzE4MTgxZCIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utb3BhY2l0eT0iMC4yIiBzdHJva2Utd2lkdGg9IjEuNSIvPgogICAgPHJlY3QgeD0iNDYiIHk9IjM4IiB3aWR0aD0iNzAiIGhlaWdodD0iNTAiIHJ4PSI4IiBmaWxsPSIjZmZmZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDkiLz4KICAgIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDE3NiAwKSI+CiAgICAgIDxjaXJjbGUgY3g9IjIzOSIgY3k9IjEwNCIgcj0iMTQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2YyZjJmNSIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgICAgIDxjaXJjbGUgY3g9IjIzOSIgY3k9IjEwNCIgcj0iNSIgZmlsbD0iI2YyZjJmNSIvPgogICAgPC9nPgogICAgPGNpcmNsZSBjeD0iODEiIGN5PSIxMTgiIHI9IjE0IiBmaWxsPSJub25lIiBzdHJva2U9IiNmMmYyZjUiIHN0cm9rZS13aWR0aD0iMyIvPgogICAgPHBhdGggZD0iTTgxIDExOHYtMjQiIHN0cm9rZT0iI2YyZjJmNSIgc3Ryb2tlLXdpZHRoPSIzIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICAgIDxyZWN0IHg9IjM1IiB5PSI2IiB3aWR0aD0iMzYiIGhlaWdodD0iMyIgcng9IjEuNSIgZmlsbD0iI2ZmZmZmZiIgZmlsbC1vcGFjaXR5PSIwLjIiLz4KICA8L2c+Cjwvc3ZnPgo=","labels":["Test"],"warning":null,"at":null,"hot":false,"data":"data:text/html;charset=utf-8,%3C!doctype%20html%3E%0A%3Chtml%20lang%3D%22en%22%3E%0A%3Chead%3E%0A%3Cmeta%20charset%3D%22utf-8%22%3E%0A%3Cmeta%20name%3D%22viewport%22%20content%3D%22width%3Ddevice-width%2C%20initial-scale%3D1%22%3E%0A%3Ctitle%3EFLIP%3C%2Ftitle%3E%0A%3Cstyle%3E%0A%20%20html%2Cbody%7Bmargin%3A0%3Bmin-height%3A100%25%3Bbackground%3A%230b0b0d%3Bcolor%3A%23f4f4f5%3Bfont-family%3Asystem-ui%2Csans-serif%7D%0A%20%20body%7Bdisplay%3Aflex%3Bflex-direction%3Acolumn%3Balign-items%3Acenter%3Bjustify-content%3Acenter%3Bgap%3A18px%3Bpadding%3A20px%3Bbox-sizing%3Aborder-box%7D%0A%20%20.hud%7Bdisplay%3Aflex%3Balign-items%3Acenter%3Bgap%3A20px%3Bfont-size%3A15px%3Bletter-spacing%3A.1em%7D%0A%20%20.hud%20button%7Bborder%3A1px%20solid%20rgba(255%2C255%2C255%2C0.25)%3Bbackground%3Argba(255%2C255%2C255%2C0.07)%3Bcolor%3A%23f4f4f5%3Bborder-radius%3A999px%3Bpadding%3A8px%2018px%3Bfont-size%3A13px%3Bletter-spacing%3A.06em%3Bcursor%3Apointer%7D%0A%20%20%23grid%7Bdisplay%3Agrid%3Bgrid-template-columns%3Arepeat(4%2Cminmax(64px%2C1fr))%3Bgap%3A12px%3Bwidth%3Amin(92vw%2C440px)%7D%0A%20%20.card%7Baspect-ratio%3A1%3Bborder-radius%3A14px%3Bborder%3A1px%20solid%20rgba(255%2C255%2C255%2C0.14)%3Bcursor%3Apointer%3B%0A%20%20%20%20display%3Agrid%3Bplace-items%3Acenter%3Bfont-size%3A34px%3Bbackground%3Alinear-gradient(150deg%2C%2316161b%2C%230e0e12)%3B%0A%20%20%20%20transition%3Atransform%20.18s%20ease%2Cborder-color%20.18s%2Copacity%20.3s%7D%0A%20%20.card%3Ahover%7Bborder-color%3Argba(255%2C255%2C255%2C0.4)%3Btransform%3AtranslateY(-2px)%7D%0A%20%20.card.hide%7Bopacity%3A0%3Bpointer-events%3Anone%3Btransform%3Ascale(.8)%7D%0A%20%20.card.open%2C.card.matched%7Bborder-color%3Argba(255%2C255%2C255%2C0.65)%7D%0A%20%20.card.wrong%7Banimation%3Ashk%20.28s%7D%0A%20%20%40keyframes%20shk%7B0%25%2C100%25%7Btransform%3AtranslateX(0)%7D25%25%7Btransform%3AtranslateX(-7px)%7D75%25%7Btransform%3AtranslateX(7px)%7D%7D%0A%20%20%23status%7Bfont-size%3A13px%3Bcolor%3Argba(255%2C255%2C255%2C0.5)%3Bmin-height%3A18px%3Bletter-spacing%3A.04em%7D%0A%3C%2Fstyle%3E%0A%3C%2Fhead%3E%0A%3Cbody%3E%0A%20%20%3Cdiv%20class%3D%22hud%22%3E%3Cspan%20id%3D%22moves%22%3EMOVES%200%3C%2Fspan%3E%3Cbutton%20id%3D%22new%22%3Enew%20game%3C%2Fbutton%3E%3Cspan%20id%3D%22best%22%3EBEST%20-%3C%2Fspan%3E%3C%2Fdiv%3E%0A%20%20%3Cdiv%20id%3D%22grid%22%3E%3C%2Fdiv%3E%0A%20%20%3Cdiv%20id%3D%22status%22%3Eflip%20a%20pair%20of%20matching%20tiles%3C%2Fdiv%3E%0A%3Cscript%3E%0A(function%20()%20%7B%0A%20%20var%20GLYPHS%20%3D%20%5B%22%E2%97%89%22%2C%22%E2%97%8B%22%2C%22%E2%96%A0%22%2C%22%E2%96%A1%22%2C%22%E2%97%86%22%2C%22%E2%97%87%22%2C%22%E2%96%B2%22%2C%22%E2%96%B3%22%2C%22%E2%9C%B1%22%2C%22%E2%8A%95%22%2C%22%E2%8A%96%22%2C%22%E2%89%A1%22%5D%3B%0A%20%20var%20grid%20%3D%20document.getElementById(%22grid%22)%3B%0A%20%20var%20movesEl%20%3D%20document.getElementById(%22moves%22)%3B%0A%20%20var%20statusEl%20%3D%20document.getElementById(%22status%22)%3B%0A%20%20var%20bestEl%20%3D%20document.getElementById(%22best%22)%3B%0A%0A%20%20var%20deck%20%3D%20%5B%5D%3B%0A%20%20var%20open%20%3D%20%5B%5D%3B%0A%20%20var%20locked%20%3D%20false%3B%0A%20%20var%20moves%20%3D%200%3B%0A%20%20var%20best%20%3D%20null%3B%0A%20%20try%20%7B%20best%20%3D%20%2BlocalStorage.getItem(%22flip.best%22)%20%7C%7C%20null%3B%20%7D%20catch%20(e)%20%7B%7D%0A%20%20if%20(best)%20bestEl.textContent%20%3D%20%22BEST%20%22%20%2B%20best%3B%0A%0A%20%20function%20build()%20%7B%0A%20%20%20%20deck%20%3D%20GLYPHS.slice(0%2C%208).concat(GLYPHS.slice(0%2C%208))%3B%0A%20%20%20%20for%20(var%20i%20%3D%20deck.length%20-%201%3B%20i%20%3E%200%3B%20i--)%20%7B%0A%20%20%20%20%20%20var%20j%20%3D%20(Math.random()%20*%20(i%20%2B%201))%20%7C%200%3B%0A%20%20%20%20%20%20var%20t%20%3D%20deck%5Bi%5D%3B%20deck%5Bi%5D%20%3D%20deck%5Bj%5D%3B%20deck%5Bj%5D%20%3D%20t%3B%0A%20%20%20%20%7D%0A%20%20%20%20open%20%3D%20%5B%5D%3B%0A%20%20%20%20locked%20%3D%20false%3B%0A%20%20%20%20moves%20%3D%200%3B%0A%20%20%20%20movesEl.textContent%20%3D%20%22MOVES%200%22%3B%0A%20%20%20%20statusEl.textContent%20%3D%20%22flip%20a%20pair%20of%20matching%20tiles%22%3B%0A%20%20%20%20grid.textContent%20%3D%20%22%22%3B%0A%20%20%20%20deck.forEach(function%20(glyph%2C%20idx)%20%7B%0A%20%20%20%20%20%20var%20el%20%3D%20document.createElement(%22button%22)%3B%0A%20%20%20%20%20%20el.className%20%3D%20%22card%22%3B%0A%20%20%20%20%20%20el.addEventListener(%22click%22%2C%20function%20()%20%7B%20flip(el%2C%20glyph%2C%20idx)%3B%20%7D)%3B%0A%20%20%20%20%20%20grid.appendChild(el)%3B%0A%20%20%20%20%7D)%3B%0A%20%20%7D%0A%0A%20%20function%20flip(el%2C%20glyph%2C%20idx)%20%7B%0A%20%20%20%20if%20(locked%20%7C%7C%20el.classList.contains(%22open%22)%20%7C%7C%20el.classList.contains(%22matched%22))%20return%3B%0A%20%20%20%20el.textContent%20%3D%20glyph%3B%0A%20%20%20%20el.classList.add(%22open%22)%3B%0A%20%20%20%20open.push(%7B%20el%3A%20el%2C%20glyph%3A%20glyph%20%7D)%3B%0A%20%20%20%20if%20(open.length%20%3D%3D%3D%202)%20%7B%0A%20%20%20%20%20%20locked%20%3D%20true%3B%0A%20%20%20%20%20%20moves%2B%2B%3B%0A%20%20%20%20%20%20movesEl.textContent%20%3D%20%22MOVES%20%22%20%2B%20moves%3B%0A%20%20%20%20%20%20var%20a%20%3D%20open%5B0%5D%2C%20b%20%3D%20open%5B1%5D%3B%0A%20%20%20%20%20%20setTimeout(function%20()%20%7B%0A%20%20%20%20%20%20%20%20if%20(a.glyph%20%3D%3D%3D%20b.glyph)%20%7B%0A%20%20%20%20%20%20%20%20%20%20a.el.classList.add(%22matched%22)%3B%0A%20%20%20%20%20%20%20%20%20%20b.el.classList.add(%22matched%22)%3B%0A%20%20%20%20%20%20%20%20%20%20statusEl.textContent%20%3D%20%22match!%22%3B%0A%20%20%20%20%20%20%20%20%7D%20else%20%7B%0A%20%20%20%20%20%20%20%20%20%20a.el.classList.add(%22wrong%22)%3B%0A%20%20%20%20%20%20%20%20%20%20b.el.classList.add(%22wrong%22)%3B%0A%20%20%20%20%20%20%20%20%20%20statusEl.textContent%20%3D%20%22no%20match%22%3B%0A%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20setTimeout(function%20()%20%7B%0A%20%20%20%20%20%20%20%20%20%20if%20(a.glyph%20!%3D%3D%20b.glyph)%20%7B%0A%20%20%20%20%20%20%20%20%20%20%20%20a.el.textContent%20%3D%20%22%22%3B%0A%20%20%20%20%20%20%20%20%20%20%20%20a.el.classList.remove(%22open%22)%3B%0A%20%20%20%20%20%20%20%20%20%20%20%20b.el.textContent%20%3D%20%22%22%3B%0A%20%20%20%20%20%20%20%20%20%20%20%20b.el.classList.remove(%22open%22)%3B%0A%20%20%20%20%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20%20%20%20%20a.el.classList.remove(%22wrong%22)%3B%0A%20%20%20%20%20%20%20%20%20%20b.el.classList.remove(%22wrong%22)%3B%0A%20%20%20%20%20%20%20%20%20%20open%20%3D%20%5B%5D%3B%0A%20%20%20%20%20%20%20%20%20%20locked%20%3D%20false%3B%0A%20%20%20%20%20%20%20%20%20%20checkWin()%3B%0A%20%20%20%20%20%20%20%20%7D%2C%20500)%3B%0A%20%20%20%20%20%20%7D%2C%20260)%3B%0A%20%20%20%20%7D%0A%20%20%7D%0A%0A%20%20function%20checkWin()%20%7B%0A%20%20%20%20var%20done%20%3D%20grid.querySelectorAll(%22.matched%22).length%3B%0A%20%20%20%20if%20(done%20%3D%3D%3D%2016)%20%7B%0A%20%20%20%20%20%20statusEl.textContent%20%3D%20%22cleared%20in%20%22%20%2B%20moves%20%2B%20%22%20moves%22%3B%0A%20%20%20%20%20%20if%20(!best%20%7C%7C%20moves%20%3C%20best)%20%7B%0A%20%20%20%20%20%20%20%20best%20%3D%20moves%3B%0A%20%20%20%20%20%20%20%20try%20%7B%20localStorage.setItem(%22flip.best%22%2C%20best)%3B%20%7D%20catch%20(e)%20%7B%7D%0A%20%20%20%20%20%20%20%20bestEl.textContent%20%3D%20%22BEST%20%22%20%2B%20best%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%20%20%7D%0A%0A%20%20document.getElementById(%22new%22).addEventListener(%22click%22%2C%20build)%3B%0A%20%20build()%3B%0A%7D)()%3B%0A%3C%2Fscript%3E%0A%3C%2Fbody%3E%0A%3C%2Fhtml%3E%0A"},{"id":"pulse","name":"Pulse","desc":"Found in games/pulse. No description written yet.","file":"/games/pulse/pulse.html","thumb":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMjAgMTgwIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCBzbGljZSI+CiAgPHJlY3Qgd2lkdGg9IjMyMCIgaGVpZ2h0PSIxODAiIGZpbGw9IiMwYzBjMGYiLz4KICA8cGF0aCBkPSJNMTYwIDEwdjE2MCIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utb3BhY2l0eT0iMC4xNCIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtZGFzaGFycmF5PSI0IDkiLz4KICA8cmVjdCB4PSIxOCIgeT0iNDIiIHdpZHRoPSIxMCIgaGVpZ2h0PSI5NiIgcng9IjUiIGZpbGw9IiNmMmYyZjUiLz4KICA8cmVjdCB4PSIyOTIiIHk9IjQyIiB3aWR0aD0iMTAiIGhlaWdodD0iOTYiIHJ4PSI1IiBmaWxsPSIjZjJmMmY1Ii8+CiAgPGNpcmNsZSBjeD0iMTYwIiBjeT0iOTIiIHI9IjkiIGZpbGw9IiNmMmYyZjUiLz4KICA8cmVjdCB4PSIxNDAiIHk9IjgiIHdpZHRoPSI0MCIgaGVpZ2h0PSIzIiByeD0iMS41IiBmaWxsPSIjZmZmZmZmIiBmaWxsLW9wYWNpdHk9IjAuMjUiLz4KICA8cmVjdCB4PSIxNDAiIHk9IjE2OCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjMiIHJ4PSIxLjUiIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4yNSIvPgo8L3N2Zz4K","labels":["Test"],"warning":{"title":"Heads up: PULSE","description":"PULSE uses the keyboard (W/S or arrows) and has sound-free retro vibes. First to 7 wins.\nSpace serves the ball. Touch devices can drag on the left/right half of the screen."},"at":null,"hot":true,"data":"data:text/html;charset=utf-8,%3C!doctype%20html%3E%0A%3Chtml%20lang%3D%22en%22%3E%0A%3Chead%3E%0A%3Cmeta%20charset%3D%22utf-8%22%3E%0A%3Cmeta%20name%3D%22viewport%22%20content%3D%22width%3Ddevice-width%2C%20initial-scale%3D1%2C%20viewport-fit%3Dcover%22%3E%0A%3Ctitle%3EPULSE%3C%2Ftitle%3E%0A%3Cstyle%3E%0A%20%20html%2Cbody%7Bmargin%3A0%3Bheight%3A100%25%3Bbackground%3A%230b0b0d%3Boverflow%3Ahidden%7D%0A%20%20body%7Bdisplay%3Agrid%3Bplace-items%3Acenter%7D%0A%20%20canvas%7Bwidth%3A100%25%3Bheight%3A100%25%3Bdisplay%3Ablock%3Btouch-action%3Anone%7D%0A%3C%2Fstyle%3E%0A%3C%2Fhead%3E%0A%3Cbody%3E%0A%3Ccanvas%20id%3D%22c%22%3E%3C%2Fcanvas%3E%0A%3Cscript%3E%0A(function%20()%20%7B%0A%20%20var%20cv%20%3D%20document.getElementById(%22c%22)%3B%0A%20%20var%20g%20%3D%20cv.getContext(%222d%22)%3B%0A%20%20var%20W%20%3D%200%2C%20H%20%3D%200%2C%20dpr%20%3D%20Math.min(window.devicePixelRatio%20%7C%7C%201%2C%202)%3B%0A%0A%20%20var%20PW%20%3D%2012%2C%20PH%20%3D%2074%2C%20BALL%20%3D%209%2C%20MID%20%3D%203%3B%0A%20%20var%20lp%20%3D%200.5%2C%20rp%20%3D%200.5%2C%20lpv%20%3D%200%2C%20rpv%20%3D%200%3B%20%20%20%2F%2F%20paddle%20centers%20(0..1)%0A%20%20var%20ball%20%3D%20%7B%20x%3A%200.5%2C%20y%3A%200.5%2C%20vx%3A%200.0042%2C%20vy%3A%200.003%20%7D%3B%0A%20%20var%20scoreL%20%3D%200%2C%20scoreR%20%3D%200%2C%20running%20%3D%20false%2C%20over%20%3D%20false%3B%0A%20%20var%20vel%20%3D%200.0042%3B%0A%0A%20%20function%20size()%20%7B%0A%20%20%20%20W%20%3D%20cv.clientWidth%3B%20H%20%3D%20cv.clientHeight%3B%0A%20%20%20%20cv.width%20%3D%20W%20*%20dpr%3B%20cv.height%20%3D%20H%20*%20dpr%3B%0A%20%20%20%20g.setTransform(dpr%2C%200%2C%200%2C%20dpr%2C%200%2C%200)%3B%0A%20%20%7D%0A%20%20window.addEventListener(%22resize%22%2C%20size)%3B%0A%0A%20%20var%20keys%20%3D%20%7B%7D%3B%0A%20%20addEventListener(%22keydown%22%2C%20function%20(e)%20%7B%0A%20%20%20%20keys%5Be.key.toLowerCase()%5D%20%3D%20true%3B%0A%20%20%20%20if%20(e.key%20%3D%3D%3D%20%22%20%22%20%7C%7C%20e.key%20%3D%3D%3D%20%22p%22%20%7C%7C%20e.key%20%3D%3D%3D%20%22P%22)%20%7B%0A%20%20%20%20%20%20e.preventDefault()%3B%0A%20%20%20%20%20%20if%20(over)%20%7B%20scoreL%20%3D%20scoreR%20%3D%200%3B%20ball.vx%20%3D%20vel%3B%20ball.vy%20%3D%20vel%20*%200.7%3B%20over%20%3D%20false%3B%20%7D%0A%20%20%20%20%20%20running%20%3D%20!running%3B%0A%20%20%20%20%7D%0A%20%20%20%20if%20(e.key%20%3D%3D%3D%20%22Enter%22%20%26%26%20over)%20%7B%20scoreL%20%3D%20scoreR%20%3D%200%3B%20ball.vx%20%3D%20vel%3B%20over%20%3D%20false%3B%20running%20%3D%20true%3B%20%7D%0A%20%20%7D)%3B%0A%20%20addEventListener(%22keyup%22%2C%20function%20(e)%20%7B%20keys%5Be.key.toLowerCase()%5D%20%3D%20false%3B%20%7D)%3B%0A%0A%20%20%2F%2F%20touch%20drag%3A%20two%20halves%20of%20the%20screen%0A%20%20var%20drag%20%3D%20%7B%20on%3A%20false%2C%20side%3A%200%2C%20y%3A%200%20%7D%3B%0A%20%20cv.addEventListener(%22pointerdown%22%2C%20function%20(e)%20%7B%0A%20%20%20%20drag.on%20%3D%20true%3B%0A%20%20%20%20drag.side%20%3D%20e.clientX%20%3C%20innerWidth%20%2F%202%20%3F%200%20%3A%201%3B%0A%20%20%20%20drag.y%20%3D%20e.clientY%3B%0A%20%20%20%20e.preventDefault()%3B%0A%20%20%7D)%3B%0A%20%20cv.addEventListener(%22pointermove%22%2C%20function%20(e)%20%7B%0A%20%20%20%20if%20(!drag.on)%20return%3B%0A%20%20%20%20var%20dy%20%3D%20(e.clientY%20-%20drag.y)%20%2F%20innerHeight%3B%0A%20%20%20%20drag.y%20%3D%20e.clientY%3B%0A%20%20%20%20if%20(drag.side%20%3D%3D%3D%200)%20lp%20%3D%20Math.min(0.86%2C%20Math.max(0.14%2C%20lp%20-%20dy))%3B%0A%20%20%20%20else%20rp%20%3D%20Math.min(0.86%2C%20Math.max(0.14%2C%20rp%20-%20dy))%3B%0A%20%20%7D)%3B%0A%20%20cv.addEventListener(%22pointerup%22%2C%20function%20()%20%7B%20drag.on%20%3D%20false%3B%20%7D)%3B%0A%0A%20%20function%20reset(dir)%20%7B%0A%20%20%20%20ball%20%3D%20%7B%20x%3A%200.5%2C%20y%3A%200.5%2C%20vx%3A%20dir%20*%20vel%2C%20vy%3A%20(Math.random()%20-%200.5)%20*%20vel%20*%200.8%20%7D%3B%0A%20%20%20%20running%20%3D%20false%3B%0A%20%20%7D%0A%0A%20%20function%20frame()%20%7B%0A%20%20%20%20var%20px%20%3D%20PH%20%2F%20H%3B%0A%20%20%20%20if%20(keys.w%20%7C%7C%20keys.arrowup)%20lpv%20%3D%20-1%3B%0A%20%20%20%20else%20if%20(keys.s%20%7C%7C%20keys.arrowdown)%20lpv%20%3D%201%3B%0A%20%20%20%20else%20lpv%20%3D%200%3B%0A%20%20%20%20if%20(keys.arrowup)%20rpv%20%3D%20-1%3B%0A%20%20%20%20else%20if%20(keys.arrowdown)%20rpv%20%3D%201%3B%0A%20%20%20%20else%20rpv%20%3D%200%3B%0A%20%20%20%20%2F%2F%20simple%20AI%20for%20the%20right%20paddle%20when%20no%20local%20keys%20pressed%0A%20%20%20%20if%20(!keys.arrowup%20%26%26%20!keys.arrowdown)%20%7B%0A%20%20%20%20%20%20var%20target%20%3D%20ball.y%20%2B%20(ball.vx%20%3E%200%20%3F%200%20%3A%20-0.02)%3B%0A%20%20%20%20%20%20rpv%20%3D%20Math.max(-1%2C%20Math.min(1%2C%20(target%20-%20rp)%20*%2014))%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20lp%20%2B%3D%20lpv%20*%200.010%3B%20rp%20%2B%3D%20rpv%20*%200.010%3B%0A%20%20%20%20lp%20%3D%20Math.max(px%20%2F%202%2C%20Math.min(1%20-%20px%20%2F%202%2C%20lp))%3B%0A%20%20%20%20rp%20%3D%20Math.max(px%20%2F%202%2C%20Math.min(1%20-%20px%20%2F%202%2C%20rp))%3B%0A%0A%20%20%20%20if%20(running)%20%7B%0A%20%20%20%20%20%20ball.x%20%2B%3D%20ball.vx%3B%0A%20%20%20%20%20%20ball.y%20%2B%3D%20ball.vy%3B%0A%20%20%20%20%20%20if%20(ball.y%20%3C%20BALL%20%2F%20H%20%7C%7C%20ball.y%20%3E%201%20-%20BALL%20%2F%20H)%20ball.vy%20*%3D%20-1%3B%0A%20%20%20%20%20%20var%20by%20%3D%20ball.y%2C%20bx%20%3D%20ball.x%3B%0A%20%20%20%20%20%20var%20lEdge%20%3D%201%20%2F%20W%20*%20(PW%20%2F%202%20%2B%20BALL%20%2F%202)%20*%202%3B%20%20%20%2F%2F%20paddle%20zone%20x%0A%20%20%20%20%20%20var%20rEdge%20%3D%201%20-%20lEdge%3B%0A%20%20%20%20%20%20if%20(bx%20%3C%20lEdge%20%26%26%20Math.abs(by%20-%20lp)%20%3C%20px%20%2F%202%20%2B%20BALL%20%2F%20H)%20%7B%0A%20%20%20%20%20%20%20%20ball.vx%20%3D%20Math.abs(ball.vx)%20*%201.03%3B%0A%20%20%20%20%20%20%20%20ball.vy%20%2B%3D%20(by%20-%20lp)%20*%200.9%3B%0A%20%20%20%20%20%20%20%20ball.x%20%3D%20lEdge%3B%0A%20%20%20%20%20%20%7D%20else%20if%20(bx%20%3E%20rEdge%20%26%26%20Math.abs(by%20-%20rp)%20%3C%20px%20%2F%202%20%2B%20BALL%20%2F%20H)%20%7B%0A%20%20%20%20%20%20%20%20ball.vx%20%3D%20-Math.abs(ball.vx)%20*%201.03%3B%0A%20%20%20%20%20%20%20%20ball.vy%20%2B%3D%20(by%20-%20rp)%20*%200.9%3B%0A%20%20%20%20%20%20%20%20ball.x%20%3D%20rEdge%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20var%20m%20%3D%20Math.max(0.0024%2C%20Math.min(0.016%2C%20Math.abs(ball.vy)))%3B%0A%20%20%20%20%20%20ball.vy%20%3D%20Math.max(-m%2C%20Math.min(m%2C%20ball.vy))%3B%0A%20%20%20%20%20%20if%20(bx%20%3C%200)%20%7B%20scoreR%2B%2B%3B%20if%20(scoreR%20%3E%3D%207)%20over%20%3D%20true%3B%20else%20reset(1)%3B%20%7D%0A%20%20%20%20%20%20if%20(bx%20%3E%201)%20%7B%20scoreL%2B%2B%3B%20if%20(scoreL%20%3E%3D%207)%20over%20%3D%20true%3B%20else%20reset(-1)%3B%20%7D%0A%20%20%20%20%20%20if%20(over)%20%7B%20ball.vx%20%3D%200%3B%20ball.vy%20%3D%200%3B%20%7D%0A%20%20%20%20%7D%0A%0A%20%20%20%20g.fillStyle%20%3D%20%22%230b0b0d%22%3B%0A%20%20%20%20g.fillRect(0%2C%200%2C%20W%2C%20H)%3B%0A%20%20%20%20g.strokeStyle%20%3D%20%22rgba(255%2C255%2C255%2C0.14)%22%3B%0A%20%20%20%20g.lineWidth%20%3D%201%3B%0A%20%20%20%20g.setLineDash(%5B6%2C%2010%5D)%3B%0A%20%20%20%20g.beginPath()%3B%20g.moveTo(W%20%2F%202%2C%200)%3B%20g.lineTo(W%20%2F%202%2C%20H)%3B%20g.stroke()%3B%0A%20%20%20%20g.setLineDash(%5B%5D)%3B%0A%0A%20%20%20%20var%20pad%20%3D%20function%20(cx%2C%20x)%20%7B%0A%20%20%20%20%20%20var%20y%20%3D%20cx%20*%20H%20-%20PH%20%2F%202%3B%0A%20%20%20%20%20%20g.fillStyle%20%3D%20%22rgba(255%2C255%2C255%2C0.95)%22%3B%0A%20%20%20%20%20%20g.beginPath()%3B%0A%20%20%20%20%20%20g.roundRect(x%20-%20PW%20%2F%202%2C%20y%2C%20PW%2C%20PH%2C%206)%3B%0A%20%20%20%20%20%20g.fill()%3B%0A%20%20%20%20%7D%3B%0A%20%20%20%20pad(lp%2C%200)%3B%0A%20%20%20%20pad(rp%2C%20W)%3B%0A%0A%20%20%20%20if%20(over)%20%7B%0A%20%20%20%20%20%20g.fillStyle%20%3D%20%22rgba(255%2C255%2C255%2C0.95)%22%3B%0A%20%20%20%20%20%20g.font%20%3D%20%22700%2042px%20system-ui%2C%20sans-serif%22%3B%0A%20%20%20%20%20%20g.textAlign%20%3D%20%22center%22%3B%0A%20%20%20%20%20%20g.fillText((scoreL%20%3E%20scoreR%20%3F%20%22LEFT%22%20%3A%20%22RIGHT%22)%20%2B%20%22%20WINS%22%2C%20W%20%2F%202%2C%20H%20%2F%202%20-%2022)%3B%0A%20%20%20%20%20%20g.font%20%3D%20%22400%2015px%20system-ui%2C%20sans-serif%22%3B%0A%20%20%20%20%20%20g.fillStyle%20%3D%20%22rgba(255%2C255%2C255%2C0.5)%22%3B%0A%20%20%20%20%20%20g.fillText(%22press%20enter%20to%20play%20again%22%2C%20W%20%2F%202%2C%20H%20%2F%202%20%2B%2018)%3B%0A%20%20%20%20%7D%20else%20if%20(!running)%20%7B%0A%20%20%20%20%20%20g.fillStyle%20%3D%20%22rgba(255%2C255%2C255%2C0.85)%22%3B%0A%20%20%20%20%20%20g.font%20%3D%20%22700%2034px%20system-ui%2C%20sans-serif%22%3B%0A%20%20%20%20%20%20g.textAlign%20%3D%20%22center%22%3B%0A%20%20%20%20%20%20g.fillText(%22PULSE%22%2C%20W%20%2F%202%2C%20H%20%2F%202%20-%2026)%3B%0A%20%20%20%20%20%20g.font%20%3D%20%22400%2014px%20system-ui%2C%20sans-serif%22%3B%0A%20%20%20%20%20%20g.fillStyle%20%3D%20%22rgba(255%2C255%2C255%2C0.5)%22%3B%0A%20%20%20%20%20%20g.fillText(%22space%20to%20serve%20%20%C2%B7%20%20W%2FS%20or%20arrows%20%20%C2%B7%20%20first%20to%207%22%2C%20W%20%2F%202%2C%20H%20%2F%202%20%2B%208)%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%2F%2F%20ball%0A%20%20%20%20g.fillStyle%20%3D%20%22%23fff%22%3B%0A%20%20%20%20g.beginPath()%3B%0A%20%20%20%20g.arc(ball.x%20*%20W%2C%20ball.y%20*%20H%2C%20BALL%20%2F%202%2C%200%2C%207)%3B%0A%20%20%20%20g.fill()%3B%0A%0A%20%20%20%20%2F%2F%20scores%0A%20%20%20%20g.fillStyle%20%3D%20%22rgba(255%2C255%2C255%2C0.85)%22%3B%0A%20%20%20%20g.font%20%3D%20%22700%2030px%20system-ui%2C%20sans-serif%22%3B%0A%20%20%20%20g.textAlign%20%3D%20%22center%22%3B%0A%20%20%20%20g.fillText(scoreL%2C%20W%20%2F%204%2C%2042)%3B%0A%20%20%20%20g.fillText(scoreR%2C%20(W%20%2F%204)%20*%203%2C%2042)%3B%0A%0A%20%20%20%20requestAnimationFrame(frame)%3B%0A%20%20%7D%0A%0A%20%20size()%3B%0A%20%20reset(1)%3B%0A%20%20requestAnimationFrame(frame)%3B%0A%7D)()%3B%0A%3C%2Fscript%3E%0A%3C%2Fbody%3E%0A%3C%2Fhtml%3E%0A"},{"id":"simon","name":"Simon","desc":"Found in games/simon. No description written yet.","file":"/games/simon/simon.html","thumb":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMjAgMTgwIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCBzbGljZSI+CiAgPHJlY3Qgd2lkdGg9IjMyMCIgaGVpZ2h0PSIxODAiIGZpbGw9IiMwYzBjMGYiLz4KICA8Zz4KICAgIDxyZWN0IHg9IjkyIiB5PSIyNiIgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTAiIGZpbGw9IiMxYTFhMjAiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLW9wYWNpdHk9IjAuMjUiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgICA8cmVjdCB4PSIxNjQiIHk9IjI2IiB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHJ4PSIxMCIgZmlsbD0iIzE2MTYxYiIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utb3BhY2l0eT0iMC4xOCIgc3Ryb2tlLXdpZHRoPSIxLjUiLz4KICAgIDxyZWN0IHg9IjkyIiB5PSI5OCIgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTAiIGZpbGw9IiMxNjE2MWIiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLW9wYWNpdHk9IjAuMTgiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgICA8cmVjdCB4PSIxNjQiIHk9Ijk4IiB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHJ4PSIxMCIgZmlsbD0iIzE2MTYxYiIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utb3BhY2l0eT0iMC4xOCIgc3Ryb2tlLXdpZHRoPSIxLjUiLz4KICA8L2c+CiAgPHJlY3QgeD0iOTIiIHk9IjI2IiB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHJ4PSIxMCIgZmlsbD0iI2YyZjJmNSIgZmlsbC1vcGFjaXR5PSIwLjkyIi8+CiAgPGNpcmNsZSBjeD0iMTk2IiBjeT0iNTgiIHI9IjEwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmMmYyZjUiIHN0cm9rZS13aWR0aD0iMi41IiBzdHJva2Utb3BhY2l0eT0iMC41Ii8+CiAgPGNpcmNsZSBjeD0iMTI0IiBjeT0iMTMwIiByPSIxMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZjJmMmY1IiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLW9wYWNpdHk9IjAuMzUiLz4KICA8Y2lyY2xlIGN4PSIxOTYiIGN5PSIxMzAiIHI9IjEwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmMmYyZjUiIHN0cm9rZS13aWR0aD0iMi41IiBzdHJva2Utb3BhY2l0eT0iMC4zNSIvPgo8L3N2Zz4K","labels":["Test"],"warning":null,"at":1788480000000,"hot":false,"data":"data:text/html;charset=utf-8,%3C!doctype%20html%3E%0A%3Chtml%20lang%3D%22en%22%3E%0A%3Chead%3E%0A%3Cmeta%20charset%3D%22utf-8%22%3E%0A%3Cmeta%20name%3D%22viewport%22%20content%3D%22width%3Ddevice-width%2C%20initial-scale%3D1%22%3E%0A%3Ctitle%3ESIMON%3C%2Ftitle%3E%0A%3Cstyle%3E%0A%20%20html%2Cbody%7Bmargin%3A0%3Bmin-height%3A100%25%3Bbackground%3A%230b0b0d%3Bcolor%3A%23f4f4f5%3Bfont-family%3Asystem-ui%2Csans-serif%7D%0A%20%20body%7Bdisplay%3Aflex%3Bflex-direction%3Acolumn%3Balign-items%3Acenter%3Bjustify-content%3Acenter%3Bgap%3A16px%3Bpadding%3A20px%3Bbox-sizing%3Aborder-box%7D%0A%20%20.hud%7Bdisplay%3Aflex%3Balign-items%3Acenter%3Bgap%3A20px%3Bfont-size%3A15px%3Bletter-spacing%3A.1em%7D%0A%20%20.hud%20button%7Bborder%3A1px%20solid%20rgba(255%2C255%2C255%2C0.25)%3Bbackground%3Argba(255%2C255%2C255%2C0.07)%3Bcolor%3A%23f4f4f5%3Bborder-radius%3A999px%3Bpadding%3A8px%2018px%3Bfont-size%3A13px%3Bletter-spacing%3A.06em%3Bcursor%3Apointer%7D%0A%20%20%23board%7Bdisplay%3Agrid%3Bgrid-template-columns%3Arepeat(2%2C1fr)%3Bgap%3A14px%3Bwidth%3Amin(84vw%2C74vh%2C380px)%7D%0A%20%20.pad%7Baspect-ratio%3A1%3Bborder-radius%3A16px%3Bborder%3A1px%20solid%20rgba(255%2C255%2C255%2C0.14)%3Bbackground%3A%2316161b%3Bcursor%3Apointer%3Btransition%3Abackground%20.12s%2Cborder-color%20.12s%7D%0A%20%20.pad.lit%7Bbackground%3A%23f4f4f5%3Bborder-color%3A%23f4f4f5%7D%0A%20%20%23status%7Bfont-size%3A13px%3Bcolor%3Argba(255%2C255%2C255%2C0.5)%3Bmin-height%3A18px%3Bletter-spacing%3A.04em%3Btext-align%3Acenter%7D%0A%20%20%23board.locked%20.pad%7Bcursor%3Adefault%7D%0A%3C%2Fstyle%3E%0A%3C%2Fhead%3E%0A%3Cbody%3E%0A%20%20%3Cdiv%20class%3D%22hud%22%3E%3Cspan%20id%3D%22round%22%3EROUND%200%3C%2Fspan%3E%3Cbutton%20id%3D%22new%22%3Enew%20game%3C%2Fbutton%3E%3Cspan%20id%3D%22best%22%3EBEST%20-%3C%2Fspan%3E%3C%2Fdiv%3E%0A%20%20%3Cdiv%20id%3D%22board%22%3E%0A%20%20%20%20%3Cbutton%20class%3D%22pad%22%20data-i%3D%220%22%20aria-label%3D%22pad%201%22%3E%3C%2Fbutton%3E%0A%20%20%20%20%3Cbutton%20class%3D%22pad%22%20data-i%3D%221%22%20aria-label%3D%22pad%202%22%3E%3C%2Fbutton%3E%0A%20%20%20%20%3Cbutton%20class%3D%22pad%22%20data-i%3D%222%22%20aria-label%3D%22pad%203%22%3E%3C%2Fbutton%3E%0A%20%20%20%20%3Cbutton%20class%3D%22pad%22%20data-i%3D%223%22%20aria-label%3D%22pad%204%22%3E%3C%2Fbutton%3E%0A%20%20%3C%2Fdiv%3E%0A%20%20%3Cdiv%20id%3D%22status%22%3Epress%20new%20game%20to%20start%3C%2Fdiv%3E%0A%3Cscript%3E%0A(function%20()%20%7B%0A%20%20var%20pads%20%3D%20Array.prototype.slice.call(document.querySelectorAll(%22.pad%22))%3B%0A%20%20var%20board%20%3D%20document.getElementById(%22board%22)%3B%0A%20%20var%20roundEl%20%3D%20document.getElementById(%22round%22)%3B%0A%20%20var%20bestEl%20%3D%20document.getElementById(%22best%22)%3B%0A%20%20var%20statusEl%20%3D%20document.getElementById(%22status%22)%3B%0A%0A%20%20var%20seq%20%3D%20%5B%5D%2C%20pos%20%3D%200%2C%20playing%20%3D%20false%2C%20accepting%20%3D%20false%3B%0A%20%20var%20best%20%3D%20null%3B%0A%20%20try%20%7B%20best%20%3D%20%2BlocalStorage.getItem(%22simon.best%22)%20%7C%7C%20null%3B%20%7D%20catch%20(e)%20%7B%7D%0A%20%20if%20(best)%20bestEl.textContent%20%3D%20%22BEST%20%22%20%2B%20best%3B%0A%0A%20%20function%20lit(pad)%20%7B%0A%20%20%20%20pad.classList.add(%22lit%22)%3B%0A%20%20%20%20setTimeout(function%20()%20%7B%20pad.classList.remove(%22lit%22)%3B%20%7D%2C%20320)%3B%0A%20%20%7D%0A%0A%20%20function%20playback()%20%7B%0A%20%20%20%20accepting%20%3D%20false%3B%0A%20%20%20%20board.classList.add(%22locked%22)%3B%0A%20%20%20%20statusEl.textContent%20%3D%20%22watch%E2%80%A6%22%3B%0A%20%20%20%20seq.forEach(function%20(idx%2C%20i)%20%7B%0A%20%20%20%20%20%20setTimeout(function%20()%20%7B%20lit(pads%5Bidx%5D)%3B%20%7D%2C%20620%20*%20i%20%2B%20400)%3B%0A%20%20%20%20%7D)%3B%0A%20%20%20%20setTimeout(function%20()%20%7B%0A%20%20%20%20%20%20accepting%20%3D%20true%3B%0A%20%20%20%20%20%20pos%20%3D%200%3B%0A%20%20%20%20%20%20board.classList.remove(%22locked%22)%3B%0A%20%20%20%20%20%20statusEl.textContent%20%3D%20%22your%20turn%22%3B%0A%20%20%20%20%7D%2C%20620%20*%20seq.length%20%2B%20400)%3B%0A%20%20%7D%0A%0A%20%20function%20next()%20%7B%0A%20%20%20%20seq.push((Math.random()%20*%204)%20%7C%200)%3B%0A%20%20%20%20roundEl.textContent%20%3D%20%22ROUND%20%22%20%2B%20seq.length%3B%0A%20%20%20%20playback()%3B%0A%20%20%7D%0A%0A%20%20function%20press(pad)%20%7B%0A%20%20%20%20if%20(!accepting)%20return%3B%0A%20%20%20%20lit(pad)%3B%0A%20%20%20%20var%20idx%20%3D%20%2Bpad.getAttribute(%22data-i%22)%3B%0A%20%20%20%20if%20(idx%20!%3D%3D%20seq%5Bpos%5D)%20%7B%0A%20%20%20%20%20%20accepting%20%3D%20false%3B%0A%20%20%20%20%20%20board.classList.add(%22locked%22)%3B%0A%20%20%20%20%20%20statusEl.textContent%20%3D%20%22wrong%20pad%2C%20round%20%22%20%2B%20seq.length%3B%0A%20%20%20%20%20%20if%20(!best%20%7C%7C%20seq.length%20-%201%20%3E%20best)%20%7B%0A%20%20%20%20%20%20%20%20best%20%3D%20seq.length%20-%201%3B%0A%20%20%20%20%20%20%20%20try%20%7B%20localStorage.setItem(%22simon.best%22%2C%20best)%3B%20%7D%20catch%20(e)%20%7B%7D%0A%20%20%20%20%20%20%20%20bestEl.textContent%20%3D%20%22BEST%20%22%20%2B%20best%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20return%3B%0A%20%20%20%20%7D%0A%20%20%20%20pos%2B%2B%3B%0A%20%20%20%20if%20(pos%20%3D%3D%3D%20seq.length)%20%7B%0A%20%20%20%20%20%20accepting%20%3D%20false%3B%0A%20%20%20%20%20%20statusEl.textContent%20%3D%20%22nice%2C%20round%20%22%20%2B%20seq.length%20%2B%20%22%20cleared%22%3B%0A%20%20%20%20%20%20setTimeout(next%2C%20900)%3B%0A%20%20%20%20%7D%0A%20%20%7D%0A%0A%20%20pads.forEach(function%20(pad)%20%7B%0A%20%20%20%20pad.addEventListener(%22click%22%2C%20function%20()%20%7B%20press(pad)%3B%20%7D)%3B%0A%20%20%7D)%3B%0A%0A%20%20document.getElementById(%22new%22).addEventListener(%22click%22%2C%20function%20()%20%7B%0A%20%20%20%20seq%20%3D%20%5B%5D%3B%0A%20%20%20%20playing%20%3D%20true%3B%0A%20%20%20%20next()%3B%0A%20%20%7D)%3B%0A%7D)()%3B%0A%3C%2Fscript%3E%0A%3C%2Fbody%3E%0A%3C%2Fhtml%3E%0A"},{"id":"snake","name":"Snake","desc":"Found in games/snake. No description written yet.","file":"/games/snake/snake.html","thumb":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMjAgMTgwIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCBzbGljZSI+CiAgPHJlY3Qgd2lkdGg9IjMyMCIgaGVpZ2h0PSIxODAiIGZpbGw9IiMwYzBjMGYiLz4KICA8cmVjdCB4PSIzMCIgeT0iMjAiIHdpZHRoPSIyNjAiIGhlaWdodD0iMTQwIiByeD0iMTIiIGZpbGw9IiMxMDEwMTQiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLW9wYWNpdHk9IjAuMTgiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPGcgZmlsbD0iI2YyZjJmNSI+CiAgICA8cmVjdCB4PSI2MiIgeT0iODYiIHdpZHRoPSIyMiIgaGVpZ2h0PSIyMiIgcng9IjQiLz4KICAgIDxyZWN0IHg9Ijg4IiB5PSI4NiIgd2lkdGg9IjIyIiBoZWlnaHQ9IjIyIiByeD0iNCIgZmlsbC1vcGFjaXR5PSIwLjc4Ii8+CiAgICA8cmVjdCB4PSIxMTQiIHk9Ijg2IiB3aWR0aD0iMjIiIGhlaWdodD0iMjIiIHJ4PSI0IiBmaWxsLW9wYWNpdHk9IjAuNiIvPgogICAgPHJlY3QgeD0iMTQwIiB5PSI4NiIgd2lkdGg9IjIyIiBoZWlnaHQ9IjIyIiByeD0iNCIgZmlsbC1vcGFjaXR5PSIwLjQ0Ii8+CiAgICA8cmVjdCB4PSIxNjYiIHk9IjY0IiB3aWR0aD0iMjIiIGhlaWdodD0iMjIiIHJ4PSI0IiBmaWxsLW9wYWNpdHk9IjAuODUiLz4KICA8L2c+CiAgPHJlY3QgeD0iMjMwIiB5PSIxMDgiIHdpZHRoPSIxOCIgaGVpZ2h0PSIxOCIgcng9IjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2YyZjJmNSIgc3Ryb2tlLXdpZHRoPSIzIi8+CiAgPHBhdGggZD0iTTE4NiA5N2g0NCIgc3Ryb2tlPSIjZjJmMmY1IiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWRhc2hhcnJheT0iNCA1IiBmaWxsPSJub25lIiBzdHJva2Utb3BhY2l0eT0iMC4zNSIvPgo8L3N2Zz4K","labels":["Test"],"warning":null,"at":1788480000000,"hot":true,"data":"data:text/html;charset=utf-8,%3C!doctype%20html%3E%0A%3Chtml%20lang%3D%22en%22%3E%0A%3Chead%3E%0A%3Cmeta%20charset%3D%22utf-8%22%3E%0A%3Cmeta%20name%3D%22viewport%22%20content%3D%22width%3Ddevice-width%2C%20initial-scale%3D1%22%3E%0A%3Ctitle%3ESNAKE%3C%2Ftitle%3E%0A%3Cstyle%3E%0A%20%20html%2Cbody%7Bmargin%3A0%3Bmin-height%3A100%25%3Bbackground%3A%230b0b0d%3Bcolor%3A%23f4f4f5%3Bfont-family%3Asystem-ui%2Csans-serif%7D%0A%20%20body%7Bdisplay%3Aflex%3Bflex-direction%3Acolumn%3Balign-items%3Acenter%3Bjustify-content%3Acenter%3Bgap%3A16px%3Bpadding%3A20px%3Bbox-sizing%3Aborder-box%7D%0A%20%20.hud%7Bdisplay%3Aflex%3Balign-items%3Acenter%3Bgap%3A20px%3Bfont-size%3A15px%3Bletter-spacing%3A.1em%7D%0A%20%20.hud%20button%7Bborder%3A1px%20solid%20rgba(255%2C255%2C255%2C0.25)%3Bbackground%3Argba(255%2C255%2C255%2C0.07)%3Bcolor%3A%23f4f4f5%3Bborder-radius%3A999px%3Bpadding%3A8px%2018px%3Bfont-size%3A13px%3Bletter-spacing%3A.06em%3Bcursor%3Apointer%7D%0A%20%20%23board%7Bwidth%3Amin(92vw%2C78vh%2C460px)%3Baspect-ratio%3A1%3Bborder-radius%3A14px%3Bborder%3A1px%20solid%20rgba(255%2C255%2C255%2C0.14)%3Bbackground%3A%23101014%7D%0A%20%20%23status%7Bfont-size%3A13px%3Bcolor%3Argba(255%2C255%2C255%2C0.5)%3Bmin-height%3A18px%3Bletter-spacing%3A.04em%3Btext-align%3Acenter%7D%0A%3C%2Fstyle%3E%0A%3C%2Fhead%3E%0A%3Cbody%3E%0A%20%20%3Cdiv%20class%3D%22hud%22%3E%3Cspan%20id%3D%22score%22%3ESCORE%200%3C%2Fspan%3E%3Cbutton%20id%3D%22new%22%3Enew%20game%3C%2Fbutton%3E%3Cspan%20id%3D%22best%22%3EBEST%20-%3C%2Fspan%3E%3C%2Fdiv%3E%0A%20%20%3Ccanvas%20id%3D%22board%22%20width%3D%22460%22%20height%3D%22460%22%3E%3C%2Fcanvas%3E%0A%20%20%3Cdiv%20id%3D%22status%22%3Earrows%20or%20swipe%20to%20steer%3C%2Fdiv%3E%0A%3Cscript%3E%0A(function%20()%20%7B%0A%20%20var%20cv%20%3D%20document.getElementById(%22board%22)%3B%0A%20%20var%20g%20%3D%20cv.getContext(%222d%22)%3B%0A%20%20var%20scoreEl%20%3D%20document.getElementById(%22score%22)%3B%0A%20%20var%20bestEl%20%3D%20document.getElementById(%22best%22)%3B%0A%20%20var%20statusEl%20%3D%20document.getElementById(%22status%22)%3B%0A%0A%20%20var%20GRID%20%3D%2020%3B%0A%20%20var%20CELL%20%3D%20cv.width%20%2F%20GRID%3B%0A%20%20var%20snake%2C%20dir%2C%20nextDir%2C%20food%2C%20score%2C%20dead%2C%20timer%3B%0A%20%20var%20best%20%3D%20null%3B%0A%20%20try%20%7B%20best%20%3D%20%2BlocalStorage.getItem(%22snake.best%22)%20%7C%7C%20null%3B%20%7D%20catch%20(e)%20%7B%7D%0A%20%20if%20(best)%20bestEl.textContent%20%3D%20%22BEST%20%22%20%2B%20best%3B%0A%0A%20%20function%20spawnFood()%20%7B%0A%20%20%20%20while%20(true)%20%7B%0A%20%20%20%20%20%20var%20x%20%3D%20(Math.random()%20*%20GRID)%20%7C%200%2C%20y%20%3D%20(Math.random()%20*%20GRID)%20%7C%200%3B%0A%20%20%20%20%20%20if%20(!snake.some(function%20(s)%20%7B%20return%20s.x%20%3D%3D%3D%20x%20%26%26%20s.y%20%3D%3D%3D%20y%3B%20%7D))%20%7B%20food%20%3D%20%7B%20x%3A%20x%2C%20y%3A%20y%20%7D%3B%20return%3B%20%7D%0A%20%20%20%20%7D%0A%20%20%7D%0A%0A%20%20function%20build()%20%7B%0A%20%20%20%20snake%20%3D%20%5B%7B%20x%3A%209%2C%20y%3A%2010%20%7D%2C%20%7B%20x%3A%208%2C%20y%3A%2010%20%7D%2C%20%7B%20x%3A%207%2C%20y%3A%2010%20%7D%5D%3B%0A%20%20%20%20dir%20%3D%20%7B%20x%3A%201%2C%20y%3A%200%20%7D%3B%0A%20%20%20%20nextDir%20%3D%20dir%3B%0A%20%20%20%20score%20%3D%200%3B%0A%20%20%20%20dead%20%3D%20false%3B%0A%20%20%20%20scoreEl.textContent%20%3D%20%22SCORE%200%22%3B%0A%20%20%20%20statusEl.textContent%20%3D%20%22arrows%20or%20swipe%20to%20steer%22%3B%0A%20%20%20%20spawnFood()%3B%0A%20%20%20%20clearInterval(timer)%3B%0A%20%20%20%20timer%20%3D%20setInterval(tick%2C%20110)%3B%0A%20%20%20%20draw()%3B%0A%20%20%7D%0A%0A%20%20function%20setDir(x%2C%20y)%20%7B%0A%20%20%20%20if%20(dir.x%20%2B%20x%20%3D%3D%3D%200%20%26%26%20dir.y%20%2B%20y%20%3D%3D%3D%200)%20return%3B%20%2F%2F%20no%20180%C2%B0%20flips%0A%20%20%20%20nextDir%20%3D%20%7B%20x%3A%20x%2C%20y%3A%20y%20%7D%3B%0A%20%20%7D%0A%0A%20%20function%20tick()%20%7B%0A%20%20%20%20if%20(dead)%20return%3B%0A%20%20%20%20dir%20%3D%20nextDir%3B%0A%20%20%20%20var%20head%20%3D%20%7B%20x%3A%20snake%5B0%5D.x%20%2B%20dir.x%2C%20y%3A%20snake%5B0%5D.y%20%2B%20dir.y%20%7D%3B%0A%20%20%20%20if%20(head.x%20%3C%200%20%7C%7C%20head.y%20%3C%200%20%7C%7C%20head.x%20%3E%3D%20GRID%20%7C%7C%20head.y%20%3E%3D%20GRID%20%7C%7C%0A%20%20%20%20%20%20%20%20snake.some(function%20(s)%20%7B%20return%20s.x%20%3D%3D%3D%20head.x%20%26%26%20s.y%20%3D%3D%3D%20head.y%3B%20%7D))%20%7B%0A%20%20%20%20%20%20dead%20%3D%20true%3B%0A%20%20%20%20%20%20statusEl.textContent%20%3D%20%22game%20over%2C%20score%20%22%20%2B%20score%3B%0A%20%20%20%20%20%20clearInterval(timer)%3B%0A%20%20%20%20%20%20if%20(!best%20%7C%7C%20score%20%3E%20best)%20%7B%0A%20%20%20%20%20%20%20%20best%20%3D%20score%3B%0A%20%20%20%20%20%20%20%20try%20%7B%20localStorage.setItem(%22snake.best%22%2C%20best)%3B%20%7D%20catch%20(e)%20%7B%7D%0A%20%20%20%20%20%20%20%20bestEl.textContent%20%3D%20%22BEST%20%22%20%2B%20best%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20return%3B%0A%20%20%20%20%7D%0A%20%20%20%20snake.unshift(head)%3B%0A%20%20%20%20if%20(head.x%20%3D%3D%3D%20food.x%20%26%26%20head.y%20%3D%3D%3D%20food.y)%20%7B%0A%20%20%20%20%20%20score%2B%2B%3B%0A%20%20%20%20%20%20scoreEl.textContent%20%3D%20%22SCORE%20%22%20%2B%20score%3B%0A%20%20%20%20%20%20spawnFood()%3B%0A%20%20%20%20%7D%20else%20%7B%0A%20%20%20%20%20%20snake.pop()%3B%0A%20%20%20%20%7D%0A%20%20%20%20draw()%3B%0A%20%20%7D%0A%0A%20%20function%20draw()%20%7B%0A%20%20%20%20g.fillStyle%20%3D%20%22%23101014%22%3B%0A%20%20%20%20g.fillRect(0%2C%200%2C%20cv.width%2C%20cv.height)%3B%0A%20%20%20%20g.fillStyle%20%3D%20%22rgba(255%2C255%2C255%2C0.06)%22%3B%0A%20%20%20%20for%20(var%20i%20%3D%201%3B%20i%20%3C%20GRID%3B%20i%2B%2B)%20%7B%0A%20%20%20%20%20%20g.fillRect(i%20*%20CELL%2C%200%2C%201%2C%20cv.height)%3B%0A%20%20%20%20%20%20g.fillRect(0%2C%20i%20*%20CELL%2C%20cv.width%2C%201)%3B%0A%20%20%20%20%7D%0A%20%20%20%20g.fillStyle%20%3D%20%22%23f4f4f5%22%3B%0A%20%20%20%20g.fillRect(food.x%20*%20CELL%20%2B%204%2C%20food.y%20*%20CELL%20%2B%204%2C%20CELL%20-%208%2C%20CELL%20-%208)%3B%0A%20%20%20%20snake.forEach(function%20(s%2C%20i)%20%7B%0A%20%20%20%20%20%20g.fillStyle%20%3D%20i%20%3D%3D%3D%200%20%3F%20%22%23ffffff%22%20%3A%20%22rgba(244%2C244%2C245%2C0.72)%22%3B%0A%20%20%20%20%20%20g.fillRect(s.x%20*%20CELL%20%2B%201%2C%20s.y%20*%20CELL%20%2B%201%2C%20CELL%20-%202%2C%20CELL%20-%202)%3B%0A%20%20%20%20%7D)%3B%0A%20%20%7D%0A%0A%20%20document.addEventListener(%22keydown%22%2C%20function%20(e)%20%7B%0A%20%20%20%20var%20k%20%3D%20e.key%3B%0A%20%20%20%20if%20(k%20%3D%3D%3D%20%22ArrowUp%22%20%7C%7C%20k%20%3D%3D%3D%20%22w%22)%20%7B%20setDir(0%2C%20-1)%3B%20e.preventDefault()%3B%20%7D%0A%20%20%20%20else%20if%20(k%20%3D%3D%3D%20%22ArrowDown%22%20%7C%7C%20k%20%3D%3D%3D%20%22s%22)%20%7B%20setDir(0%2C%201)%3B%20e.preventDefault()%3B%20%7D%0A%20%20%20%20else%20if%20(k%20%3D%3D%3D%20%22ArrowLeft%22%20%7C%7C%20k%20%3D%3D%3D%20%22a%22)%20%7B%20setDir(-1%2C%200)%3B%20e.preventDefault()%3B%20%7D%0A%20%20%20%20else%20if%20(k%20%3D%3D%3D%20%22ArrowRight%22%20%7C%7C%20k%20%3D%3D%3D%20%22d%22)%20%7B%20setDir(1%2C%200)%3B%20e.preventDefault()%3B%20%7D%0A%20%20%20%20else%20if%20(dead%20%26%26%20(k%20%3D%3D%3D%20%22%20%22%20%7C%7C%20k%20%3D%3D%3D%20%22Enter%22))%20build()%3B%0A%20%20%7D)%3B%0A%0A%20%20var%20touch%20%3D%20null%3B%0A%20%20cv.addEventListener(%22touchstart%22%2C%20function%20(e)%20%7B%0A%20%20%20%20touch%20%3D%20%7B%20x%3A%20e.touches%5B0%5D.clientX%2C%20y%3A%20e.touches%5B0%5D.clientY%20%7D%3B%0A%20%20%7D%2C%20%7B%20passive%3A%20true%20%7D)%3B%0A%20%20cv.addEventListener(%22touchmove%22%2C%20function%20(e)%20%7B%0A%20%20%20%20e.preventDefault()%3B%0A%20%20%7D%2C%20%7B%20passive%3A%20false%20%7D)%3B%0A%20%20cv.addEventListener(%22touchend%22%2C%20function%20(e)%20%7B%0A%20%20%20%20if%20(!touch)%20return%3B%0A%20%20%20%20var%20dx%20%3D%20e.changedTouches%5B0%5D.clientX%20-%20touch.x%3B%0A%20%20%20%20var%20dy%20%3D%20e.changedTouches%5B0%5D.clientY%20-%20touch.y%3B%0A%20%20%20%20if%20(Math.abs(dx)%20%3E%20Math.abs(dy))%20setDir(dx%20%3E%200%20%3F%201%20%3A%20-1%2C%200)%3B%0A%20%20%20%20else%20setDir(0%2C%20dy%20%3E%200%20%3F%201%20%3A%20-1)%3B%0A%20%20%20%20touch%20%3D%20null%3B%0A%20%20%7D)%3B%0A%0A%20%20document.getElementById(%22new%22).addEventListener(%22click%22%2C%20build)%3B%0A%20%20build()%3B%0A%7D)()%3B%0A%3C%2Fscript%3E%0A%3C%2Fbody%3E%0A%3C%2Fhtml%3E%0A"},{"id":"trace","name":"Trace","desc":"Found in games/trace. No description written yet.","file":"/games/trace/trace.html","thumb":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMjAgMTgwIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCBzbGljZSI+CiAgPHJlY3Qgd2lkdGg9IjMyMCIgaGVpZ2h0PSIxODAiIGZpbGw9IiMwYzBjMGYiLz4KICA8ZyBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS1vcGFjaXR5PSIwLjA3Ij4KICAgIDxwYXRoIGQ9Ik00MCAwdjE4ME04MCAwdjE4ME0xMjAgMHYxODBNMTYwIDB2MTgwTTIwMCAwdjE4ME0yNDAgMHYxODBNMjgwIDB2MTgwIi8+CiAgICA8cGF0aCBkPSJNMCA0MGgzMjBNMCA4MGgzMjBNMCAxMjBoMzIwTTAgMTYwaDMyMCIvPgogIDwvZz4KICA8ZyBmaWxsPSIjZjJmMmY1Ij4KICAgIDxyZWN0IHg9IjQyIiB5PSIxMjQiIHdpZHRoPSIzNCIgaGVpZ2h0PSIzNCIgcng9IjYiLz4KICAgIDxyZWN0IHg9IjgwIiB5PSIxMjQiIHdpZHRoPSIzNCIgaGVpZ2h0PSIzNCIgcng9IjYiLz4KICAgIDxyZWN0IHg9IjExOCIgeT0iMTI0IiB3aWR0aD0iMzQiIGhlaWdodD0iMzQiIHJ4PSI2Ii8+CiAgICA8cmVjdCB4PSIxMTgiIHk9Ijg2IiB3aWR0aD0iMzQiIGhlaWdodD0iMzQiIHJ4PSI2Ii8+CiAgICA8cmVjdCB4PSIxMTgiIHk9IjQ4IiB3aWR0aD0iMzQiIGhlaWdodD0iMzQiIHJ4PSI2Ii8+CiAgICA8cmVjdCB4PSIxNTYiIHk9IjQ4IiB3aWR0aD0iMzQiIGhlaWdodD0iMzQiIHJ4PSI2Ii8+CiAgICA8cmVjdCB4PSIxOTQiIHk9IjQ4IiB3aWR0aD0iMzQiIGhlaWdodD0iMzQiIHJ4PSI2Ii8+CiAgICA8cmVjdCB4PSIyMzIiIHk9IjQ4IiB3aWR0aD0iMzQiIGhlaWdodD0iMzQiIHJ4PSI2Ii8+CiAgPC9nPgogIDxjaXJjbGUgY3g9IjEwNiIgY3k9IjE0MSIgcj0iMTMiIGZpbGw9IiMwYzBjMGYiLz4KICA8Y2lyY2xlIGN4PSIxMDYiIGN5PSIxNDEiIHI9IjgiIGZpbGw9IiNmMmYyZjUiLz4KPC9zdmc+Cg==","labels":["Test"],"warning":null,"at":null,"hot":false,"data":"data:text/html;charset=utf-8,%3C!doctype%20html%3E%0A%3Chtml%20lang%3D%22en%22%3E%0A%3Chead%3E%0A%3Cmeta%20charset%3D%22utf-8%22%3E%0A%3Cmeta%20name%3D%22viewport%22%20content%3D%22width%3Ddevice-width%2C%20initial-scale%3D1%2C%20viewport-fit%3Dcover%22%3E%0A%3Ctitle%3ETRACE%3C%2Ftitle%3E%0A%3Cstyle%3E%0A%20%20html%2Cbody%7Bmargin%3A0%3Bheight%3A100%25%3Bbackground%3A%230b0b0d%3Boverflow%3Ahidden%3Bfont-family%3Asystem-ui%2Csans-serif%7D%0A%20%20body%7Bdisplay%3Aflex%3Bflex-direction%3Acolumn%3Balign-items%3Acenter%3Bjustify-content%3Acenter%3Bgap%3A10px%3Buser-select%3Anone%7D%0A%20%20%23board%7Bbackground%3A%230e0e11%3Bborder%3A1px%20solid%20rgba(255%2C255%2C255%2C0.12)%3Bborder-radius%3A14px%3Bdisplay%3Ablock%3Bmax-width%3Amin(92vw%2C560px)%7D%0A%20%20.hud%7Bdisplay%3Aflex%3Bgap%3A18px%3Bcolor%3Argba(255%2C255%2C255%2C0.85)%3Bfont-size%3A14px%3Bletter-spacing%3A.08em%7D%0A%20%20.hud%20b%7Bfont-weight%3A700%7D%0A%20%20%23dpad%7Bdisplay%3Anone%3Bgrid-template-columns%3Arepeat(3%2C56px)%3Bgrid-auto-rows%3A56px%3Bgap%3A6px%3Bmargin-top%3A4px%7D%0A%20%20%23dpad%20button%7Bborder%3A1px%20solid%20rgba(255%2C255%2C255%2C0.2)%3Bborder-radius%3A12px%3Bbackground%3Argba(255%2C255%2C255%2C0.06)%3Bcolor%3A%23fff%3Bfont-size%3A20px%7D%0A%20%20%40media%20(pointer%3Acoarse)%7B%23dpad%7Bdisplay%3Agrid%7D%7D%0A%20%20%23msg%7Bposition%3Aabsolute%3Binset%3A0%3Bdisplay%3Agrid%3Bplace-items%3Acenter%3Bcolor%3A%23fff%3Bpointer-events%3Anone%7D%0A%20%20%23msg%20div%7Btext-align%3Acenter%7D%0A%20%20%23msg%20h1%7Bfont-size%3A34px%3Bmargin%3A0%200%206px%3Bletter-spacing%3A.02em%7D%0A%20%20%23msg%20p%7Bfont-size%3A14px%3Bcolor%3Argba(255%2C255%2C255%2C0.55)%3Bmargin%3A0%7D%0A%3C%2Fstyle%3E%0A%3C%2Fhead%3E%0A%3Cbody%3E%0A%20%20%3Cdiv%20class%3D%22hud%22%3E%3Cspan%3ESCORE%20%3Cb%20id%3D%22score%22%3E0%3C%2Fb%3E%3C%2Fspan%3E%3Cspan%3EBEST%20%3Cb%20id%3D%22best%22%3E0%3C%2Fb%3E%3C%2Fspan%3E%3C%2Fdiv%3E%0A%20%20%3Ccanvas%20id%3D%22board%22%20width%3D%22420%22%20height%3D%22420%22%3E%3C%2Fcanvas%3E%0A%20%20%3Cdiv%20id%3D%22dpad%22%3E%0A%20%20%20%20%3Cspan%3E%3C%2Fspan%3E%3Cbutton%20data-d%3D%22up%22%3E%E2%96%B2%3C%2Fbutton%3E%3Cspan%3E%3C%2Fspan%3E%0A%20%20%20%20%3Cbutton%20data-d%3D%22left%22%3E%E2%97%80%3C%2Fbutton%3E%3Cspan%3E%3C%2Fspan%3E%3Cbutton%20data-d%3D%22right%22%3E%E2%96%B6%3C%2Fbutton%3E%0A%20%20%20%20%3Cspan%3E%3C%2Fspan%3E%3Cbutton%20data-d%3D%22down%22%3E%E2%96%BC%3C%2Fbutton%3E%3Cspan%3E%3C%2Fspan%3E%0A%20%20%3C%2Fdiv%3E%0A%20%20%3Cdiv%20id%3D%22msg%22%3E%3Cdiv%3E%3Ch1%20id%3D%22msgTitle%22%3ETRACE%3C%2Fh1%3E%3Cp%20id%3D%22msgSub%22%3Earrows%20%2F%20WASD%20to%20start%3C%2Fp%3E%3C%2Fdiv%3E%3C%2Fdiv%3E%0A%3Cscript%3E%0A(function%20()%20%7B%0A%20%20var%20cv%20%3D%20document.getElementById(%22board%22)%3B%0A%20%20var%20g%20%3D%20cv.getContext(%222d%22)%3B%0A%20%20var%20N%20%3D%2021%2C%20CELL%20%3D%20cv.width%20%2F%20N%3B%0A%20%20var%20snake%20%3D%20%5B%7B%20x%3A%2010%2C%20y%3A%2010%20%7D%5D%3B%0A%20%20var%20dir%20%3D%20%7B%20x%3A%201%2C%20y%3A%200%20%7D%3B%0A%20%20var%20next%20%3D%20null%3B%0A%20%20var%20food%20%3D%20%7B%20x%3A%2015%2C%20y%3A%2010%20%7D%3B%0A%20%20var%20score%20%3D%200%2C%20best%20%3D%200%2C%20alive%20%3D%20false%2C%20tick%20%3D%200%3B%0A%20%20var%20spd%20%3D%20150%3B%0A%0A%20%20var%20scoreEl%20%3D%20document.getElementById(%22score%22)%3B%0A%20%20var%20bestEl%20%3D%20document.getElementById(%22best%22)%3B%0A%20%20var%20msg%20%3D%20document.getElementById(%22msg%22)%3B%0A%20%20var%20msgTitle%20%3D%20document.getElementById(%22msgTitle%22)%3B%0A%20%20var%20msgSub%20%3D%20document.getElementById(%22msgSub%22)%3B%0A%0A%20%20try%20%7B%20best%20%3D%20%2BlocalStorage.getItem(%22trace.best%22)%20%7C%7C%200%3B%20%7D%20catch%20(e)%20%7B%7D%0A%20%20bestEl.textContent%20%3D%20best%3B%0A%0A%20%20function%20placeFood()%20%7B%0A%20%20%20%20while%20(true)%20%7B%0A%20%20%20%20%20%20var%20f%20%3D%20%7B%20x%3A%20(Math.random()%20*%20N)%20%7C%200%2C%20y%3A%20(Math.random()%20*%20N)%20%7C%200%20%7D%3B%0A%20%20%20%20%20%20if%20(!snake.some(function%20(s)%20%7B%20return%20s.x%20%3D%3D%3D%20f.x%20%26%26%20s.y%20%3D%3D%3D%20f.y%3B%20%7D))%20%7B%20food%20%3D%20f%3B%20return%3B%20%7D%0A%20%20%20%20%7D%0A%20%20%7D%0A%0A%20%20function%20setDir(x%2C%20y)%20%7B%0A%20%20%20%20if%20(!alive)%20%7B%0A%20%20%20%20%20%20if%20(!snake.length%20%7C%7C%20(snake%5B1%5D%20%26%26%20snake%5B1%5D.x%20%3D%3D%3D%20snake%5B0%5D.x%20%2B%20x%20%26%26%20snake%5B1%5D.y%20%3D%3D%3D%20snake%5B0%5D.y%20%2B%20y))%20return%3B%0A%20%20%20%20%20%20start()%3B%0A%20%20%20%20%7D%0A%20%20%20%20if%20(dir.x%20%3D%3D%3D%20-x%20%26%26%20dir.y%20%3D%3D%3D%20-y)%20return%3B%20%2F%2F%20no%20reversing%0A%20%20%20%20next%20%3D%20%7B%20x%3A%20x%2C%20y%3A%20y%20%7D%3B%0A%20%20%7D%0A%0A%20%20function%20start()%20%7B%0A%20%20%20%20snake%20%3D%20%5B%7B%20x%3A%205%2C%20y%3A%2010%20%7D%2C%20%7B%20x%3A%204%2C%20y%3A%2010%20%7D%2C%20%7B%20x%3A%203%2C%20y%3A%2010%20%7D%5D%3B%0A%20%20%20%20dir%20%3D%20%7B%20x%3A%201%2C%20y%3A%200%20%7D%3B%0A%20%20%20%20score%20%3D%200%3B%20scoreEl.textContent%20%3D%20%220%22%3B%0A%20%20%20%20alive%20%3D%20true%3B%0A%20%20%20%20msg.style.display%20%3D%20%22none%22%3B%0A%20%20%20%20placeFood()%3B%0A%20%20%7D%0A%0A%20%20function%20die()%20%7B%0A%20%20%20%20alive%20%3D%20false%3B%0A%20%20%20%20if%20(score%20%3E%20best)%20%7B%0A%20%20%20%20%20%20best%20%3D%20score%3B%0A%20%20%20%20%20%20try%20%7B%20localStorage.setItem(%22trace.best%22%2C%20best)%3B%20%7D%20catch%20(e)%20%7B%7D%0A%20%20%20%20%20%20bestEl.textContent%20%3D%20best%3B%0A%20%20%20%20%7D%0A%20%20%20%20msgTitle.textContent%20%3D%20%22TRACED%20OUT%22%3B%0A%20%20%20%20msgSub.textContent%20%3D%20%22score%20%22%20%2B%20score%20%2B%20%22%20%C2%B7%20press%20any%20arrow%20to%20restart%22%3B%0A%20%20%20%20msg.style.display%20%3D%20%22grid%22%3B%0A%20%20%20%20snake%20%3D%20%5B%7B%20x%3A%2010%2C%20y%3A%2010%20%7D%5D%3B%0A%20%20%20%20dir%20%3D%20%7B%20x%3A%201%2C%20y%3A%200%20%7D%3B%0A%20%20%7D%0A%0A%20%20function%20step()%20%7B%0A%20%20%20%20if%20(!alive)%20return%3B%0A%20%20%20%20if%20(next)%20%7B%20dir%20%3D%20next%3B%20next%20%3D%20null%3B%20%7D%0A%20%20%20%20var%20head%20%3D%20%7B%20x%3A%20snake%5B0%5D.x%20%2B%20dir.x%2C%20y%3A%20snake%5B0%5D.y%20%2B%20dir.y%20%7D%3B%0A%20%20%20%20if%20(head.x%20%3C%200%20%7C%7C%20head.y%20%3C%200%20%7C%7C%20head.x%20%3E%3D%20N%20%7C%7C%20head.y%20%3E%3D%20N)%20return%20die()%3B%0A%20%20%20%20if%20(snake.some(function%20(s%2C%20i)%20%7B%20return%20i%20%3C%20snake.length%20-%201%20%26%26%20s.x%20%3D%3D%3D%20head.x%20%26%26%20s.y%20%3D%3D%3D%20head.y%3B%20%7D))%20return%20die()%3B%0A%20%20%20%20snake.unshift(head)%3B%0A%20%20%20%20if%20(head.x%20%3D%3D%3D%20food.x%20%26%26%20head.y%20%3D%3D%3D%20food.y)%20%7B%0A%20%20%20%20%20%20score%2B%2B%3B%0A%20%20%20%20%20%20scoreEl.textContent%20%3D%20score%3B%0A%20%20%20%20%20%20spd%20%3D%20Math.max(70%2C%20150%20-%20score%20*%203)%3B%0A%20%20%20%20%20%20placeFood()%3B%0A%20%20%20%20%7D%20else%20%7B%0A%20%20%20%20%20%20snake.pop()%3B%0A%20%20%20%20%7D%0A%20%20%20%20draw()%3B%0A%20%20%7D%0A%0A%20%20function%20draw()%20%7B%0A%20%20%20%20g.fillStyle%20%3D%20%22%230e0e11%22%3B%0A%20%20%20%20g.fillRect(0%2C%200%2C%20cv.width%2C%20cv.height)%3B%0A%20%20%20%20g.strokeStyle%20%3D%20%22rgba(255%2C255%2C255%2C0.04)%22%3B%0A%20%20%20%20for%20(var%20i%20%3D%201%3B%20i%20%3C%20N%3B%20i%2B%2B)%20%7B%0A%20%20%20%20%20%20g.beginPath()%3B%20g.moveTo(i%20*%20CELL%2C%200)%3B%20g.lineTo(i%20*%20CELL%2C%20cv.height)%3B%20g.stroke()%3B%0A%20%20%20%20%20%20g.beginPath()%3B%20g.moveTo(0%2C%20i%20*%20CELL)%3B%20g.lineTo(cv.width%2C%20i%20*%20CELL)%3B%20g.stroke()%3B%0A%20%20%20%20%7D%0A%20%20%20%20g.fillStyle%20%3D%20%22rgba(255%2C255%2C255%2C0.9)%22%3B%0A%20%20%20%20var%20r%20%3D%20CELL%20%2F%202%20-%202%3B%0A%20%20%20%20g.beginPath()%3B%20g.arc(food.x%20*%20CELL%20%2B%20CELL%20%2F%202%2C%20food.y%20*%20CELL%20%2B%20CELL%20%2F%202%2C%20r%2C%200%2C%207)%3B%20g.fill()%3B%0A%20%20%20%20for%20(var%20s%20%3D%200%3B%20s%20%3C%20snake.length%3B%20s%2B%2B)%20%7B%0A%20%20%20%20%20%20g.globalAlpha%20%3D%201%20-%20s%20%2F%20snake.length%20*%200.55%3B%0A%20%20%20%20%20%20var%20x%20%3D%20snake%5Bs%5D.x%20*%20CELL%20%2B%201.5%2C%20y%20%3D%20snake%5Bs%5D.y%20*%20CELL%20%2B%201.5%3B%0A%20%20%20%20%20%20g.beginPath()%3B%20g.roundRect(x%2C%20y%2C%20CELL%20-%203%2C%20CELL%20-%203%2C%204)%3B%20g.fill()%3B%0A%20%20%20%20%7D%0A%20%20%20%20g.globalAlpha%20%3D%201%3B%0A%20%20%7D%0A%0A%20%20addEventListener(%22keydown%22%2C%20function%20(e)%20%7B%0A%20%20%20%20var%20k%20%3D%20e.key.toLowerCase()%3B%0A%20%20%20%20if%20(k%20%3D%3D%3D%20%22arrowup%22%20%7C%7C%20k%20%3D%3D%3D%20%22w%22)%20setDir(0%2C%20-1)%3B%0A%20%20%20%20else%20if%20(k%20%3D%3D%3D%20%22arrowdown%22%20%7C%7C%20k%20%3D%3D%3D%20%22s%22)%20setDir(0%2C%201)%3B%0A%20%20%20%20else%20if%20(k%20%3D%3D%3D%20%22arrowleft%22%20%7C%7C%20k%20%3D%3D%3D%20%22a%22)%20setDir(-1%2C%200)%3B%0A%20%20%20%20else%20if%20(k%20%3D%3D%3D%20%22arrowright%22%20%7C%7C%20k%20%3D%3D%3D%20%22d%22)%20setDir(1%2C%200)%3B%0A%20%20%20%20else%20return%3B%0A%20%20%20%20e.preventDefault()%3B%0A%20%20%7D)%3B%0A%0A%20%20document.querySelectorAll(%22%23dpad%20button%22).forEach(function%20(b)%20%7B%0A%20%20%20%20b.addEventListener(%22pointerdown%22%2C%20function%20(e)%20%7B%0A%20%20%20%20%20%20e.preventDefault()%3B%0A%20%20%20%20%20%20var%20d%20%3D%20b.dataset.d%3B%0A%20%20%20%20%20%20if%20(d%20%3D%3D%3D%20%22up%22)%20setDir(0%2C%20-1)%3B%0A%20%20%20%20%20%20else%20if%20(d%20%3D%3D%3D%20%22down%22)%20setDir(0%2C%201)%3B%0A%20%20%20%20%20%20else%20if%20(d%20%3D%3D%3D%20%22left%22)%20setDir(-1%2C%200)%3B%0A%20%20%20%20%20%20else%20setDir(1%2C%200)%3B%0A%20%20%20%20%7D)%3B%0A%20%20%7D)%3B%0A%0A%20%20setInterval(step%2C%2090)%3B%0A%20%20draw()%3B%0A%7D)()%3B%0A%3C%2Fscript%3E%0A%3C%2Fbody%3E%0A%3C%2Fhtml%3E%0A"},{"id":"void","name":"Void","desc":"Found in games/void. No description written yet.","file":"/games/void/void.html","thumb":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMjAgMTgwIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCBzbGljZSI+CiAgPHJlY3Qgd2lkdGg9IjMyMCIgaGVpZ2h0PSIxODAiIGZpbGw9IiMwYzBjMGYiLz4KICA8cmVjdCB4PSIyNCIgeT0iMTgiIHdpZHRoPSIyNzIiIGhlaWdodD0iMTQ0IiByeD0iMTIiIGZpbGw9IiMxMDEwMTQiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLW9wYWNpdHk9IjAuMTgiIHN0cm9rZS13aWR0aD0iMS41Ii8+CiAgPGcgZmlsbD0iI2YyZjJmNSI+CiAgICA8cmVjdCB4PSI0NCIgeT0iMzQiIHdpZHRoPSI0NiIgaGVpZ2h0PSIxNCIgcng9IjMiIGZpbGwtb3BhY2l0eT0iMC44NSIvPgogICAgPHJlY3QgeD0iOTgiIHk9IjM0IiB3aWR0aD0iNDYiIGhlaWdodD0iMTQiIHJ4PSIzIiBmaWxsLW9wYWNpdHk9IjAuNyIvPgogICAgPHJlY3QgeD0iMTUyIiB5PSIzNCIgd2lkdGg9IjQ2IiBoZWlnaHQ9IjE0IiByeD0iMyIgZmlsbC1vcGFjaXR5PSIwLjU1Ii8+CiAgICA8cmVjdCB4PSIyMDYiIHk9IjM0IiB3aWR0aD0iNDYiIGhlaWdodD0iMTQiIHJ4PSIzIiBmaWxsLW9wYWNpdHk9IjAuNCIvPgogICAgPHJlY3QgeD0iNDQiIHk9IjU2IiB3aWR0aD0iNDYiIGhlaWdodD0iMTQiIHJ4PSIzIiBmaWxsLW9wYWNpdHk9IjAuNjUiLz4KICAgIDxyZWN0IHg9Ijk4IiB5PSI1NiIgd2lkdGg9IjQ2IiBoZWlnaHQ9IjE0IiByeD0iMyIgZmlsbC1vcGFjaXR5PSIwLjUiLz4KICAgIDxyZWN0IHg9IjE1MiIgeT0iNTYiIHdpZHRoPSI0NiIgaGVpZ2h0PSIxNCIgcng9IjMiIGZpbGwtb3BhY2l0eT0iMC4zNSIvPgogICAgPHJlY3QgeD0iMjA2IiB5PSI1NiIgd2lkdGg9IjQ2IiBoZWlnaHQ9IjE0IiByeD0iMyIgZmlsbC1vcGFjaXR5PSIwLjI1Ii8+CiAgPC9nPgogIDxjaXJjbGUgY3g9IjE3NiIgY3k9IjEyMCIgcj0iNyIgZmlsbD0iI2YyZjJmNSIvPgogIDxyZWN0IHg9IjE0NiIgeT0iMTM2IiB3aWR0aD0iNjAiIGhlaWdodD0iOSIgcng9IjQiIGZpbGw9IiNmMmYyZjUiIGZpbGwtb3BhY2l0eT0iMC45Ii8+Cjwvc3ZnPgo=","labels":["Test"],"warning":null,"at":1788480000000,"hot":false,"data":"data:text/html;charset=utf-8,%3C!doctype%20html%3E%0A%3Chtml%20lang%3D%22en%22%3E%0A%3Chead%3E%0A%3Cmeta%20charset%3D%22utf-8%22%3E%0A%3Cmeta%20name%3D%22viewport%22%20content%3D%22width%3Ddevice-width%2C%20initial-scale%3D1%22%3E%0A%3Ctitle%3EVOID%3C%2Ftitle%3E%0A%3Cstyle%3E%0A%20%20html%2Cbody%7Bmargin%3A0%3Bmin-height%3A100%25%3Bbackground%3A%230b0b0d%3Bcolor%3A%23f4f4f5%3Bfont-family%3Asystem-ui%2Csans-serif%7D%0A%20%20body%7Bdisplay%3Aflex%3Bflex-direction%3Acolumn%3Balign-items%3Acenter%3Bjustify-content%3Acenter%3Bgap%3A16px%3Bpadding%3A20px%3Bbox-sizing%3Aborder-box%7D%0A%20%20.hud%7Bdisplay%3Aflex%3Balign-items%3Acenter%3Bgap%3A20px%3Bfont-size%3A15px%3Bletter-spacing%3A.1em%7D%0A%20%20.hud%20button%7Bborder%3A1px%20solid%20rgba(255%2C255%2C255%2C0.25)%3Bbackground%3Argba(255%2C255%2C255%2C0.07)%3Bcolor%3A%23f4f4f5%3Bborder-radius%3A999px%3Bpadding%3A8px%2018px%3Bfont-size%3A13px%3Bletter-spacing%3A.06em%3Bcursor%3Apointer%7D%0A%20%20%23stage%7Bwidth%3Amin(92vw%2C560px)%3Bborder-radius%3A14px%3Bborder%3A1px%20solid%20rgba(255%2C255%2C255%2C0.14)%3Bbackground%3A%23101014%3Btouch-action%3Anone%7D%0A%20%20%23status%7Bfont-size%3A13px%3Bcolor%3Argba(255%2C255%2C255%2C0.5)%3Bmin-height%3A18px%3Bletter-spacing%3A.04em%3Btext-align%3Acenter%7D%0A%3C%2Fstyle%3E%0A%3C%2Fhead%3E%0A%3Cbody%3E%0A%20%20%3Cdiv%20class%3D%22hud%22%3E%3Cspan%20id%3D%22score%22%3ESCORE%200%3C%2Fspan%3E%3Cbutton%20id%3D%22new%22%3Enew%20game%3C%2Fbutton%3E%3Cspan%20id%3D%22lives%22%3ELIVES%20%E2%97%8F%E2%97%8F%E2%97%8F%3C%2Fspan%3E%3C%2Fdiv%3E%0A%20%20%3Ccanvas%20id%3D%22stage%22%20width%3D%22560%22%20height%3D%22420%22%3E%3C%2Fcanvas%3E%0A%20%20%3Cdiv%20id%3D%22status%22%3E%E2%86%90%20%E2%86%92%20or%20drag%20to%20move%20%C2%B7%20space%20to%20launch%3C%2Fdiv%3E%0A%3Cscript%3E%0A(function%20()%20%7B%0A%20%20var%20cv%20%3D%20document.getElementById(%22stage%22)%3B%0A%20%20var%20g%20%3D%20cv.getContext(%222d%22)%3B%0A%20%20var%20scoreEl%20%3D%20document.getElementById(%22score%22)%3B%0A%20%20var%20livesEl%20%3D%20document.getElementById(%22lives%22)%3B%0A%20%20var%20statusEl%20%3D%20document.getElementById(%22status%22)%3B%0A%0A%20%20var%20W%20%3D%20cv.width%2C%20H%20%3D%20cv.height%3B%0A%20%20var%20COLS%20%3D%2010%2C%20ROWS%20%3D%205%2C%20BW%20%3D%2048%2C%20BH%20%3D%2018%2C%20GAP%20%3D%208%3B%0A%20%20var%20OX%20%3D%20(W%20-%20(COLS%20*%20BW%20%2B%20(COLS%20-%201)%20*%20GAP))%20%2F%202%2C%20OY%20%3D%2046%3B%0A%0A%20%20var%20paddle%2C%20ball%2C%20bricks%2C%20score%2C%20lives%2C%20running%2C%20raf%20%3D%20null%3B%0A%20%20var%20keys%20%3D%20%7B%20left%3A%20false%2C%20right%3A%20false%20%7D%3B%0A%0A%20%20function%20buildBricks()%20%7B%0A%20%20%20%20bricks%20%3D%20%5B%5D%3B%0A%20%20%20%20for%20(var%20r%20%3D%200%3B%20r%20%3C%20ROWS%3B%20r%2B%2B)%0A%20%20%20%20%20%20for%20(var%20c%20%3D%200%3B%20c%20%3C%20COLS%3B%20c%2B%2B)%0A%20%20%20%20%20%20%20%20bricks.push(%7B%20x%3A%20OX%20%2B%20c%20*%20(BW%20%2B%20GAP)%2C%20y%3A%20OY%20%2B%20r%20*%20(BH%20%2B%20GAP)%2C%20alive%3A%20true%2C%20row%3A%20r%20%7D)%3B%0A%20%20%7D%0A%0A%20%20function%20resetBall()%20%7B%0A%20%20%20%20ball%20%3D%20%7B%20x%3A%20paddle.x%20%2B%20paddle.w%20%2F%202%2C%20y%3A%20paddle.y%20-%209%2C%20vx%3A%200%2C%20vy%3A%200%2C%20stuck%3A%20true%20%7D%3B%0A%20%20%7D%0A%0A%20%20function%20build()%20%7B%0A%20%20%20%20paddle%20%3D%20%7B%20w%3A%2088%2C%20h%3A%2010%2C%20x%3A%20W%20%2F%202%20-%2044%2C%20y%3A%20H%20-%2026%20%7D%3B%0A%20%20%20%20buildBricks()%3B%0A%20%20%20%20score%20%3D%200%3B%0A%20%20%20%20lives%20%3D%203%3B%0A%20%20%20%20running%20%3D%20false%3B%0A%20%20%20%20scoreEl.textContent%20%3D%20%22SCORE%200%22%3B%0A%20%20%20%20livesEl.textContent%20%3D%20%22LIVES%20%E2%97%8F%E2%97%8F%E2%97%8F%22%3B%0A%20%20%20%20statusEl.textContent%20%3D%20%22%E2%86%90%20%E2%86%92%20or%20drag%20to%20move%20%C2%B7%20space%20to%20launch%22%3B%0A%20%20%20%20resetBall()%3B%0A%20%20%20%20loop()%3B%0A%20%20%7D%0A%0A%20%20function%20launch()%20%7B%0A%20%20%20%20if%20(!ball.stuck)%20return%3B%0A%20%20%20%20ball.stuck%20%3D%20false%3B%0A%20%20%20%20ball.vx%20%3D%20(Math.random()%20%3C%200.5%20%3F%20-1%20%3A%201)%20*%203.1%3B%0A%20%20%20%20ball.vy%20%3D%20-3.6%3B%0A%20%20%20%20running%20%3D%20true%3B%0A%20%20%20%20statusEl.textContent%20%3D%20%22%22%3B%0A%20%20%7D%0A%0A%20%20function%20loop()%20%7B%0A%20%20%20%20if%20(raf)%20cancelAnimationFrame(raf)%3B%0A%20%20%20%20raf%20%3D%20requestAnimationFrame(step)%3B%0A%20%20%7D%0A%0A%20%20function%20step()%20%7B%0A%20%20%20%20update()%3B%0A%20%20%20%20draw()%3B%0A%20%20%20%20loop()%3B%0A%20%20%7D%0A%0A%20%20function%20update()%20%7B%0A%20%20%20%20if%20(keys.left)%20paddle.x%20-%3D%206.2%3B%0A%20%20%20%20if%20(keys.right)%20paddle.x%20%2B%3D%206.2%3B%0A%20%20%20%20paddle.x%20%3D%20Math.max(4%2C%20Math.min(W%20-%20paddle.w%20-%204%2C%20paddle.x))%3B%0A%0A%20%20%20%20if%20(ball.stuck)%20%7B%20ball.x%20%3D%20paddle.x%20%2B%20paddle.w%20%2F%202%3B%20ball.y%20%3D%20paddle.y%20-%209%3B%20return%3B%20%7D%0A%0A%20%20%20%20ball.x%20%2B%3D%20ball.vx%3B%0A%20%20%20%20ball.y%20%2B%3D%20ball.vy%3B%0A%20%20%20%20if%20(ball.x%20%3C%207)%20%7B%20ball.x%20%3D%207%3B%20ball.vx%20*%3D%20-1%3B%20%7D%0A%20%20%20%20if%20(ball.x%20%3E%20W%20-%207)%20%7B%20ball.x%20%3D%20W%20-%207%3B%20ball.vx%20*%3D%20-1%3B%20%7D%0A%20%20%20%20if%20(ball.y%20%3C%207)%20%7B%20ball.y%20%3D%207%3B%20ball.vy%20*%3D%20-1%3B%20%7D%0A%0A%20%20%20%20%2F%2F%20paddle%20bounce%0A%20%20%20%20if%20(ball.vy%20%3E%200%20%26%26%20ball.y%20%3E%20paddle.y%20-%207%20%26%26%20ball.y%20%3C%20paddle.y%20%2B%20paddle.h%20%26%26%0A%20%20%20%20%20%20%20%20ball.x%20%3E%20paddle.x%20-%206%20%26%26%20ball.x%20%3C%20paddle.x%20%2B%20paddle.w%20%2B%206)%20%7B%0A%20%20%20%20%20%20var%20hit%20%3D%20(ball.x%20-%20(paddle.x%20%2B%20paddle.w%20%2F%202))%20%2F%20(paddle.w%20%2F%202)%3B%0A%20%20%20%20%20%20ball.vx%20%3D%20hit%20*%204.4%3B%0A%20%20%20%20%20%20ball.vy%20%3D%20-Math.max(3.2%2C%20Math.abs(ball.vy))%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20%2F%2F%20bricks%0A%20%20%20%20for%20(var%20i%20%3D%200%3B%20i%20%3C%20bricks.length%3B%20i%2B%2B)%20%7B%0A%20%20%20%20%20%20var%20b%20%3D%20bricks%5Bi%5D%3B%0A%20%20%20%20%20%20if%20(!b.alive)%20continue%3B%0A%20%20%20%20%20%20if%20(ball.x%20%3E%20b.x%20-%206%20%26%26%20ball.x%20%3C%20b.x%20%2B%20BW%20%2B%206%20%26%26%20ball.y%20%3E%20b.y%20-%206%20%26%26%20ball.y%20%3C%20b.y%20%2B%20BH%20%2B%206)%20%7B%0A%20%20%20%20%20%20%20%20b.alive%20%3D%20false%3B%0A%20%20%20%20%20%20%20%20score%20%2B%3D%2010%3B%0A%20%20%20%20%20%20%20%20scoreEl.textContent%20%3D%20%22SCORE%20%22%20%2B%20score%3B%0A%20%20%20%20%20%20%20%20ball.vy%20*%3D%20-1%3B%0A%20%20%20%20%20%20%20%20break%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%0A%20%20%20%20if%20(!bricks.some(function%20(b)%20%7B%20return%20b.alive%3B%20%7D))%20%7B%0A%20%20%20%20%20%20statusEl.textContent%20%3D%20%22cleared!%20%2B1%20life%22%3B%0A%20%20%20%20%20%20lives%2B%2B%3B%0A%20%20%20%20%20%20livesEl.textContent%20%3D%20%22LIVES%20%22%20%2B%20new%20Array(lives%20%2B%201).join(%22%E2%97%8F%22)%3B%0A%20%20%20%20%20%20buildBricks()%3B%0A%20%20%20%20%20%20resetBall()%3B%0A%20%20%20%20%20%20running%20%3D%20false%3B%0A%20%20%20%20%20%20return%3B%0A%20%20%20%20%7D%0A%0A%20%20%20%20if%20(ball.y%20%3E%20H%20%2B%2012)%20%7B%0A%20%20%20%20%20%20lives--%3B%0A%20%20%20%20%20%20livesEl.textContent%20%3D%20%22LIVES%20%22%20%2B%20(lives%20%3E%200%20%3F%20new%20Array(lives%20%2B%201).join(%22%E2%97%8F%22)%20%3A%20%22-%22)%3B%0A%20%20%20%20%20%20if%20(lives%20%3C%3D%200)%20%7B%0A%20%20%20%20%20%20%20%20statusEl.textContent%20%3D%20%22game%20over%2C%20score%20%22%20%2B%20score%3B%0A%20%20%20%20%20%20%20%20running%20%3D%20false%3B%0A%20%20%20%20%20%20%20%20ball.stuck%20%3D%20true%3B%0A%20%20%20%20%20%20%20%20ball.x%20%3D%20paddle.x%20%2B%20paddle.w%20%2F%202%3B%0A%20%20%20%20%20%20%20%20ball.y%20%3D%20paddle.y%20-%209%3B%0A%20%20%20%20%20%20%7D%20else%20%7B%0A%20%20%20%20%20%20%20%20resetBall()%3B%0A%20%20%20%20%20%20%20%20running%20%3D%20false%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%0A%20%20%7D%0A%0A%20%20function%20draw()%20%7B%0A%20%20%20%20g.fillStyle%20%3D%20%22%23101014%22%3B%0A%20%20%20%20g.fillRect(0%2C%200%2C%20W%2C%20H)%3B%0A%0A%20%20%20%20bricks.forEach(function%20(b)%20%7B%0A%20%20%20%20%20%20if%20(!b.alive)%20return%3B%0A%20%20%20%20%20%20var%20shade%20%3D%200.85%20-%20b.row%20*%200.16%3B%0A%20%20%20%20%20%20g.fillStyle%20%3D%20%22rgba(244%2C244%2C245%2C%22%20%2B%20shade.toFixed(2)%20%2B%20%22)%22%3B%0A%20%20%20%20%20%20g.fillRect(b.x%2C%20b.y%2C%20BW%2C%20BH)%3B%0A%20%20%20%20%7D)%3B%0A%0A%20%20%20%20g.fillStyle%20%3D%20%22%23f4f4f5%22%3B%0A%20%20%20%20g.fillRect(paddle.x%2C%20paddle.y%2C%20paddle.w%2C%20paddle.h)%3B%0A%20%20%20%20g.beginPath()%3B%0A%20%20%20%20g.arc(ball.x%2C%20ball.y%2C%206%2C%200%2C%207)%3B%0A%20%20%20%20g.fill()%3B%0A%20%20%7D%0A%0A%20%20document.addEventListener(%22keydown%22%2C%20function%20(e)%20%7B%0A%20%20%20%20if%20(e.key%20%3D%3D%3D%20%22ArrowLeft%22)%20keys.left%20%3D%20true%3B%0A%20%20%20%20if%20(e.key%20%3D%3D%3D%20%22ArrowRight%22)%20keys.right%20%3D%20true%3B%0A%20%20%20%20if%20(e.key%20%3D%3D%3D%20%22%20%22)%20%7B%20launch()%3B%20e.preventDefault()%3B%20%7D%0A%20%20%20%20if%20(e.key%20%3D%3D%3D%20%22Enter%22%20%26%26%20statusEl.textContent.indexOf(%22game%20over%22)%20%3D%3D%3D%200)%20build()%3B%0A%20%20%7D)%3B%0A%20%20document.addEventListener(%22keyup%22%2C%20function%20(e)%20%7B%0A%20%20%20%20if%20(e.key%20%3D%3D%3D%20%22ArrowLeft%22)%20keys.left%20%3D%20false%3B%0A%20%20%20%20if%20(e.key%20%3D%3D%3D%20%22ArrowRight%22)%20keys.right%20%3D%20false%3B%0A%20%20%7D)%3B%0A%0A%20%20var%20drag%20%3D%20false%3B%0A%20%20cv.addEventListener(%22pointerdown%22%2C%20function%20(e)%20%7B%20drag%20%3D%20true%3B%20launch()%3B%20move(e)%3B%20%7D)%3B%0A%20%20cv.addEventListener(%22pointermove%22%2C%20function%20(e)%20%7B%20if%20(drag)%20move(e)%3B%20%7D)%3B%0A%20%20window.addEventListener(%22pointerup%22%2C%20function%20()%20%7B%20drag%20%3D%20false%3B%20%7D)%3B%0A%20%20function%20move(e)%20%7B%0A%20%20%20%20var%20r%20%3D%20cv.getBoundingClientRect()%3B%0A%20%20%20%20var%20x%20%3D%20(e.clientX%20-%20r.left)%20*%20(W%20%2F%20r.width)%3B%0A%20%20%20%20paddle.x%20%3D%20Math.max(4%2C%20Math.min(W%20-%20paddle.w%20-%204%2C%20x%20-%20paddle.w%20%2F%202))%3B%0A%20%20%7D%0A%0A%20%20document.getElementById(%22new%22).addEventListener(%22click%22%2C%20build)%3B%0A%20%20build()%3B%0A%7D)()%3B%0A%3C%2Fscript%3E%0A%3C%2Fbody%3E%0A%3C%2Fhtml%3E%0A"}],"apps":[{"id":"calc","name":"Calculator","desc":"Found in apps/calc. No description written yet.","file":"/apps/calc/calc.html","thumb":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMjAgMTgwIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCBzbGljZSI+CiAgPHJlY3Qgd2lkdGg9IjMyMCIgaGVpZ2h0PSIxODAiIGZpbGw9IiMwZjBmMTIiLz4KICA8cmVjdCB4PSIxMDAiIHk9IjE4IiB3aWR0aD0iMTIwIiBoZWlnaHQ9IjE0NCIgcng9IjE0IiBmaWxsPSIjMTYxNjFiIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS1vcGFjaXR5PSIwLjIiLz4KICA8cmVjdCB4PSIxMTIiIHk9IjMwIiB3aWR0aD0iOTYiIGhlaWdodD0iMzAiIHJ4PSI2IiBmaWxsPSIjMGMwYzBmIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS1vcGFjaXR5PSIwLjE0Ii8+CiAgPHRleHQgeD0iMjAwIiB5PSI1MSIgdGV4dC1hbmNob3I9ImVuZCIgZm9udC1mYW1pbHk9InN5c3RlbS11aSxzYW5zLXNlcmlmIiBmb250LXNpemU9IjE2IiBmb250LXdlaWdodD0iNjAwIiBmaWxsPSIjZjJmMmY1Ij40MjwvdGV4dD4KICA8ZyBmaWxsPSIjZjJmMmY1Ij4KICAgIDxyZWN0IHg9IjExMiIgeT0iNzAiIHdpZHRoPSIyNCIgaGVpZ2h0PSIxOCIgcng9IjUiIGZpbGwtb3BhY2l0eT0iMC4xOCIvPgogICAgPHJlY3QgeD0iMTQyIiB5PSI3MCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjE4IiByeD0iNSIgZmlsbC1vcGFjaXR5PSIwLjE4Ii8+CiAgICA8cmVjdCB4PSIxNzIiIHk9IjcwIiB3aWR0aD0iMjQiIGhlaWdodD0iMTgiIHJ4PSI1IiBmaWxsLW9wYWNpdHk9IjAuMTgiLz4KICAgIDxyZWN0IHg9IjExMiIgeT0iOTQiIHdpZHRoPSIyNCIgaGVpZ2h0PSIxOCIgcng9IjUiIGZpbGwtb3BhY2l0eT0iMC4xOCIvPgogICAgPHJlY3QgeD0iMTQyIiB5PSI5NCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjE4IiByeD0iNSIgZmlsbC1vcGFjaXR5PSIwLjE4Ii8+CiAgICA8cmVjdCB4PSIxNzIiIHk9Ijk0IiB3aWR0aD0iMjQiIGhlaWdodD0iMTgiIHJ4PSI1IiBmaWxsLW9wYWNpdHk9IjAuNTUiLz4KICAgIDxyZWN0IHg9IjExMiIgeT0iMTE4IiB3aWR0aD0iMjQiIGhlaWdodD0iMTgiIHJ4PSI1IiBmaWxsLW9wYWNpdHk9IjAuMTgiLz4KICAgIDxyZWN0IHg9IjE0MiIgeT0iMTE4IiB3aWR0aD0iMjQiIGhlaWdodD0iMTgiIHJ4PSI1IiBmaWxsLW9wYWNpdHk9IjAuMTgiLz4KICAgIDxyZWN0IHg9IjE3MiIgeT0iMTE4IiB3aWR0aD0iMzYiIGhlaWdodD0iMTgiIHJ4PSI1IiBmaWxsPSIjZjJmMmY1Ii8+CiAgPC9nPgo8L3N2Zz4K","labels":["Utility","Math","Tools","Offline","Calculator"],"warning":null,"at":1788480000000,"hot":false,"data":"data:text/html;charset=utf-8,%3C!doctype%20html%3E%0A%3Chtml%20lang%3D%22en%22%3E%0A%3Chead%3E%0A%3Cmeta%20charset%3D%22utf-8%22%3E%0A%3Cmeta%20name%3D%22viewport%22%20content%3D%22width%3Ddevice-width%2C%20initial-scale%3D1%22%3E%0A%3Ctitle%3ECALC%3C%2Ftitle%3E%0A%3Cstyle%3E%0A%20%20html%2Cbody%7Bmargin%3A0%3Bmin-height%3A100%25%3Bbackground%3A%230b0b0d%3Bcolor%3A%23f4f4f5%3Bfont-family%3Asystem-ui%2Csans-serif%7D%0A%20%20body%7Bdisplay%3Aflex%3Bflex-direction%3Acolumn%3Balign-items%3Acenter%3Bjustify-content%3Acenter%3Bgap%3A14px%3Bpadding%3A20px%3Bbox-sizing%3Aborder-box%7D%0A%20%20h1%7Bfont-size%3A15px%3Bletter-spacing%3A.14em%3Bfont-weight%3A700%3Bmargin%3A0%3Bcolor%3Argba(255%2C255%2C255%2C.85)%7D%0A%20%20.calc%7Bwidth%3Amin(92vw%2C340px)%3Bborder%3A1px%20solid%20rgba(255%2C255%2C255%2C0.14)%3Bborder-radius%3A16px%3Bbackground%3A%23101014%3Bpadding%3A16px%3Bbox-sizing%3Aborder-box%7D%0A%20%20%23screen%7Btext-align%3Aright%3Bfont-variant-numeric%3Atabular-nums%3Bpadding%3A14px%206px%2010px%3Bmin-height%3A56px%7D%0A%20%20%23expr%7Bfont-size%3A13px%3Bcolor%3Argba(255%2C255%2C255%2C0.4)%3Bmin-height%3A16px%3Bletter-spacing%3A.03em%7D%0A%20%20%23out%7Bfont-size%3A34px%3Bfont-weight%3A600%3Bletter-spacing%3A.02em%3Bword-break%3Abreak-all%7D%0A%20%20%23keys%7Bdisplay%3Agrid%3Bgrid-template-columns%3Arepeat(4%2C1fr)%3Bgap%3A9px%3Bmargin-top%3A6px%7D%0A%20%20button%7Bborder%3A1px%20solid%20rgba(255%2C255%2C255%2C0.14)%3Bbackground%3Argba(255%2C255%2C255%2C0.06)%3Bcolor%3A%23f4f4f5%3B%0A%20%20%20%20border-radius%3A12px%3Bpadding%3A14px%200%3Bfont%3Ainherit%3Bfont-size%3A16px%3Bcursor%3Apointer%3Btransition%3Abackground%20.12s%7D%0A%20%20button%3Ahover%7Bbackground%3Argba(255%2C255%2C255%2C0.15)%7D%0A%20%20button%3Aactive%7Bbackground%3Argba(255%2C255%2C255%2C0.24)%7D%0A%20%20.op%7Bbackground%3Argba(255%2C255%2C255%2C0.12)%7D%0A%20%20.eq%7Bbackground%3A%23f4f4f5%3Bcolor%3A%230b0b0d%3Bborder-color%3A%23f4f4f5%3Bfont-weight%3A700%7D%0A%20%20.wide%7Bgrid-column%3Aspan%202%7D%0A%20%20%23hist%7Bwidth%3Amin(92vw%2C340px)%3Bfont-size%3A12px%3Bcolor%3Argba(255%2C255%2C255%2C0.4)%3Bletter-spacing%3A.03em%3Bmin-height%3A18px%3Btext-align%3Acenter%7D%0A%3C%2Fstyle%3E%0A%3C%2Fhead%3E%0A%3Cbody%3E%0A%20%20%3Ch1%3ECALC%3C%2Fh1%3E%0A%20%20%3Cdiv%20class%3D%22calc%22%3E%0A%20%20%20%20%3Cdiv%20id%3D%22screen%22%3E%0A%20%20%20%20%20%20%3Cdiv%20id%3D%22expr%22%3E%3C%2Fdiv%3E%0A%20%20%20%20%20%20%3Cdiv%20id%3D%22out%22%3E0%3C%2Fdiv%3E%0A%20%20%20%20%3C%2Fdiv%3E%0A%20%20%20%20%3Cdiv%20id%3D%22keys%22%3E%0A%20%20%20%20%20%20%3Cbutton%20data-k%3D%22AC%22%3EAC%3C%2Fbutton%3E%0A%20%20%20%20%20%20%3Cbutton%20data-k%3D%22%C2%B1%22%3E%C2%B1%3C%2Fbutton%3E%0A%20%20%20%20%20%20%3Cbutton%20data-k%3D%22%25%22%3E%25%3C%2Fbutton%3E%0A%20%20%20%20%20%20%3Cbutton%20class%3D%22op%22%20data-k%3D%22%2F%22%3E%C3%B7%3C%2Fbutton%3E%0A%20%20%20%20%20%20%3Cbutton%20data-k%3D%227%22%3E7%3C%2Fbutton%3E%0A%20%20%20%20%20%20%3Cbutton%20data-k%3D%228%22%3E8%3C%2Fbutton%3E%0A%20%20%20%20%20%20%3Cbutton%20data-k%3D%229%22%3E9%3C%2Fbutton%3E%0A%20%20%20%20%20%20%3Cbutton%20class%3D%22op%22%20data-k%3D%22*%22%3E%C3%97%3C%2Fbutton%3E%0A%20%20%20%20%20%20%3Cbutton%20data-k%3D%224%22%3E4%3C%2Fbutton%3E%0A%20%20%20%20%20%20%3Cbutton%20data-k%3D%225%22%3E5%3C%2Fbutton%3E%0A%20%20%20%20%20%20%3Cbutton%20data-k%3D%226%22%3E6%3C%2Fbutton%3E%0A%20%20%20%20%20%20%3Cbutton%20class%3D%22op%22%20data-k%3D%22-%22%3E%E2%88%92%3C%2Fbutton%3E%0A%20%20%20%20%20%20%3Cbutton%20data-k%3D%221%22%3E1%3C%2Fbutton%3E%0A%20%20%20%20%20%20%3Cbutton%20data-k%3D%222%22%3E2%3C%2Fbutton%3E%0A%20%20%20%20%20%20%3Cbutton%20data-k%3D%223%22%3E3%3C%2Fbutton%3E%0A%20%20%20%20%20%20%3Cbutton%20class%3D%22op%22%20data-k%3D%22%2B%22%3E%2B%3C%2Fbutton%3E%0A%20%20%20%20%20%20%3Cbutton%20class%3D%22wide%22%20data-k%3D%220%22%3E0%3C%2Fbutton%3E%0A%20%20%20%20%20%20%3Cbutton%20data-k%3D%22.%22%3E.%3C%2Fbutton%3E%0A%20%20%20%20%20%20%3Cbutton%20class%3D%22eq%22%20data-k%3D%22%3D%22%3E%3D%3C%2Fbutton%3E%0A%20%20%20%20%3C%2Fdiv%3E%0A%20%20%3C%2Fdiv%3E%0A%20%20%3Cdiv%20id%3D%22hist%22%3E%3C%2Fdiv%3E%0A%3Cscript%3E%0A(function%20()%20%7B%0A%20%20var%20out%20%3D%20document.getElementById(%22out%22)%3B%0A%20%20var%20expr%20%3D%20document.getElementById(%22expr%22)%3B%0A%20%20var%20hist%20%3D%20document.getElementById(%22hist%22)%3B%0A%20%20var%20cur%20%3D%20%220%22%3B%0A%20%20var%20acc%20%3D%20null%3B%0A%20%20var%20op%20%3D%20null%3B%0A%20%20var%20fresh%20%3D%20true%3B%0A%0A%20%20function%20fmt(n)%20%7B%0A%20%20%20%20if%20(!isFinite(n))%20return%20%22Error%22%3B%0A%20%20%20%20var%20s%20%3D%20String(Math.round(n%20*%201e10)%20%2F%201e10)%3B%0A%20%20%20%20return%20s%3B%0A%20%20%7D%0A%0A%20%20function%20apply(a%2C%20b%2C%20o)%20%7B%0A%20%20%20%20if%20(o%20%3D%3D%3D%20%22%2B%22)%20return%20a%20%2B%20b%3B%0A%20%20%20%20if%20(o%20%3D%3D%3D%20%22-%22)%20return%20a%20-%20b%3B%0A%20%20%20%20if%20(o%20%3D%3D%3D%20%22*%22)%20return%20a%20*%20b%3B%0A%20%20%20%20if%20(o%20%3D%3D%3D%20%22%2F%22)%20return%20b%20%3D%3D%3D%200%20%3F%20NaN%20%3A%20a%20%2F%20b%3B%0A%20%20%20%20return%20b%3B%0A%20%20%7D%0A%0A%20%20function%20render()%20%7B%0A%20%20%20%20out.textContent%20%3D%20cur%3B%0A%20%20%20%20expr.textContent%20%3D%20(acc%20!%3D%3D%20null%20%3F%20fmt(acc)%20%2B%20%22%20%22%20%2B%20(op%20%3D%3D%3D%20%22*%22%20%3F%20%22%C3%97%22%20%3A%20op%20%3D%3D%3D%20%22%2F%22%20%3F%20%22%C3%B7%22%20%3A%20op)%20%2B%20%22%20%22%20%3A%20%22%22)%3B%0A%20%20%7D%0A%0A%20%20function%20press(k)%20%7B%0A%20%20%20%20if%20(k%20%3E%3D%20%220%22%20%26%26%20k%20%3C%3D%20%229%22)%20%7B%0A%20%20%20%20%20%20cur%20%3D%20fresh%20%7C%7C%20cur%20%3D%3D%3D%20%220%22%20%3F%20k%20%3A%20cur%20%2B%20k%3B%0A%20%20%20%20%20%20fresh%20%3D%20false%3B%0A%20%20%20%20%7D%20else%20if%20(k%20%3D%3D%3D%20%22.%22)%20%7B%0A%20%20%20%20%20%20if%20(fresh)%20%7B%20cur%20%3D%20%220.%22%3B%20fresh%20%3D%20false%3B%20%7D%0A%20%20%20%20%20%20else%20if%20(cur.indexOf(%22.%22)%20%3C%200)%20cur%20%2B%3D%20%22.%22%3B%0A%20%20%20%20%7D%20else%20if%20(k%20%3D%3D%3D%20%22AC%22)%20%7B%0A%20%20%20%20%20%20cur%20%3D%20%220%22%3B%20acc%20%3D%20null%3B%20op%20%3D%20null%3B%20fresh%20%3D%20true%3B%20hist.textContent%20%3D%20%22%22%3B%0A%20%20%20%20%7D%20else%20if%20(k%20%3D%3D%3D%20%22%C2%B1%22)%20%7B%0A%20%20%20%20%20%20cur%20%3D%20fmt(-parseFloat(cur))%3B%0A%20%20%20%20%7D%20else%20if%20(k%20%3D%3D%3D%20%22%25%22)%20%7B%0A%20%20%20%20%20%20cur%20%3D%20fmt(parseFloat(cur)%20%2F%20100)%3B%0A%20%20%20%20%7D%20else%20if%20(k%20%3D%3D%3D%20%22%3D%22)%20%7B%0A%20%20%20%20%20%20if%20(op%20!%3D%3D%20null%20%26%26%20acc%20!%3D%3D%20null)%20%7B%0A%20%20%20%20%20%20%20%20var%20r%20%3D%20apply(acc%2C%20parseFloat(cur)%2C%20op)%3B%0A%20%20%20%20%20%20%20%20hist.textContent%20%3D%20fmt(acc)%20%2B%20%22%20%22%20%2B%20op%20%2B%20%22%20%22%20%2B%20cur%20%2B%20%22%20%3D%20%22%20%2B%20fmt(r)%3B%0A%20%20%20%20%20%20%20%20cur%20%3D%20fmt(r)%3B%0A%20%20%20%20%20%20%20%20acc%20%3D%20null%3B%20op%20%3D%20null%3B%20fresh%20%3D%20true%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%7D%20else%20%7B%20%2F%2F%20operator%0A%20%20%20%20%20%20if%20(op%20!%3D%3D%20null%20%26%26%20!fresh)%20%7B%0A%20%20%20%20%20%20%20%20acc%20%3D%20apply(acc%2C%20parseFloat(cur)%2C%20op)%3B%0A%20%20%20%20%20%20%20%20cur%20%3D%20fmt(acc)%3B%0A%20%20%20%20%20%20%7D%20else%20%7B%0A%20%20%20%20%20%20%20%20acc%20%3D%20parseFloat(cur)%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%20%20op%20%3D%20k%3B%0A%20%20%20%20%20%20fresh%20%3D%20true%3B%0A%20%20%20%20%7D%0A%20%20%20%20render()%3B%0A%20%20%7D%0A%0A%20%20document.querySelectorAll(%22%23keys%20button%22).forEach(function%20(b)%20%7B%0A%20%20%20%20b.addEventListener(%22click%22%2C%20function%20()%20%7B%20press(b.getAttribute(%22data-k%22))%3B%20%7D)%3B%0A%20%20%7D)%3B%0A%0A%20%20document.addEventListener(%22keydown%22%2C%20function%20(e)%20%7B%0A%20%20%20%20var%20k%20%3D%20e.key%3B%0A%20%20%20%20if%20(k%20%3D%3D%3D%20%22Enter%22)%20k%20%3D%20%22%3D%22%3B%0A%20%20%20%20if%20(k%20%3D%3D%3D%20%22Escape%22)%20k%20%3D%20%22AC%22%3B%0A%20%20%20%20if%20(k%20%3D%3D%3D%20%22x%22%20%7C%7C%20k%20%3D%3D%3D%20%22X%22)%20k%20%3D%20%22*%22%3B%0A%20%20%20%20if%20((k%20%3E%3D%20%220%22%20%26%26%20k%20%3C%3D%20%229%22)%20%7C%7C%20%22%2B-*%2F.%25%22.indexOf(k)%20%3E%3D%200%20%7C%7C%20k%20%3D%3D%3D%20%22%3D%22%20%7C%7C%20k%20%3D%3D%3D%20%22AC%22)%20%7B%0A%20%20%20%20%20%20press(k)%3B%0A%20%20%20%20%20%20e.preventDefault()%3B%0A%20%20%20%20%7D%0A%20%20%7D)%3B%0A%0A%20%20render()%3B%0A%7D)()%3B%0A%3C%2Fscript%3E%0A%3C%2Fbody%3E%0A%3C%2Fhtml%3E%0A"},{"id":"notes","name":"Notes","desc":"Found in apps/notes. No description written yet.","file":"/apps/notes/notes.html","thumb":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMjAgMTgwIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCBzbGljZSI+CiAgPHJlY3Qgd2lkdGg9IjMyMCIgaGVpZ2h0PSIxODAiIGZpbGw9IiMwZjBmMTIiLz4KICA8cmVjdCB4PSI2MCIgeT0iMjYiIHdpZHRoPSIyMDAiIGhlaWdodD0iMTI4IiByeD0iMTIiIGZpbGw9IiMxNjE2MWIiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLW9wYWNpdHk9IjAuMTgiLz4KICA8ZyBzdHJva2U9IiNmMmYyZjUiIHN0cm9rZS13aWR0aD0iMy41IiBzdHJva2UtbGluZWNhcD0icm91bmQiPgogICAgPHBhdGggZD0iTTg0IDU4aDk2IiBzdHJva2Utb3BhY2l0eT0iMC43NSIvPgogICAgPHBhdGggZD0iTTg0IDc4aDEzMiIgc3Ryb2tlLW9wYWNpdHk9IjAuNCIvPgogICAgPHBhdGggZD0iTTg0IDk2aDExOCIgc3Ryb2tlLW9wYWNpdHk9IjAuNCIvPgogICAgPHBhdGggZD0iTTg0IDExNGgxMzIiIHN0cm9rZS1vcGFjaXR5PSIwLjI1Ii8+CiAgICA8cGF0aCBkPSJNODQgMTMyaDg0IiBzdHJva2Utb3BhY2l0eT0iMC4yNSIvPgogIDwvZz4KICA8cGF0aCBkPSJNMjMyIDk2bC01MiA1OC0yNCA0IDIwLTQ2eiIgZmlsbD0iI2YyZjJmNSIgZmlsbC1vcGFjaXR5PSIwLjkiLz4KPC9zdmc+Cg==","labels":["Utility","Writing","Offline","Notes"],"warning":null,"at":1788480000000,"hot":false,"data":"data:text/html;charset=utf-8,%3C!doctype%20html%3E%0A%3Chtml%20lang%3D%22en%22%3E%0A%3Chead%3E%0A%3Cmeta%20charset%3D%22utf-8%22%3E%0A%3Cmeta%20name%3D%22viewport%22%20content%3D%22width%3Ddevice-width%2C%20initial-scale%3D1%22%3E%0A%3Ctitle%3ENOTES%3C%2Ftitle%3E%0A%3Cstyle%3E%0A%20%20html%2Cbody%7Bmargin%3A0%3Bheight%3A100%25%3Bbackground%3A%230b0b0d%3Bcolor%3A%23f4f4f5%3Bfont-family%3Asystem-ui%2Csans-serif%7D%0A%20%20body%7Bdisplay%3Aflex%3Bflex-direction%3Acolumn%7D%0A%20%20.bar%7Bdisplay%3Aflex%3Balign-items%3Acenter%3Bgap%3A10px%3Bpadding%3A10px%2014px%3Bborder-bottom%3A1px%20solid%20rgba(255%2C255%2C255%2C.1)%3Bflex-wrap%3Awrap%7D%0A%20%20.bar%20h1%7Bfont-size%3A15px%3Bmargin%3A0%3Bletter-spacing%3A.14em%3Bfont-weight%3A700%7D%0A%20%20.sp%7Bflex%3A1%7D%0A%20%20.bar%20button%7Bborder%3A1px%20solid%20rgba(255%2C255%2C255%2C.2)%3Bbackground%3Argba(255%2C255%2C255%2C.06)%3Bcolor%3A%23f4f4f5%3B%0A%20%20%20%20border-radius%3A999px%3Bpadding%3A7px%2016px%3Bfont-size%3A12.5px%3Bletter-spacing%3A.04em%3Bcursor%3Apointer%7D%0A%20%20.bar%20button%3Ahover%7Bbackground%3Argba(255%2C255%2C255%2C.16)%7D%0A%20%20.wrap%7Bflex%3A1%3Bdisplay%3Aflex%3Bmin-height%3A0%7D%0A%20%20%23list%7Bwidth%3A220px%3Bborder-right%3A1px%20solid%20rgba(255%2C255%2C255%2C.1)%3Boverflow-y%3Aauto%3Bpadding%3A8px%7D%0A%20%20.note%7Bwidth%3A100%25%3Btext-align%3Aleft%3Bborder%3A1px%20solid%20transparent%3Bbackground%3Anone%3Bcolor%3Argba(244%2C244%2C245%2C.75)%3B%0A%20%20%20%20border-radius%3A10px%3Bpadding%3A9px%2011px%3Bfont%3Ainherit%3Bfont-size%3A13px%3Bcursor%3Apointer%3Bmargin-bottom%3A4px%3B%0A%20%20%20%20white-space%3Anowrap%3Boverflow%3Ahidden%3Btext-overflow%3Aellipsis%3Bdisplay%3Ablock%7D%0A%20%20.note%3Ahover%7Bbackground%3Argba(255%2C255%2C255%2C.07)%7D%0A%20%20.note.sel%7Bborder-color%3Argba(255%2C255%2C255%2C.4)%3Bbackground%3Argba(255%2C255%2C255%2C.09)%3Bcolor%3A%23f4f4f5%7D%0A%20%20.note%20small%7Bcolor%3Argba(255%2C255%2C255%2C.4)%3Bdisplay%3Ablock%3Bfont-size%3A11px%3Bmargin-top%3A2px%7D%0A%20%20%23editor%7Bflex%3A1%3Bdisplay%3Aflex%3Bflex-direction%3Acolumn%3Bmin-width%3A0%7D%0A%20%20%23title%7Bborder%3Anone%3Bborder-bottom%3A1px%20solid%20rgba(255%2C255%2C255%2C.1)%3Bbackground%3Anone%3Bcolor%3A%23f4f4f5%3B%0A%20%20%20%20font%3Ainherit%3Bfont-size%3A16px%3Bfont-weight%3A600%3Bpadding%3A12px%2016px%3Boutline%3Anone%7D%0A%20%20%23body%7Bflex%3A1%3Bborder%3Anone%3Bbackground%3Anone%3Bcolor%3Argba(244%2C244%2C245%2C.9)%3Bfont%3Ainherit%3Bfont-size%3A14px%3B%0A%20%20%20%20line-height%3A1.6%3Bpadding%3A14px%2016px%3Boutline%3Anone%3Bresize%3Anone%7D%0A%20%20%23saved%7Bfont-size%3A11.5px%3Bcolor%3Argba(255%2C255%2C255%2C.35)%3Bpadding%3A6px%2016px%2010px%3Bletter-spacing%3A.05em%7D%0A%20%20%40media%20(max-width%3A560px)%7B%20%23list%7Bwidth%3A150px%7D%20%7D%0A%3C%2Fstyle%3E%0A%3C%2Fhead%3E%0A%3Cbody%3E%0A%20%20%3Cdiv%20class%3D%22bar%22%3E%0A%20%20%20%20%3Ch1%3ENOTES%3C%2Fh1%3E%0A%20%20%20%20%3Cspan%20class%3D%22sp%22%3E%3C%2Fspan%3E%0A%20%20%20%20%3Cbutton%20id%3D%22add%22%3Enew%20note%3C%2Fbutton%3E%0A%20%20%20%20%3Cbutton%20id%3D%22del%22%3Edelete%3C%2Fbutton%3E%0A%20%20%3C%2Fdiv%3E%0A%20%20%3Cdiv%20class%3D%22wrap%22%3E%0A%20%20%20%20%3Cdiv%20id%3D%22list%22%3E%3C%2Fdiv%3E%0A%20%20%20%20%3Cdiv%20id%3D%22editor%22%3E%0A%20%20%20%20%20%20%3Cinput%20id%3D%22title%22%20placeholder%3D%22Title%22%20value%3D%22%22%3E%0A%20%20%20%20%20%20%3Ctextarea%20id%3D%22body%22%20placeholder%3D%22Start%20typing%E2%80%A6%22%3E%3C%2Ftextarea%3E%0A%20%20%20%20%20%20%3Cdiv%20id%3D%22saved%22%3E%3C%2Fdiv%3E%0A%20%20%20%20%3C%2Fdiv%3E%0A%20%20%3C%2Fdiv%3E%0A%3Cscript%3E%0A(function%20()%20%7B%0A%20%20var%20listEl%20%3D%20document.getElementById(%22list%22)%3B%0A%20%20var%20titleEl%20%3D%20document.getElementById(%22title%22)%3B%0A%20%20var%20bodyEl%20%3D%20document.getElementById(%22body%22)%3B%0A%20%20var%20savedEl%20%3D%20document.getElementById(%22saved%22)%3B%0A%0A%20%20var%20notes%20%3D%20%5B%5D%3B%0A%20%20var%20sel%20%3D%20null%3B%0A%20%20try%20%7B%20notes%20%3D%20JSON.parse(localStorage.getItem(%22notes.docs%22)%20%7C%7C%20%22%5B%5D%22)%3B%20%7D%20catch%20(e)%20%7B%7D%0A%20%20if%20(!notes.length)%20%7B%0A%20%20%20%20notes%20%3D%20%5B%7B%20title%3A%20%22Welcome%22%2C%20body%3A%20%22This%20is%20your%20first%20note.%5Cn%5CnEverything%20is%20stored%20locally%20in%20your%20browser.%20Nothing%20leaves%20this%20device.%22%2C%20at%3A%20Date.now()%20%7D%5D%3B%0A%20%20%7D%0A%0A%20%20function%20save()%20%7B%0A%20%20%20%20try%20%7B%20localStorage.setItem(%22notes.docs%22%2C%20JSON.stringify(notes))%3B%20%7D%20catch%20(e)%20%7B%7D%0A%20%20%20%20savedEl.textContent%20%3D%20%22saved%20%22%20%2B%20new%20Date().toLocaleTimeString()%3B%0A%20%20%7D%0A%0A%20%20function%20render()%20%7B%0A%20%20%20%20listEl.textContent%20%3D%20%22%22%3B%0A%20%20%20%20notes.forEach(function%20(n%2C%20i)%20%7B%0A%20%20%20%20%20%20var%20b%20%3D%20document.createElement(%22button%22)%3B%0A%20%20%20%20%20%20b.className%20%3D%20%22note%22%20%2B%20(i%20%3D%3D%3D%20sel%20%3F%20%22%20sel%22%20%3A%20%22%22)%3B%0A%20%20%20%20%20%20b.textContent%20%3D%20n.title%20%7C%7C%20%22Untitled%22%3B%0A%20%20%20%20%20%20var%20d%20%3D%20document.createElement(%22small%22)%3B%0A%20%20%20%20%20%20d.textContent%20%3D%20new%20Date(n.at).toLocaleDateString()%3B%0A%20%20%20%20%20%20b.appendChild(d)%3B%0A%20%20%20%20%20%20b.addEventListener(%22click%22%2C%20function%20()%20%7B%20sel%20%3D%20i%3B%20open()%3B%20%7D)%3B%0A%20%20%20%20%20%20listEl.appendChild(b)%3B%0A%20%20%20%20%7D)%3B%0A%20%20%7D%0A%0A%20%20function%20open()%20%7B%0A%20%20%20%20render()%3B%0A%20%20%20%20var%20n%20%3D%20notes%5Bsel%5D%3B%0A%20%20%20%20if%20(!n)%20%7B%20titleEl.value%20%3D%20%22%22%3B%20bodyEl.value%20%3D%20%22%22%3B%20return%3B%20%7D%0A%20%20%20%20titleEl.value%20%3D%20n.title%3B%0A%20%20%20%20bodyEl.value%20%3D%20n.body%3B%0A%20%20%7D%0A%0A%20%20function%20touch()%20%7B%0A%20%20%20%20if%20(sel%20%3D%3D%3D%20null)%20return%3B%0A%20%20%20%20notes%5Bsel%5D.title%20%3D%20titleEl.value%3B%0A%20%20%20%20notes%5Bsel%5D.body%20%3D%20bodyEl.value%3B%0A%20%20%20%20notes%5Bsel%5D.at%20%3D%20Date.now()%3B%0A%20%20%20%20save()%3B%0A%20%20%20%20render()%3B%0A%20%20%7D%0A%0A%20%20titleEl.addEventListener(%22input%22%2C%20touch)%3B%0A%20%20bodyEl.addEventListener(%22input%22%2C%20touch)%3B%0A%0A%20%20document.getElementById(%22add%22).addEventListener(%22click%22%2C%20function%20()%20%7B%0A%20%20%20%20notes.unshift(%7B%20title%3A%20%22Untitled%22%2C%20body%3A%20%22%22%2C%20at%3A%20Date.now()%20%7D)%3B%0A%20%20%20%20sel%20%3D%200%3B%0A%20%20%20%20save()%3B%0A%20%20%20%20open()%3B%0A%20%20%20%20titleEl.focus()%3B%0A%20%20%20%20titleEl.select()%3B%0A%20%20%7D)%3B%0A%0A%20%20document.getElementById(%22del%22).addEventListener(%22click%22%2C%20function%20()%20%7B%0A%20%20%20%20if%20(sel%20%3D%3D%3D%20null)%20return%3B%0A%20%20%20%20notes.splice(sel%2C%201)%3B%0A%20%20%20%20sel%20%3D%20notes.length%20%3F%20Math.min(sel%2C%20notes.length%20-%201)%20%3A%20null%3B%0A%20%20%20%20save()%3B%0A%20%20%20%20open()%3B%0A%20%20%7D)%3B%0A%0A%20%20sel%20%3D%200%3B%0A%20%20open()%3B%0A%7D)()%3B%0A%3C%2Fscript%3E%0A%3C%2Fbody%3E%0A%3C%2Fhtml%3E%0A"},{"id":"pad","name":"Pad","desc":"Found in apps/pad. No description written yet.","file":"/apps/pad/pad.html","thumb":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMjAgMTgwIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCBzbGljZSI+CiAgPHJlY3Qgd2lkdGg9IjMyMCIgaGVpZ2h0PSIxODAiIGZpbGw9IiMwZjBmMTIiLz4KICA8cmVjdCB4PSI1MCIgeT0iMzAiIHdpZHRoPSIyMjAiIGhlaWdodD0iMTIwIiByeD0iMTQiIGZpbGw9IiMxNjE2MWIiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLW9wYWNpdHk9IjAuMTgiLz4KICA8ZyBzdHJva2U9IiNmMmYyZjUiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBmaWxsPSJub25lIj4KICAgIDxwYXRoIGQ9Ik04MCAxMDBsMjgtMzQgMjAgMjYgMTgtMTggMzQgNDAiIHN0cm9rZS1vcGFjaXR5PSIwLjM1Ii8+CiAgICA8cGF0aCBkPSJNNzAgNzBoNDQiIHN0cm9rZS1vcGFjaXR5PSIwLjE4Ii8+CiAgICA8cGF0aCBkPSJNNzAgODJoMzAiIHN0cm9rZS1vcGFjaXR5PSIwLjEyIi8+CiAgPC9nPgogIDxwYXRoIGQ9Ik0yMzggNjZsLTcyIDg4LTM0IDYgMzAtNzJ6IiBmaWxsPSIjZjJmMmY1IiBzdHJva2U9Im5vbmUiLz4KICA8cmVjdCB4PSI0MCIgeT0iMTU4IiB3aWR0aD0iMjQwIiBoZWlnaHQ9IjMiIHJ4PSIxLjUiIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4xMiIvPgo8L3N2Zz4K","labels":["Creative","Tool","Whiteboard","Drawing","Offline"],"warning":null,"at":null,"hot":false,"data":"data:text/html;charset=utf-8,%3C!doctype%20html%3E%0A%3Chtml%20lang%3D%22en%22%3E%0A%3Chead%3E%0A%3Cmeta%20charset%3D%22utf-8%22%3E%0A%3Cmeta%20name%3D%22viewport%22%20content%3D%22width%3Ddevice-width%2C%20initial-scale%3D1%22%3E%0A%3Ctitle%3EPAD%3C%2Ftitle%3E%0A%3Cstyle%3E%0A%20%20html%2Cbody%7Bmargin%3A0%3Bheight%3A100%25%3Bbackground%3A%230b0b0d%3Bcolor%3A%23f4f4f5%3Bfont-family%3Asystem-ui%2Csans-serif%3Boverflow%3Ahidden%7D%0A%20%20body%7Bdisplay%3Aflex%3Bflex-direction%3Acolumn%7D%0A%20%20.bar%7Bdisplay%3Aflex%3Balign-items%3Acenter%3Bgap%3A10px%3Bpadding%3A10px%2014px%3Bborder-bottom%3A1px%20solid%20rgba(255%2C255%2C255%2C.1)%3Bflex-wrap%3Awrap%7D%0A%20%20.bar%20h1%7Bfont-size%3A15px%3Bmargin%3A0%3Bletter-spacing%3A.14em%3Bfont-weight%3A700%7D%0A%20%20.sp%7Bflex%3A1%7D%0A%20%20.bar%20button%7Bborder%3A1px%20solid%20rgba(255%2C255%2C255%2C.2)%3Bbackground%3Argba(255%2C255%2C255%2C.06)%3Bcolor%3A%23f4f4f5%3B%0A%20%20%20%20border-radius%3A999px%3Bpadding%3A7px%2016px%3Bfont-size%3A12.5px%3Bletter-spacing%3A.04em%3Bcursor%3Apointer%7D%0A%20%20.bar%20button%3Ahover%7Bbackground%3Argba(255%2C255%2C255%2C.16)%7D%0A%20%20.bar%20input%5Btype%3Drange%5D%7Bwidth%3A90px%3Baccent-color%3A%23fff%7D%0A%20%20.bar%20label%7Bfont-size%3A12px%3Bcolor%3Argba(255%2C255%2C255%2C.55)%7D%0A%20%20canvas%7Bflex%3A1%3Bwidth%3A100%25%3Btouch-action%3Anone%3Bbackground%3A%23101014%3Bdisplay%3Ablock%3Bcursor%3Acrosshair%7D%0A%3C%2Fstyle%3E%0A%3C%2Fhead%3E%0A%3Cbody%3E%0A%20%20%3Cdiv%20class%3D%22bar%22%3E%0A%20%20%20%20%3Ch1%3EPAD%3C%2Fh1%3E%0A%20%20%20%20%3Clabel%3Esize%3C%2Flabel%3E%0A%20%20%20%20%3Cinput%20type%3D%22range%22%20id%3D%22size%22%20min%3D%221%22%20max%3D%2240%22%20value%3D%226%22%3E%0A%20%20%20%20%3Cspan%20class%3D%22sp%22%3E%3C%2Fspan%3E%0A%20%20%20%20%3Cbutton%20id%3D%22undo%22%3Eundo%3C%2Fbutton%3E%0A%20%20%20%20%3Cbutton%20id%3D%22clear%22%3Eclear%3C%2Fbutton%3E%0A%20%20%20%20%3Cbutton%20id%3D%22save%22%3Esave%20png%3C%2Fbutton%3E%0A%20%20%3C%2Fdiv%3E%0A%20%20%3Ccanvas%20id%3D%22c%22%3E%3C%2Fcanvas%3E%0A%3Cscript%3E%0A(function%20()%20%7B%0A%20%20var%20cv%20%3D%20document.getElementById(%22c%22)%3B%0A%20%20var%20g%20%3D%20cv.getContext(%222d%22)%3B%0A%20%20var%20sizeEl%20%3D%20document.getElementById(%22size%22)%3B%0A%20%20var%20strokes%20%3D%20%5B%5D%3B%0A%20%20var%20cur%20%3D%20null%3B%0A%20%20var%20drawing%20%3D%20false%3B%0A%20%20var%20dpr%20%3D%20Math.min(window.devicePixelRatio%20%7C%7C%201%2C%202)%3B%0A%0A%20%20function%20size()%20%7B%0A%20%20%20%20cv.width%20%3D%20cv.clientWidth%20*%20dpr%3B%0A%20%20%20%20cv.height%20%3D%20cv.clientHeight%20*%20dpr%3B%0A%20%20%20%20g.setTransform(dpr%2C%200%2C%200%2C%20dpr%2C%200%2C%200)%3B%0A%20%20%20%20repaint()%3B%0A%20%20%7D%0A%0A%20%20function%20repaint()%20%7B%0A%20%20%20%20g.clearRect(0%2C%200%2C%20cv.clientWidth%2C%20cv.clientHeight)%3B%0A%20%20%20%20strokes.forEach(function%20(s)%20%7B%0A%20%20%20%20%20%20drawStroke(s%2C%20false)%3B%0A%20%20%20%20%7D)%3B%0A%20%20%20%20if%20(cur)%20drawStroke(cur%2C%20false)%3B%0A%20%20%7D%0A%0A%20%20function%20drawStroke(s%2C%20live)%20%7B%0A%20%20%20%20if%20(s.pts.length%20%3C%201)%20return%3B%0A%20%20%20%20g.strokeStyle%20%3D%20s.color%3B%0A%20%20%20%20g.lineWidth%20%3D%20s.w%3B%0A%20%20%20%20g.lineCap%20%3D%20%22round%22%3B%0A%20%20%20%20g.lineJoin%20%3D%20%22round%22%3B%0A%20%20%20%20g.beginPath()%3B%0A%20%20%20%20g.moveTo(s.pts%5B0%5D.x%2C%20s.pts%5B0%5D.y)%3B%0A%20%20%20%20for%20(var%20i%20%3D%201%3B%20i%20%3C%20s.pts.length%3B%20i%2B%2B)%20g.lineTo(s.pts%5Bi%5D.x%2C%20s.pts%5Bi%5D.y)%3B%0A%20%20%20%20g.stroke()%3B%0A%20%20%20%20if%20(live)%20%7B%0A%20%20%20%20%20%20g.fillStyle%20%3D%20s.color%3B%0A%20%20%20%20%20%20g.beginPath()%3B%0A%20%20%20%20%20%20g.arc(s.pts%5Bs.pts.length%20-%201%5D.x%2C%20s.pts%5Bs.pts.length%20-%201%5D.y%2C%20s.w%20%2F%202%2C%200%2C%207)%3B%0A%20%20%20%20%20%20g.fill()%3B%0A%20%20%20%20%7D%0A%20%20%7D%0A%0A%20%20function%20pos(e)%20%7B%0A%20%20%20%20var%20r%20%3D%20cv.getBoundingClientRect()%3B%0A%20%20%20%20return%20%7B%20x%3A%20e.clientX%20-%20r.left%2C%20y%3A%20e.clientY%20-%20r.top%20%7D%3B%0A%20%20%7D%0A%0A%20%20cv.addEventListener(%22pointerdown%22%2C%20function%20(e)%20%7B%0A%20%20%20%20e.preventDefault()%3B%0A%20%20%20%20cv.setPointerCapture(e.pointerId)%3B%0A%20%20%20%20drawing%20%3D%20true%3B%0A%20%20%20%20cur%20%3D%20%7B%20w%3A%20%2BsizeEl.value%2C%20color%3A%20%22%23f4f4f5%22%2C%20pts%3A%20%5Bpos(e)%5D%20%7D%3B%0A%20%20%7D)%3B%0A%20%20cv.addEventListener(%22pointermove%22%2C%20function%20(e)%20%7B%0A%20%20%20%20if%20(!drawing)%20return%3B%0A%20%20%20%20cur.pts.push(pos(e))%3B%0A%20%20%20%20drawStroke(cur%2C%20true)%3B%0A%20%20%7D)%3B%0A%20%20function%20end()%20%7B%0A%20%20%20%20if%20(!drawing)%20return%3B%0A%20%20%20%20drawing%20%3D%20false%3B%0A%20%20%20%20strokes.push(cur)%3B%0A%20%20%20%20cur%20%3D%20null%3B%0A%20%20%20%20if%20(strokes.length%20%3E%20200)%20strokes.shift()%3B%0A%20%20%7D%0A%20%20cv.addEventListener(%22pointerup%22%2C%20end)%3B%0A%20%20cv.addEventListener(%22pointercancel%22%2C%20end)%3B%0A%0A%20%20document.getElementById(%22undo%22).addEventListener(%22click%22%2C%20function%20()%20%7B%0A%20%20%20%20strokes.pop()%3B%0A%20%20%20%20repaint()%3B%0A%20%20%7D)%3B%0A%20%20document.getElementById(%22clear%22).addEventListener(%22click%22%2C%20function%20()%20%7B%0A%20%20%20%20strokes%20%3D%20%5B%5D%3B%0A%20%20%20%20repaint()%3B%0A%20%20%7D)%3B%0A%20%20document.getElementById(%22save%22).addEventListener(%22click%22%2C%20function%20()%20%7B%0A%20%20%20%20var%20a%20%3D%20document.createElement(%22a%22)%3B%0A%20%20%20%20a.download%20%3D%20%22pad.png%22%3B%0A%20%20%20%20a.href%20%3D%20cv.toDataURL(%22image%2Fpng%22)%3B%0A%20%20%20%20a.click()%3B%0A%20%20%7D)%3B%0A%0A%20%20window.addEventListener(%22resize%22%2C%20size)%3B%0A%20%20size()%3B%0A%7D)()%3B%0A%3C%2Fscript%3E%0A%3C%2Fbody%3E%0A%3C%2Fhtml%3E%0A"},{"id":"stopwatch","name":"Stopwatch","desc":"Found in apps/stopwatch. No description written yet.","file":"/apps/stopwatch/stopwatch.html","thumb":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMjAgMTgwIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCBzbGljZSI+CiAgPHJlY3Qgd2lkdGg9IjMyMCIgaGVpZ2h0PSIxODAiIGZpbGw9IiMxMDEwMTMiLz4KICA8Y2lyY2xlIGN4PSIxNjAiIGN5PSIxMDQiIHI9IjUyIiBmaWxsPSJub25lIiBzdHJva2U9IiNmMmYyZjUiIHN0cm9rZS13aWR0aD0iNCIvPgogIDxwYXRoIGQ9Ik0xNjAgMTA0VjcwIiBzdHJva2U9IiNmMmYyZjUiIHN0cm9rZS13aWR0aD0iNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPHBhdGggZD0iTTE2MCAxMDRsMjQgMTYiIHN0cm9rZT0iI2YyZjJmNSIgc3Ryb2tlLXdpZHRoPSI1IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8cGF0aCBkPSJNMTYwIDM0VjIyIiBzdHJva2U9IiNmMmYyZjUiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPHBhdGggZD0iTTEzNCAyMmg1MiIgc3Ryb2tlPSIjZjJmMmY1IiBzdHJva2Utd2lkdGg9IjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxnIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLW9wYWNpdHk9IjAuMiIgc3Ryb2tlLXdpZHRoPSIyIj4KICAgIDxjaXJjbGUgY3g9IjE2MCIgY3k9IjEwNCIgcj0iNDAiIGZpbGw9Im5vbmUiIHN0cm9rZS1kYXNoYXJyYXk9IjIgOCIvPgogIDwvZz4KICA8cmVjdCB4PSIxMjAiIHk9IjE2OCIgd2lkdGg9IjgwIiBoZWlnaHQ9IjMiIHJ4PSIxLjUiIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4xNSIvPgo8L3N2Zz4K","labels":["Utility","Timer","Tools","Offline"],"warning":null,"at":null,"hot":false,"data":"data:text/html;charset=utf-8,%3C!doctype%20html%3E%0A%3Chtml%20lang%3D%22en%22%3E%0A%3Chead%3E%0A%3Cmeta%20charset%3D%22utf-8%22%3E%0A%3Cmeta%20name%3D%22viewport%22%20content%3D%22width%3Ddevice-width%2C%20initial-scale%3D1%22%3E%0A%3Ctitle%3EStopwatch%3C%2Ftitle%3E%0A%3Cstyle%3E%0A%20%20html%2Cbody%7Bmargin%3A0%3Bmin-height%3A100%25%3Bbackground%3A%230b0b0d%3Bcolor%3A%23f4f4f5%3Bfont-family%3Asystem-ui%2Csans-serif%7D%0A%20%20body%7Bdisplay%3Aflex%3Bflex-direction%3Acolumn%3Balign-items%3Acenter%3Bjustify-content%3Acenter%3Bgap%3A26px%3Bpadding%3A20px%3Bbox-sizing%3Aborder-box%7D%0A%20%20%23time%7Bfont-size%3Aclamp(44px%2C14vw%2C110px)%3Bfont-weight%3A700%3Bletter-spacing%3A-.03em%3Bfont-variant-numeric%3Atabular-nums%7D%0A%20%20%23time%20small%7Bfont-size%3A.4em%3Bcolor%3Argba(255%2C255%2C255%2C0.5)%3Bfont-weight%3A400%7D%0A%20%20.btns%7Bdisplay%3Aflex%3Bgap%3A14px%3Bflex-wrap%3Awrap%3Bjustify-content%3Acenter%7D%0A%20%20button%7Bborder%3A1px%20solid%20rgba(255%2C255%2C255%2C0.25)%3Bbackground%3Argba(255%2C255%2C255%2C0.06)%3Bcolor%3A%23f4f4f5%3B%0A%20%20%20%20min-width%3A112px%3Bpadding%3A14px%2022px%3Bborder-radius%3A999px%3Bfont-size%3A15px%3Bletter-spacing%3A.08em%3Bcursor%3Apointer%7D%0A%20%20button%3Ahover%7Bbackground%3Argba(255%2C255%2C255%2C0.14)%7D%0A%20%20button.primary%7Bbackground%3A%23f4f4f5%3Bcolor%3A%230b0b0d%3Bborder-color%3A%23f4f4f5%7D%0A%20%20button.danger%7Bcolor%3A%23ff9a9a%3Bborder-color%3Argba(255%2C120%2C120%2C.5)%7D%0A%20%20%23laps%7Bwidth%3Amin(560px%2C100%25)%3Bdisplay%3Aflex%3Bflex-direction%3Acolumn%3Bgap%3A6px%3Bmax-height%3A34vh%3Boverflow%3Aauto%7D%0A%20%20.lap%7Bdisplay%3Aflex%3Bjustify-content%3Aspace-between%3Bgap%3A16px%3Bpadding%3A9px%2014px%3Bborder-radius%3A10px%3B%0A%20%20%20%20border%3A1px%20solid%20rgba(255%2C255%2C255%2C0.09)%3Bfont-variant-numeric%3Atabular-nums%3Bfont-size%3A14px%3Bcolor%3Argba(255%2C255%2C255%2C0.8)%7D%0A%20%20.lap%20b%7Bcolor%3A%23fff%7D%0A%3C%2Fstyle%3E%0A%3C%2Fhead%3E%0A%3Cbody%3E%0A%20%20%3Cdiv%20id%3D%22time%22%3E0%3A00%3Csmall%3E%20.00%3C%2Fsmall%3E%3C%2Fdiv%3E%0A%20%20%3Cdiv%20class%3D%22btns%22%3E%0A%20%20%20%20%3Cbutton%20id%3D%22start%22%20class%3D%22primary%22%3ESTART%3C%2Fbutton%3E%0A%20%20%20%20%3Cbutton%20id%3D%22lap%22%3ELAP%3C%2Fbutton%3E%0A%20%20%20%20%3Cbutton%20id%3D%22reset%22%20class%3D%22danger%22%3ERESET%3C%2Fbutton%3E%0A%20%20%3C%2Fdiv%3E%0A%20%20%3Cdiv%20id%3D%22laps%22%3E%3C%2Fdiv%3E%0A%3Cscript%3E%0A(function%20()%20%7B%0A%20%20var%20timeEl%20%3D%20document.getElementById(%22time%22)%3B%0A%20%20var%20lapsEl%20%3D%20document.getElementById(%22laps%22)%3B%0A%20%20var%20running%20%3D%20false%2C%20t0%20%3D%200%2C%20acc%20%3D%200%2C%20timer%20%3D%20null%3B%0A%20%20var%20last%20%3D%200%3B%0A%0A%20%20function%20pad(n%2C%20w)%20%7B%20return%20String(n).padStart(w%2C%20%220%22)%3B%20%7D%0A%0A%20%20function%20paint(ms)%20%7B%0A%20%20%20%20var%20m%20%3D%20Math.floor(ms%20%2F%2060000)%3B%0A%20%20%20%20var%20s%20%3D%20Math.floor(ms%20%2F%201000)%20%25%2060%3B%0A%20%20%20%20var%20cs%20%3D%20Math.floor(ms%20%2F%2010)%20%25%20100%3B%0A%20%20%20%20timeEl.innerHTML%20%3D%20m%20%2B%20%22%3A%22%20%2B%20pad(s%2C%202)%20%2B%20%22%3Csmall%3E%20.%22%20%2B%20pad(cs%2C%202)%20%2B%20%22%3C%2Fsmall%3E%22%3B%0A%20%20%7D%0A%0A%20%20function%20tick()%20%7B%0A%20%20%20%20paint(acc%20%2B%20(Date.now()%20-%20t0))%3B%0A%20%20%20%20timer%20%3D%20setTimeout(tick%2C%2030)%3B%0A%20%20%7D%0A%0A%20%20function%20toggle()%20%7B%0A%20%20%20%20if%20(running)%20%7B%0A%20%20%20%20%20%20acc%20%2B%3D%20Date.now()%20-%20t0%3B%0A%20%20%20%20%20%20clearTimeout(timer)%3B%0A%20%20%20%20%20%20running%20%3D%20false%3B%0A%20%20%20%20%20%20document.getElementById(%22start%22).textContent%20%3D%20%22START%22%3B%0A%20%20%20%20%20%20document.getElementById(%22start%22).className%20%3D%20%22primary%22%3B%0A%20%20%20%20%20%20last%20%3D%200%3B%0A%20%20%20%20%7D%20else%20%7B%0A%20%20%20%20%20%20t0%20%3D%20Date.now()%3B%0A%20%20%20%20%20%20running%20%3D%20true%3B%0A%20%20%20%20%20%20document.getElementById(%22start%22).textContent%20%3D%20%22STOP%22%3B%0A%20%20%20%20%20%20document.getElementById(%22start%22).className%20%3D%20%22%22%3B%0A%20%20%20%20%20%20tick()%3B%0A%20%20%20%20%7D%0A%20%20%7D%0A%0A%20%20function%20lap()%20%7B%0A%20%20%20%20if%20(!running)%20return%3B%0A%20%20%20%20var%20now%20%3D%20acc%20%2B%20(Date.now()%20-%20t0)%3B%0A%20%20%20%20var%20delta%20%3D%20now%20-%20last%3B%0A%20%20%20%20last%20%3D%20now%3B%0A%20%20%20%20var%20row%20%3D%20document.createElement(%22div%22)%3B%0A%20%20%20%20row.className%20%3D%20%22lap%22%3B%0A%20%20%20%20var%20i%20%3D%20lapsEl.children.length%20%2B%201%3B%0A%20%20%20%20row.innerHTML%20%3D%20%22%3Cspan%3ELap%20%22%20%2B%20i%20%2B%20%22%3C%2Fspan%3E%3Cb%3E%22%20%2B%20fmt(delta)%20%2B%20%22%3C%2Fb%3E%3Cspan%3E%2B%22%20%2B%20fmt(now)%20%2B%20%22%3C%2Fspan%3E%22%3B%0A%20%20%20%20lapsEl.prepend(row)%3B%0A%20%20%7D%0A%20%20function%20fmt(ms)%20%7B%0A%20%20%20%20var%20m%20%3D%20Math.floor(ms%20%2F%2060000)%3B%0A%20%20%20%20var%20s%20%3D%20Math.floor(ms%20%2F%201000)%20%25%2060%3B%0A%20%20%20%20var%20cs%20%3D%20Math.floor(ms%20%2F%2010)%20%25%20100%3B%0A%20%20%20%20return%20m%20%2B%20%22%3A%22%20%2B%20pad(s%2C%202)%20%2B%20%22.%22%20%2B%20pad(cs%2C%202)%3B%0A%20%20%7D%0A%0A%20%20function%20reset()%20%7B%0A%20%20%20%20running%20%3D%20false%3B%0A%20%20%20%20clearTimeout(timer)%3B%0A%20%20%20%20acc%20%3D%200%3B%20last%20%3D%200%3B%0A%20%20%20%20paint(0)%3B%0A%20%20%20%20document.getElementById(%22start%22).textContent%20%3D%20%22START%22%3B%0A%20%20%20%20document.getElementById(%22start%22).className%20%3D%20%22primary%22%3B%0A%20%20%20%20lapsEl.textContent%20%3D%20%22%22%3B%0A%20%20%7D%0A%0A%20%20document.getElementById(%22start%22).addEventListener(%22click%22%2C%20toggle)%3B%0A%20%20document.getElementById(%22lap%22).addEventListener(%22click%22%2C%20lap)%3B%0A%20%20document.getElementById(%22reset%22).addEventListener(%22click%22%2C%20reset)%3B%0A%20%20addEventListener(%22keydown%22%2C%20function%20(e)%20%7B%0A%20%20%20%20if%20(e.key%20%3D%3D%3D%20%22%20%22)%20%7B%20e.preventDefault()%3B%20toggle()%3B%20%7D%0A%20%20%20%20else%20if%20(e.key.toLowerCase()%20%3D%3D%3D%20%22l%22)%20lap()%3B%0A%20%20%20%20else%20if%20(e.key.toLowerCase()%20%3D%3D%3D%20%22r%22)%20reset()%3B%0A%20%20%7D)%3B%0A%20%20paint(0)%3B%0A%7D)()%3B%0A%3C%2Fscript%3E%0A%3C%2Fbody%3E%0A%3C%2Fhtml%3E%0A"}],"proxies":[{"id":"internet-archive","name":"Internet Archive","url":"https://archive.org/","desc":"Millions of books, software, audio and old web pages.","status":"All Good","thumb":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMjAgMTgwIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCBzbGljZSI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImJnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzEzMTMxNyIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMwNzA3MDkiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgPC9kZWZzPgogIDxyZWN0IHdpZHRoPSIzMjAiIGhlaWdodD0iMTgwIiBmaWxsPSJ1cmwoI2JnKSIvPgogIDxjaXJjbGUgY3g9IjE2MCIgY3k9IjkwIiByPSI1MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utb3BhY2l0eT0iMC4xIiBzdHJva2Utd2lkdGg9IjEuNSIvPgogIDxnIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2VlZjBmMyIgc3Ryb2tlLXdpZHRoPSIyLjIiPgogICAgPGNpcmNsZSBjeD0iMTEyIiBjeT0iOTAiIHI9IjEzIi8+CiAgICA8Y2lyY2xlIGN4PSIyMDgiIGN5PSI5MCIgcj0iMTMiLz4KICAgIDxjaXJjbGUgY3g9IjExMiIgY3k9IjkwIiByPSI0MiIgc3Ryb2tlLWRhc2hhcnJheT0iNSA5Ii8+CiAgICA8Y2lyY2xlIGN4PSIyMDgiIGN5PSI5MCIgcj0iNDIiIHN0cm9rZS1kYXNoYXJyYXk9IjUgOSIvPgogIDwvZz4KICA8Y2lyY2xlIGN4PSIxNjAiIGN5PSI5MCIgcj0iMyIgZmlsbD0iI2VlZjBmMyIvPgogIDxyZWN0IHg9IjMwIiB5PSIxNTYiIHdpZHRoPSIyNjAiIGhlaWdodD0iMyIgcng9IjEuNSIgZmlsbD0iI2ZmZmZmZiIgZmlsbC1vcGFjaXR5PSIwLjEyIi8+Cjwvc3ZnPgo="},{"id":"openstreetmap","name":"Openstreetmap","url":"https://www.openstreetmap.org/","desc":"The free, editable world map. May be blocked on some networks.","status":"Issue","thumb":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMjAgMTgwIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCBzbGljZSI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImJnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzEzMTMxNyIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMwNzA3MDkiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgPC9kZWZzPgogIDxyZWN0IHdpZHRoPSIzMjAiIGhlaWdodD0iMTgwIiBmaWxsPSJ1cmwoI2JnKSIvPgogIDxjaXJjbGUgY3g9IjE2MCIgY3k9IjkwIiByPSI1MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utb3BhY2l0eT0iMC4xIiBzdHJva2Utd2lkdGg9IjEuNSIvPgogIDxnIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2VlZjBmMyIgc3Ryb2tlLXdpZHRoPSIyLjIiPgogICAgPGNpcmNsZSBjeD0iMTEyIiBjeT0iOTAiIHI9IjEzIi8+CiAgICA8Y2lyY2xlIGN4PSIyMDgiIGN5PSI5MCIgcj0iMTMiLz4KICAgIDxjaXJjbGUgY3g9IjExMiIgY3k9IjkwIiByPSI0MiIgc3Ryb2tlLWRhc2hhcnJheT0iNSA5Ii8+CiAgICA8Y2lyY2xlIGN4PSIyMDgiIGN5PSI5MCIgcj0iNDIiIHN0cm9rZS1kYXNoYXJyYXk9IjUgOSIvPgogIDwvZz4KICA8Y2lyY2xlIGN4PSIxNjAiIGN5PSI5MCIgcj0iMyIgZmlsbD0iI2VlZjBmMyIvPgogIDxyZWN0IHg9IjMwIiB5PSIxNTYiIHdpZHRoPSIyNjAiIGhlaWdodD0iMyIgcng9IjEuNSIgZmlsbD0iI2ZmZmZmZiIgZmlsbC1vcGFjaXR5PSIwLjEyIi8+Cjwvc3ZnPgo="},{"id":"wikipedia","name":"Wikipedia","url":"https://www.wikipedia.org/","desc":"The free encyclopedia: quick research and reading.","status":"All Good","thumb":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMjAgMTgwIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCBzbGljZSI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImJnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzEzMTMxNyIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMwNzA3MDkiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgPC9kZWZzPgogIDxyZWN0IHdpZHRoPSIzMjAiIGhlaWdodD0iMTgwIiBmaWxsPSJ1cmwoI2JnKSIvPgogIDxjaXJjbGUgY3g9IjE2MCIgY3k9IjkwIiByPSI1MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utb3BhY2l0eT0iMC4xIiBzdHJva2Utd2lkdGg9IjEuNSIvPgogIDxnIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2VlZjBmMyIgc3Ryb2tlLXdpZHRoPSIyLjIiPgogICAgPGNpcmNsZSBjeD0iMTEyIiBjeT0iOTAiIHI9IjEzIi8+CiAgICA8Y2lyY2xlIGN4PSIyMDgiIGN5PSI5MCIgcj0iMTMiLz4KICAgIDxjaXJjbGUgY3g9IjExMiIgY3k9IjkwIiByPSI0MiIgc3Ryb2tlLWRhc2hhcnJheT0iNSA5Ii8+CiAgICA8Y2lyY2xlIGN4PSIyMDgiIGN5PSI5MCIgcj0iNDIiIHN0cm9rZS1kYXNoYXJyYXk9IjUgOSIvPgogIDwvZz4KICA8Y2lyY2xlIGN4PSIxNjAiIGN5PSI5MCIgcj0iMyIgZmlsbD0iI2VlZjBmMyIvPgogIDxyZWN0IHg9IjMwIiB5PSIxNTYiIHdpZHRoPSIyNjAiIGhlaWdodD0iMyIgcng9IjEuNSIgZmlsbD0iI2ZmZmZmZiIgZmlsbC1vcGFjaXR5PSIwLjEyIi8+Cjwvc3ZnPgo="}]};
+window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-14T16:33:38.252Z","games":[],"apps":[],"proxies":[{"id":"internet-archive","name":"Internet Archive","url":"https://archive.org/","desc":"Millions of books, software, audio and old web pages.","status":"All Good","thumb":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMjAgMTgwIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCBzbGljZSI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImJnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzEzMTMxNyIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMwNzA3MDkiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgPC9kZWZzPgogIDxyZWN0IHdpZHRoPSIzMjAiIGhlaWdodD0iMTgwIiBmaWxsPSJ1cmwoI2JnKSIvPgogIDxjaXJjbGUgY3g9IjE2MCIgY3k9IjkwIiByPSI1MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utb3BhY2l0eT0iMC4xIiBzdHJva2Utd2lkdGg9IjEuNSIvPgogIDxnIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2VlZjBmMyIgc3Ryb2tlLXdpZHRoPSIyLjIiPgogICAgPGNpcmNsZSBjeD0iMTEyIiBjeT0iOTAiIHI9IjEzIi8+CiAgICA8Y2lyY2xlIGN4PSIyMDgiIGN5PSI5MCIgcj0iMTMiLz4KICAgIDxjaXJjbGUgY3g9IjExMiIgY3k9IjkwIiByPSI0MiIgc3Ryb2tlLWRhc2hhcnJheT0iNSA5Ii8+CiAgICA8Y2lyY2xlIGN4PSIyMDgiIGN5PSI5MCIgcj0iNDIiIHN0cm9rZS1kYXNoYXJyYXk9IjUgOSIvPgogIDwvZz4KICA8Y2lyY2xlIGN4PSIxNjAiIGN5PSI5MCIgcj0iMyIgZmlsbD0iI2VlZjBmMyIvPgogIDxyZWN0IHg9IjMwIiB5PSIxNTYiIHdpZHRoPSIyNjAiIGhlaWdodD0iMyIgcng9IjEuNSIgZmlsbD0iI2ZmZmZmZiIgZmlsbC1vcGFjaXR5PSIwLjEyIi8+Cjwvc3ZnPgo="},{"id":"openstreetmap","name":"Openstreetmap","url":"https://www.openstreetmap.org/","desc":"The free, editable world map. May be blocked on some networks.","status":"Issue","thumb":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMjAgMTgwIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCBzbGljZSI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImJnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzEzMTMxNyIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMwNzA3MDkiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgPC9kZWZzPgogIDxyZWN0IHdpZHRoPSIzMjAiIGhlaWdodD0iMTgwIiBmaWxsPSJ1cmwoI2JnKSIvPgogIDxjaXJjbGUgY3g9IjE2MCIgY3k9IjkwIiByPSI1MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utb3BhY2l0eT0iMC4xIiBzdHJva2Utd2lkdGg9IjEuNSIvPgogIDxnIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2VlZjBmMyIgc3Ryb2tlLXdpZHRoPSIyLjIiPgogICAgPGNpcmNsZSBjeD0iMTEyIiBjeT0iOTAiIHI9IjEzIi8+CiAgICA8Y2lyY2xlIGN4PSIyMDgiIGN5PSI5MCIgcj0iMTMiLz4KICAgIDxjaXJjbGUgY3g9IjExMiIgY3k9IjkwIiByPSI0MiIgc3Ryb2tlLWRhc2hhcnJheT0iNSA5Ii8+CiAgICA8Y2lyY2xlIGN4PSIyMDgiIGN5PSI5MCIgcj0iNDIiIHN0cm9rZS1kYXNoYXJyYXk9IjUgOSIvPgogIDwvZz4KICA8Y2lyY2xlIGN4PSIxNjAiIGN5PSI5MCIgcj0iMyIgZmlsbD0iI2VlZjBmMyIvPgogIDxyZWN0IHg9IjMwIiB5PSIxNTYiIHdpZHRoPSIyNjAiIGhlaWdodD0iMyIgcng9IjEuNSIgZmlsbD0iI2ZmZmZmZiIgZmlsbC1vcGFjaXR5PSIwLjEyIi8+Cjwvc3ZnPgo="},{"id":"wikipedia","name":"Wikipedia","url":"https://www.wikipedia.org/","desc":"The free encyclopedia: quick research and reading.","status":"All Good","thumb":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMjAgMTgwIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCBzbGljZSI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImJnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+CiAgICAgIDxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iIzEzMTMxNyIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMwNzA3MDkiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgPC9kZWZzPgogIDxyZWN0IHdpZHRoPSIzMjAiIGhlaWdodD0iMTgwIiBmaWxsPSJ1cmwoI2JnKSIvPgogIDxjaXJjbGUgY3g9IjE2MCIgY3k9IjkwIiByPSI1MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utb3BhY2l0eT0iMC4xIiBzdHJva2Utd2lkdGg9IjEuNSIvPgogIDxnIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2VlZjBmMyIgc3Ryb2tlLXdpZHRoPSIyLjIiPgogICAgPGNpcmNsZSBjeD0iMTEyIiBjeT0iOTAiIHI9IjEzIi8+CiAgICA8Y2lyY2xlIGN4PSIyMDgiIGN5PSI5MCIgcj0iMTMiLz4KICAgIDxjaXJjbGUgY3g9IjExMiIgY3k9IjkwIiByPSI0MiIgc3Ryb2tlLWRhc2hhcnJheT0iNSA5Ii8+CiAgICA8Y2lyY2xlIGN4PSIyMDgiIGN5PSI5MCIgcj0iNDIiIHN0cm9rZS1kYXNoYXJyYXk9IjUgOSIvPgogIDwvZz4KICA8Y2lyY2xlIGN4PSIxNjAiIGN5PSI5MCIgcj0iMyIgZmlsbD0iI2VlZjBmMyIvPgogIDxyZWN0IHg9IjMwIiB5PSIxNTYiIHdpZHRoPSIyNjAiIGhlaWdodD0iMyIgcng9IjEuNSIgZmlsbD0iI2ZmZmZmZiIgZmlsbC1vcGFjaXR5PSIwLjEyIi8+Cjwvc3ZnPgo="}]};
 /* NULL · store.js
    localStorage-backed user data: preferences, flags, recent items, favorites.
    Everything for a given visitor lives under four keys. */
@@ -6693,6 +7668,13 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-13T13:32:21.808Z","g
     seasonOverride: null, // dev-console season preview: "fall" | "winter" | ... | null = calendar
     smartTab: false, // smart tab cloak: rotate tab presets on a timer
     smartTabMin: 5, // smart tab cloak: minutes between rotations
+    density: "regular", // layout compactness: regular | comfy | spacious | compact
+    miniPerf: false, // Mini-Perf: unload off-screen blocks, strip nothing
+    seasonVariant: null, // seasonal/holiday pick; null follows the calendar
+    bgImage: "", // custom page background (Shop unlock): a URL or a data URL
+    bgFit: "cover", // cover | contain | tile
+    bgDim: 0.35, // 0..1 tint over the image so the page stays readable
+    bgBlur: 0, // px of blur on the image
   };
 
   N.prefs = (function () {
@@ -7411,7 +8393,17 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-13T13:32:21.808Z","g
   var FX = [
     { id: "goldconfetti", name: "Golden confetti", price: 30, desc: "Period-end confetti drops in gold instead of grayscale." },
     { id: "customaccent", name: "Custom accent color", price: 80, desc: "Unlocks a color picker in Settings, so your accent can be any color at all." },
+    { id: "custombg", name: "Custom background image", price: 100, desc: "Unlocks a background picture in Settings: paste a link or upload a file, then set how it fits, how far it dims behind the page and how soft it is." },
+    { id: "editor", name: "Theme & particle editor", price: 150, desc: "Unlocks the editor in the Shop: build your own theme pack and particle set, pick the colours, tint, backdrop art and exactly what drifts through it." },
   ];
+
+  /* the editor's two creations are stored by theme.js (null:craft) and owned
+     for as long as the editor is. They are never bought on their own. */
+  var CRAFT_PACK = "mypack";
+  var CRAFT_PART = "mypart";
+  function editorOn() {
+    return ownedList("fx").indexOf("editor") >= 0;
+  }
 
   function boosted() {
     return data.boostUntil > Date.now();
@@ -7696,6 +8688,8 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-13T13:32:21.808Z","g
   }
   function isUnlocked(type, id) {
     if (type === "boost") return boosted();
+    if (type === "theme" && id === CRAFT_PACK) return editorOn();
+    if (type === "particle" && id === CRAFT_PART) return editorOn();
     if (isFree(type, id)) return true;
     return ownedList(type).indexOf(id) >= 0;
   }
@@ -7733,6 +8727,23 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-13T13:32:21.808Z","g
   function unlockedBetas() {
     if (!window.NULL_CONTENT || !window.NULL_CONTENT.betas) return [];
     return window.NULL_CONTENT.betas.filter(function (b) {
+      return isUnlocked("game", b.id);
+    });
+  }
+
+  /* everything permanent in the shop, owned. Boosts are excluded on purpose:
+     they are a timed consumable, not an unlock. shop.js watches this for the
+     credits hand-off. */
+  function shopComplete() {
+    var kinds = { theme: THEMES, particle: PARTICLES, fx: FX };
+    var done = Object.keys(kinds).every(function (type) {
+      return kinds[type].every(function (it) {
+        return !it.price || isUnlocked(type, it.id);
+      });
+    });
+    if (!done) return false;
+    var betas = (window.NULL_CONTENT && window.NULL_CONTENT.betas) || [];
+    return betas.every(function (b) {
       return isUnlocked("game", b.id);
     });
   }
@@ -7787,6 +8798,7 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-13T13:32:21.808Z","g
     grant: grant,
     reload: reload,
     isUnlocked: isUnlocked,
+    shopComplete: shopComplete,
     unlockedBetas: unlockedBetas,
     /* progress: quests, achievements and the daily crate */
     trackPlay: trackPlay,
@@ -8033,12 +9045,42 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-13T13:32:21.808Z","g
     return sel;
   }
 
+  /* ---------- colour dots ----------
+     A circle showing the colour, with the real <input type="color"> stretched
+     invisibly across it, so clicking the circle opens the browser's own
+     picker. A far nicer target than the bare native swatch, and it reads as
+     the colour it currently holds. onPick fires on every change. */
+  function colorDot(value, onPick, opts) {
+    opts = opts || {};
+    var dot = h("label", {
+      class: "cdot" + (opts.big ? " cdot--lg" : ""),
+      title: opts.title || value,
+    });
+    var input = h("input", { type: "color", value: value, "aria-label": opts.title || "Color" });
+    dot.style.setProperty("--cdot", value);
+    dot.appendChild(input);
+    input.addEventListener("input", function () {
+      dot.style.setProperty("--cdot", input.value);
+      dot.title = input.value;
+      onPick(input.value);
+    });
+    /* let a caller move the dot from code (a card rebuilt after a save, say)
+       without reaching inside it */
+    dot.setValue = function (v) {
+      input.value = v;
+      dot.style.setProperty("--cdot", v);
+      dot.title = v;
+    };
+    return dot;
+  }
+
   N.dom = {
     h: h,
     qs: qs,
     qsa: qsa,
     icon: icon,
     icons: P,
+    colorDot: colorDot,
     upgradeSelect: upgradeSelect,
     selSync: selSync,
   };
@@ -8302,10 +9344,12 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-13T13:32:21.808Z","g
     if (!N.econ) return [];
     var free = N.econ.FREE_PACKS || [];
     var paid = N.econ.THEMES || [];
+    var mine = craftedPack();
     return free.concat(
       paid.filter(function (t) {
         return N.econ.isUnlocked("theme", t.id);
       }),
+      mine ? [mine] : [],
     );
   }
 
@@ -8337,6 +9381,148 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-13T13:32:21.808Z","g
       return false;
     if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return false;
     return true;
+  }
+
+  /* ---------- crafted pack + particle (Shop: theme & particle editor) ----------
+     The editor builds two things and keeps them in null:craft: a theme pack
+     (palette, tint, which backdrop art to borrow, drifting parts) and a
+     particle set (kinds, counts, own palette or the site's). Once loaded both
+     are ordinary definitions: allPacks()/allParticles() hand them to the very
+     same builders a Shop pack goes through, so a crafted theme previews,
+     applies and is styled like a bought one and nothing downstream needs to
+     know it was made by hand. */
+  var CRAFT_KEY = "null:craft";
+  var CRAFT_PACK = "mypack";
+  var CRAFT_PART = "mypart";
+
+  /* the art a crafted backdrop can borrow, by the pack that draws it. The
+     pack's own CSS is driven by --pk-1..4 and the tint, so a borrowed
+     backdrop takes the crafted palette without a line of new CSS. */
+  var ART = [
+    { id: "synthwave", name: "Grid horizon" },
+    { id: "matrix", name: "Code rain" },
+    { id: "gold", name: "Light rays" },
+    { id: "aurora", name: "Aurora ribbons" },
+    { id: "cosmos", name: "Starfield" },
+    { id: "vapor", name: "Smoke + waves" },
+    { id: "neon", name: "Wireframe room" },
+    { id: "dawn", name: "Plain glow" },
+    { id: "mist", name: "Haze" },
+  ];
+
+  /* every particle kind the sheets can actually draw, split by layer: pf-*
+     rides with a theme pack, pt-* is the ambient layer. The editor offers
+     these lists, so it can never hand the painter a shape that doesn't exist. */
+  var PF_KINDS = [
+    "star", "starfar", "dust", "ribbon", "rain", "smoke", "cloud", "neonTube", "neonPulse",
+  ];
+  var PT_KINDS = [
+    "mote", "bloom", "spark", "sparkle", "flare", "speck", "haze", "wisp", "firefly",
+    "trail", "ember", "bubble", "glint", "node", "link", "plasma", "swirl", "tunnel", "warp",
+  ];
+
+  var craftCache = null;
+
+  function craftRaw() {
+    return N.store.read(CRAFT_KEY, {}) || {};
+  }
+  function craftWrite(patch) {
+    N.store.write(CRAFT_KEY, Object.assign(craftRaw(), patch));
+    craftCache = null;
+  }
+  /* The editor writes the pair whole; Settings edits a piece at a time (one
+     palette colour, the tint, the mono switch) and can drop either half
+     outright. Same file, so both stay in step. */
+  function craftPatch(patch) {
+    var raw = craftRaw();
+    if (patch.pack) raw.pack = Object.assign({}, raw.pack || {}, patch.pack);
+    if (patch.part) raw.part = Object.assign({}, raw.part || {}, patch.part);
+    if (patch.drop === "all") raw = {};
+    else if (patch.drop === "pack") delete raw.pack;
+    else if (patch.drop === "part") delete raw.part;
+    N.store.write(CRAFT_KEY, raw);
+    craftCache = null;
+  }
+
+  /* re-apply whichever crafted piece is being worn, so an edit shows up at
+     once without the caller knowing what is on */
+  function craftApply() {
+    craftCache = null;
+    if (craftedPack() && N.prefs.get("accent") === CRAFT_PACK) setAccent(CRAFT_PACK);
+    if (craftedPart() && N.prefs.get("particles") === CRAFT_PART) setParticles(CRAFT_PART);
+  }
+
+  /* throw a crafted piece away. Whatever was wearing it falls back to none. */
+  function removeCraft(which) {
+    craftPatch({ drop: which });
+    if (which === "pack" && N.prefs.get("accent") === CRAFT_PACK) {
+      N.prefs.set("accent", "off");
+      setAccent("off");
+    }
+    if (which === "part" && N.prefs.get("particles") === CRAFT_PART) {
+      N.prefs.set("particles", "none");
+      setParticles("none");
+    }
+  }
+  /* the editor is a Shop unlock: without it the crafted pair is ignored
+     everywhere, so a leftover pair in storage can't outlive the unlock */
+  function craftOn() {
+    return !!(N.econ && N.econ.isUnlocked("fx", "editor"));
+  }
+  function craftPartList(p) {
+    return (p || []).filter(function (x) {
+      return x && PF_KINDS.concat(PT_KINDS).indexOf(x.k) >= 0 && x.n > 0;
+    });
+  }
+  function crafted() {
+    if (craftCache) return craftCache;
+    var out = { pack: null, part: null };
+    var raw = craftRaw();
+    if (craftOn() && raw.pack && raw.pack.colors && raw.pack.colors.length) {
+      var d = raw.pack;
+      var art = ART.some(function (a) {
+        return a.id === d.art;
+      })
+        ? d.art
+        : ART[0].id;
+      var tint = d.tint && d.tint.length === 2 ? d.tint : ["#101016", "#08080b"];
+      out.pack = {
+        id: CRAFT_PACK,
+        name: d.name || "My theme",
+        crafted: true,
+        bg: art,
+        art: art,
+        c1: d.colors[0],
+        c2: d.colors[1] || d.colors[0],
+        colors: d.colors,
+        tint: tint,
+        parts: craftPartList(d.parts),
+        desc: "Your own theme pack: palette, tint and backdrop, built in the editor.",
+        tags: ["Crafted", (ART.find(function (a) { return a.id === art; }) || {}).name, d.colors.length + " colors"],
+      };
+    }
+    if (craftOn() && raw.part && raw.part.parts && raw.part.parts.length) {
+      var q = raw.part;
+      var mono = !!q.mono;
+      out.part = {
+        id: CRAFT_PART,
+        name: q.name || "My particles",
+        crafted: true,
+        mono: mono,
+        colors: mono ? null : q.colors,
+        parts: craftPartList(q.parts),
+        desc: "Your own particle set: shapes, counts and colours, built in the editor.",
+        tags: ["Crafted", mono ? "Follows the theme" : "Own palette"],
+      };
+    }
+    craftCache = out;
+    return out;
+  }
+  function craftedPack() {
+    return crafted().pack;
+  }
+  function craftedPart() {
+    return crafted().part;
   }
 
   /* ---------- palette ---------- */
@@ -8399,7 +9585,9 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-13T13:32:21.808Z","g
     opts = opts || {};
     var el = document.createElement("div");
     el.className = cls;
-    el.setAttribute("data-pack", p.id);
+    /* a crafted pack carries the id of the pack whose art it borrows, so the
+       layer is painted by that pack's CSS with the crafted palette */
+    el.setAttribute("data-pack", p.art || p.id);
     el.setAttribute("aria-hidden", "true");
     ["a", "b", "c"].forEach(function (k) {
       var i = document.createElement("i");
@@ -8435,10 +9623,11 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-13T13:32:21.808Z","g
     return thumb;
   }
 
-  /* every pack that exists: free first, then the Shop's */
+  /* every pack that exists: free first, then the Shop's, then your own */
   function allPacks() {
     if (!N.econ) return [];
-    return (N.econ.FREE_PACKS || []).concat(N.econ.THEMES || []);
+    var mine = craftedPack();
+    return (N.econ.FREE_PACKS || []).concat(N.econ.THEMES || [], mine ? [mine] : []);
   }
 
   function killPack() {
@@ -8448,7 +9637,7 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-13T13:32:21.808Z","g
 
   function buildPack(p) {
     if (!p || !p.bg || !packAllowed()) return;
-    if (packEl && packEl.isConnected && packEl.dataset.pack === p.id) return;
+    if (packEl && packEl.isConnected && packEl.dataset.pack === (p.art || p.id)) return;
     killPack();
     packEl = packArt(p, "pack-fx");
     document.body.appendChild(packEl);
@@ -8466,7 +9655,7 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-13T13:32:21.808Z","g
     }
     var vars = packVars(p);
     for (var k in vars) root.style.setProperty(k, vars[k]);
-    root.dataset.pack = p.id;
+    root.dataset.pack = p.art || p.id;
     buildPack(p);
   }
 
@@ -8481,7 +9670,8 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-13T13:32:21.808Z","g
 
   function allParticles() {
     if (!N.econ) return [];
-    return (N.econ.FREE_PARTICLES || []).concat(N.econ.PARTICLES || []);
+    var mine = craftedPart();
+    return (N.econ.FREE_PARTICLES || []).concat(N.econ.PARTICLES || [], mine ? [mine] : []);
   }
 
   function particleFor(id) {
@@ -8492,9 +9682,13 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-13T13:32:21.808Z","g
     );
   }
 
-  /* free particles are everyone's; the rest must be unlocked in the Shop */
+  /* free particles are everyone's; the rest must be unlocked in the Shop,
+     and a crafted one comes with the editor */
   function partOwned(p) {
-    return !!p && (p.free || (N.econ && N.econ.isUnlocked("particle", p.id)));
+    if (!p) return false;
+    if (p.free) return true;
+    if (p.crafted) return craftOn();
+    return !!(N.econ && N.econ.isUnlocked("particle", p.id));
   }
 
   /* NB: named ptHost, not partHost: the theme-pack builder above owns that
@@ -8885,16 +10079,91 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-13T13:32:21.808Z","g
     if (on) {
       killPack();
       killPart();
+      killBg();
     } else {
       buildPack(packFor(curPack));
       buildPart(particleFor(curPart));
+      buildBg();
     }
+  }
+
+  /* ---------- layout prefs ----------
+     Density is one CSS scale (global.css), Mini-Perf is one attribute
+     (perf.css). Both are read here so every page gets them, whether or not it
+     has a Settings screen on it. */
+  function applyLayout() {
+    var p = N.prefs.data;
+    if (p.density && p.density !== "regular") root.dataset.density = p.density;
+    else delete root.dataset.density;
+    if (p.miniPerf) root.dataset.mini = "1";
+    else delete root.dataset.mini;
+    applyBg();
+  }
+
+  /* ---------- custom background image ----------
+     A Shop unlock (fx "custombg"). The picture gets its own fixed layer
+     behind the theme pack and the particles: a link the visitor pasted or a
+     file they uploaded, with the page's own background colour laid over it
+     as a tint (--bg-dim), so any picture stays readable behind the text.
+     Gated like every other backdrop: off in performance mode. */
+  var bgEl = null;
+  var bgSig = null;
+
+  function bgAllowed() {
+    return !!(N.econ && N.econ.isUnlocked("fx", "custombg") && !N.prefs.data.perf);
+  }
+
+  function killBg() {
+    if (bgEl && bgEl.parentNode) bgEl.parentNode.removeChild(bgEl);
+    bgEl = null;
+    bgSig = null;
+  }
+
+  function buildBg() {
+    var p = N.prefs.data;
+    var url = (p.bgImage || "").trim();
+    if (!url || !bgAllowed()) {
+      killBg();
+      return;
+    }
+    var fit = p.bgFit === "contain" || p.bgFit === "tile" ? p.bgFit : "cover";
+    var dim = Math.min(0.95, Math.max(0, Number(p.bgDim) || 0));
+    var blur = Math.min(30, Math.max(0, Number(p.bgBlur) || 0));
+    var sig = [url, fit, dim, blur].join("|");
+    if (bgEl && bgSig === sig) return;
+    if (!bgEl) {
+      bgEl = document.createElement("div");
+      bgEl.className = "bg-fx";
+      bgEl.setAttribute("aria-hidden", "true");
+      document.body.appendChild(bgEl);
+    }
+    bgSig = sig;
+    bgEl.style.backgroundImage = "url(" + JSON.stringify(url) + ")";
+    bgEl.style.backgroundSize = fit === "tile" ? "auto" : fit;
+    bgEl.style.backgroundRepeat = fit === "tile" ? "repeat" : "no-repeat";
+    bgEl.style.filter = blur ? "blur(" + blur + "px)" : "";
+    /* a blurred layer fades out at its own edges, so it is grown past the
+       viewport to keep the blur off the border */
+    bgEl.style.inset = blur ? "-" + blur * 2 + "px" : "";
+    bgEl.style.setProperty("--bg-dim", String(dim));
+  }
+
+  /* re-check the layer: it clears itself when it shouldn't show, and builds
+     or updates itself when it should */
+  function applyBg() {
+    buildBg();
+  }
+
+  function setBg(patch) {
+    N.prefs.patch(patch);
+    applyBg();
   }
 
   function applyAll() {
     var p = N.prefs.data;
     setTheme(p.theme);
     setPerf(p.perf);
+    applyLayout();
     /* glow first: Neon's backdrop is built from the glow palette, so the
        vars have to exist before the pack is built (avoids a rebuild) */
     cometOn = !!p.glowComet;
@@ -8903,10 +10172,45 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-13T13:32:21.808Z","g
     setParticles(p.particles);
   }
 
+  /* a second window may have bought the editor or set a background: keep the
+     layers in step without a reload */
+  if (N.bus) {
+    N.bus.on("sync", function () {
+      craftCache = null;
+      applyLayout();
+    });
+    N.bus.on("eco", function () {
+      craftCache = null;
+      applyLayout();
+    });
+  }
+
   N.theme = {
     ACCENTS: ACCENTS,
     GLOWS: GLOWS,
     extraAccents: extraAccents,
+    /* the editor's palette of real backdrops and real particle kinds */
+    ART: ART,
+    PF_KINDS: PF_KINDS,
+    PT_KINDS: PT_KINDS,
+    craftPack: craftedPack,
+    craftPart: craftedPart,
+    craftWrite: craftWrite,
+    craftPatch: craftPatch,
+    craftApply: craftApply,
+    removeCraft: removeCraft,
+    craftOn: craftOn,
+    /* layout + background */
+    setDensity: function (id) {
+      N.prefs.set("density", id);
+      applyLayout();
+    },
+    setMiniPerf: function (on) {
+      N.prefs.set("miniPerf", !!on);
+      applyLayout();
+    },
+    setBg: setBg,
+    applyLayout: applyLayout,
     /* shop + settings share this so a preview can never drift from the real
        thing: same builder, same CSS, different container class */
     packPreview: packPreview,
@@ -8946,67 +10250,163 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-13T13:32:21.808Z","g
 })();
 
 /* NULL: seasons.js
-   Seasonal theme: a light ambient pass driven by the calendar.
+   Seasonal + holiday themes: a light ambient pass driven by the calendar.
    Sets html[data-season] so CSS can tint the page, and when the user's
-   accent is off, fills --ac-* with the season's colors. Also drops a
-   drifting particle layer behind everything: fall leaves, winter snow,
-   spring petals, summer light motes. Particles are hand-drawn inline
-   SVGs (data URIs), so no emoji and no external assets. Skipped on the
-   player and 404, in performance mode, and for reduced-motion users.
-   The dev console can force a season via prefs.seasonOverride. */
+   accent is off, fills --ac-* with the theme's colors. Also drops a
+   drifting particle layer behind everything.
+
+   A holiday is a variant of the season it lands in, not a season of its
+   own: Fall offers Fall and Halloween, Winter offers Winter and Holidays.
+   Both are always on the list, so you can pick either; the calendar picks
+   for you otherwise, and a variant with a `window` (Halloween's last two
+   weeks of October, the December holidays) wins that window.
+
+   Particles are hand-drawn inline SVGs (data URIs), so no emoji and no
+   external assets. Skipped on the player and 404, in performance mode, and
+   for reduced-motion users. The dev console can force a theme via
+   prefs.seasonOverride; Settings writes prefs.seasonVariant. */
+
 (function () {
   var N = (window.N = window.N || {});
   var root = document.documentElement;
 
+  /* ---------- shapes ----------
+     One inline SVG per particle kind, and {C} is swapped for a color from
+     the theme's palette. */
+  var SHAPES = {
+    /* leaf: Material "eco" glyph, filled */
+    leaf: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="{C}" d="M6.05 8.05c-2.73 2.73-2.73 7.15-.02 9.88 1.47-3.4 4.09-6.24 7.36-7.93-2.77 2.34-4.71 5.61-5.39 9.32 2.6 1.23 5.8.78 7.95-1.37C19.43 14.47 20 4 20 4S9.53 4.57 6.05 8.05z"/></svg>',
+    /* bat: two wings and a small body */
+    bat: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="{C}" d="M12 7.2c1.1 0 1.9.7 2.3 1.5.6-.5 1.4-.8 2.2-.8.5 0 .9.1 1.3.3-.4-1-.6-2.1-.4-3.2-1.9.9-3.5 1.2-4.4 1.2-.4 0-.7 0-1 0s-.6 0-1 0c-.9 0-2.5-.3-4.4-1.2.2 1.1 0 2.2-.4 3.2.4-.2.8-.3 1.3-.3.8 0 1.6.3 2.2.8.4-.8 1.2-1.5 2.3-1.5zM12 10.6c-1.2 0-2.2.9-2.2 2 0 1 .7 1.8 1.6 2v1.1c0 .3.3.6.6.6s.6-.3.6-.6v-1.1c.9-.2 1.6-1 1.6-2 0-1.1-1-2-2.2-2z"/></svg>',
+    /* snowflake: three crossing lines, 6-point silhouette */
+    snow: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="{C}" stroke-width="1.6" stroke-linecap="round"><path d="M12 2v20M3.3 7l17.4 10M20.7 7L3.3 17"/></svg>',
+    /* star: Material "star_4" sparkle, filled */
+    star: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="{C}" d="M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5z"/></svg>',
+    /* petal: a soft teardrop */
+    petal: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="{C}" d="M12 2C17 8 19.5 12.5 12 22 4.5 12.5 7 8 12 2Z"/></svg>',
+    /* mote: a plain soft round light, for the summer pass */
+    mote: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7" fill="{C}"/></svg>',
+  };
+
+  /* ---------- themes ----------
+     `kinds` is walked in order, one shape per particle, so the mix and the
+     order of what falls are both visible in the list. `size` is the px
+     range, `n` how many, `window` the day range a holiday claims inside its
+     season, `palette` the colors the shapes take, `colors` the pair used for
+     --ac-* when the visitor has no accent of their own. */
+  var THEMES = {
+    fall: {
+      id: "fall",
+      label: "Fall",
+      hint: "leaves drift behind everything",
+      kinds: ["leaf"],
+      size: [14, 26],
+      n: 16,
+      palette: ["#c97b3a", "#d9a441", "#a85a32", "#e0b45f"],
+      colors: { c1: "#d98e3d", c2: "#e6b45f" },
+    },
+    halloween: {
+      id: "halloween",
+      label: "Halloween",
+      hint: "bats and leaves drift behind everything",
+      kinds: ["bat", "bat", "leaf"],
+      size: [12, 24],
+      n: 18,
+      window: { month: 9, from: 18, to: 31 },
+      palette: ["#ff8a3d", "#a06be0", "#e0b45f", "#c97b3a"],
+      colors: { c1: "#e2813d", c2: "#a06be0" },
+    },
+    winter: {
+      id: "winter",
+      label: "Winter",
+      hint: "snow drifts behind everything",
+      kinds: ["snow"],
+      size: [10, 18],
+      n: 22,
+      palette: ["#eef1f6", "#d9dee8", "#ffffff"],
+      colors: { c1: "#7fb4e8", c2: "#b9d8f5" },
+    },
+    holidays: {
+      id: "holidays",
+      label: "Holidays",
+      hint: "snow and gold light drift behind everything",
+      kinds: ["snow", "star"],
+      size: [10, 20],
+      n: 22,
+      window: { month: 11, from: 8, to: 31 },
+      palette: ["#ffffff", "#f2d98c", "#c94f4f", "#8fd6a5"],
+      colors: { c1: "#c94f4f", c2: "#8fd6a5" },
+    },
+    spring: {
+      id: "spring",
+      label: "Spring",
+      hint: "blossom petals float behind everything",
+      kinds: ["petal"],
+      size: [11, 20],
+      n: 14,
+      palette: ["#e291b0", "#f0b8cf", "#d97b9c", "#f3cfe0"],
+      colors: { c1: "#e291b0", c2: "#f0b8cf" },
+    },
+    summer: {
+      id: "summer",
+      label: "Summer",
+      hint: "light motes drift behind everything",
+      kinds: ["mote"],
+      size: [8, 16],
+      n: 12,
+      palette: ["#e6c35c", "#f0d98c", "#f5e3a8"],
+      colors: { c1: "#d9b64a", c2: "#f0d98c" },
+    },
+  };
+
+  /* the seasons themselves: which months they cover, and which themes they
+     offer. The first variant is the plain season and the one that wins when
+     no holiday window is open. */
   var SEASONS = [
-    { id: "winter", label: "Winter", hint: "snow drifts behind everything", months: [11, 0, 1], size: [10, 18], n: 22 },
-    { id: "spring", label: "Spring", hint: "blossom petals float behind everything", months: [2, 3, 4], size: [11, 20], n: 14 },
-    { id: "summer", label: "Summer", hint: "light motes drift behind everything", months: [5, 6, 7], size: [8, 16], n: 12 },
-    { id: "fall", label: "Fall", hint: "leaves drift behind everything", months: [8, 9, 10], size: [14, 26], n: 16 },
+    { id: "winter", months: [11, 0, 1], variants: ["winter", "holidays"] },
+    { id: "spring", months: [2, 3, 4], variants: ["spring"] },
+    { id: "summer", months: [5, 6, 7], variants: ["summer"] },
+    { id: "fall", months: [8, 9, 10], variants: ["fall", "halloween"] },
   ];
 
-  /* used for --ac-* when the user hasn't picked their own accent */
-  var COLORS = {
-    fall: { c1: "#d98e3d", c2: "#e6b45f" },
-    winter: { c1: "#7fb4e8", c2: "#b9d8f5" },
-    spring: { c1: "#e291b0", c2: "#f0b8cf" },
-    summer: { c1: "#d9b64a", c2: "#f0d98c" },
-  };
-
-  /* one SVG shape per season; {C} is swapped for a color per particle */
-  var SVG = {
-    /* leaf: Material "eco" glyph, filled */
-    fall: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="{C}" d="M6.05 8.05c-2.73 2.73-2.73 7.15-.02 9.88 1.47-3.4 4.09-6.24 7.36-7.93-2.77 2.34-4.71 5.61-5.39 9.32 2.6 1.23 5.8.78 7.95-1.37C19.43 14.47 20 4 20 4S9.53 4.57 6.05 8.05z"/></svg>',
-    /* snowflake: three crossing lines, 6-point silhouette */
-    winter: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="{C}" stroke-width="1.6" stroke-linecap="round"><path d="M12 2v20M3.3 7l17.4 10M20.7 7L3.3 17"/></svg>',
-    /* petal: a soft teardrop */
-    spring: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="{C}" d="M12 2C17 8 19.5 12.5 12 22 4.5 12.5 7 8 12 2Z"/></svg>',
-    /* sparkle: Material "auto_awesome" glyph */
-    summer: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="{C}" d="M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5z"/></svg>',
-  };
-
-  var PALETTES = {
-    fall: ["#c97b3a", "#d9a441", "#a85a32", "#e0b45f"],
-    winter: ["#eef1f6", "#d9dee8", "#ffffff"],
-    spring: ["#e291b0", "#f0b8cf", "#d97b9c", "#f3cfe0"],
-    summer: ["#e6c35c", "#f0d98c", "#f5e3a8"],
-  };
-
-  function detect() {
-    /* dev-console preview wins over the calendar */
-    var ov = N.prefs.get("seasonOverride");
-    if (ov) {
-      var hit = SEASONS.find(function (s) {
-        return s.id === ov;
-      });
-      if (hit) return hit;
-    }
-    var m = new Date().getMonth();
+  function seasonFor(date) {
+    var m = (date || new Date()).getMonth();
     return (
       SEASONS.find(function (s) {
         return s.months.indexOf(m) >= 0;
-      }) || SEASONS[3]
+      }) || SEASONS[0]
     );
+  }
+
+  function themeFor(id) {
+    return (id && THEMES[id]) || THEMES.fall;
+  }
+
+  /* is today inside a variant's own window? */
+  function inWindow(t, date) {
+    if (!t.window) return false;
+    var d = date || new Date();
+    return d.getMonth() === t.window.month && d.getDate() >= t.window.from && d.getDate() <= t.window.to;
+  }
+
+  /* the theme the calendar alone would pick right now */
+  function autoTheme(date) {
+    var season = seasonFor(date);
+    var hit = null;
+    season.variants.forEach(function (id) {
+      if (inWindow(THEMES[id], date)) hit = id;
+    });
+    return THEMES[hit || season.variants[0]];
+  }
+
+  function detect() {
+    /* dev-console preview wins over everything */
+    var ov = N.prefs.get("seasonOverride");
+    if (ov && THEMES[ov]) return THEMES[ov];
+    /* then the theme the visitor picked in Settings */
+    var pick = N.prefs.get("seasonVariant");
+    if (pick && THEMES[pick]) return THEMES[pick];
+    return autoTheme();
   }
 
   /* ---------- particle layer ---------- */
@@ -9020,7 +10420,7 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-13T13:32:21.808Z","g
   }
 
   function spawn() {
-    var s = detect();
+    var t = detect();
     var perf = N.prefs.get("perf");
     var reduced =
       window.matchMedia &&
@@ -9028,20 +10428,18 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-13T13:32:21.808Z","g
     if (N.prefs.data.seasonal === false || gated() || perf || reduced) return;
     if (fx && fx.el.isConnected) return;
 
-    var svg = SVG[s.id];
-    var palette = PALETTES[s.id];
-    var size = s.size;
     var el = document.createElement("div");
     el.className = "season-fx";
     el.setAttribute("aria-hidden", "true");
-    for (var i = 0; i < s.n; i++) {
+    for (var i = 0; i < t.n; i++) {
+      var svg = SHAPES[t.kinds[i % t.kinds.length]] || SHAPES.fall || SHAPES.mote;
       var p = document.createElement("span");
       p.className = "sf-p";
       var uri =
         "data:image/svg+xml;utf8," +
-        encodeURIComponent(svg.replace("{C}", palette[i % palette.length]));
+        encodeURIComponent(svg.replace("{C}", t.palette[i % t.palette.length]));
       p.style.backgroundImage = "url(\"" + uri + "\")";
-      var px = (size[0] + Math.random() * (size[1] - size[0])).toFixed(1);
+      var px = (t.size[0] + Math.random() * (t.size[1] - t.size[0])).toFixed(1);
       p.style.width = px + "px";
       p.style.height = px + "px";
       p.style.left = (Math.random() * 100).toFixed(2) + "%";
@@ -9074,13 +10472,12 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-13T13:32:21.808Z","g
       }
       return;
     }
-    var s = detect();
-    root.dataset.season = s.id;
+    var t = detect();
+    root.dataset.season = t.id;
     /* seasonal colors only when the user hasn't picked their own accent */
     if (!N.prefs.data.accent || N.prefs.data.accent === "off") {
-      var c = COLORS[s.id];
-      root.style.setProperty("--ac-1", c.c1);
-      root.style.setProperty("--ac-2", c.c2);
+      root.style.setProperty("--ac-1", t.colors.c1);
+      root.style.setProperty("--ac-2", t.colors.c2);
     }
   }
 
@@ -9100,14 +10497,42 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-13T13:32:21.808Z","g
   N.seasons = {
     now: detect,
     refresh: refresh,
-    /* dev console: force a season, follow the calendar, or turn it off */
+    /* the theme the calendar alone would pick, ignoring any pick or preview */
+    auto: autoTheme,
+    /* every theme on offer for the season we are in: Settings lists these so
+       the season and its holiday are both there to choose between */
+    options: function (date) {
+      var season = seasonFor(date);
+      var auto = autoTheme(date);
+      return season.variants.map(function (id) {
+        return Object.assign({}, THEMES[id], { season: season.id, auto: id === auto.id });
+      });
+    },
+    all: function () {
+      return Object.keys(THEMES).map(function (id) {
+        return Object.assign({}, THEMES[id]);
+      });
+    },
+    /* Settings: choose which theme is worn. `id` is a theme id, or null for
+       "Automatic" (the calendar, holiday windows included). Clears any
+       dev-console preview so the choice actually takes. */
+    setVariant: function (id) {
+      N.prefs.set("seasonal", true);
+      N.prefs.set("seasonOverride", null);
+      N.prefs.set("seasonVariant", id && THEMES[id] ? id : null);
+      refresh();
+      return detect();
+    },
+    /* dev console: force a theme, follow the calendar, or turn it off */
     pick: function (id) {
       if (!id || id === "off") {
         N.prefs.set("seasonal", false);
         N.prefs.set("seasonOverride", null);
+        N.prefs.set("seasonVariant", null);
       } else if (id === "auto") {
         N.prefs.set("seasonal", true);
         N.prefs.set("seasonOverride", null);
+        N.prefs.set("seasonVariant", null);
       } else {
         N.prefs.set("seasonal", true);
         N.prefs.set("seasonOverride", id);
@@ -9116,6 +10541,7 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-13T13:32:21.808Z","g
     },
   };
 })();
+
 /* NULL · scroll.js
    Custom overlay scrollbar for the library pages (games / apps / proxies).
    The native page scrollbar is hidden; a slim frosted pill tracks scroll.
@@ -9551,36 +10977,13 @@ window.NULL_CONTENT = {
 
   /* Shop-unlocked beta builds. These never appear in the auto-discovered
      library: buying them in /shop merges them in at runtime (see
-     catalog.js). Point `file` at the real beta build whenever one exists. */
-  betas: [
-    {
-      id: "beta-simon",
-      name: "Simon: Deluxe",
-      date: "2026-09-08",
-      desc: "Beta branch of SIMON: faster rounds and double-tap combos. Beta-only, unlocked in the Shop.",
-      file: "/games/simon/simon.html",
-      labels: ["beta", "memory"],
-      price: 60,
-    },
-    {
-      id: "beta-void",
-      name: "Void: Nightshift",
-      date: "2026-09-08",
-      desc: "An experimental VOID variant with a colder palette. Beta-only, unlocked in the Shop.",
-      file: "/games/void/void.html",
-      labels: ["beta", "arcade"],
-      price: 60,
-    },
-    {
-      id: "beta-trace",
-      name: "Trace: Ghost Mode",
-      date: "2026-09-08",
-      desc: "Beta branch of TRACE: trails linger longer. Beta-only, unlocked in the Shop.",
-      file: "/games/trace/trace.html",
-      labels: ["beta", "precision"],
-      price: 60,
-    },
-  ],
+     catalog.js).
+
+     `file` has to point at a build that is really in the repo. A missing one
+     404s the shop tile and fails check-links, so a beta can only be listed
+     while its game folder is there. Empty means the Shop shows no beta
+     section at all (see shop.js). */
+  betas: [],
 
   pages: [
     {
@@ -9636,15 +11039,15 @@ window.NULL_CONTENT = {
       title: "Shop",
       url: "/shop.html",
       grp: "Extras",
-      desc: "Spend coins earned by playing on beta games, custom themes and effects.",
-      kw: "shop store coins xp unlock buy beta theme rewards",
+      desc: "Spend coins earned by playing on custom themes and effects, the custom background image, and the theme and particle editor.",
+      kw: "shop store coins xp unlock buy theme rewards editor background",
     },
     {
       title: "Settings",
       url: "/settings.html",
       grp: "Pages",
-      desc: "Theme, accent, tab presets, performance mode.",
-      kw: "preferences theme accent tab cloak performance",
+      desc: "Theme, accent, layout compactness, seasonal and holiday themes, background image, tab presets, performance and Mini-Perf.",
+      kw: "preferences theme accent tab cloak performance density compact comfy spacious seasonal holiday halloween background",
     },
     {
       title: "About",
@@ -9687,6 +11090,51 @@ window.NULL_CONTENT = {
       grp: "Info",
       desc: "NULL’s open license, the GNU AGPL version 3.",
       kw: "license agpl gnu copyleft open source",
+    },
+
+    /* The hidden pages. Nothing links them from the nav, but they are typed
+       in like any other page so search can turn them up. `body: false` keeps
+       the page text out of the index: blob alone would otherwise match half
+       the site's vocabulary. */
+    {
+      title: "Void",
+      url: "/void.html",
+      grp: "Hidden",
+      kind: "egg",
+      icon: "eye",
+      body: false,
+      desc: "An entirely black page with one small line in the middle. The void awaits, and it does not explain itself.",
+      kw: "void black blank dark nothing easter egg hidden lmao",
+    },
+    {
+      title: "Blob",
+      url: "/blob.html",
+      grp: "Hidden",
+      kind: "egg",
+      icon: "eye",
+      body: false,
+      desc: "A page that types blob lines at you, semi fast, forever. Not a mascot. A lifestyle.",
+      kw: "blob typing stream wobble easter egg hidden joke nldev",
+    },
+    {
+      title: "Time",
+      url: "/time.html",
+      grp: "Hidden",
+      kind: "egg",
+      icon: "clock",
+      body: false,
+      desc: "The clock page. NULL is open from midnight to 8:00 AM, and this tells you exactly where you stand.",
+      kw: "time clock midnight 8am vampire hours schedule easter egg hidden",
+    },
+    {
+      title: "Credits",
+      url: "/credits.html",
+      grp: "Hidden",
+      kind: "egg",
+      icon: "star",
+      body: false,
+      desc: "The credits roll, and a skip button that does not skip anything.",
+      kw: "credits roll thanks people skip easter egg hidden",
     },
   ],
 };
@@ -10860,8 +12308,8 @@ window.NULL_CONTENT = {
     (C.pages || []).forEach(function (pg) {
       var raw = pg.title + " " + pg.desc + " " + pg.kw + " " + pg.grp;
       idx.push({
-        kind: "page",
-        icon: "list",
+        kind: pg.kind || "page",
+        icon: pg.icon || "list",
         title: pg.title,
         _t: norm(pg.title),
         _h: norm(raw),
@@ -10870,7 +12318,9 @@ window.NULL_CONTENT = {
           location.href = pg.url;
         },
       });
-      fetchPageText(pg);
+      /* the hidden pages skip body indexing: their text is the joke, and
+         blob's wall of lines would match half the site's vocabulary */
+      if (pg.body !== false) fetchPageText(pg);
     });
     (C.announcements || []).forEach(function (a) {
       var raw = a.title + " " + a.desc + " " + a.category + " announcement news";
@@ -10910,6 +12360,7 @@ window.NULL_CONTENT = {
     app: "Apps",
     proxy: "Proxies",
     page: "Pages",
+    egg: "Hidden",
     announcement: "Announcements",
   };
 
@@ -11598,8 +13049,7 @@ return foot;
   /* ---------- keyboard ---------- */
   function shortcuts() {
     document.addEventListener("keydown", function (e) {
-      var t = e.target;
-      var typing = t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable);
+      var typing = isTyping(e.target);
       if (e.key === "/" && !typing) {
         e.preventDefault();
         N.search.open();
@@ -11636,6 +13086,291 @@ return foot;
         window.location.href = url;
       }
     }
+  }
+
+  /* ============================================================
+     the hidden pages, and how you fall into them
+       /void     hold Backspace and the page erases line by line
+       /blob     a small orb sits in the corner during period four
+       /time     type the current half of the day, or outlast midnight
+       /credits  the shop's completion reward (see shop.js)
+     ============================================================ */
+  var VOID_URL = "/void.html";
+  var BLOB_URL = "/blob.html";
+  var TIME_URL = "/time.html";
+
+  function isTyping(t) {
+    return (
+      !!t &&
+      (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable)
+    );
+  }
+
+  /* the eggs stay off the player, and nothing fires over another overlay */
+  function eggsAllowed() {
+    var b = document.body;
+    return !b.classList.contains("player-page") && !b.classList.contains("no-chrome");
+  }
+  function eggsReady() {
+    return (
+      eggsAllowed() &&
+      !d.qs(".modal-ov.open") &&
+      !d.qs(".search-ov.open") &&
+      !d.qs(".dc-ov") &&
+      !d.qs(".dc-gate")
+    );
+  }
+
+  /* ---------- /void: hold Backspace ----------
+     A tap does nothing. Keep holding and the page is wiped away in thin
+     horizontal lines, bottom to top; let go early and it snaps back. The
+     hold has to run to the end (or the void is not impressed). */
+  var HOLD_MS = 150; // a tap never starts the wipe
+  var ERASE_MS = 1900; // hold this long to finish it
+  var LINE_PX = 12; // one erased line (matches the stripe period in extra.css)
+  var eraseEl = null;
+  var eraseRaf = 0;
+  var eraseAt = 0;
+  var holdTimer = 0;
+
+  function eraseBegin() {
+    if (eraseEl) return;
+    var ov = d.h("div", { class: "erase-ov", "aria-hidden": "true" }, [
+      d.h("div", { class: "erase-fill" }),
+      d.h("div", { class: "erase-edge" }),
+      d.h("div", { class: "erase-hint" }, "keep holding to erase"),
+    ]);
+    document.body.appendChild(ov);
+    eraseEl = ov;
+    eraseAt = Date.now();
+    requestAnimationFrame(eraseStep);
+    setTimeout(function () {
+      if (eraseEl === ov) ov.classList.add("holding");
+    }, 220);
+  }
+
+  function eraseStep() {
+    if (!eraseEl) return;
+    var p = Math.min(1, (Date.now() - eraseAt) / ERASE_MS);
+    /* snap to whole lines so it reads as one line at a time, not a slide */
+    var h = Math.min(window.innerHeight, Math.round((p * window.innerHeight) / LINE_PX) * LINE_PX);
+    var fill = d.qs(".erase-fill", eraseEl);
+    var edge = d.qs(".erase-edge", eraseEl);
+    if (fill) fill.style.height = h + "px";
+    if (edge) edge.style.bottom = h + "px";
+    if (p >= 1) {
+      eraseFinish();
+      return;
+    }
+    eraseRaf = requestAnimationFrame(eraseStep);
+  }
+
+  function eraseFinish() {
+    cancelAnimationFrame(eraseRaf);
+    var ov = eraseEl;
+    eraseEl = null;
+    if (ov) {
+      /* last line falls: drop the stripes and close the screen out */
+      ov.classList.add("filled");
+      var fill = d.qs(".erase-fill", ov);
+      var edge = d.qs(".erase-edge", ov);
+      if (fill) fill.style.height = "100%";
+      if (edge) edge.style.bottom = "100%";
+    }
+    setTimeout(function () {
+      location.href = VOID_URL;
+    }, 150);
+  }
+
+  function eraseCancel() {
+    cancelAnimationFrame(eraseRaf);
+    var ov = eraseEl;
+    eraseEl = null;
+    if (!ov) return;
+    ov.classList.add("out");
+    var fill = d.qs(".erase-fill", ov);
+    var edge = d.qs(".erase-edge", ov);
+    if (fill) fill.style.height = "0px";
+    if (edge) edge.style.bottom = "0px";
+    setTimeout(function () {
+      if (ov.parentNode) ov.parentNode.removeChild(ov);
+    }, 260);
+  }
+
+  function armErase() {
+    document.addEventListener("keydown", function (e) {
+      if (e.key !== "Backspace" || e.repeat) return;
+      if (isTyping(e.target) || !eggsReady()) return;
+      e.preventDefault();
+      if (eraseEl || holdTimer) return;
+      holdTimer = setTimeout(function () {
+        holdTimer = 0;
+        eraseBegin();
+      }, HOLD_MS);
+    });
+    function stop() {
+      if (holdTimer) {
+        clearTimeout(holdTimer);
+        holdTimer = 0;
+      }
+      if (eraseEl) eraseCancel();
+    }
+    document.addEventListener("keyup", function (e) {
+      if (e.key === "Backspace") stop();
+    });
+    window.addEventListener("blur", stop);
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden) stop();
+    });
+  }
+
+  /* ---------- /time: type the current half of the day ----------
+     "am" before noon, "pm" after. The chunk resets on any non-letter so a
+     word that merely ends in am/pm does not count. */
+  function armTimeCode() {
+    var chunk = "";
+    document.addEventListener("keydown", function (e) {
+      if (e.repeat) return;
+      var k = e.key;
+      if (!k || k.length !== 1 || !/[a-z]/i.test(k)) {
+        chunk = "";
+        return;
+      }
+      if (isTyping(e.target)) {
+        chunk = "";
+        return;
+      }
+      chunk = (chunk + k.toLowerCase()).slice(-8);
+      var frame = new Date().getHours() < 12 ? "am" : "pm";
+      if (chunk === frame && eggsReady()) {
+        chunk = "";
+        location.href = TIME_URL;
+      }
+    });
+  }
+
+  /* ---------- midnight: the day rolls over with confetti ---------- */
+  function midnightParty() {
+    N.modal.open({
+      title: "Midnight",
+      icon: "clock",
+      body:
+        "<p>It is officially a new day. NULL is awake from <b>midnight to 8:00 AM</b>, so the halls are yours.</p>" +
+        "<p style='color:var(--text-2)'>The <b>/time</b> page has the live clock, if you want to watch it with us.</p>",
+      actions: [
+        { label: "Stay up", variant: "outline" },
+        {
+          label: "Open /time",
+          variant: "primary",
+          onClick: function () {
+            location.href = TIME_URL;
+          },
+        },
+      ],
+    });
+    /* confetti() guards itself for ~2.6 s, so space the bursts out past it */
+    confetti();
+    setTimeout(confetti, 2700);
+    setTimeout(confetti, 5400);
+  }
+
+  function midnightTick() {
+    var now = new Date();
+    if (now.getHours() !== 0 || now.getMinutes() !== 0) return;
+    if (!eggsReady()) return; /* another overlay owns the screen: try again */
+    var key = "midnight:" + now.toDateString();
+    if (N.flags.get(key)) return;
+    N.flags.set(key);
+    midnightParty();
+  }
+
+  function armMidnight() {
+    midnightTick();
+    setInterval(midnightTick, 10000);
+    document.addEventListener("visibilitychange", function () {
+      if (!document.hidden) midnightTick();
+    });
+  }
+
+  /* ---------- /blob: the orb that shows up in period four ----------
+     One click swaps the face to -𐃷-; a second, at least a second later,
+     drops you on /blob. */
+  var orbEl = null;
+  var orbArmedAt = 0;
+  /* the dev console can force the orb on or off, or hand it back to the
+     schedule (null) */
+  var orbForced = null;
+
+  function periodFourNow() {
+    if (!N.schedule || !N.schedule.blocksFor) return false;
+    var info = N.schedule.todayInfo();
+    if (!info || !info.type) return false;
+    var blocks = N.schedule.blocksFor(info.type);
+    var now = new Date();
+    var secs = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+    for (var i = 0; i < blocks.length; i++) {
+      if (blocks[i].n !== 4) continue;
+      var s = N.schedule.parseHM(blocks[i].start) * 60;
+      var e = N.schedule.parseHM(blocks[i].end) * 60;
+      return secs >= s && secs < e;
+    }
+    return false;
+  }
+
+  function paintOrb() {
+    var want = orbForced === null ? periodFourNow() : !!orbForced;
+    if (want && eggsAllowed()) orbShow();
+    else if (orbEl) orbHide();
+  }
+
+  /* nldev: force the face on, force it off, then back on the schedule */
+  function orbToggle() {
+    orbForced = orbForced === null ? true : orbForced ? false : null;
+    paintOrb();
+    return orbForced;
+  }
+
+  function orbShow() {
+    if (orbEl) return;
+    var face = d.h("span", { class: "orb-face" }, "•𐃷•");
+    var btn = d.h(
+      "button",
+      {
+        type: "button",
+        class: "blob-orb",
+        title: "•𐃷•",
+        "aria-label": "blob",
+        onclick: function () {
+          var now = Date.now();
+          if (!orbArmedAt) {
+            orbArmedAt = now;
+            face.textContent = "-𐃷-";
+            btn.classList.add("armed");
+            return;
+          }
+          if (now - orbArmedAt < 1000) return; // cooldown between the two clicks
+          location.href = BLOB_URL;
+        },
+      },
+      [face],
+    );
+    document.body.appendChild(btn);
+    orbEl = btn;
+  }
+
+  function orbHide() {
+    var el = orbEl;
+    orbEl = null;
+    orbArmedAt = 0;
+    if (el && el.parentNode) el.parentNode.removeChild(el);
+  }
+
+  function armOrb() {
+    paintOrb();
+    setInterval(paintOrb, 10000);
+    document.addEventListener("visibilitychange", function () {
+      if (!document.hidden) paintOrb();
+    });
   }
 
   /* ---------- cloaking: open the whole site in about:blank / blob: ----------
@@ -12235,6 +13970,12 @@ return foot;
     initSs();
     watchPeriodEnd();
 
+    /* the hidden pages: hold Backspace, the period-four orb, the clock codes */
+    armErase();
+    armTimeCode();
+    armOrb();
+    armMidnight();
+
     /* weekly wrap-up: slightly delayed so it stacks above (never under)
        the first-run welcome chain on the home page */
     setTimeout(wrapupCheck, 1200);
@@ -12327,7 +14068,13 @@ return foot;
     },
   };
 
-  N.shell = { init: init, screensaverNow: ssNow };
+  N.shell = {
+    init: init,
+    screensaverNow: ssNow,
+    /* dev console: the blob orb and the midnight party on demand */
+    orb: orbToggle,
+    midnightNow: midnightParty,
+  };
   N.fx = { confetti: confetti };
   N.perf = { ultra: ultraOn, watchFps: fpsWatch, floor: FPS_FLOOR };
 

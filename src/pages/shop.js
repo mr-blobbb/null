@@ -1,7 +1,11 @@
 /* NULL · shop.js
    The Shop page: shows the local economy (playtime → XP → coins) and lets
-   coins unlock beta games, theme accents, the XP boost and effects. All
-   state lives in null:eco: nothing is purchased with real money. */
+   coins unlock theme accents, particles, the XP boost and effects. All state
+   lives in null:eco: nothing is purchased with real money.
+
+   Beta games come from the hand-maintained entries in content.js. With none
+   listed there (the default) the section is not rendered at all, so the Shop
+   never shows an empty shelf. Add an entry and it comes back on its own. */
 (function () {
   var N = (window.N = window.N || {});
   var d = N.dom;
@@ -436,18 +440,16 @@
     questSec.appendChild(N.daily.questList(render));
     body.appendChild(questSec);
 
-    var betaSec = section("Beta games", "game", "unlocked builds join your library");
-    var betaGrid = d.h("div", { class: "shop-grid" });
-    var list = betas();
-    if (!list.length) {
-      betaGrid.appendChild(N.cards.empty("No beta builds yet", "New beta games land here as they're ready."));
-    } else {
-      list.forEach(function (b) {
+    var betaList = betas();
+    if (betaList.length) {
+      var betaSec = section("Beta games", "game", "unlocked builds join your library");
+      var betaGrid = d.h("div", { class: "shop-grid" });
+      betaList.forEach(function (b) {
         betaGrid.appendChild(betaCard(b));
       });
+      betaSec.appendChild(betaGrid);
+      body.appendChild(betaSec);
     }
-    betaSec.appendChild(betaGrid);
-    body.appendChild(betaSec);
 
     var themeSec = section("Theme packs", "pen", "a palette *and* a live backdrop");
     var themeGrid = d.h("div", { class: "shop-grid" });

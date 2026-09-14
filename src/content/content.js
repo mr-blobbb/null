@@ -35,8 +35,8 @@ window.NULL_CONTENT = {
 
      `file` has to point at a build that is really in the repo. A missing one
      404s the shop tile and fails check-links, so a beta can only be listed
-     while its game folder is there. Empty for now: the library ships with
-     hollow-knight alone. */
+     while its game folder is there. Empty means the Shop shows no beta
+     section at all (see shop.js). */
   betas: [],
 
   pages: [
@@ -93,8 +93,8 @@ window.NULL_CONTENT = {
       title: "Shop",
       url: "/shop.html",
       grp: "Extras",
-      desc: "Spend coins earned by playing on beta games, custom themes and effects, the custom background image, and the theme and particle editor.",
-      kw: "shop store coins xp unlock buy beta theme rewards editor background",
+      desc: "Spend coins earned by playing on custom themes and effects, the custom background image, and the theme and particle editor.",
+      kw: "shop store coins xp unlock buy theme rewards editor background",
     },
     {
       title: "Settings",

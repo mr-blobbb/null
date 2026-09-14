@@ -71,7 +71,7 @@ const TIERS = {
   lite: { title: "NULL Lite", extraCss: false, minify: true },
 };
 
-/* "/games/flip/flip.html" → "games/flip/flip.html" */
+/* "/games/my-game/my-game.html" → "games/my-game/my-game.html" */
 const local = (url) => (typeof url === "string" && url.charAt(0) === "/" ? url.slice(1) : null);
 
 function dataUri(file, mime) {

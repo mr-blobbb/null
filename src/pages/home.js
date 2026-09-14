@@ -16,8 +16,8 @@
      The games you want on the home page, in order. Type any of these and it
      lands in the Featured rail:
 
-       "snake"            the folder name (games/snake)
-       "Snake"            the display name, case does not matter
+       "hollow-knight"    the folder name (games/hollow-knight)
+       "Hollow Knight"    the display name, case does not matter
        "hollow knight"    spaces and dashes are ignored when matching
 
      A name that matches nothing is skipped, so a typo costs you one card
@@ -25,8 +25,6 @@
      and the rest fills with the first games in the library. Apps are never
      featured here: this rail is games only. */
   var FEATURED = [
-    "snake",
-    "pulse",
     "hollow-knight",
   ];
   var FEATURED_MAX = 10;

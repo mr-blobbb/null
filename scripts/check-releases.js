@@ -84,33 +84,47 @@ for (const build of BUILDS) {
   if (errors.length) console.log("  errors: " + errors.slice(0, 4).join(" | "));
 
   ok(win.RELEASE_TIER === build.replace("null-", "").replace(".html", ""), "tier is set");
-  ok((win.NULL_CATALOG.games || []).length > 0, "embedded catalog loads (" + win.NULL_CATALOG.games.length + " games)");
-  ok(/^data:text\/html/.test(win.NULL_CATALOG.games[0].data), "games carry their own code as a data: URI");
+
+  /* the library travels inside the build, so an empty games/ gives a build
+     with no games rather than a broken one: only ask for a game when there
+     is one to ask about */
+  const games = (win.NULL_CATALOG && win.NULL_CATALOG.games) || [];
+  ok(
+    !!win.NULL_CATALOG,
+    "embedded catalog loads (" + games.length + " games, " + ((win.NULL_CATALOG || {}).apps || []).length + " apps)",
+  );
+  if (games.length) ok(/^data:text\/html/.test(games[0].data), "games carry their own code as a data: URI");
 
   const navBtns = doc.querySelectorAll(".rel-nav button");
   ok(navBtns.length > 3, "shell renders the nav (" + navBtns.length + " pages)");
   ok(!!doc.querySelector(".rel-hero"), "home view renders the hero");
-  ok(doc.querySelectorAll(".libgrid .tcard").length > 0, "featured grid renders cards");
+  ok(
+    doc.querySelectorAll(".libgrid .tcard").length > 0 === games.length > 0,
+    games.length ? "featured grid renders cards" : "an empty library draws no cards",
+  );
   ok(!!doc.querySelector("#dailyStrip") === !lite, "daily crate strip " + (lite ? "hidden on lite" : "present"));
 
   /* nav → library */
   click(byText(navBtns, /^Games$/));
   const cards = doc.querySelectorAll(".libgrid .tcard");
-  ok(!!doc.querySelector(".view-head") && cards.length > 0, "games view lists the library (" + cards.length + " cards)");
+  ok(!!doc.querySelector(".view-head"), "games view mounts");
 
-  /* a card must open the overlay, not navigate to a player page */
-  click(cards[0]);
-  const frame = doc.querySelector(".player iframe");
-  ok(!!doc.querySelector(".player") && !!frame, "a card opens the player overlay");
-  ok(!!frame && /^data:text\/html/.test(frame.getAttribute("src") || ""), "the game runs from its embedded copy");
-  click(doc.querySelector(".player-bar .btn-icon"));
-  ok(!doc.querySelector(".player"), "closing the player removes the overlay");
+  if (games.length) {
+    ok(cards.length > 0, "games view lists the library (" + cards.length + " cards)");
 
-  /* search results route back into the same overlay */
-  const searchHit = win.NULL_CATALOG.games[0];
-  win.N.launch.game(searchHit);
-  ok(!!doc.querySelector(".player iframe"), "N.launch.game opens the overlay too");
-  click(doc.querySelector(".player-bar .btn-icon"));
+    /* a card must open the overlay, not navigate to a player page */
+    click(cards[0]);
+    const frame = doc.querySelector(".player iframe");
+    ok(!!doc.querySelector(".player") && !!frame, "a card opens the player overlay");
+    ok(!!frame && /^data:text\/html/.test(frame.getAttribute("src") || ""), "the game runs from its embedded copy");
+    click(doc.querySelector(".player-bar .btn-icon"));
+    ok(!doc.querySelector(".player"), "closing the player removes the overlay");
+
+    /* search results route back into the same overlay */
+    win.N.launch.game(games[0]);
+    ok(!!doc.querySelector(".player iframe"), "N.launch.game opens the overlay too");
+    click(doc.querySelector(".player-bar .btn-icon"));
+  }
 
   /* settings */
   click(byText(doc.querySelectorAll(".rel-nav button"), /^Settings$/));

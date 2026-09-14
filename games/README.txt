@@ -20,7 +20,7 @@ The game appears automatically on /games: no JSON, no manual registry.
 
 Notes
 -----
-- Folders without an HTML file are ignored (they don't show as broken cards).
-  games/hollow-knight/ is an example: drop the real files in and rebuild.
+- Folders without an HTML file are ignored (they don't show as broken cards),
+  so a half-finished folder can sit there until the game is ready.
 - Missing thumbnails automatically fall back to the NULL-style placeholder.
 - If a folder starts with "_" or "." it is skipped entirely.

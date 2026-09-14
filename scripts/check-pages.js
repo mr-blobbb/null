@@ -122,9 +122,23 @@ for (const page of PAGES) {
   }
 
   if (page === "index.html") {
-    ok(doc.querySelectorAll(".tcard").length > 0, "home lists featured cards (" + doc.querySelectorAll(".tcard").length + ")");
+    /* the library can be empty while you are still adding folders, so the
+       home page is asked to agree with the catalog rather than to have cards */
+    const g = win.N.catalog.games().length;
+    const a = win.N.catalog.apps().length;
+    const p = win.N.catalog.proxies().length;
+    const featured = doc.querySelectorAll(".tcard").length;
+    ok(
+      g ? featured > 0 : !!doc.querySelector(".feat-empty"),
+      g ? "home lists featured cards (" + featured + ")" : "an empty library shows the featured empty state",
+    );
+    const n = (count, one, many) => (count ? count.toLocaleString() + " " + (count === 1 ? one : many) : "");
+    const want = [n(g, "game", "games"), n(a, "app", "apps"), n(p, "proxy", "proxies")].filter(Boolean).join(" · ");
     const stats = doc.querySelector("#mastStats");
-    ok(!!stats && /game/.test(stats.textContent), "masthead shows the live catalog counts (\"" + (stats ? stats.textContent : "") + "\")");
+    ok(
+      !!stats && stats.textContent === want,
+      "masthead shows the live catalog counts (\"" + (stats ? stats.textContent : "") + "\")",
+    );
     ok(!!doc.querySelector(".mast-quick a"), "masthead quick links render");
   }
 
@@ -224,6 +238,18 @@ for (const page of PAGES) {
       dev.hide();
     }
   }
+  if (page === "shop.html") {
+    /* the beta shelf is hand-maintained in content.js: with the list empty
+       the section should not be there at all, not sitting there empty */
+    const betas = (win.NULL_CONTENT && win.NULL_CONTENT.betas) || [];
+    const body = doc.querySelector("#shopBody").textContent;
+    ok(doc.querySelectorAll("#shopBody .shop-card").length > 0, "the shop lists its unlocks (" + doc.querySelectorAll("#shopBody .shop-card").length + " cards)");
+    ok(
+      /Beta games/.test(body) === betas.length > 0,
+      betas.length ? "beta builds are listed (" + betas.length + ")" : "no beta section while the beta list is empty",
+    );
+  }
+
   if (page === "announcements.html") {
     const n = doc.querySelectorAll(".ann-card").length;
     ok(n > 0, "announcements render cards (" + n + ")");
@@ -255,6 +281,11 @@ for (const page of PAGES) {
   }
   if (page.endsWith("index.html") && page !== "index.html") {
     ok(!!doc.querySelector("#libSearch") && !!doc.querySelector("#grid"), "library page mounts its controls");
+    /* an empty folder is a normal state: say so instead of drawing nothing */
+    const kind = page.split("/")[0];
+    if (!win.N.catalog[kind]().length) {
+      ok(!!doc.querySelector("#empty .empty"), "an empty " + kind + " folder shows the empty state");
+    }
   }
   if (page === "player.html") {
     ok(!!doc.querySelector(".player"), "player mounts its stage");

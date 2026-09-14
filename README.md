@@ -24,8 +24,7 @@ site can be previewed and the releases rebuilt; see the end of this file.)
 ├── tests.html             The test suite, run in the browser
 ├── games/                 Game library: index.html is the /games page
 │   ├── index.html         The /games library page
-│   ├── pulse/ …           One folder per game
-│   └── hollow-knight/     Placeholder: drop the real files in, then rebuild the catalog
+│   └── <slug>/ …          One folder per game: the catalog build discovers them
 ├── apps/                  App library: index.html is the /apps page
 ├── proxies/               Proxy list: index.html is the /proxies page
 ├── src/
@@ -330,8 +329,9 @@ this folder as they are, and NULL never calls out to anything.
 - Permanent school schedule (home + /schedule.html) with live now/next, passing
   periods and period-end confetti.
 - Shop + local economy: 30 minutes of play banks 10 XP, 100 XP banks 30 coins,
-  spent on beta games, theme packs with real animated backdrops, particle sets,
-  boosts and effects.
+  spent on theme packs with real animated backdrops, particle sets, boosts and
+  effects. Beta games (`betas` in `content.js`) join the Shop only while that
+  list has entries in it.
 - **Custom background image** (Shop unlock, `fx custombg`): paste a link or
   upload a file in Settings, then set the fit (cover / contain / tile), how far
   it dims behind the page and how soft it is. It gets its own fixed layer
