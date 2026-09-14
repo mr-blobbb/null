@@ -513,10 +513,12 @@
       eq("one row per particle set (free + shop)", qa("#partGrid .pack-card").length, parts.length);
       ok("the packs card lists both free and paid", packs.length >= 8, "found " + packs.length);
       ok("the particles card is populated", parts.length >= 9, "found " + parts.length);
-      ok("theme switch is present", qa("#themeSeg button").length === 2);
+      ok("theme switch is present", !!q("#themeSwitch"));
       ok("glow presets are listed", qa("#glowSelect option").length >= 4);
-      ok("custom glow colours are available", !!q("#glowColor1") && !!q("#glowColor2"));
-      ok("performance mode toggle exists", !!q("#perfSwitch"));
+      ok("custom glow colours are available", qa("#glowColors .cdot").length === 2);
+      ok("the performance tiers are listed", qa("#perfSeg button").length === 3);
+      ok("the section rail is built", qa("#railList .rail-link").length >= 4);
+      ok("cards that are set once fold", qa("[data-fold]").length >= 6);
       ok("data export/import exists", !!q("#btnDataExport") && !!q("#btnDataImport"));
       ok("install-as-app row exists", !!q("#installBtn") && !!q("#installHint"));
       ok("accent swatches render", qa("#accentRow .swatch-btn, #accentRow button").length >= 6);

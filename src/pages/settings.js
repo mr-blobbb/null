@@ -1,202 +1,191 @@
 /* NULL · settings.js
-   Binds every control on /settings. Recently played has its own clear
-   button on the home page: it is not duplicated here. The Danger Zone only
-   holds whole-app resets. */
+   Binds every control on /settings, and owns the page's own chrome: the
+   section rail with its filter and scroll-spy, plus the fold state of the
+   cards that are only set once.
+
+   Recently played has its own clear button on the home page, and the Danger
+   Zone holds whole-app resets only. */
 (function () {
   var N = (window.N = window.N || {});
   var d = N.dom;
 
+  var FOLD_KEY = "null:setFolds";
   var inited = false;
+  var filterQ = "";
+  var accentDot = null;
 
+  /* what each performance tier actually does, said once */
+  var PERF_NOTE = {
+    off: "Everything NULL has: full motion, glow, blur, backdrops and particles.",
+    on: "Animations shortened, hover movement, glow and shadows dropped, and the theme backdrop and particles stay off.",
+    ultra:
+      "Nothing animated at all, no particles, no glow, no blur, and only what is on screen is drawn. Most visual settings stop doing anything while this is on.",
+  };
+
+  /* ---------- small helpers ---------- */
+  function show(el, on) {
+    if (el) el.hidden = !on;
+  }
+  function setText(sel, text) {
+    var el = d.qs(sel);
+    if (el) el.textContent = text;
+  }
+  /* one segment group, one selected option */
+  function segPaint(sel, val) {
+    d.qsa(sel + " button").forEach(function (b) {
+      b.classList.toggle("on", b.dataset.val === val);
+    });
+  }
+
+  /* ============================================================
+     paint: read the prefs back onto every control
+     ============================================================ */
   function refresh() {
     var p = N.prefs.data;
+    paintTheme(p);
+    buildAccentRow();
+    paintAccent(p);
+    paintPerf(p);
+    paintDensity();
+    paintMini();
+    paintGlow();
+    paintSeason();
+    paintSeasonPick();
+    paintBg();
+    paintEditorRow();
+    paintCustom();
+    paintSmart();
+    paintTab();
+    paintCloak();
+    paintPanic();
+    paintExtras(p);
+    paintInstall();
+    paintData();
+    paintPacks();
+    paintParts();
+    /* a rebuild drops the filter's classes, so put them back */
+    if (filterQ) applyFilter(filterQ);
+  }
 
-    /* theme */
-    d.qsa("#themeSeg button").forEach(function (b) {
-      b.classList.toggle("on", b.dataset.val === p.theme);
+  /* ---------- theme ---------- */
+  function paintTheme(p) {
+    var light = p.theme === "light";
+    var sw = d.qs("#themeSwitch");
+    if (sw) sw.checked = light;
+    setText("#themeHint", light ? "Light, NULL inverted." : "Dark, NULL's default.");
+  }
+
+  /* ---------- accent ----------
+     Rebuilt, not filled once: the Shop's custom-colour unlock adds its own
+     swatch, and that can happen while this page is open (a dev-console
+     grant, or another NULL window). */
+  function buildAccentRow() {
+    var row = d.qs("#accentRow");
+    if (!row) return;
+    row.textContent = "";
+    var plain = document.documentElement.dataset.theme === "light" ? "#1c1d21" : "#e8eaef";
+    function swatch(id, name, bg) {
+      var b = d.h("button", { type: "button", class: "swatch-btn", "data-val": id, title: name }, [
+        d.h("span", { class: "accent-dot", style: { background: bg } }),
+        name,
+      ]);
+      b.addEventListener("click", function () {
+        N.prefs.set("accent", id);
+        N.theme.setAccent(id);
+        if (N.seasons) N.seasons.refresh(); /* re-assert seasonal colours when accent = off */
+        refresh();
+      });
+      row.appendChild(b);
+    }
+    N.theme.ACCENTS.forEach(function (a) {
+      swatch(a.id, a.name, a.c1 || plain);
     });
+    if (N.theme.customOn && N.theme.customOn()) {
+      swatch("custom", "Custom", N.prefs.get("accentColor") || "#6cc7ff");
+    }
+  }
 
-    /* accent swatches */
+  function paintAccent(p) {
     d.qsa("#accentRow .swatch-btn").forEach(function (b) {
       b.classList.toggle("on", b.dataset.val === p.accent);
     });
+    var all = N.theme.ACCENTS.concat(N.theme.extraAccents());
+    var a = all.filter(function (x) {
+      return x.id === p.accent;
+    })[0];
+    setText("#accentHint", a ? a.name : "One colour, or a whole theme pack.");
+    var hex = p.accentColor || "#6cc7ff";
+    var swatch = d.qs("#accentRow .swatch-btn[data-val=\"custom\"] .accent-dot");
+    if (swatch) swatch.style.background = hex;
+    if (accentDot) accentDot.setValue(hex);
+  }
 
-    /* glow preset */
-    var gsel = d.qs("#glowSelect");
-    if (gsel) {
-      gsel.value = p.glow;
-      N.dom.selSync(gsel);
-    }
-    paintGlow();
+  /* ---------- performance ---------- */
+  function paintPerf(p) {
+    var level = p.perf === "ultra" ? "ultra" : p.perf ? "on" : "off";
+    segPaint("#perfSeg", level);
+    setText("#perfNote", PERF_NOTE[level]);
+  }
 
-    /* performance switches: perf is false | true | "ultra" */
-    var sw = d.qs("#perfSwitch");
-    if (sw) sw.checked = !!p.perf;
-    var usw = d.qs("#ultraSwitch");
-    if (usw) usw.checked = p.perf === "ultra";
+  function paintDensity() {
+    segPaint("#densitySeg", N.prefs.get("density") || "regular");
+  }
 
-    /* library extras toggles */
-    var rsw = d.qs("#recsSwitch");
-    if (rsw) rsw.checked = p.recs !== false;
-    var msw = d.qs("#marathonSwitch");
-    if (msw) msw.checked = p.marathon !== false;
-    var cfsw = d.qs("#confettiSwitch");
-    if (cfsw) cfsw.checked = p.confetti !== false;
+  function paintMini() {
+    var sw = d.qs("#miniPerfSwitch");
+    if (sw) sw.checked = !!N.prefs.get("miniPerf");
+  }
 
-    /* glow comet switch */
-    var csw = d.qs("#cometSwitch");
-    if (csw) csw.checked = !!p.glowComet;
+  /* ---------- glow border ---------- */
+  function glowName(id) {
+    var g = (N.theme.GLOWS || []).filter(function (x) {
+      return x.id === id;
+    })[0];
+    return (g && g.name) || "Off";
+  }
 
-    /* seasonal theme + the themes on offer this season */
-    paintSeason();
-    paintSeasonPick();
-
-    /* layout, Mini-Perf, background image, editor */
-    paintDensity();
-    paintMini();
-    paintBg();
-    paintEditorRow();
-
-    /* smart tab cloak */
-    paintSmart();
-
-    /* tab preset */
-    var sel = d.qs("#tabSelect");
+  function paintGlow() {
+    var id = N.prefs.get("glow");
+    var sel = d.qs("#glowSelect");
     if (sel) {
-      sel.value = p.tab;
+      sel.value = id;
       N.dom.selSync(sel);
     }
-    paintTabPreview();
-    paintGmail();
-    paintCustomTab();
-    paintCloak();
-
-    /* panic key */
-    paintPanic();
-
-    /* local data summary */
-    var di = d.qs("#dataInfo");
-    if (di) {
-      var size = 0;
-      try {
-        for (var i = 0; i < localStorage.length; i++) {
-          var k = localStorage.key(i);
-          if (k && k.indexOf("null:") === 0) size += (localStorage.getItem(k) || "").length * 2;
-        }
-      } catch (err) {}
-      di.textContent =
-        N.recent.list().length +
-        " recent · " +
-        N.favs.list().length +
-        " favorites · ~" +
-        (size / 1024).toFixed(1) +
-        " KB stored locally";
-    }
-
-    /* theme packs, particles + the custom picker follow their prefs */
-    paintPacks();
-    paintParts();
-    paintCustom();
+    show(d.qs("#glowCustom"), id === "custom");
+    var keys = ["glowColor1", "glowColor2"];
+    d.qsa("#glowColors .cdot").forEach(function (dot, i) {
+      if (dot.setValue) dot.setValue(N.prefs.get(keys[i]) || (i ? "#a86bff" : "#35c3f2"));
+    });
+    var sw = d.qs("#cometSwitch");
+    if (sw) sw.checked = !!N.prefs.get("glowComet");
+    setText("#glowVal", id === "custom" ? "Custom" : glowName(id));
   }
 
-  function paintTabPreview() {
-    var p = N.tab.current();
-    var img = d.qs("#tabPrev img");
-    var b = d.qs("#tabPrev .tp-name");
-    var s = d.qs("#tabPrev .tp-sub");
-    if (p) {
-      if (p.icon) {
-        img.src = p.icon;
-        img.style.display = "";
-      } else {
-        img.style.display = "none";
-      }
-      b.textContent = N.tab.titleFor(p);
-      s.textContent = p.name;
-    }
+  /* ---------- seasonal theme ---------- */
+  function seasonLabel(id) {
+    if (!id || !N.seasons || !N.seasons.options) return null;
+    var t = N.seasons.options().filter(function (x) {
+      return x.id === id;
+    })[0];
+    return t ? t.label : null;
   }
 
-  function paintCustomTab() {
-    var p = N.prefs.data;
-    var wrap = d.qs("#tabCustomWrap");
-    if (wrap) wrap.style.display = p.tab === "custom" ? "" : "none";
-    var ti = d.qs("#tabCustomTitle");
-    if (ti && document.activeElement !== ti) ti.value = (p.tabCustom && p.tabCustom.title) || "";
-    var ii = d.qs("#tabCustomIcon");
-    if (ii && document.activeElement !== ii) ii.value = (p.tabCustom && p.tabCustom.icon) || "";
-    var ui = d.qs("#tabCustomUrl");
-    if (ui && document.activeElement !== ui) ui.value = (p.tabCustom && p.tabCustom.url) || "";
-  }
-
-  /* say where the cloak redirect will land, so the toggle isn't a mystery */
-  function paintCloak() {
-    var sw = d.qs("#cloakRedirectSwitch");
-    if (sw) sw.checked = N.prefs.get("cloakRedirect") !== false;
-    var info = d.qs("#cloakTargetInfo");
-    if (!info) return;
-    var to = N.cloak && N.cloak.target ? N.cloak.target() : null;
-    var preset = N.tab.current() || {};
-    if (N.prefs.get("cloakRedirect") === false) {
-      info.textContent = "Off. After cloaking, this tab stays on NULL.";
-    } else if (!to) {
-      info.textContent =
-        "This tab preset has no real site of its own" +
-        (preset.id === "custom" ? ". Add one under Browser tab presets." : ", so this tab stays on NULL.");
-    } else {
-      info.textContent =
-        "The cloaked window opens first, then this tab goes to " + to +
-        ", so the address bar matches the tab title.";
-    }
-  }
-
-  /* show/hide the custom glow color pickers to match the selected preset.
-     Runs on every refresh AND immediately on dropdown change, so the
-     pickers can never lag behind the select. */
-  function paintGlow() {
-    var on = N.prefs.get("glow") === "custom";
-    var gc = d.qs("#glowCustom");
-    if (gc) gc.style.display = on ? "" : "none";
-    var gc1 = d.qs("#glowColor1");
-    var gc2 = d.qs("#glowColor2");
-    if (gc1) gc1.value = N.prefs.get("glowColor1") || "#35c3f2";
-    if (gc2) gc2.value = N.prefs.get("glowColor2") || "#a86bff";
-  }
-
-  /* seasonal theme row: label reads "Turn on Fall theme?" while off and
-     "Fall theme on" while on, with the current season as a chip */
   function paintSeason() {
     var on = N.prefs.data.seasonal !== false;
     var s = N.seasons ? N.seasons.now() : null;
     var sw = d.qs("#seasonalSwitch");
     if (sw) sw.checked = on;
     if (s) {
-      var lbl = d.qs("#seasonalLbl");
-      if (lbl) lbl.textContent = on ? s.label + " theme on" : "Turn on " + s.label + " theme?";
-      var hint = d.qs("#seasonalHint");
-      if (hint) {
-        hint.textContent =
-          s.hint + " · switches automatically with the seasons";
-      }
+      setText("#seasonalLbl", on ? s.label + " theme on" : "Turn on " + s.label + " theme?");
+      setText("#seasonalHint", s.hint + " · switches automatically with the seasons");
       var chip = d.qs("#seasonalChip");
       if (chip) {
         chip.textContent = s.label;
-        chip.style.display = on ? "" : "none";
+        show(chip, on);
       }
     }
-  }
-
-  /* layout compactness: one segment, four scales. theme.js owns the actual
-     scale, so the page just says which one is on. */
-  function paintDensity() {
-    var cur = N.prefs.get("density") || "regular";
-    d.qsa("#densitySeg button").forEach(function (b) {
-      b.classList.toggle("on", b.dataset.val === cur);
-    });
-  }
-
-  function paintMini() {
-    var sw = d.qs("#miniPerfSwitch");
-    if (sw) sw.checked = !!N.prefs.get("miniPerf");
+    var pick = seasonLabel(N.prefs.get("seasonVariant"));
+    setText("#seasonVal", on ? pick || (s ? s.label : "On") : "Off");
   }
 
   /* the themes that go with the season we're in: Fall offers Fall and
@@ -206,16 +195,11 @@
     var row = d.qs("#seasonSeg");
     if (!row || !N.seasons || !N.seasons.options) return;
     var on = N.prefs.data.seasonal !== false;
-    var wrap = d.qs("#seasonPickRow");
-    if (wrap) wrap.style.display = on ? "" : "none";
+    show(d.qs("#seasonPickRow"), on);
     var picked = N.prefs.get("seasonVariant") || "";
     var opts = N.seasons.options();
     row.textContent = "";
-    var auto = d.h(
-      "button",
-      { type: "button", "data-val": "", title: "Follow the calendar" },
-      "Automatic",
-    );
+    var auto = d.h("button", { type: "button", "data-val": "", title: "Follow the calendar" }, "Automatic");
     if (!picked) auto.classList.add("on");
     row.appendChild(auto);
     opts.forEach(function (t) {
@@ -252,10 +236,13 @@
     var on = bgOn();
     body.hidden = !on;
     locked.hidden = on;
+    var url = (N.prefs.get("bgImage") || "").trim();
+    if (!on) setText("#bgVal", "Locked");
+    else setText("#bgVal", url ? "Set" : "Off");
     if (!on) return;
     var p = N.prefs.data;
-    var url = d.qs("#bgUrl");
-    if (url && document.activeElement !== url) url.value = p.bgImage || "";
+    var field = d.qs("#bgUrl");
+    if (field && document.activeElement !== field) field.value = p.bgImage || "";
     var fit = d.qs("#bgFit");
     if (fit) {
       fit.value = p.bgFit || "cover";
@@ -267,19 +254,17 @@
     if (blur) blur.value = String(p.bgBlur || 0);
   }
 
-  /* the editor is a Shop unlock too: show the button once it's owned */
+  /* the theme & particle editor is a Shop unlock too */
   function paintEditorRow() {
-    var row = d.qs("#packEditorRow");
-    if (!row) return;
-    row.style.display = N.econ && N.econ.isUnlocked("fx", "editor") ? "" : "none";
+    show(d.qs("#packEditorRow"), !!(N.econ && N.econ.isUnlocked("fx", "editor")));
   }
 
+  /* ---------- smart tab cloak ---------- */
   function paintSmart() {
     var on = !!N.prefs.get("smartTab");
     var sw = d.qs("#smartTabSwitch");
     if (sw) sw.checked = on;
-    var wrap = d.qs("#smartTabWrap");
-    if (wrap) wrap.style.display = on ? "" : "none";
+    show(d.qs("#smartTabWrap"), on);
     var sel = d.qs("#smartTabMin");
     if (sel) {
       sel.value = String(N.prefs.get("smartTabMin") || 5);
@@ -287,51 +272,596 @@
     }
   }
 
-  /* save a piece of the custom tab preset and re-apply it live */
-  function saveTabCustom(patch) {
-    var cur = N.prefs.get("tabCustom") || {};
-    N.prefs.set("tabCustom", Object.assign({}, cur, patch));
-    N.tab.apply();
+  /* ---------- browser tab ---------- */
+  function paintTab() {
+    var sel = d.qs("#tabSelect");
+    if (sel) {
+      sel.value = N.prefs.get("tab");
+      N.dom.selSync(sel);
+    }
+    var cur = (N.tab && N.tab.current && N.tab.current()) || {};
+    setText("#tabVal", cur.name || "Default");
     paintTabPreview();
+    paintGmail();
+    paintCustomTab();
+  }
+
+  function paintTabPreview() {
+    var p = N.tab.current();
+    var img = d.qs("#tabPrev img");
+    var b = d.qs("#tabPrev .tp-name");
+    var s = d.qs("#tabPrev .tp-sub");
+    if (!p) return;
+    if (p.icon) {
+      img.src = p.icon;
+      img.style.display = "";
+    } else {
+      img.style.display = "none";
+    }
+    b.textContent = N.tab.titleFor(p);
+    s.textContent = p.name;
+  }
+
+  function paintCustomTab() {
+    var p = N.prefs.data;
+    show(d.qs("#tabCustomWrap"), p.tab === "custom");
+    var ti = d.qs("#tabCustomTitle");
+    if (ti && document.activeElement !== ti) ti.value = (p.tabCustom && p.tabCustom.title) || "";
+    var ii = d.qs("#tabCustomIcon");
+    if (ii && document.activeElement !== ii) ii.value = (p.tabCustom && p.tabCustom.icon) || "";
+    var ui = d.qs("#tabCustomUrl");
+    if (ui && document.activeElement !== ui) ui.value = (p.tabCustom && p.tabCustom.url) || "";
   }
 
   function paintGmail() {
     var p = N.prefs.data;
-    var wrap = d.qs("#gmailWrap");
+    show(d.qs("#gmailWrap"), p.tab === "gmail");
     var addr = d.qs("#gmailAddr");
+    if (addr && document.activeElement !== addr) addr.value = p.gmailAddr;
     var unread = d.qs("#gmailUnread");
-    if (wrap) wrap.style.display = p.tab === "gmail" ? "" : "none";
-    if (addr) addr.value = p.gmailAddr;
-    if (unread) unread.value = p.gmailUnread;
+    if (unread && document.activeElement !== unread) unread.value = p.gmailUnread;
   }
 
+  /* ---------- privacy and cloaking ---------- */
+  function paintCloak() {
+    var sw = d.qs("#cloakRedirectSwitch");
+    var on = N.prefs.get("cloakRedirect") !== false;
+    if (sw) sw.checked = on;
+    setText("#cloakVal", on ? "Redirect on" : "Stays on NULL");
+    var info = d.qs("#cloakTargetInfo");
+    if (!info) return;
+    var to = N.cloak && N.cloak.target ? N.cloak.target() : null;
+    var preset = N.tab.current() || {};
+    if (!on) {
+      info.textContent = "Off. After cloaking, this tab stays on NULL.";
+    } else if (!to) {
+      info.textContent =
+        "This tab preset has no real site of its own" +
+        (preset.id === "custom" ? ". Add one under the custom tab fields." : ", so this tab stays on NULL.");
+    } else {
+      info.textContent =
+        "The cloaked window opens first, then this tab goes to " + to + ", so the address bar matches the tab title.";
+    }
+  }
+
+  /* ---------- library extras ---------- */
+  function paintExtras(p) {
+    var rsw = d.qs("#recsSwitch");
+    if (rsw) rsw.checked = p.recs !== false;
+    var msw = d.qs("#marathonSwitch");
+    if (msw) msw.checked = p.marathon !== false;
+    var cfsw = d.qs("#confettiSwitch");
+    if (cfsw) cfsw.checked = p.confetti !== false;
+    var on = [p.recs !== false, p.marathon !== false, p.confetti !== false].filter(function (b) {
+      return b;
+    }).length;
+    setText("#extrasVal", on === 0 ? "All off" : on + " of 3 on");
+  }
+
+  /* ---------- install as an app ---------- */
+  function paintInstall() {
+    var btn = d.qs("#installBtn");
+    var hint = d.qs("#installHint");
+    if (!btn || !hint || !N.install) return;
+    btn.hidden = true;
+    if (N.install.installed()) {
+      hint.textContent = "Installed: NULL is running as its own app.";
+      setText("#installVal", "Installed");
+    } else if (N.install.ready()) {
+      btn.hidden = false;
+      hint.textContent = "This browser can install NULL right now.";
+      setText("#installVal", "Ready");
+    } else {
+      hint.textContent = 'Not offered by the browser yet. It appears once NULL is served over https, or use "How?".';
+      setText("#installVal", "Not available");
+    }
+  }
+
+  /* ---------- local data summary ---------- */
+  function paintData() {
+    var size = 0;
+    try {
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (k && k.indexOf("null:") === 0) size += (localStorage.getItem(k) || "").length * 2;
+      }
+    } catch (err) {}
+    var kb = size / 1024;
+    setText(
+      "#dataInfo",
+      N.recent.list().length +
+        " recent · " +
+        N.favs.list().length +
+        " favorites · ~" +
+        kb.toFixed(1) +
+        " KB stored locally",
+    );
+    setText("#dataVal", kb < 1 ? "Under 1 KB" : kb.toFixed(0) + " KB");
+  }
+
+  /* ---------- panic key ---------- */
+  function paintPanic() {
+    var key = N.prefs.get("panicKey") || "`";
+    var cap = d.qs("#panicKey");
+    if (cap) cap.textContent = key;
+    setText("#panicVal", key === " " ? "Space" : key);
+    var url = d.qs("#panicUrl");
+    if (url && document.activeElement !== url) url.value = N.prefs.get("panicUrl") || "";
+    var sw = d.qs("#panicSwitch");
+    if (sw) sw.checked = (N.prefs.get("panicMode") || "single") === "double";
+  }
+
+  /* ---------- custom accent (Shop unlock) ---------- */
+  function paintCustom() {
+    var rowEl = d.qs("#accentCustomRow");
+    if (!rowEl) return;
+    var on = !!(N.theme.customOn && N.theme.customOn());
+    rowEl.hidden = !on;
+    if (on && accentDot) accentDot.setValue(N.prefs.get("accentColor") || "#6cc7ff");
+  }
+
+  /* ============================================================
+     theme packs
+     Free packs are always available; Shop packs show veiled until bought.
+     Each card previews the real backdrop through theme.js, so settings and
+     the Shop can never disagree about what a pack looks like. Your own
+     crafted pack gets a recolour row and a delete button right here.
+     ============================================================ */
+  function applyPack(p) {
+    if (!p) {
+      N.prefs.set("accent", "off");
+      N.theme.setAccent("off");
+    } else {
+      N.theme.setAccent(p.id);
+      N.prefs.set("accent", p.id);
+    }
+    if (N.seasons) N.seasons.refresh();
+    refresh();
+    d.toast(p ? "Wearing " + p.name : "Accent back to plain", { icon: p ? "pen" : "ban" });
+  }
+
+  /* the recolour + edit + delete row that only your own set gets */
+  function craftTools(kind, p, strip) {
+    var isPack = kind === "pack";
+    var colors = (p.colors || []).slice(0, 4);
+    var tint = (p.tint || ["#101016", "#08080b"]).slice(0, 2);
+    var box = d.h("div", { class: "craft-tools" });
+
+    function save() {
+      if (isPack) N.theme.craftPatch({ pack: { colors: colors.slice(), tint: tint.slice() } });
+      else N.theme.craftPatch({ part: { colors: colors.slice() } });
+      N.theme.craftApply();
+      if (strip) {
+        Array.prototype.forEach.call(strip.children, function (el, i) {
+          if (colors[i]) el.style.background = colors[i];
+        });
+      }
+    }
+
+    function pickRow(label, list, titles) {
+      var row = d.h("div", { class: "craft-row" }, d.h("span", { class: "cdot-lab" }, label));
+      list.forEach(function (c, i) {
+        row.appendChild(
+          d.colorDot(
+            c,
+            function (v) {
+              list[i] = v;
+              save();
+            },
+            { title: titles[i] },
+          ),
+        );
+      });
+      return row;
+    }
+
+    if (isPack || !p.mono) {
+      var names = ["Main colour", "Second colour", "Third colour", "Fourth colour"];
+      box.appendChild(pickRow(isPack ? "Palette" : "Colours", colors, names));
+    }
+    if (isPack) {
+      box.appendChild(pickRow("Tint", tint, ["Tint top", "Tint bottom"]));
+    }
+    if (!isPack) {
+      var sw = d.h("input", { type: "checkbox", checked: !!p.mono, "aria-label": "Follow the theme colours" });
+      sw.addEventListener("change", function () {
+        N.theme.craftPatch({ part: { mono: sw.checked } });
+        N.theme.craftApply();
+        d.toast(sw.checked ? "Particles follow the theme colours" : "Particles carry their own colours");
+        paintParts();
+      });
+      box.appendChild(
+        d.h("div", { class: "craft-row" }, [
+          d.h("span", { class: "cdot-lab" }, "Follow the theme"),
+          d.h("label", { class: "switch" }, [sw, d.h("span", { class: "track" })]),
+        ]),
+      );
+    }
+
+    var acts = d.h("div", { class: "craft-acts" });
+    acts.appendChild(
+      d.h(
+        "button",
+        {
+          type: "button",
+          class: "btn btn-outline btn-sm",
+          onclick: function () {
+            if (N.editor && N.editor.open) N.editor.open(refresh, isPack ? "theme" : "part");
+            else d.toast("The editor could not load here.", { type: "err" });
+          },
+        },
+        [d.icon("wrench"), "Edit"],
+      ),
+    );
+    acts.appendChild(
+      d.h(
+        "button",
+        {
+          type: "button",
+          class: "btn btn-outline-danger btn-sm",
+          onclick: function () {
+            deleteCraft(kind, p);
+          },
+        },
+        [d.icon("trash"), "Delete"],
+      ),
+    );
+    box.appendChild(acts);
+    return box;
+  }
+
+  function deleteCraft(kind, p) {
+    var isPack = kind === "pack";
+    N.modal.open({
+      title: "Delete " + (isPack ? "your theme pack" : "your particle set") + "?",
+      icon: "trash",
+      iconTone: "danger",
+      body:
+        "<p>This removes <b>" +
+        (p.name || "it") +
+        "</b> from this browser for good. Anything wearing it goes back to none.</p>" +
+        "<p style='color:var(--text-2)'>The editor itself stays unlocked, so you can build another one.</p>",
+      actions: [
+        { label: "Cancel", variant: "outline" },
+        {
+          label: "Delete",
+          variant: "danger",
+          onClick: function () {
+            N.theme.removeCraft(isPack ? "pack" : "part");
+            refresh();
+            d.toast(isPack ? "Theme pack deleted" : "Particle set deleted", { icon: "trash" });
+          },
+        },
+      ],
+    });
+  }
+
+  function packCard(p) {
+    var owned = !!(p.free || N.econ.isUnlocked("theme", p.id));
+    var applied = N.prefs.get("accent") === p.id;
+    var foot = d.h("div", { class: "shop-foot" });
+    if (owned) {
+      foot.appendChild(
+        d.h("span", { class: "chip ok" }, [d.h("span", { class: "dot" }), p.free ? "Free" : p.crafted ? "Yours" : "Unlocked"]),
+      );
+      foot.appendChild(
+        d.h(
+          "button",
+          {
+            type: "button",
+            class: "btn " + (applied ? "btn-primary" : "btn-outline") + " btn-sm",
+            onclick: function () {
+              applyPack(applied ? null : p);
+            },
+          },
+          applied ? [d.icon("check"), "Applied"] : [d.icon("pen"), "Apply"],
+        ),
+      );
+    } else {
+      foot.appendChild(d.h("span", { class: "chip price-chip" }, [d.icon("coin"), String(p.price)]));
+      foot.appendChild(d.h("a", { class: "btn btn-outline btn-sm", href: "/shop.html" }, [d.icon("store"), "Shop"]));
+    }
+
+    var strip = d.h(
+      "div",
+      { class: "pack-strip" },
+      (p.colors || [p.c1, p.c2]).map(function (c) {
+        return d.h("i", { style: { background: c } });
+      }),
+    );
+    var card = d.h(
+      "article",
+      {
+        class: "shop-card pack-card glass" + (owned ? " owned" : " locked") + (applied ? " playing" : "") + (p.crafted ? " crafted" : ""),
+      },
+      [
+        N.theme.packThumb(p, { lock: !owned }),
+        strip,
+        d.h("div", { class: "shop-info" }, [
+          d.h("h3", null, p.name),
+          d.h("p", null, p.desc || ""),
+          d.h(
+            "div",
+            { class: "chips-row" },
+            (p.tags || []).map(function (t) {
+              return d.h("span", { class: "chip" }, t);
+            }),
+          ),
+        ]),
+        foot,
+      ],
+    );
+    if (p.crafted) card.appendChild(craftTools("pack", p, strip));
+    return card;
+  }
+
+  function paintPacks() {
+    var grid = d.qs("#packGrid");
+    if (!grid || !N.theme.allPacks) return;
+    var packs = N.theme.allPacks();
+    grid.textContent = "";
+    packs.forEach(function (p) {
+      grid.appendChild(packCard(p));
+    });
+    var on = packs.filter(function (p) {
+      return p.id === N.prefs.get("accent");
+    })[0];
+    setText("#packVal", on ? "Wearing " + on.name : "None");
+  }
+
+  /* ============================================================
+     background particles
+     Free ones are always wearable, the rest preview veiled and point at the
+     Shop. Applying the one already on switches particles back off.
+     ============================================================ */
+  function applyParts(p) {
+    var id = p ? p.id : "none";
+    N.theme.setParticles(id);
+    N.prefs.set("particles", id);
+    refresh();
+    d.toast(p ? "Particles: " + p.name : "Background particles off", { icon: "sparkle" });
+  }
+
+  function partCard(p) {
+    var owned = !!(p.free || N.econ.isUnlocked("particle", p.id));
+    var applied = N.prefs.get("particles") === p.id;
+    var foot = d.h("div", { class: "shop-foot" });
+    if (owned) {
+      foot.appendChild(
+        d.h("span", { class: "chip ok" }, [d.h("span", { class: "dot" }), p.free ? "Free" : p.crafted ? "Yours" : "Unlocked"]),
+      );
+      foot.appendChild(
+        d.h(
+          "button",
+          {
+            type: "button",
+            class: "btn " + (applied ? "btn-primary" : "btn-outline") + " btn-sm",
+            onclick: function () {
+              applyParts(applied ? null : p);
+            },
+          },
+          applied ? [d.icon("check"), "Applied"] : [d.icon("pen"), "Apply"],
+        ),
+      );
+    } else {
+      foot.appendChild(d.h("span", { class: "chip price-chip" }, [d.icon("coin"), String(p.price)]));
+      foot.appendChild(d.h("a", { class: "btn btn-outline btn-sm", href: "/shop.html" }, [d.icon("store"), "Shop"]));
+    }
+
+    var strip = p.colors
+      ? d.h(
+          "div",
+          { class: "pack-strip" },
+          p.colors.map(function (c) {
+            return d.h("i", { style: { background: c } });
+          }),
+        )
+      : null;
+    var card = d.h(
+      "article",
+      {
+        class: "shop-card pack-card glass" + (owned ? " owned" : " locked") + (applied ? " playing" : "") + (p.crafted ? " crafted" : ""),
+      },
+      [
+        N.theme.partThumb(p, { lock: !owned }),
+        strip,
+        d.h("div", { class: "shop-info" }, [
+          d.h("h3", null, p.name),
+          d.h("p", null, p.desc || ""),
+          d.h(
+            "div",
+            { class: "chips-row" },
+            (p.tags || []).map(function (t) {
+              return d.h("span", { class: "chip" }, t);
+            }),
+          ),
+        ]),
+        foot,
+      ],
+    );
+    if (p.crafted) card.appendChild(craftTools("part", p, strip));
+    return card;
+  }
+
+  function paintParts() {
+    var grid = d.qs("#partGrid");
+    if (!grid || !N.theme.allParticles) return;
+    var list = N.theme.allParticles();
+    grid.textContent = "";
+    list.forEach(function (p) {
+      grid.appendChild(partCard(p));
+    });
+    var on = list.filter(function (p) {
+      return p.id === N.prefs.get("particles");
+    })[0];
+    setText("#partVal", on ? on.name : "Off");
+  }
+
+  /* ============================================================
+     the rail: one link per section, a filter, and a scroll-spy
+     ============================================================ */
+  function setRailOn(id) {
+    d.qsa("#railList .rail-link").forEach(function (b) {
+      b.classList.toggle("on", b.dataset.target === id);
+    });
+  }
+
+  function buildRail() {
+    var list = d.qs("#railList");
+    if (!list) return;
+    list.textContent = "";
+    d.qsa(".set-group").forEach(function (g) {
+      /* NB: data-ic, not data-icon. shell.js hydrates every [data-icon]
+         element in place, and on anything but a <span> it empties the
+         element first: on a whole section that would wipe the cards. */
+      var link = d.h(
+        "a",
+        { class: "rail-link", href: "#" + g.id, "data-target": g.id },
+        [d.icon(g.dataset.ic || "settings"), d.h("span", null, g.dataset.label || g.id)],
+      );
+      link.addEventListener("click", function (e) {
+        e.preventDefault();
+        if (g.scrollIntoView) g.scrollIntoView({ behavior: "smooth", block: "start" });
+        if (history.replaceState) history.replaceState(null, "", "#" + g.id);
+        setRailOn(g.id);
+      });
+      list.appendChild(link);
+    });
+  }
+
+  function spy() {
+    var groups = d.qsa(".set-group");
+    if (!groups.length) return;
+    function run() {
+      var nav = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--nh")) || 60;
+      var line = nav + 44;
+      var best = groups[0].id;
+      groups.forEach(function (g) {
+        if (g.getBoundingClientRect().top <= line) best = g.id;
+      });
+      if (window.innerHeight + window.scrollY >= document.body.scrollHeight - 4) best = groups[groups.length - 1].id;
+      setRailOn(best);
+    }
+    var raf = null;
+    window.addEventListener(
+      "scroll",
+      function () {
+        if (raf) return;
+        raf = requestAnimationFrame(function () {
+          raf = null;
+          run();
+        });
+      },
+      { passive: true },
+    );
+    run();
+  }
+
+  /* Filter the cards by text. A group with nothing left in it goes too, and
+     a card that matches is opened so the hit is actually on screen. */
+  function applyFilter(q) {
+    filterQ = q;
+    var needle = (q || "").trim().toLowerCase();
+    var any = false;
+    d.qsa("[data-card]").forEach(function (card) {
+      var hit = !needle || (card.textContent || "").toLowerCase().indexOf(needle) >= 0;
+      card.classList.toggle("gone", !hit);
+      if (hit) any = true;
+    });
+    d.qsa(".set-group").forEach(function (g) {
+      var live = g.querySelectorAll("[data-card]:not(.gone)").length > 0;
+      g.classList.toggle("gone", !!needle && !live);
+    });
+    if (needle) {
+      d.qsa("[data-card]:not(.gone)").forEach(function (card) {
+        if (card.dataset.fold) setFold(card, true, false);
+      });
+      setRailOn();
+    } else {
+      paintFolds();
+    }
+    show(d.qs("#setEnd"), !!needle && !any);
+  }
+
+  /* ============================================================
+     folding: cards that are only set once keep their state in storage
+     ============================================================ */
+  function folds() {
+    return N.store.read(FOLD_KEY, {}) || {};
+  }
+
+  function setFold(card, open, remember) {
+    card.setAttribute("data-open", open ? "1" : "0");
+    var btn = card.querySelector(".set-toggle");
+    if (btn) btn.setAttribute("aria-expanded", open ? "true" : "false");
+    if (remember) {
+      var all = folds();
+      all[card.dataset.fold] = open ? 1 : 0;
+      N.store.write(FOLD_KEY, all);
+    }
+  }
+
+  function paintFolds() {
+    var saved = folds();
+    d.qsa("[data-fold]").forEach(function (card) {
+      var key = card.dataset.fold;
+      var open = key in saved ? !!saved[key] : card.getAttribute("data-open") === "1";
+      setFold(card, open, false);
+    });
+  }
+
+  function bindFolds() {
+    d.qsa(".set-toggle").forEach(function (btn) {
+      var card = btn.closest("[data-fold]");
+      if (!card) return;
+      btn.addEventListener("click", function () {
+        setFold(card, card.getAttribute("data-open") !== "1", true);
+      });
+    });
+  }
+
+  /* ============================================================
+     bind: the controls themselves
+     ============================================================ */
   function bind() {
-    /* theme */
-    d.qsa("#themeSeg button").forEach(function (b) {
-      b.addEventListener("click", function () {
-        var t = b.dataset.val;
+    /* theme: one switch, not two buttons */
+    var tsw = d.qs("#themeSwitch");
+    if (tsw) {
+      tsw.addEventListener("change", function () {
+        var t = tsw.checked ? "light" : "dark";
         N.theme.setTheme(t);
         N.prefs.set("theme", t);
         refresh();
+        d.toast(t === "light" ? "Light theme on" : "Dark theme on", { icon: t === "light" ? "sun" : "moon" });
       });
-    });
+    }
 
-    /* accent */
-    d.qsa("#accentRow .swatch-btn").forEach(function (b) {
-      b.addEventListener("click", function () {
-        N.prefs.set("accent", b.dataset.val);
-        N.theme.setAccent(b.dataset.val);
-        if (N.seasons) N.seasons.refresh(); /* re-assert seasonal colors when accent = off */
-        refresh();
-      });
-    });
-
-    /* glow */
+    /* glow border */
     var gsel = d.qs("#glowSelect");
     if (gsel) {
       gsel.addEventListener("change", function () {
         N.prefs.set("glow", gsel.value);
-        paintGlow(); /* pickers follow the select no matter what */
+        paintGlow(); /* the colour pickers follow the select no matter what */
         try {
           N.theme.setGlow(gsel.value);
         } catch (err) {
@@ -341,67 +871,41 @@
         d.toast("Glow: " + (gsel.options[gsel.selectedIndex] || {}).textContent);
       });
     }
-    var glowC1 = d.qs("#glowColor1");
-    var glowC2 = d.qs("#glowColor2");
-    if (glowC1) {
-      glowC1.addEventListener("input", function () {
-        N.prefs.set("glowColor1", glowC1.value);
-        if (N.prefs.get("glow") === "custom") N.theme.setGlow("custom");
-      });
-    }
-    if (glowC2) {
-      glowC2.addEventListener("input", function () {
-        N.prefs.set("glowColor2", glowC2.value);
-        if (N.prefs.get("glow") === "custom") N.theme.setGlow("custom");
+    var csw = d.qs("#cometSwitch");
+    if (csw) {
+      csw.addEventListener("change", function () {
+        N.prefs.set("glowComet", csw.checked);
+        N.theme.setComet(csw.checked);
+        d.toast(csw.checked ? "Comet mode on" : "Comet mode off");
       });
     }
 
-    /* performance */
-    var sw = d.qs("#perfSwitch");
-    var usw = d.qs("#ultraSwitch");
-    function applyPerf() {
-      /* ultra implies the plain switch; turning plain mode off leaves ultra */
-      var level = usw && usw.checked ? "ultra" : sw && sw.checked;
-      N.prefs.set("perf", level);
-      N.theme.setPerf(level);
-      if (sw) sw.checked = !!level;
-      if (usw) usw.checked = level === "ultra";
-      if (N.seasons) N.seasons.refresh(); /* particles skip perf mode */
-      d.toast(
-        level === "ultra"
-          ? "Ultra-Performance mode on"
-          : level
-            ? "Performance mode on"
-            : "Performance mode off",
-      );
-    }
-    if (sw) sw.addEventListener("change", applyPerf);
-    if (usw) usw.addEventListener("change", applyPerf);
-
-    /* seasonal theme */
-    var ssw = d.qs("#seasonalSwitch");
-    if (ssw) {
-      ssw.addEventListener("change", function () {
-        N.prefs.set("seasonal", ssw.checked);
-        N.prefs.set("seasonOverride", null); /* settings follows the calendar */
-        if (N.seasons) N.seasons.refresh();
-        paintSeason();
-        paintSeasonPick();
-        var s = N.seasons ? N.seasons.now() : null;
-        d.toast(ssw.checked && s ? s.label + " theme on" : "Seasonal theme off");
-      });
-    }
-
-    /* which seasonal or holiday theme is worn */
-    var seg = d.qs("#seasonSeg");
-    if (seg) {
-      seg.addEventListener("click", function (e) {
+    /* performance: one tier, plus Mini-Perf which stacks with any of them */
+    var pseg = d.qs("#perfSeg");
+    if (pseg) {
+      pseg.addEventListener("click", function (e) {
         var b = e.target.closest("button");
-        if (!b || !N.seasons) return;
-        var t = N.seasons.setVariant(b.dataset.val || null);
-        paintSeason();
-        paintSeasonPick();
-        d.toast(t && N.prefs.get("seasonVariant") ? t.label + " theme on" : "Seasonal theme follows the calendar");
+        if (!b) return;
+        var val = b.dataset.val;
+        var level = val === "ultra" ? "ultra" : val === "on" ? true : false;
+        N.prefs.set("perf", level);
+        N.theme.setPerf(level);
+        if (N.seasons) N.seasons.refresh(); /* particles skip performance mode */
+        paintPerf(N.prefs.data);
+        d.toast(
+          val === "ultra"
+            ? "Ultra-Performance mode on"
+            : val === "on"
+              ? "Performance mode on"
+              : "Performance mode off",
+        );
+      });
+    }
+    var mp = d.qs("#miniPerfSwitch");
+    if (mp) {
+      mp.addEventListener("change", function () {
+        N.theme.setMiniPerf(mp.checked);
+        d.toast(mp.checked ? "Mini-Perf on: only what's on screen is drawn" : "Mini-Perf off");
       });
     }
 
@@ -417,12 +921,30 @@
       });
     }
 
-    /* Mini-Perf */
-    var mp = d.qs("#miniPerfSwitch");
-    if (mp) {
-      mp.addEventListener("change", function () {
-        N.theme.setMiniPerf(mp.checked);
-        d.toast(mp.checked ? "Mini-Perf on: only what's on screen is drawn" : "Mini-Perf off");
+    /* seasonal theme */
+    var ssw = d.qs("#seasonalSwitch");
+    if (ssw) {
+      ssw.addEventListener("change", function () {
+        N.prefs.set("seasonal", ssw.checked);
+        N.prefs.set("seasonOverride", null); /* settings follows the calendar */
+        if (N.seasons) N.seasons.refresh();
+        paintSeason();
+        paintSeasonPick();
+        var s = N.seasons ? N.seasons.now() : null;
+        d.toast(ssw.checked && s ? s.label + " theme on" : "Seasonal theme off");
+      });
+    }
+    var sseg = d.qs("#seasonSeg");
+    if (sseg) {
+      sseg.addEventListener("click", function (e) {
+        var b = e.target.closest("button");
+        if (!b || !N.seasons) return;
+        var t = N.seasons.setVariant(b.dataset.val || null);
+        paintSeason();
+        paintSeasonPick();
+        d.toast(
+          t && N.prefs.get("seasonVariant") ? t.label + " theme on" : "Seasonal theme follows the calendar",
+        );
       });
     }
 
@@ -434,11 +956,13 @@
         clearTimeout(bgTimer);
         bgTimer = setTimeout(function () {
           N.theme.setBg({ bgImage: bgUrl.value.trim() });
+          paintBg();
         }, 350);
       });
       bgUrl.addEventListener("change", function () {
         clearTimeout(bgTimer);
         N.theme.setBg({ bgImage: bgUrl.value.trim() });
+        paintBg();
         d.toast(bgUrl.value.trim() ? "Background image set" : "Background image cleared", { icon: "check" });
       });
     }
@@ -498,7 +1022,7 @@
       });
     }
 
-    /* the theme & particle editor (Shop unlock) */
+    /* the editor (Shop unlock) */
     var opEd = d.qs("#openEditor");
     if (opEd) {
       opEd.addEventListener("click", function () {
@@ -528,28 +1052,17 @@
     }
 
     /* install as an app */
-    var inBtn = d.qs("#installBtn");
-    var inHint = d.qs("#installHint");
-    if (inBtn && N.install) {
-      var paintInstall = function () {
-        inBtn.hidden = true;
-        if (N.install.installed()) {
-          inHint.textContent = "Installed: NULL is running as its own app.";
-        } else if (N.install.ready()) {
-          inBtn.hidden = false;
-          inHint.textContent = "This browser can install NULL right now.";
-        } else {
-          inHint.textContent =
-            "Not offered by the browser yet. It appears once NULL is served over https, or use \"How?\".";
-        }
-      };
+    if (N.install) {
       N.bus.on("installReady", paintInstall);
-      inBtn.addEventListener("click", function () {
-        N.install.prompt().then(function (outcome) {
-          if (outcome === "accepted") d.toast("Installing NULL…", { icon: "check" });
-          paintInstall();
+      var inBtn = d.qs("#installBtn");
+      if (inBtn) {
+        inBtn.addEventListener("click", function () {
+          N.install.prompt().then(function (outcome) {
+            if (outcome === "accepted") d.toast("Installing NULL…", { icon: "check" });
+            paintInstall();
+          });
         });
-      });
+      }
       var inHelp = d.qs("#installHelp");
       if (inHelp) {
         inHelp.addEventListener("click", function () {
@@ -557,10 +1070,9 @@
             title: "Install NULL in Chrome",
             icon: "download",
             body:
-"<p>Chrome can turn NULL into its own app window with its own icon:</p>" +
-"<p>Just click the <b>Install</b> button right here on this page.</p>" +
-"<p>NULL will instantly open in a clean window with no tabs or address bar.</p>"
-,
+              "<p>Chrome can turn NULL into its own app window with its own icon:</p>" +
+              "<p>Just click the <b>Install</b> button right here on this page.</p>" +
+              "<p>NULL will instantly open in a clean window with no tabs or address bar.</p>",
             actions: [{ label: "Got it", variant: "primary" }],
           });
         });
@@ -573,6 +1085,7 @@
     if (rsw) {
       rsw.addEventListener("change", function () {
         N.prefs.set("recs", rsw.checked);
+        paintExtras(N.prefs.data);
         d.toast(rsw.checked ? "Because you played: on" : "Because you played: off");
       });
     }
@@ -581,10 +1094,11 @@
       msw.addEventListener("change", function () {
         N.prefs.set("marathon", msw.checked);
         if (!msw.checked) {
-          /* fully disarm: the games toolbar won't show any controls */
+          /* fully disarm: the games toolbar shows no controls at all then */
           N.prefs.set("marathonMin", 0);
           N.prefs.set("marathonAt", 0);
         }
+        paintExtras(N.prefs.data);
         d.toast(msw.checked ? "Marathon mode: on" : "Marathon mode: off");
       });
     }
@@ -592,17 +1106,8 @@
     if (cfsw) {
       cfsw.addEventListener("change", function () {
         N.prefs.set("confetti", cfsw.checked);
+        paintExtras(N.prefs.data);
         d.toast(cfsw.checked ? "Period confetti: on" : "Period confetti: off");
-      });
-    }
-
-    /* glow comet */
-    var csw = d.qs("#cometSwitch");
-    if (csw) {
-      csw.addEventListener("change", function () {
-        N.prefs.set("glowComet", csw.checked);
-        N.theme.setComet(csw.checked);
-        d.toast(csw.checked ? "Comet mode on" : "Comet mode off");
       });
     }
 
@@ -643,7 +1148,6 @@
         d.toast(cRed.checked ? "This tab will follow the preset" : "This tab stays on NULL");
       });
     }
-    paintCloak();
 
     /* tab preset */
     var sel = d.qs("#tabSelect");
@@ -655,7 +1159,6 @@
         d.toast("Tab preset: " + (N.tab.current() || {}).name);
       });
     }
-    /* custom tab preset builder */
     var tcTitle = d.qs("#tabCustomTitle");
     if (tcTitle) {
       tcTitle.addEventListener("input", function () {
@@ -717,10 +1220,78 @@
       });
     }
 
-    /* another NULL window edited something: show its values here too */
+    /* another NULL window edited something: show its values here too.
+       "eco" covers a Shop purchase or a dev-console grant from this one. */
     N.bus.on("sync", refresh);
+    N.bus.on("eco", refresh);
+  }
 
-    /* danger zone */
+  /* save a piece of the custom tab preset and re-apply it live */
+  function saveTabCustom(patch) {
+    var cur = N.prefs.get("tabCustom") || {};
+    N.prefs.set("tabCustom", Object.assign({}, cur, patch));
+    N.tab.apply();
+    paintTabPreview();
+  }
+
+  /* ---------- panic key ---------- */
+  var capturing = false;
+
+  function bindPanic() {
+    var cap = d.qs("#panicKey");
+    var hint = d.qs("#panicKeyHint");
+    if (cap) {
+      cap.addEventListener("click", function () {
+        capturing = true;
+        cap.classList.add("on");
+        if (hint) hint.textContent = "Press any key… (Esc cancels)";
+      });
+    }
+    document.addEventListener(
+      "keydown",
+      function (e) {
+        if (!capturing) return;
+        e.preventDefault();
+        e.stopPropagation();
+        capturing = false;
+        if (cap) cap.classList.remove("on");
+        if (hint) hint.textContent = "Click, then press any key";
+        if (e.key === "Escape") return;
+        N.prefs.set("panicKey", e.key);
+        paintPanic();
+        d.toast("Panic key: " + (e.key === " " ? "Space" : e.key), { icon: "check" });
+      },
+      true,
+    );
+
+    var url = d.qs("#panicUrl");
+    if (url) {
+      url.addEventListener("input", function () {
+        var v = url.value.trim();
+        if (!v) return;
+        if (!/^https?:\/\//i.test(v)) v = "https://" + v;
+        N.prefs.set("panicUrl", v);
+      });
+      url.addEventListener("blur", function () {
+        if (!url.value.trim()) {
+          N.prefs.set("panicUrl", "https://classroom.google.com");
+          url.value = N.prefs.get("panicUrl");
+        }
+      });
+    }
+
+    var sw = d.qs("#panicSwitch");
+    if (sw) {
+      sw.addEventListener("change", function () {
+        N.prefs.set("panicMode", sw.checked ? "double" : "single");
+        paintPanic();
+        d.toast(sw.checked ? "Double press on" : "Single press on");
+      });
+    }
+  }
+
+  /* ---------- danger zone ---------- */
+  function bindDanger() {
     var rs = d.qs("#dangerReset");
     if (rs) {
       rs.addEventListener("click", function () {
@@ -753,17 +1324,25 @@
           title: "Wipe all NULL data?",
           icon: "trash",
           iconTone: "danger",
-      body:
-        "<p>This permanently removes everything stored on this device for NULL:</p>" +
-        "<p>• Recently played<br>• Preferences & settings<br>• Seen-flag markers (welcome modal etc.)</p>" +
-        "<p>There is no undo.</p>",
+          body:
+            "<p>This permanently removes everything stored on this device for NULL:</p>" +
+            "<p>• Recently played<br>• Preferences &amp; settings<br>• Coins, unlocks and your own theme<br>• Seen-flag markers (welcome modal etc.)</p>" +
+            "<p>There is no undo.</p>",
           actions: [
             { label: "Cancel", variant: "outline" },
             {
               label: "Wipe everything",
               variant: "danger",
               onClick: function () {
-                ["null:prefs", "null:recent", "null:favs", "null:flags"].forEach(function (k) {
+                [
+                  "null:prefs",
+                  "null:recent",
+                  "null:favs",
+                  "null:flags",
+                  "null:econ",
+                  "null:craft",
+                  "null:setFolds",
+                ].forEach(function (k) {
                   N.store.del(k);
                 });
                 location.reload();
@@ -775,241 +1354,13 @@
     }
   }
 
-  /* ---------- panic key ---------- */
-  var capturing = false;
-
-  function paintPanic() {
-    var cap = d.qs("#panicKey");
-    if (cap) cap.textContent = N.prefs.get("panicKey") || "`";
-    var url = d.qs("#panicUrl");
-    if (url && document.activeElement !== url) url.value = N.prefs.get("panicUrl") || "";
-    var sw = d.qs("#panicSwitch");
-    if (sw) sw.checked = (N.prefs.get("panicMode") || "single") === "double";
-  }
-
-  function bindPanic() {
-    var cap = d.qs("#panicKey");
-    var hint = d.qs("#panicKeyHint");
-    if (cap) {
-      cap.addEventListener("click", function () {
-        capturing = true;
-        cap.classList.add("on");
-        if (hint) hint.textContent = "Press any key… (Esc cancels)";
-      });
-    }
-    document.addEventListener("keydown", function (e) {
-      if (!capturing) return;
-      e.preventDefault();
-      e.stopPropagation();
-      capturing = false;
-      cap.classList.remove("on");
-      if (hint) hint.textContent = "Click, then press any key";
-      if (e.key === "Escape") return;
-      N.prefs.set("panicKey", e.key);
-      paintPanic();
-      d.toast("Panic key: " + (e.key === " " ? "Space" : e.key), { icon: "check" });
-    }, true);
-
-    var url = d.qs("#panicUrl");
-    if (url) {
-      url.addEventListener("input", function () {
-        var v = url.value.trim();
-        if (!v) return;
-        if (!/^https?:\/\//i.test(v)) v = "https://" + v;
-        N.prefs.set("panicUrl", v);
-      });
-      url.addEventListener("blur", function () {
-        if (!url.value.trim()) {
-          N.prefs.set("panicUrl", "https://classroom.google.com");
-          url.value = N.prefs.get("panicUrl");
-        }
-      });
-    }
-
-    var sw = d.qs("#panicSwitch");
-    if (sw) {
-      sw.addEventListener("change", function () {
-        N.prefs.set("panicMode", sw.checked ? "double" : "single");
-        paintPanic();
-        d.toast(sw.checked ? "Double press on" : "Single press on");
-      });
-    }
-  }
-
-  /* ---------- custom accent (Shop unlock) ---------- */
-  function paintCustom() {
-    var rowEl = d.qs("#accentCustomRow");
-    var inp = d.qs("#accentCustom");
-    if (!rowEl || !inp) return;
-    var on = !!(N.theme.customOn && N.theme.customOn());
-    rowEl.style.display = on ? "" : "none";
-    if (on) inp.value = N.prefs.get("accentColor") || "#6cc7ff";
-  }
-
-  /* ---------- theme packs ----------
-     Free packs are always available; Shop packs show veiled until bought.
-     Each card previews the real backdrop through theme.js, so the settings
-     page and the shop can never disagree about what a pack looks like. */
-  function applyPack(p) {
-    if (!p) {
-      N.prefs.set("accent", "off");
-      N.theme.setAccent("off");
-    } else {
-      N.theme.setAccent(p.id);
-      N.prefs.set("accent", p.id);
-    }
-    if (N.seasons) N.seasons.refresh();
-    refresh();
-  }
-
-  function packCard(p) {
-    var owned = !!(p.free || N.econ.isUnlocked("theme", p.id));
-    var applied = N.prefs.get("accent") === p.id;
-    var foot = d.h("div", { class: "shop-foot" });
-    if (owned) {
-      foot.appendChild(
-        d.h("span", { class: "chip ok" }, [d.h("span", { class: "dot" }), p.free ? "Free" : "Unlocked"]),
-      );
-      foot.appendChild(
-        d.h(
-          "button",
-          {
-            type: "button",
-            class: "btn " + (applied ? "btn-primary" : "btn-outline") + " btn-sm",
-            onclick: function () {
-              applyPack(applied ? null : p);
-            },
-          },
-          applied ? [d.icon("check"), "Applied"] : [d.icon("pen"), "Apply"],
-        ),
-      );
-    } else {
-      foot.appendChild(d.h("span", { class: "chip price-chip" }, [d.icon("coin"), String(p.price)]));
-      foot.appendChild(d.h("a", { class: "btn btn-outline btn-sm", href: "/shop.html" }, [d.icon("store"), "Shop"]));
-    }
-
-    return d.h(
-      "article",
-      {
-        class: "shop-card pack-card glass" + (owned ? " owned" : " locked") + (applied ? " playing" : ""),
-      },
-      [
-        N.theme.packThumb(p, { lock: !owned }),
-        d.h(
-          "div",
-          { class: "pack-strip" },
-          (p.colors || [p.c1, p.c2]).map(function (c) {
-            return d.h("i", { style: { background: c } });
-          }),
-        ),
-        d.h("div", { class: "shop-info" }, [
-          d.h("h3", null, p.name),
-          d.h("p", null, p.desc || ""),
-          d.h(
-            "div",
-            { class: "chips-row" },
-            (p.tags || []).map(function (t) {
-              return d.h("span", { class: "chip" }, t);
-            }),
-          ),
-        ]),
-        foot,
-      ],
-    );
-  }
-
-  function paintPacks() {
-    var grid = d.qs("#packGrid");
-    if (!grid || !N.theme.allPacks) return;
-    grid.textContent = "";
-    N.theme.allPacks().forEach(function (p) {
-      grid.appendChild(packCard(p));
-    });
-  }
-
-  /* ---------- background particles ----------
-     The free ones are always wearable; the rest preview veiled and point at
-     the Shop. Clicking the applied card switches particles back off. */
-  function applyParts(p) {
-    var id = p ? p.id : "none";
-    N.theme.setParticles(id);
-    N.prefs.set("particles", id);
-    d.toast(p ? "Particles: " + p.name : "Background particles off", { icon: "sparkle" });
-    refresh();
-  }
-
-  function partCard(p) {
-    var owned = !!(p.free || N.econ.isUnlocked("particle", p.id));
-    var applied = N.prefs.get("particles") === p.id;
-    var foot = d.h("div", { class: "shop-foot" });
-    if (owned) {
-      foot.appendChild(
-        d.h("span", { class: "chip ok" }, [d.h("span", { class: "dot" }), p.free ? "Free" : "Unlocked"]),
-      );
-      foot.appendChild(
-        d.h(
-          "button",
-          {
-            type: "button",
-            class: "btn " + (applied ? "btn-primary" : "btn-outline") + " btn-sm",
-            onclick: function () {
-              applyParts(applied ? null : p);
-            },
-          },
-          applied ? [d.icon("check"), "Applied"] : [d.icon("pen"), "Apply"],
-        ),
-      );
-    } else {
-      foot.appendChild(d.h("span", { class: "chip price-chip" }, [d.icon("coin"), String(p.price)]));
-      foot.appendChild(d.h("a", { class: "btn btn-outline btn-sm", href: "/shop.html" }, [d.icon("store"), "Shop"]));
-    }
-
-    return d.h(
-      "article",
-      {
-        class: "shop-card pack-card glass" + (owned ? " owned" : " locked") + (applied ? " playing" : ""),
-      },
-      [
-        N.theme.partThumb(p, { lock: !owned }),
-        p.colors
-          ? d.h(
-              "div",
-              { class: "pack-strip" },
-              p.colors.map(function (c) {
-                return d.h("i", { style: { background: c } });
-              }),
-            )
-          : null,
-        d.h("div", { class: "shop-info" }, [
-          d.h("h3", null, p.name),
-          d.h("p", null, p.desc || ""),
-          d.h(
-            "div",
-            { class: "chips-row" },
-            (p.tags || []).map(function (t) {
-              return d.h("span", { class: "chip" }, t);
-            }),
-          ),
-        ]),
-        foot,
-      ],
-    );
-  }
-
-  function paintParts() {
-    var grid = d.qs("#partGrid");
-    if (!grid || !N.theme.allParticles) return;
-    grid.textContent = "";
-    N.theme.allParticles().forEach(function (p) {
-      grid.appendChild(partCard(p));
-    });
-  }
-
-  /* ---------- export / import ----------
+  /* ============================================================
+     export / import
      localStorage is scoped to one origin, so a NULL profile cannot follow you
      from googleslides2026.github.io to an about:blank clone, a blob: window or
-     a preview URL without a server: which NULL deliberately doesn't have.
-     A backup file is the honest way to carry the profile across. */
+     a preview URL: which NULL deliberately doesn't have a server for. A
+     backup file is the honest way to carry the profile across.
+     ============================================================ */
   var PREFIX = "null:";
 
   function exportData() {
@@ -1097,76 +1448,103 @@
     reader.readAsText(file);
   }
 
+  /* ============================================================
+     build the controls that are made in JS
+     ============================================================ */
   function init() {
     if (inited) return;
     inited = true;
 
-    /* accent swatches: plain single-color accents; full theme packs get
-       their own card below, with previews. */
-    var row = d.qs("#accentRow");
-    if (row) {
-      function swatch(a) {
-        return d.h(
-          "button",
-          { type: "button", class: "swatch-btn", "data-val": a.id, title: a.name },
-          [
-            d.h("span", {
-              class: "accent-dot",
-              style: a.c1
-                ? { background: a.c1 }
-                : { background: document.documentElement.dataset.theme === "light" ? "#1c1d21" : "#e8eaef" },
-            }),
-            a.name,
-          ],
-        );
-      }
-      N.theme.ACCENTS.forEach(function (a) {
-        row.appendChild(swatch(a));
-      });
-      /* the picker is a Shop unlock, so only offer it once it's owned */
-      if (N.theme.customOn && N.theme.customOn()) {
-        row.appendChild(
-          d.h(
-            "button",
-            { type: "button", class: "swatch-btn", "data-val": "custom", title: "Your own color" },
-            [
-              d.h("span", {
-                class: "accent-dot",
-                style: { background: N.prefs.get("accentColor") || "#6cc7ff" },
-              }),
-              "Custom",
-            ],
-          ),
-        );
-      }
+    /* the custom accent itself: one big colour circle */
+    var accRow = d.qs("#accentCustomRow");
+    var accHolder = d.qs("#accentCustom");
+    if (accHolder) {
+      accentDot = d.colorDot(
+        N.prefs.get("accentColor") || accHolder.dataset.cdot || "#6cc7ff",
+        function (v) {
+          N.theme.setCustomAccent(v);
+          if (N.seasons) N.seasons.refresh();
+          paintAccent(N.prefs.data);
+        },
+        { big: true, title: "Custom accent colour" },
+      );
+      accHolder.replaceWith(accentDot);
     }
+    if (accRow) accRow.hidden = !(N.theme.customOn && N.theme.customOn());
+
+    /* the two custom glow colours */
+    var glowRow = d.qs("#glowColors");
+    if (glowRow) {
+      glowRow.textContent = "";
+      [
+        ["glowColor1", "Colour 1"],
+        ["glowColor2", "Colour 2"],
+      ].forEach(function (pair) {
+        var dot = d.colorDot(
+          N.prefs.get(pair[0]),
+          function (v) {
+            N.prefs.set(pair[0], v);
+            if (N.prefs.get("glow") === "custom") N.theme.setGlow("custom");
+          },
+          { title: pair[1] },
+        );
+        glowRow.appendChild(d.h("span", { class: "cdot-pick" }, [dot, d.h("span", null, pair[1])]));
+      });
+    }
+
+    /* tab preset list: show the actual tab name the preset produces,
+       "Untitled document - Google Docs", not "Google Docs: Untitled …" */
     var sel = d.qs("#tabSelect");
     if (sel) {
-      /* show the actual tab name the preset produces: "Untitled document -
-         Google Docs", not "Google Docs: Untitled document - Google Docs" */
       N.tab.list.forEach(function (p) {
         var label = p.id === "custom" ? p.name : N.tab.titleFor(p);
         sel.appendChild(d.h("option", { value: p.id }, label));
       });
-      /* custom-styled dropdown, not the native <select> */
       N.dom.upgradeSelect(sel);
     }
     var gsel = d.qs("#glowSelect");
     if (gsel) N.dom.upgradeSelect(gsel);
     var stm = d.qs("#smartTabMin");
     if (stm) N.dom.upgradeSelect(stm);
-    var acc = d.qs("#accentCustom");
-    if (acc) {
-      acc.addEventListener("input", function () {
-        N.theme.setCustomAccent(acc.value);
-        if (N.seasons) N.seasons.refresh();
-        refresh();
+
+    /* the rail: filter + spy + folds */
+    buildRail();
+    bindFolds();
+    paintFolds();
+    spy();
+    var find = d.qs("#setFind");
+    if (find) {
+      var runFilter = d.debounce(function () {
+        applyFilter(find.value);
+      }, 120);
+      find.addEventListener("input", runFilter);
+      find.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") {
+          find.value = "";
+          applyFilter("");
+        }
+      });
+    }
+    var clear = d.qs("#setClear");
+    if (clear) {
+      clear.addEventListener("click", function () {
+        var find2 = d.qs("#setFind");
+        if (find2) find2.value = "";
+        applyFilter("");
       });
     }
 
     bind();
     bindPanic();
+    bindDanger();
     refresh();
+
+    /* an incoming #section link should land on the right card */
+    var hash = (location.hash || "").replace("#", "");
+    if (hash) {
+      var target = d.qs("#" + hash);
+      if (target && target.classList.contains("set-group")) setRailOn(hash);
+    }
   }
 
   if (document.readyState === "loading") {

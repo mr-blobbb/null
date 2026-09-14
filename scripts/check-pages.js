@@ -261,8 +261,59 @@ for (const page of PAGES) {
   }
   if (page === "settings.html") {
     const q = (s) => doc.querySelector(s);
+    const qa = (s) => Array.from(doc.querySelectorAll(s));
     const fire = (el) => el.dispatchEvent(new win.Event("change", { bubbles: true }));
-    ok(!!q("#perfSwitch") && !!q("#ultraSwitch"), "performance + ultra switches exist");
+    const tier = (v) => qa("#perfSeg button").find((b) => b.dataset.val === v);
+    ok(qa("#perfSeg button").length === 3, "the performance tiers are listed");
+
+    /* the page is a rail of sections beside grouped, foldable cards */
+    const links = qa("#railList .rail-link");
+    ok(links.length >= 4, "the rail has one link per section (" + links.length + ")");
+    ok(links.length === qa(".set-group").length, "…and that is every group on the page");
+    ok(
+      links.every((l) => doc.getElementById(l.dataset.target)),
+      "every rail link points at a real section",
+    );
+    ok(qa("[data-fold]").length >= 6, "the set-once cards fold (" + qa("[data-fold]").length + ")");
+
+    const glowCard = q('[data-fold="glow"]');
+    const glowBtn = glowCard.querySelector(".set-toggle");
+    ok(glowCard.getAttribute("data-open") === "0", "the glow card starts folded");
+    glowBtn.click();
+    ok(
+      glowCard.getAttribute("data-open") === "1" && glowBtn.getAttribute("aria-expanded") === "true",
+      "clicking its header opens it",
+    );
+    ok(JSON.parse(win.localStorage.getItem("null:setFolds")).glow === 1, "…and the fold is remembered");
+    glowBtn.click();
+    ok(glowCard.getAttribute("data-open") === "0", "clicking again folds it back");
+
+    /* the rail filter matches card text, opens what it finds, and clears */
+    const find = q("#setFind");
+    find.value = "confetti";
+    find.dispatchEvent(new win.Event("input", { bubbles: true }));
+    await wait(200);
+    const live = qa("[data-card]:not(.gone)");
+    ok(live.length === 1 && live[0].dataset.card === "extras", "filtering keeps only the matching card");
+    ok(q("#setEnd").hidden, "a hit means no empty state");
+    find.value = "";
+    find.dispatchEvent(new win.Event("input", { bubbles: true }));
+    await wait(200);
+    ok(qa("[data-card]:not(.gone)").length === qa("[data-card]").length, "clearing the filter shows everything");
+
+    /* theme is one switch now */
+    const themeSw = q("#themeSwitch");
+    ok(!!themeSw && !q("#themeSeg"), "theme is a single switch, not two buttons");
+    themeSw.checked = true;
+    fire(themeSw);
+    ok(
+      win.N.prefs.get("theme") === "light" && doc.documentElement.dataset.theme === "light",
+      "the theme switch flips to light",
+    );
+    themeSw.checked = false;
+    fire(themeSw);
+    ok(doc.documentElement.dataset.theme === "dark", "…and back to dark");
+
     ok(!!q("#cloakRedirectSwitch"), "cloak redirect switch exists");
     ok(!!q("#tabCustomUrl"), "custom tab has a real-site URL field");
     ok(
@@ -270,26 +321,22 @@ for (const page of PAGES) {
       "cloak target is spelled out in the row",
     );
 
-    /* ultra: pref + <html> attribute, then back off again */
-    const usw = q("#ultraSwitch");
-    usw.checked = true;
-    fire(usw);
+    /* the tier segment drives the pref, the <html> attribute and its own note */
+    tier("ultra").click();
     ok(
       win.N.prefs.get("perf") === "ultra" && doc.documentElement.dataset.perf === "ultra",
-      "ultra switch sets data-perf=ultra",
+      "the Ultra tier sets data-perf=ultra",
     );
-    ok(q("#perfSwitch").checked, "plain switch reads on while ultra is on");
-    usw.checked = false;
-    fire(usw);
+    ok(tier("ultra").classList.contains("on"), "the chosen tier reads as selected");
+    ok(/no particles, no glow/.test(q("#perfNote").textContent), "…and the note says what it does");
+    tier("on").click();
     ok(
       win.N.prefs.get("perf") === true && doc.documentElement.dataset.perf === "1",
-      "ultra off falls back to plain performance mode",
+      "the Performance tier falls back to plain performance mode",
     );
-    const psw = q("#perfSwitch");
-    psw.checked = false;
-    fire(psw);
-    ok(win.N.prefs.get("perf") === false && !doc.documentElement.dataset.perf, "plain switch then clears it",);
-    ok(!usw.checked, "ultra switch follows the pref back off");
+    tier("off").click();
+    ok(win.N.prefs.get("perf") === false && !doc.documentElement.dataset.perf, "the Off tier clears it");
+    ok(tier("off").classList.contains("on"), "…and reads as the selected tier");
 
     /* density: one scale on <html>, and it goes back off */
     const dseg = q("#densitySeg");
@@ -363,6 +410,56 @@ for (const page of PAGES) {
     ok(!!cfx && !!cfx.querySelector(".pf-p-star b"), "the crafted pack draws its borrowed art and its parts");
     win.N.theme.setAccent("off");
 
+    /* your own pair gets a card each, with circles you can recolour and a
+       delete button, without opening the editor */
+    win.N.bus.emit("sync"); /* the page repaints its grids */
+    const own = qa("#packGrid .pack-card.crafted");
+    ok(own.length === 1, "your own pack gets a card of its own");
+    ok(
+      own[0].querySelectorAll(".craft-tools .cdot").length === 6,
+      "…with four palette circles and two tint circles",
+    );
+    const dots = own[0].querySelectorAll(".craft-tools .cdot input[type=color]");
+    ok(dots.length === 6, "every circle owns a real colour input");
+    dots[0].value = "#123456";
+    dots[0].dispatchEvent(new win.Event("input", { bubbles: true }));
+    ok(win.N.theme.craftPack().colors[0] === "#123456", "picking a colour writes it back to the pack");
+    ok(
+      own[0].querySelector(".pack-strip i").style.background !== "",
+      "…and the colour strip follows it",
+    );
+
+    const ownPart = qa("#partGrid .pack-card.crafted")[0];
+    ok(
+      !!ownPart && !!ownPart.querySelector(".craft-tools .switch"),
+      "your particle set can follow the theme colours or carry its own",
+    );
+    ok(!!own[0].querySelector(".craft-tools .btn-outline-danger"), "your own pack can be deleted from the card");
+
+    win.N.theme.setAccent("mypack");
+    win.N.theme.removeCraft("pack");
+    ok(win.N.theme.allPacks().every((p) => p.id !== "mypack"), "deleting it removes it for good");
+    ok(win.N.prefs.get("accent") !== "mypack", "…and un-wears it");
+    win.N.theme.removeCraft("part");
+    ok(win.N.theme.allParticles().every((p) => p.id !== "mypart"), "deleting your particle set removes it too");
+
+    /* the custom accent is one big colour circle, not a bare swatch */
+    win.N.econ.grant("fx", "customaccent");
+    win.N.bus.emit("sync");
+    ok(
+      !!q('#accentRow .swatch-btn[data-val="custom"]'),
+      "owning the custom accent adds its swatch while the page is open",
+    );
+    const accDot = q("#accentCustomRow .cdot input[type=color]");
+    ok(!!accDot, "the custom accent is a colour circle with a real picker behind it");
+    accDot.value = "#ff0090";
+    accDot.dispatchEvent(new win.Event("input", { bubbles: true }));
+    ok(
+      win.N.prefs.get("accentColor") === "#ff0090" && win.N.prefs.get("accent") === "custom",
+      "picking a colour sets the custom accent",
+    );
+    ok(qa("#glowColors .cdot").length === 2, "the custom glow colours are circles too");
+
     ok(typeof win.N.perf === "object" && typeof win.N.perf.ultra === "function", "N.perf.ultra() is exposed");
     ok(typeof win.N.cloak.target === "function", "cloak target is queryable");
     ok(typeof win.N.tab.url === "function" && /docs\.google\.com/.test(win.N.tab.url()), "the default preset has a real site");
@@ -401,6 +498,38 @@ console.log("\nicon font");
   ok(
     fs.readFileSync(path.join(root, "src", "styles", "global.css"), "utf8").includes('url("/' + font + '")'),
     "global.css serves it locally",
+  );
+}
+
+/* ---------- [data-icon] placeholders ----------
+   shell.js hydrates every [data-icon] element in place. On a <span> it swaps
+   the span out; on anything else it empties the element first and drops an
+   icon in, so a placeholder left on a <section> or a <div> wipes whatever was
+   inside it. That is a whole card silently disappearing, which is exactly the
+   kind of bug this file exists to catch. */
+console.log("\nicon placeholders");
+{
+  const skip = new Set(["node_modules", ".git", "releases", "public", "scripts"]);
+  const files = [];
+  (function walk(dir) {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (skip.has(e.name)) continue;
+      const p = path.join(dir, e.name);
+      if (e.isDirectory()) walk(p);
+      else if (e.name.endsWith(".html")) files.push(p);
+    }
+  })(root);
+
+  const bad = [];
+  for (const f of files) {
+    const html = fs.readFileSync(f, "utf8");
+    for (const m of html.matchAll(/<([a-zA-Z][\w-]*)\b[^>]*\bdata-icon=/g)) {
+      if (m[1].toLowerCase() !== "span") bad.push(path.relative(root, f) + " puts it on a <" + m[1] + ">");
+    }
+  }
+  ok(
+    bad.length === 0,
+    bad.length ? bad.join("; ") : "every [data-icon] placeholder sits on a <span> (" + files.length + " pages)",
   );
 }
 

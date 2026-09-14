@@ -2,6 +2,13 @@
    Additions kept out of global.css on purpose. Linked on every page after
    global.css so these rules win when they need to. */
 
+/* The `hidden` attribute is how this site hides things, but any author
+   `display` rule beats the browser's own [hidden], and almost every element
+   here is a flex or grid box. Say it once, loudly, and `hidden` means hidden. */
+[hidden] {
+  display: none !important;
+}
+
 /* ============================================================
    layout compactness (Settings → Appearance)
    global.css sets the scale behind html[data-density]; these are the
@@ -133,14 +140,9 @@ html[data-perf="1"] .bg-fx {
   gap: 7px;
   flex-wrap: wrap;
 }
-.ed-colors input[type="color"] {
-  width: 38px;
-  height: 33px;
-  padding: 2px;
-  border: 1px solid var(--line-2);
-  border-radius: 9px;
-  background: var(--glass-bg);
-  cursor: pointer;
+.ed-colors .cdot {
+  width: 32px;
+  height: 32px;
 }
 .ed-part-row {
   display: flex;
@@ -799,6 +801,563 @@ html[data-perf="1"] .nav-dot {
 }
 .set-grid .set-card--wide {
   grid-column: 1 / -1;
+}
+
+/* ============================================================
+   settings: rail + grouped, foldable cards
+   The page is a sticky rail of sections beside the cards. Cards that are
+   set once wear a header button with their current value on the right and
+   fold away, so the state of every setting fits on a screen or two and
+   nothing has to be hunted for.
+   ============================================================ */
+.set-page {
+  max-width: 1220px;
+}
+.set-wrap {
+  display: grid;
+  grid-template-columns: 216px minmax(0, 1fr);
+  gap: var(--grid-gap);
+  align-items: start;
+}
+
+/* ---------- rail ---------- */
+/* the rail's column has to be as tall as the cards for sticky to have any
+   room to travel, which the grid's align-items: start would deny it */
+.set-rail {
+  align-self: stretch;
+}
+.rail-stick {
+  position: sticky;
+  top: calc(var(--nh) + 16px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 13px;
+  border-radius: var(--r-lg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.rail-find {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 11px;
+  border-radius: 11px;
+  border: 1px solid var(--line);
+  background: var(--glass-bg-2);
+  transition: border-color 0.16s;
+}
+.rail-find:focus-within {
+  border-color: var(--ac-1);
+}
+.rail-find .msr {
+  font-size: 15px;
+  color: var(--text-2);
+  flex: none;
+}
+.rail-find input {
+  width: 100%;
+  min-width: 0;
+  background: none;
+  border: 0;
+  outline: 0;
+  font-size: 13px;
+  color: var(--text);
+}
+.rail-find input::-webkit-search-cancel-button {
+  display: none;
+}
+.rail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.rail-link {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+  text-align: left;
+  transition: background 0.16s, color 0.16s, border-color 0.16s;
+}
+.rail-link .msr {
+  font-size: 15px;
+  color: var(--ac-1);
+  flex: none;
+}
+.rail-link:hover {
+  background: var(--glass-bg-2);
+  color: var(--text);
+}
+.rail-link.on {
+  color: var(--text);
+  background: color-mix(in srgb, var(--ac-1) 14%, transparent);
+  border-color: color-mix(in srgb, var(--ac-1) 34%, transparent);
+}
+.rail-note {
+  padding: 0 3px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+
+/* ---------- groups ---------- */
+.set-group {
+  margin-bottom: var(--sec-gap);
+  scroll-margin-top: calc(var(--nh) + 22px);
+}
+.set-group:last-child {
+  margin-bottom: 0;
+}
+.grp {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 15px;
+}
+.grp-ic {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: 11px;
+  border: 1px solid var(--line);
+  background: var(--glass-bg-2);
+}
+.grp-ic .msr {
+  font-size: 17px;
+  color: var(--ac-1);
+}
+.grp-txt {
+  min-width: 0;
+}
+.grp-t {
+  font-size: 15.5px;
+  letter-spacing: 0.01em;
+}
+.grp-s {
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+
+/* ---------- card header ---------- */
+.set-card {
+  gap: var(--card-gap);
+}
+.set-h {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  width: 100%;
+}
+.set-h .set-ic {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  margin-top: 1px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: var(--glass-bg-2);
+}
+.set-h .set-ic .msr {
+  font-size: 16px;
+  color: var(--ac-1);
+}
+.set-htxt {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+.set-htxt b {
+  font-size: 15px;
+  font-weight: 640;
+  transition: color 0.16s;
+}
+.set-htxt > span {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--text-2);
+}
+.set-val {
+  flex: none;
+  margin-left: auto;
+  max-width: 200px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--glass-bg-2);
+  font-size: 11.5px;
+  font-weight: 620;
+  color: var(--text-2);
+}
+
+/* ---------- fold ---------- */
+.set-toggle {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 0;
+  border-radius: 12px;
+  text-align: left;
+}
+.set-toggle:hover .set-htxt b {
+  color: var(--ac-1);
+}
+.set-chev {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  color: var(--text-2);
+  transition: transform 0.24s cubic-bezier(0.3, 0.8, 0.3, 1);
+}
+.set-chev .msr {
+  font-size: 19px;
+}
+.fold[data-open="1"] .set-chev {
+  transform: rotate(180deg);
+}
+.set-fold {
+  display: flex;
+  flex-direction: column;
+  gap: var(--card-gap);
+  animation: foldIn 0.2s ease;
+}
+.fold[data-open="0"] .set-fold {
+  display: none;
+}
+@keyframes foldIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+html[data-perf] .set-fold {
+  animation: none;
+}
+
+/* a row that stacks its label over its control: segments, sliders and the
+   bigger pickers need the whole width, not a squeezed right-hand column */
+.set-row--stack {
+  display: block;
+}
+.set-row--stack > .lbl-txt,
+.set-row--stack > .lbl {
+  margin-bottom: 10px;
+}
+.set-row--stack .select-field {
+  display: block;
+}
+.set-row--stack > .tab-preview {
+  margin-top: 10px;
+}
+/* .set-sub ships pulled up tight under a card title. Away from one it needs
+   real space instead: inside a fold body the column gap already spaces it. */
+.set-card .set-sub {
+  margin-top: 0;
+}
+/* a field stacked under another one needs the room the old inline margin-top
+   used to give it (custom tab fields, the gmail address) */
+.set-card .field + .lbl,
+.set-card .set-inline + .lbl {
+  margin-top: 12px;
+}
+
+/* the first row in a card, or in a fold, has nothing above it to divide */
+.set-h + .set-row,
+.set-fold > .set-row:first-child,
+.set-fold > .set-sub:first-child + .set-row {
+  border-top: 0;
+  padding-top: 0;
+}
+.set-fold > .set-sub:first-child {
+  margin-top: 0;
+}
+.set-sub--inline {
+  margin: 0;
+}
+.set-note {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+.set-inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+/* ---------- theme toggle ---------- */
+.theme-tgl {
+  display: inline-flex;
+  flex: none;
+  cursor: pointer;
+}
+.theme-tgl input {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+}
+.tt-track {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 66px;
+  height: 34px;
+  padding: 0 7px;
+  border-radius: 999px;
+  border: 1px solid var(--line-2);
+  background: var(--glass-bg-2);
+  transition: background 0.2s, border-color 0.2s;
+}
+.tt-ic {
+  display: grid;
+  place-items: center;
+  z-index: 1;
+  color: var(--text-2);
+  transition: color 0.2s;
+}
+.tt-ic .msr {
+  font-size: 15px;
+}
+.tt-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+  background: linear-gradient(160deg, #2e2f36, #14151a);
+  border: 1px solid var(--line-2);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45);
+  transition: transform 0.24s cubic-bezier(0.3, 0.8, 0.3, 1);
+}
+.theme-tgl input:checked + .tt-track .tt-thumb {
+  transform: translateX(31px);
+}
+.theme-tgl input:checked + .tt-track {
+  background: color-mix(in srgb, var(--ac-1) 16%, transparent);
+  border-color: color-mix(in srgb, var(--ac-1) 42%, transparent);
+}
+.theme-tgl input:checked + .tt-track .tt-b .msr {
+  color: var(--ac-1);
+}
+.theme-tgl input:not(:checked) + .tt-track .tt-a .msr {
+  color: var(--ac-1);
+}
+.theme-tgl input:focus-visible + .tt-track {
+  outline: 2px solid var(--ac-1);
+  outline-offset: 3px;
+}
+
+/* ---------- segments ---------- */
+.seg--wide {
+  display: flex;
+  width: 100%;
+  flex-wrap: nowrap;
+}
+.seg--wide button {
+  flex: 1;
+  justify-content: center;
+}
+
+/* a live sample of the spacing scale, so the choice is visible */
+.dens-prev {
+  display: flex;
+  flex-direction: column;
+  gap: var(--card-gap);
+  width: 100%;
+  padding: var(--card-pad);
+  border-radius: var(--r-md);
+  border: 1px dashed var(--line-2);
+  background: var(--glass-bg-2);
+}
+.dens-prev i {
+  display: block;
+  height: 9px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--ac-1) 55%, transparent), transparent 72%);
+}
+.dens-prev i:nth-child(2) {
+  width: 74%;
+}
+.dens-prev i:nth-child(3) {
+  width: 47%;
+}
+
+/* ---------- colour dots ----------
+   A circle showing the colour, with the real <input type="color"> stretched
+   invisibly over it: clicking the circle opens the browser's own picker. */
+.cdot {
+  position: relative;
+  display: inline-block;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: 50%;
+  border: 1px solid var(--line-2);
+  background: var(--cdot, #6cc7ff);
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16), 0 2px 9px rgba(0, 0, 0, 0.35);
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+.cdot::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  border: 1px dashed color-mix(in srgb, var(--ac-1) 75%, transparent);
+  opacity: 0;
+  transition: opacity 0.16s ease;
+}
+.cdot:hover {
+  transform: scale(1.08);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.24), 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+.cdot:hover::after,
+.cdot:focus-within::after {
+  opacity: 1;
+}
+.cdot--lg {
+  width: 42px;
+  height: 42px;
+}
+.cdot input[type="color"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  opacity: 0;
+  cursor: pointer;
+}
+.cdot-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.cdot-lab {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+.cdot-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 620;
+  color: var(--text-2);
+}
+
+/* ---------- your own pack / particle set ----------
+   A crafted card can be recoloured in place and thrown away, without
+   opening the editor for either one. */
+.craft-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  width: 100%;
+  margin-top: 10px;
+  padding-top: 11px;
+  border-top: 1px solid var(--line);
+}
+.craft-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.craft-acts {
+  display: flex;
+  gap: 7px;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+.pack-card.crafted {
+  border-color: color-mix(in srgb, var(--ac-1) 32%, var(--line));
+}
+
+/* ---------- narrow screens: rail becomes a chip row ---------- */
+@media (max-width: 1000px) {
+  .set-wrap {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .rail-stick {
+    position: static;
+    padding: 11px;
+  }
+  .rail-list {
+    flex-direction: row;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+  .rail-list::-webkit-scrollbar {
+    display: none;
+  }
+  .rail-link {
+    flex: none;
+    white-space: nowrap;
+  }
+  .rail-note {
+    display: none;
+  }
+}
+@media (max-width: 560px) {
+  .set-val,
+  .set-h .set-ic {
+    display: none;
+  }
+}
+
+/* ---------- the rail filter, and its empty state ---------- */
+.set-card.gone,
+.set-group.gone {
+  display: none;
+}
+.set-end {
+  padding: 26px 0 8px;
+  font-size: 13px;
+  text-align: center;
+  color: var(--text-2);
+}
+.link-btn {
+  color: var(--ac-1);
+  font-weight: 620;
+  text-decoration: underline;
 }
 
 /* ============================================================

@@ -120,6 +120,40 @@
     N.store.write(CRAFT_KEY, Object.assign(craftRaw(), patch));
     craftCache = null;
   }
+  /* The editor writes the pair whole; Settings edits a piece at a time (one
+     palette colour, the tint, the mono switch) and can drop either half
+     outright. Same file, so both stay in step. */
+  function craftPatch(patch) {
+    var raw = craftRaw();
+    if (patch.pack) raw.pack = Object.assign({}, raw.pack || {}, patch.pack);
+    if (patch.part) raw.part = Object.assign({}, raw.part || {}, patch.part);
+    if (patch.drop === "all") raw = {};
+    else if (patch.drop === "pack") delete raw.pack;
+    else if (patch.drop === "part") delete raw.part;
+    N.store.write(CRAFT_KEY, raw);
+    craftCache = null;
+  }
+
+  /* re-apply whichever crafted piece is being worn, so an edit shows up at
+     once without the caller knowing what is on */
+  function craftApply() {
+    craftCache = null;
+    if (craftedPack() && N.prefs.get("accent") === CRAFT_PACK) setAccent(CRAFT_PACK);
+    if (craftedPart() && N.prefs.get("particles") === CRAFT_PART) setParticles(CRAFT_PART);
+  }
+
+  /* throw a crafted piece away. Whatever was wearing it falls back to none. */
+  function removeCraft(which) {
+    craftPatch({ drop: which });
+    if (which === "pack" && N.prefs.get("accent") === CRAFT_PACK) {
+      N.prefs.set("accent", "off");
+      setAccent("off");
+    }
+    if (which === "part" && N.prefs.get("particles") === CRAFT_PART) {
+      N.prefs.set("particles", "none");
+      setParticles("none");
+    }
+  }
   /* the editor is a Shop unlock: without it the crafted pair is ignored
      everywhere, so a leftover pair in storage can't outlive the unlock */
   function craftOn() {
@@ -852,6 +886,9 @@
     craftPack: craftedPack,
     craftPart: craftedPart,
     craftWrite: craftWrite,
+    craftPatch: craftPatch,
+    craftApply: craftApply,
+    removeCraft: removeCraft,
     craftOn: craftOn,
     /* layout + background */
     setDensity: function (id) {

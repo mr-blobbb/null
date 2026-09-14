@@ -107,12 +107,10 @@
     return d.h("span", { class: "field" }, input);
   }
 
-  function colorInput(value, onInput) {
-    var input = d.h("input", { type: "color", value: value, "aria-label": "Color" });
-    input.addEventListener("input", function () {
-      onInput(input.value);
-    });
-    return input;
+  /* the same colour circle Settings uses: a swatch that opens the browser's
+     own picker. dom.js owns it, so the two pages can't drift apart. */
+  function colorInput(value, onInput, title) {
+    return d.colorDot(value, onInput, { title: title || "Colour" });
   }
 
   function selectInput(options, value, onChange) {
@@ -135,7 +133,8 @@
   }
 
   /* ---------- the modal ---------- */
-  function open(onSave) {
+  /* `startTab` lets Settings jump straight to the half you clicked on */
+  function open(onSave, startTab) {
     if (!N.modal || !N.theme || !N.theme.craftOn || !N.theme.craftOn()) {
       if (d.toast) d.toast("The editor unlocks in the Shop first.", { type: "err" });
       return;
@@ -144,7 +143,15 @@
     var stored = N.store.read(CRAFT_KEY, {}) || {};
     var pack = seed(stored.pack, DEFAULT_PACK, "pf");
     var part = seed(stored.part, DEFAULT_PART, "pt");
-    var tab = "theme";
+    var tab = startTab === "part" ? "part" : "theme";
+    var handle = null;
+    /* whether there is anything saved to throw away. A fresh install has
+       nothing, so Delete only shows up once you've built something. */
+    var built = {
+      pack: !!(stored.pack && Array.isArray(stored.pack.colors) && stored.pack.colors.length),
+      part: !!(stored.part && Array.isArray(stored.part.parts) && stored.part.parts.length),
+    };
+    var delBtn = {};
 
     var tabs = d.h("div", { class: "ed-tabs" });
     var panel = d.h("div", { class: "ed-panel" });
@@ -243,6 +250,58 @@
       });
     }
 
+    /* each tab ends the same way: save what you built and wear it, or throw
+       that half away outright */
+    function wearRow(kind, glyph, onWear) {
+      var del = d.h(
+        "button",
+        { type: "button", class: "btn btn-outline-danger btn-sm", hidden: !built[kind], onclick: function () { drop(kind); } },
+        [d.icon("trash"), "Delete"],
+      );
+      delBtn[kind] = del;
+      return d.h("div", { class: "ed-row" }, [
+        d.h("b", null, "Wear it"),
+        d.h("div", { class: "craft-acts" }, [
+          del,
+          d.h(
+            "button",
+            { type: "button", class: "btn btn-outline btn-sm", onclick: onWear },
+            [d.icon(glyph), "Save and wear"],
+          ),
+        ]),
+      ]);
+    }
+
+    /* deleting lives in the body, like Reset: a modal action always closes,
+       and this one should close the editor only after it has happened */
+    function drop(kind) {
+      var isPack = kind === "pack";
+      var what = isPack ? "theme pack" : "particle set";
+      N.modal.open({
+        title: "Delete your " + what + "?",
+        icon: "trash",
+        iconTone: "danger",
+        body:
+          "<p>This removes the " +
+          what +
+          " you built from this browser for good. Anything wearing it goes back to none.</p>" +
+          "<p style='color:var(--text-2)'>The editor itself stays unlocked, so you can build another one.</p>",
+        actions: [
+          { label: "Cancel", variant: "outline" },
+          {
+            label: "Delete",
+            variant: "danger",
+            onClick: function () {
+              N.theme.removeCraft(isPack ? "pack" : "part");
+              if (handle) handle.close();
+              if (onSave) onSave();
+              d.toast("Deleted your " + what, { icon: "trash" });
+            },
+          },
+        ],
+      });
+    }
+
     function paintTabs() {
       tabs.textContent = "";
       [
@@ -315,21 +374,10 @@
           panel.appendChild(n);
         });
         panel.appendChild(
-          d.h("div", { class: "ed-row" }, [
-            d.h("b", null, "Wear it"),
-            d.h(
-              "button",
-              {
-                type: "button",
-                class: "btn btn-outline btn-sm",
-                onclick: function () {
-                  save();
-                  wearPack();
-                },
-              },
-              [d.icon("check"), "Save and wear"],
-            ),
-          ]),
+          wearRow("pack", "check", function () {
+            save();
+            wearPack();
+          }),
         );
       } else {
         panel.appendChild(row("Name", textInput(part.name, function (v) { part.name = v.slice(0, 40); })));
@@ -366,26 +414,20 @@
           panel.appendChild(n);
         });
         panel.appendChild(
-          d.h("div", { class: "ed-row" }, [
-            d.h("b", null, "Wear it"),
-            d.h(
-              "button",
-              {
-                type: "button",
-                class: "btn btn-outline btn-sm",
-                onclick: function () {
-                  save();
-                  wearPart();
-                },
-              },
-              [d.icon("sparkle"), "Save and wear"],
-            ),
-          ]),
+          wearRow("part", "sparkle", function () {
+            save();
+            wearPart();
+          }),
         );
       }
     }
 
     function write() {
+      built.pack = true;
+      built.part = true;
+      Object.keys(delBtn).forEach(function (k) {
+        delBtn[k].hidden = false;
+      });
       N.theme.craftWrite({
         pack: {
           name: pack.name,
@@ -441,7 +483,7 @@
     paintPanel();
     paintPreview();
 
-    N.modal.open({
+    handle = N.modal.open({
       title: "Theme & particle editor",
       icon: "wrench",
       body: body,

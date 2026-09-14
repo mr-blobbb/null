@@ -223,12 +223,42 @@
     return sel;
   }
 
+  /* ---------- colour dots ----------
+     A circle showing the colour, with the real <input type="color"> stretched
+     invisibly across it, so clicking the circle opens the browser's own
+     picker. A far nicer target than the bare native swatch, and it reads as
+     the colour it currently holds. onPick fires on every change. */
+  function colorDot(value, onPick, opts) {
+    opts = opts || {};
+    var dot = h("label", {
+      class: "cdot" + (opts.big ? " cdot--lg" : ""),
+      title: opts.title || value,
+    });
+    var input = h("input", { type: "color", value: value, "aria-label": opts.title || "Color" });
+    dot.style.setProperty("--cdot", value);
+    dot.appendChild(input);
+    input.addEventListener("input", function () {
+      dot.style.setProperty("--cdot", input.value);
+      dot.title = input.value;
+      onPick(input.value);
+    });
+    /* let a caller move the dot from code (a card rebuilt after a save, say)
+       without reaching inside it */
+    dot.setValue = function (v) {
+      input.value = v;
+      dot.style.setProperty("--cdot", v);
+      dot.title = v;
+    };
+    return dot;
+  }
+
   N.dom = {
     h: h,
     qs: qs,
     qsa: qsa,
     icon: icon,
     icons: P,
+    colorDot: colorDot,
     upgradeSelect: upgradeSelect,
     selSync: selSync,
   };

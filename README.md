@@ -299,9 +299,19 @@ this folder as they are, and NULL never calls out to anything.
 - Minimal flat design system, dark + light themes, configurable accents, and a
   **glow border** that re-inks the viewport edge in the palette you pick (the
   Neon theme pack is the one that also lights its cards).
+- **Settings** is a sticky rail of five sections (Look and feel, Effects,
+  Layout and speed, Browsing, Your stuff) beside grouped cards. Cards that are
+  only set once fold away with their current value in the header
+  (`Glow border · Rainbow`, `Panic key · \``), the fold state is remembered in
+  `null:setFolds`, and the rail's own filter hides every card that doesn't
+  match, opening what it finds.
+- Light and dark is **one switch** with a sun and a moon, and every colour
+  choice is a **colour circle** (an invisible `<input type="color">` stretched
+  over a swatch, `N.dom.colorDot`) instead of a bare native box.
 - **Layout compactness** in Settings: regular, comfy, spacious or compact:
   one spacing scale (nav height, page gutters, section rhythm, grid gaps, card
   padding, tile width) behind `html[data-density]`, so every page follows it.
+  A live sample strip in the card shows the scale before you commit to it.
 - **Mini-Perf mode** in Settings: strips nothing, it just lets the browser skip
   the blocks that are off screen (`content-visibility`, in perf.css) and brings
   them right back on scroll. Full visuals, less work per frame.
@@ -332,6 +342,10 @@ this folder as they are, and NULL never calls out to anything.
   the site's), with a live preview. Both are stored in `null:craft` and merged
   into `allPacks()` / `allParticles()`, so a crafted theme applies through the
   same code a bought one does.
+- Your own pack and particle set also get a card in Settings with their
+  palette and tint as colour circles plus **Edit** and **Delete**, so you can
+  recolour or throw one away without opening the editor
+  (`N.theme.craftPatch` / `removeCraft`; deleting un-wears it).
 - **Daily crate** (a modal with a spinning reel, streak bonuses), three rotating
   **daily quests** and permanent **achievements**, all paid in coins.
 - Seasonal mode with **holiday variants**: a holiday is a variant of the season
