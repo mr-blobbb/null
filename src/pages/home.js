@@ -266,7 +266,7 @@
         ]),
       ]);
       card.addEventListener("click", function () {
-        location.href = N.url(a.link || "/announcements.html");
+        location.href = N.url(a.link || "/announcements");
       });
       box.appendChild(card);
     });
@@ -460,7 +460,7 @@
           variant: "primary",
           onClick: function () {
             N.flags.set("customize");
-            location.href = N.url("/settings.html");
+            location.href = N.url("/settings");
           },
         },
       ],

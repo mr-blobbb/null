@@ -34,8 +34,9 @@
   function live(list) {
     return (list || []).map(function (e) {
       var out = Object.assign({}, e);
-      if (out.file) out.file = N.url(out.file);
-      if (out.thumb) out.thumb = N.url(out.thumb);
+      /* keep=true: a game file and a thumbnail are real files, not pages */
+      if (out.file) out.file = N.url(out.file, true);
+      if (out.thumb) out.thumb = N.url(out.thumb, true);
       return out;
     });
   }
@@ -72,7 +73,7 @@
   var KIND_LABEL = { game: "Game", app: "App", proxy: "Proxy" };
 
   function playerUrl(kind, id) {
-    return N.url("/player.html") + "?k=" + encodeURIComponent(kind) + "&id=" + encodeURIComponent(id);
+    return N.url("/player") + "?k=" + encodeURIComponent(kind) + "&id=" + encodeURIComponent(id);
   }
 
   function go(kind, entry) {

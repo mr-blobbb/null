@@ -109,12 +109,8 @@
       if (live) live.rebuild();
     }
     function miss() {
-      /* clean urls: some hosts only serve the .html file, and the
-         library pages now live at games/index.html, apps/index.html… */
-      if (/\.html$/.test(pg.url)) {
-        pageText[pg.url] = null;
-        return;
-      }
+      /* clean urls: a static host only serves the .html file, and the
+         library pages live at games/index.html, apps/index.html… */
       var base = src.replace(/\/+$/, "");
       var alts = [base + ".html", base + "/index.html"];
       var i = 0;
@@ -131,7 +127,7 @@
           .catch(tryAlt);
       })();
     }
-    fetch(pg.url)
+    fetch(src)
       .then(function (r) {
         return r.ok ? r.text() : Promise.reject();
       })
@@ -214,7 +210,7 @@
         _h: norm(raw),
         _x: "",
         run: function () {
-          location.href = N.url("/announcements.html");
+          location.href = N.url("/announcements");
         },
       });
     });
@@ -282,8 +278,8 @@
           { t: "Home", u: N.url("/"), i: "home" },
           { t: "Games", u: N.url("/games/"), i: "game" },
           { t: "Apps", u: N.url("/apps/"), i: "grid" },
-          { t: "Schedule", u: N.url("/schedule.html"), i: "sched" },
-          { t: "Settings", u: N.url("/settings.html"), i: "settings" },
+          { t: "Schedule", u: N.url("/schedule"), i: "sched" },
+          { t: "Settings", u: N.url("/settings"), i: "settings" },
         ].forEach(function (s) {
           var it = {
             kind: "page",

@@ -579,7 +579,7 @@
       );
     } else {
       foot.appendChild(d.h("span", { class: "chip price-chip" }, [d.icon("coin"), String(p.price)]));
-      foot.appendChild(d.h("a", { class: "btn btn-outline btn-sm", href: N.url("/shop.html") }, [d.icon("store"), "Shop"]));
+      foot.appendChild(d.h("a", { class: "btn btn-outline btn-sm", href: N.url("/shop") }, [d.icon("store"), "Shop"]));
     }
 
     var strip = d.h(
@@ -665,7 +665,7 @@
       );
     } else {
       foot.appendChild(d.h("span", { class: "chip price-chip" }, [d.icon("coin"), String(p.price)]));
-      foot.appendChild(d.h("a", { class: "btn btn-outline btn-sm", href: N.url("/shop.html") }, [d.icon("store"), "Shop"]));
+      foot.appendChild(d.h("a", { class: "btn btn-outline btn-sm", href: N.url("/shop") }, [d.icon("store"), "Shop"]));
     }
 
     var strip = p.colors

@@ -13,7 +13,7 @@
 
   function inline(s) {
     var out = "";
-    /* links accept http(s) URLs and site-relative paths like [Settings](/settings.html) */
+    /* links accept http(s) URLs and site-relative paths like [Settings](/settings) */
     var re = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|\[([^\]]+)\]\(((?:https?:)?\/[^)\s]+)\))/g;
     var last = 0;
     var m;

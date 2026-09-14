@@ -274,7 +274,8 @@
      assuming it is there. */
   N.dom.fbFor = function (kind) {
     var p = N.dom.fb[kind] || N.dom.fb.game;
-    return N.url ? N.url(p) : p;
+    /* keep=true: a fallback thumb is a real file, not a page */
+    return N.url ? N.url(p, true) : p;
   };
   N.dom.bindImgFallback = function (img, kind) {
     img.addEventListener("error", function () {

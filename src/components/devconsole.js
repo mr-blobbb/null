@@ -444,7 +444,7 @@
           }),
           b("Open the shop", "store", function () {
             ok("heading to the shop");
-            setTimeout(function () { location.href = N.url("/shop.html"); }, 150);
+            setTimeout(function () { location.href = N.url("/shop"); }, 150);
           }),
           b("Player, missing id", "file", function () {
             ok("opening the player with an id that does not exist");
@@ -699,19 +699,19 @@
       { name: "eggs", icon: "eye", items: [
         b("Void", "ban", function () {
           ok("opening the void");
-          location.href = N.url("/void.html");
+          location.href = N.url("/void");
         }),
         b("Blob", "code", function () {
           ok("opening blob");
-          location.href = N.url("/blob.html");
+          location.href = N.url("/blob");
         }),
         b("Time", "clock", function () {
           ok("opening time");
-          location.href = N.url("/time.html");
+          location.href = N.url("/time");
         }),
         b("Credits", "star", function () {
           ok("opening credits");
-          location.href = N.url("/credits.html");
+          location.href = N.url("/credits");
         }),
         b("Blob face on/off", "eye", function () {
           var st = N.shell && N.shell.orb ? N.shell.orb() : null;

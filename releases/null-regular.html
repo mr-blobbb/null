@@ -7628,7 +7628,7 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-14T16:33:38.252Z","g
      The pages link to each other with paths relative to the folder NULL is
      served from, so the same files run at a domain root and under a subfolder
      (github.io/some-repo/, say). The JS keeps asking for pages by their site
-     path (N.url("/shop.html")), which needs that folder. It is worked out
+     path (N.url("/shop")), which needs that folder. It is worked out
      once, from the address this script was loaded at: everything above the
      page is the folder, except the content folder the page itself sits in.
 
@@ -7651,8 +7651,30 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-14T16:33:38.252Z","g
   if (segs.length && FOLDERS.indexOf(segs[segs.length - 1]) > -1) segs.pop();
   var root = document.documentElement.getAttribute("data-root");
   N.base = root ? asBase(root) : asBase(segs.join("/"));
-  N.url = function (path) {
-    return N.base + String(path == null ? "" : path).replace(/^\/+/, "");
+  /* clean urls: pages are asked for by extensionless site path ("/shop"),
+     the same shape a visitor sees in the address bar. On a static host they
+     are answered by the .html file (see sw.js and 404.html). Pass keep=true
+     for real files (a game's own .html inside its folder, a thumbnail):
+     those keep their extension or the host would not serve them. */
+  N.url = function (path, keep) {
+    var clean = String(path == null ? "" : path).replace(/^\/+/, "");
+    if (!keep) clean = clean.replace(/\.html$/, "");
+    return N.base + clean;
+  };
+
+  /* a visitor can land on /shop.html (typed, an old link, a host without
+     rewrite support): rewrite the address bar to /shop without a reload so
+     every NULL url is one shape. Folder pages rewrite to /games/, home keeps
+     /. The 404 page skips this: its address is a path that does not exist
+     and GitHub keeps it that way on purpose. */
+  N.cleanAddress = function () {
+    var p = location.pathname;
+    var isRoot = p === "/" || p === "/index.html";
+    if (!/\.html$/.test(p) || isRoot || document.documentElement.hasAttribute("data-root")) return;
+    var clean = /\/index\.html$/.test(p) ? p.replace(/index\.html$/, "") : p.replace(/\.html$/, "");
+    try {
+      history.replaceState(null, "", clean + location.search + location.hash);
+    } catch (err) {}
   };
 
   /* ---------- tiny pub/sub used to refresh lists when favorites/recent change ---------- */
@@ -9129,7 +9151,8 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-14T16:33:38.252Z","g
      assuming it is there. */
   N.dom.fbFor = function (kind) {
     var p = N.dom.fb[kind] || N.dom.fb.game;
-    return N.url ? N.url(p) : p;
+    /* keep=true: a fallback thumb is a real file, not a page */
+    return N.url ? N.url(p, true) : p;
   };
   N.dom.bindImgFallback = function (img, kind) {
     img.addEventListener("error", function () {
@@ -10706,9 +10729,10 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-14T16:33:38.252Z","g
    they point, and which one is active on the current page. Pages are plain
    HTML files: this just keeps their menus/footers consistent.
 
-   Root pages are linked with their real .html files. GitHub Pages only serves
-   exact files and directory indexes (/games/), so an extensionless /schedule
-   would 404 there; 404.html also redirects those if someone types one. */
+   Root pages are linked by their extensionless site path ("/schedule"), which
+   is what a visitor sees in the address bar. GitHub Pages serves those through
+   404.html (it redirects to the real file) and the service worker answers for
+   them offline; /games/ style folder links hit the directory index directly. */
 (function () {
   var N = (window.N = window.N || {});
 
@@ -10718,11 +10742,11 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-14T16:33:38.252Z","g
     { id: "games", t: "Games", url: "/games/", icon: "game" },
     { id: "apps", t: "Apps", url: "/apps/", icon: "grid" },
     { id: "proxies", t: "Proxies", url: "/proxies/", icon: "proxy" },
-    { id: "schedule", t: "Schedule", url: "/schedule.html", icon: "sched" },
-    { id: "announcements", t: "Announcements", url: "/announcements.html", icon: "ann" },
-    { id: "shop", t: "Shop", url: "/shop.html", icon: "store" },
-    { id: "backups", t: "Backups", url: "/backups.html", icon: "backups" },
-    { id: "settings", t: "Settings", url: "/settings.html", icon: "settings" },
+    { id: "schedule", t: "Schedule", url: "/schedule", icon: "sched" },
+    { id: "announcements", t: "Announcements", url: "/announcements", icon: "ann" },
+    { id: "shop", t: "Shop", url: "/shop", icon: "store" },
+    { id: "backups", t: "Backups", url: "/backups", icon: "backups" },
+    { id: "settings", t: "Settings", url: "/settings", icon: "settings" },
   ];
 
   /* grouped view used by the mobile drawer */
@@ -10738,11 +10762,11 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-14T16:33:38.252Z","g
     {
       name: "More",
       links: [
-        { t: "Announcements", url: "/announcements.html", icon: "ann" },
-        { t: "Schedule", url: "/schedule.html", icon: "sched" },
-        { t: "Shop", url: "/shop.html", icon: "store" },
-        { t: "Backups", url: "/backups.html", icon: "backups" },
-        { t: "Settings", url: "/settings.html", icon: "settings" },
+        { t: "Announcements", url: "/announcements", icon: "ann" },
+        { t: "Schedule", url: "/schedule", icon: "sched" },
+        { t: "Shop", url: "/shop", icon: "store" },
+        { t: "Backups", url: "/backups", icon: "backups" },
+        { t: "Settings", url: "/settings", icon: "settings" },
       ],
     },
   ];
@@ -10757,21 +10781,21 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-14T16:33:38.252Z","g
         { t: "Games", url: "/games/" },
         { t: "Apps", url: "/apps/" },
         { t: "Proxies", url: "/proxies/" },
-        { t: "Announcements", url: "/announcements.html" },
-        { t: "Schedule", url: "/schedule.html" },
-        { t: "Shop", url: "/shop.html" },
-        { t: "Settings", url: "/settings.html" },
+        { t: "Announcements", url: "/announcements" },
+        { t: "Schedule", url: "/schedule" },
+        { t: "Shop", url: "/shop" },
+        { t: "Settings", url: "/settings" },
       ],
     },
     {
       name: "Info",
       links: [
-        { t: "About", url: "/about.html" },
-        { t: "District", url: "/district.html" },
-        { t: "License", url: "/license.html" },
-        { t: "Privacy", url: "/privacy.html" },
-        { t: "Terms", url: "/terms.html" },
-        { t: "Cookies", url: "/cookies.html" },
+        { t: "About", url: "/about" },
+        { t: "District", url: "/district" },
+        { t: "License", url: "/license" },
+        { t: "Privacy", url: "/privacy" },
+        { t: "Terms", url: "/terms" },
+        { t: "Cookies", url: "/cookies" },
       ],
     },
   ];
@@ -10783,19 +10807,17 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-14T16:33:38.252Z","g
     var p = location.pathname;
     if (N.base !== "/" && p.indexOf(N.base) === 0) p = "/" + p.slice(N.base.length);
     if (url === "/") return p === "/" || p === "/index.html";
-    /* normalize both sides: strip the trailing slash and any /index.html
-       suffix, so /games, /games/, /games/index.html and /games.html all
-       light up the same nav item on any host */
+    /* normalize both sides: strip the trailing slash, any /index.html
+       suffix and any .html, so /games, /games/, /games/index.html and
+       /games.html all light up the same nav item on any host */
     function norm(s) {
       if (s.length > 1 && s.charAt(s.length - 1) === "/") s = s.slice(0, -1);
       if (s.slice(-11) === "/index.html") s = s.slice(0, -11);
-      return s;
+      return s.replace(/\.html$/, "");
     }
     var dir = norm(p);
     var target = norm(url);
-    var name = target.split("/").pop();
-    var tail = dir.split("/").pop() || "";
-    return dir === target || tail === name || tail === name + ".html";
+    return dir === target || dir === target + ".html";
   }
 
   N.router = {
@@ -10849,8 +10871,9 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-14T16:33:38.252Z","g
   function live(list) {
     return (list || []).map(function (e) {
       var out = Object.assign({}, e);
-      if (out.file) out.file = N.url(out.file);
-      if (out.thumb) out.thumb = N.url(out.thumb);
+      /* keep=true: a game file and a thumbnail are real files, not pages */
+      if (out.file) out.file = N.url(out.file, true);
+      if (out.thumb) out.thumb = N.url(out.thumb, true);
       return out;
     });
   }
@@ -10887,7 +10910,7 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-14T16:33:38.252Z","g
   var KIND_LABEL = { game: "Game", app: "App", proxy: "Proxy" };
 
   function playerUrl(kind, id) {
-    return N.url("/player.html") + "?k=" + encodeURIComponent(kind) + "&id=" + encodeURIComponent(id);
+    return N.url("/player") + "?k=" + encodeURIComponent(kind) + "&id=" + encodeURIComponent(id);
   }
 
   function go(kind, entry) {
@@ -11016,7 +11039,7 @@ window.NULL_CONTENT = {
       title: "Start here",
       date: "2026-09-12",
       category: "info",
-      link: "/about.html",
+      link: "/about",
       desc: "New around here? The search bar finds games and apps by name, and the tabs up top split everything into games, apps and proxies. Settings handles your theme, the tab disguise and the panic key. The About page walks through the rest.",
     },
     {
@@ -11024,7 +11047,7 @@ window.NULL_CONTENT = {
       title: "How the shop works",
       date: "2026-09-11",
       category: "info",
-      link: "/shop.html",
+      link: "/shop",
       desc: "Playing games banks XP, XP turns into coins, and coins buy themes, particle effects and a few extras in the Shop. It is all local: no real money, no payment, nothing charged. Open the Shop and see what is in stock.",
     },
   ],
@@ -11070,77 +11093,77 @@ window.NULL_CONTENT = {
     },
     {
       title: "Announcements",
-      url: "/announcements.html",
+      url: "/announcements",
       grp: "Pages",
       desc: "What’s new on NULL.",
       kw: "news updates changelog posts",
     },
     {
       title: "Schedule",
-      url: "/schedule.html",
+      url: "/schedule",
       grp: "Pages",
       desc: "The school schedule: Regular and Homeroom/WIN days, live countdown, editable period names and lunch period.",
       kw: "school bell time class period day lunch homeroom win",
     },
     {
       title: "Backups",
-      url: "/backups.html",
+      url: "/backups",
       grp: "Pages",
       desc: "Alternate places to reach NULL if this domain goes down.",
       kw: "mirror alternate domain access link",
     },
     {
       title: "Shop",
-      url: "/shop.html",
+      url: "/shop",
       grp: "Extras",
       desc: "Spend coins earned by playing on custom themes and effects, the custom background image, and the theme and particle editor.",
       kw: "shop store coins xp unlock buy theme rewards editor background",
     },
     {
       title: "Settings",
-      url: "/settings.html",
+      url: "/settings",
       grp: "Pages",
       desc: "Theme, accent, layout compactness, seasonal and holiday themes, background image, tab presets, performance and Mini-Perf.",
       kw: "preferences theme accent tab cloak performance density compact comfy spacious seasonal holiday halloween background",
     },
     {
       title: "About",
-      url: "/about.html",
+      url: "/about",
       grp: "Info",
       desc: "What NULL is, who made it, and how to add your own games.",
       kw: "about what is how works readme",
     },
     {
       title: "District",
-      url: "/district.html",
+      url: "/district",
       grp: "Info",
       desc: "District information page.",
       kw: "school district naperville 203",
     },
     {
       title: "Privacy",
-      url: "/privacy.html",
+      url: "/privacy",
       grp: "Info",
       desc: "What NULL stores, where it is stored, and what it never collects.",
       kw: "privacy policy data local storage gdpr ccpa",
     },
     {
       title: "Terms",
-      url: "/terms.html",
+      url: "/terms",
       grp: "Info",
       desc: "The agreement covering your use of NULL.",
       kw: "terms of service rules agreement use",
     },
     {
       title: "Cookies",
-      url: "/cookies.html",
+      url: "/cookies",
       grp: "Info",
       desc: "How NULL handles cookies.",
       kw: "cookies storage tracking",
     },
     {
       title: "License",
-      url: "/license.html",
+      url: "/license",
       grp: "Info",
       desc: "NULL’s open license, the GNU AGPL version 3.",
       kw: "license agpl gnu copyleft open source",
@@ -11152,7 +11175,7 @@ window.NULL_CONTENT = {
        the site's vocabulary. */
     {
       title: "Void",
-      url: "/void.html",
+      url: "/void",
       grp: "Hidden",
       kind: "egg",
       icon: "eye",
@@ -11162,7 +11185,7 @@ window.NULL_CONTENT = {
     },
     {
       title: "Blob",
-      url: "/blob.html",
+      url: "/blob",
       grp: "Hidden",
       kind: "egg",
       icon: "eye",
@@ -11172,7 +11195,7 @@ window.NULL_CONTENT = {
     },
     {
       title: "Time",
-      url: "/time.html",
+      url: "/time",
       grp: "Hidden",
       kind: "egg",
       icon: "clock",
@@ -11182,7 +11205,7 @@ window.NULL_CONTENT = {
     },
     {
       title: "Credits",
-      url: "/credits.html",
+      url: "/credits",
       grp: "Hidden",
       kind: "egg",
       icon: "star",
@@ -12284,12 +12307,8 @@ window.NULL_CONTENT = {
       if (live) live.rebuild();
     }
     function miss() {
-      /* clean urls: some hosts only serve the .html file, and the
-         library pages now live at games/index.html, apps/index.html… */
-      if (/\.html$/.test(pg.url)) {
-        pageText[pg.url] = null;
-        return;
-      }
+      /* clean urls: a static host only serves the .html file, and the
+         library pages live at games/index.html, apps/index.html… */
       var base = src.replace(/\/+$/, "");
       var alts = [base + ".html", base + "/index.html"];
       var i = 0;
@@ -12306,7 +12325,7 @@ window.NULL_CONTENT = {
           .catch(tryAlt);
       })();
     }
-    fetch(pg.url)
+    fetch(src)
       .then(function (r) {
         return r.ok ? r.text() : Promise.reject();
       })
@@ -12389,7 +12408,7 @@ window.NULL_CONTENT = {
         _h: norm(raw),
         _x: "",
         run: function () {
-          location.href = N.url("/announcements.html");
+          location.href = N.url("/announcements");
         },
       });
     });
@@ -12457,8 +12476,8 @@ window.NULL_CONTENT = {
           { t: "Home", u: N.url("/"), i: "home" },
           { t: "Games", u: N.url("/games/"), i: "game" },
           { t: "Apps", u: N.url("/apps/"), i: "grid" },
-          { t: "Schedule", u: N.url("/schedule.html"), i: "sched" },
-          { t: "Settings", u: N.url("/settings.html"), i: "settings" },
+          { t: "Schedule", u: N.url("/schedule"), i: "sched" },
+          { t: "Settings", u: N.url("/settings"), i: "settings" },
         ].forEach(function (s) {
           var it = {
             kind: "page",
@@ -12841,9 +12860,9 @@ window.NULL_CONTENT = {
           } }, [d.icon("gift"), "Open"]),
       );
     }
-    /* data-go is for the single-file builds: they have no /shop.html to
+    /* data-go is for the single-file builds: they have no /shop page to
        point at, so their shell catches the click and shows its own Shop */
-    acts.appendChild(d.h("a", { class: "btn btn-outline btn-sm", href: N.url("/shop.html"), "data-go": "shop" }, [d.icon("store"), "Quests"]));
+    acts.appendChild(d.h("a", { class: "btn btn-outline btn-sm", href: N.url("/shop"), "data-go": "shop" }, [d.icon("store"), "Quests"]));
     host.appendChild(acts);
   }
 
@@ -12981,7 +13000,7 @@ window.NULL_CONTENT = {
           d.icon(l.icon),
           d.h("span", null, l.t),
         ]);
-        if (l.url === "/announcements.html") mi.appendChild(annDotEl());
+        if (l.url === "/announcements") mi.appendChild(annDotEl());
         drawer.appendChild(mi);
       });
     });
@@ -13007,7 +13026,7 @@ window.NULL_CONTENT = {
   function paintAnnDots() {
     if (!N.ann) return;
     var unread = N.ann.unread();
-    d.qsa('a[href="' + N.url("/announcements.html") + '"]').forEach(function (a) {
+    d.qsa('a[href="' + N.url("/announcements") + '"]').forEach(function (a) {
       var dot = a.querySelector(".nav-dot");
       if (unread && !dot) a.appendChild(annDotEl());
       else if (!unread && dot) dot.remove();
@@ -13022,7 +13041,7 @@ window.NULL_CONTENT = {
     if (!N.econ) return;
     var st = N.econ.state();
     var ready = st.canSpin || st.questsReady > 0 || st.achReady > 0;
-    d.qsa('a[href="' + N.url("/shop.html") + '"]').forEach(function (a) {
+    d.qsa('a[href="' + N.url("/shop") + '"]').forEach(function (a) {
       var dot = a.querySelector(".nav-dot");
       if (ready && !dot) a.appendChild(d.h("span", { class: "nav-dot", "aria-hidden": "true" }));
       else if (!ready && dot) dot.remove();
@@ -13154,9 +13173,9 @@ return foot;
        /time     type the current half of the day, or outlast midnight
        /credits  the shop's completion reward (see shop.js)
      ============================================================ */
-  var VOID_URL = N.url("/void.html");
-  var BLOB_URL = N.url("/blob.html");
-  var TIME_URL = N.url("/time.html");
+  var VOID_URL = N.url("/void");
+  var BLOB_URL = N.url("/blob");
+  var TIME_URL = N.url("/time");
 
   function isTyping(t) {
     return (
@@ -14003,6 +14022,11 @@ return foot;
   };
 
   function init() {
+    /* clean urls: a visitor landing on /shop.html gets /shop in the address
+       bar, so every NULL url is the same shape. Skipped on the 404 page,
+       whose address GitHub keeps for the redirect dance to work. */
+    if (N.cleanAddress) N.cleanAddress();
+
     /* resolve [data-icon] placeholders left in static HTML */
     d.qsa("[data-icon]").forEach(function (el) {
       var ic = d.icon(el.dataset.icon);
@@ -14664,7 +14688,7 @@ return foot;
     var lv = S.live(blocks);
     panel.appendChild(S.grid(blocks, lv.block ? lv.i : -1, { live: true }));
     panel.appendChild(
-      d.h("p", { class: "sched-note" }, "Times are the sample bells. Rename periods and pick a lunch period on the full site's /schedule.html."),
+      d.h("p", { class: "sched-note" }, "Times are the sample bells. Rename periods and pick a lunch period on the full site's /schedule page."),
     );
 
     setInterval(function () {

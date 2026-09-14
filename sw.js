@@ -16,12 +16,21 @@
    leaving every page unstyled.
 
    Bump CACHE/RUNTIME when the core file list changes so old caches are dropped. */
-const CACHE = "null-v10";
-const RUNTIME = "null-runtime-v10";
+const CACHE = "null-v11";
+const RUNTIME = "null-runtime-v11";
 
 /* Site paths, resolved against this script's own address: the cache then holds
    the real URLs whether NULL is at a domain root or under a project path. */
 const at = (path) => new URL(path.replace(/^\/+/, ""), self.location).href;
+
+/* Navigations use clean urls ("/schedule") while the host serves files
+   ("/schedule.html"). This works out the file a request is really for: an
+   extensionless path becomes its .html file, a folder becomes its index. */
+const fileFor = (path) => {
+  const last = path.replace(/\/+$/, "").split("/").pop() || "";
+  if (!last || last.includes(".")) return path;
+  return path.replace(/\/+$/, "") + ".html";
+};
 
 const CORE = [
   "./",
@@ -140,9 +149,14 @@ self.addEventListener("fetch", (e) => {
   if (!isAsset(req)) return;
 
   if (req.mode === "navigate") {
+    /* clean url: the .html file is what the host really serves, so ask for
+       that directly when the clean path is not a real file */
+    const url = new URL(req.url);
+    const asFile = at(fileFor(url.pathname));
     e.respondWith(
       fetch(req)
         .then((res) => {
+          if (!res.ok && asFile !== req.url) return fetch(asFile);
           const copy = res.clone();
           caches.open(RUNTIME).then((c) => c.put(req, copy)).catch(() => {});
           return res;
@@ -150,6 +164,7 @@ self.addEventListener("fetch", (e) => {
         .catch(() =>
           caches
             .match(req)
+            .then((hit) => hit || caches.match(asFile))
             .then((hit) => hit || caches.match(at("./")))
             .then((hit) => hit || Response.error()),
         ),

@@ -110,7 +110,7 @@
           d.icon(l.icon),
           d.h("span", null, l.t),
         ]);
-        if (l.url === "/announcements.html") mi.appendChild(annDotEl());
+        if (l.url === "/announcements") mi.appendChild(annDotEl());
         drawer.appendChild(mi);
       });
     });
@@ -136,7 +136,7 @@
   function paintAnnDots() {
     if (!N.ann) return;
     var unread = N.ann.unread();
-    d.qsa('a[href="' + N.url("/announcements.html") + '"]').forEach(function (a) {
+    d.qsa('a[href="' + N.url("/announcements") + '"]').forEach(function (a) {
       var dot = a.querySelector(".nav-dot");
       if (unread && !dot) a.appendChild(annDotEl());
       else if (!unread && dot) dot.remove();
@@ -151,7 +151,7 @@
     if (!N.econ) return;
     var st = N.econ.state();
     var ready = st.canSpin || st.questsReady > 0 || st.achReady > 0;
-    d.qsa('a[href="' + N.url("/shop.html") + '"]').forEach(function (a) {
+    d.qsa('a[href="' + N.url("/shop") + '"]').forEach(function (a) {
       var dot = a.querySelector(".nav-dot");
       if (ready && !dot) a.appendChild(d.h("span", { class: "nav-dot", "aria-hidden": "true" }));
       else if (!ready && dot) dot.remove();
@@ -283,9 +283,9 @@ return foot;
        /time     type the current half of the day, or outlast midnight
        /credits  the shop's completion reward (see shop.js)
      ============================================================ */
-  var VOID_URL = N.url("/void.html");
-  var BLOB_URL = N.url("/blob.html");
-  var TIME_URL = N.url("/time.html");
+  var VOID_URL = N.url("/void");
+  var BLOB_URL = N.url("/blob");
+  var TIME_URL = N.url("/time");
 
   function isTyping(t) {
     return (
@@ -1132,6 +1132,11 @@ return foot;
   };
 
   function init() {
+    /* clean urls: a visitor landing on /shop.html gets /shop in the address
+       bar, so every NULL url is the same shape. Skipped on the 404 page,
+       whose address GitHub keeps for the redirect dance to work. */
+    if (N.cleanAddress) N.cleanAddress();
+
     /* resolve [data-icon] placeholders left in static HTML */
     d.qsa("[data-icon]").forEach(function (el) {
       var ic = d.icon(el.dataset.icon);

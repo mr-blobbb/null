@@ -6,6 +6,10 @@
   var N = (window.N = window.N || {});
   var d = N.dom;
 
+  /* clean urls on the egg pages too: they skip shell.js (no nav, no footer,
+     nothing to init), so the address rewrite happens here instead */
+  if (N.cleanAddress) N.cleanAddress();
+
   function shuffle(list) {
     for (var i = list.length - 1; i > 0; i--) {
       var j = Math.floor(Math.random() * (i + 1));

@@ -31,7 +31,7 @@
      The pages link to each other with paths relative to the folder NULL is
      served from, so the same files run at a domain root and under a subfolder
      (github.io/some-repo/, say). The JS keeps asking for pages by their site
-     path (N.url("/shop.html")), which needs that folder. It is worked out
+     path (N.url("/shop")), which needs that folder. It is worked out
      once, from the address this script was loaded at: everything above the
      page is the folder, except the content folder the page itself sits in.
 
@@ -54,8 +54,30 @@
   if (segs.length && FOLDERS.indexOf(segs[segs.length - 1]) > -1) segs.pop();
   var root = document.documentElement.getAttribute("data-root");
   N.base = root ? asBase(root) : asBase(segs.join("/"));
-  N.url = function (path) {
-    return N.base + String(path == null ? "" : path).replace(/^\/+/, "");
+  /* clean urls: pages are asked for by extensionless site path ("/shop"),
+     the same shape a visitor sees in the address bar. On a static host they
+     are answered by the .html file (see sw.js and 404.html). Pass keep=true
+     for real files (a game's own .html inside its folder, a thumbnail):
+     those keep their extension or the host would not serve them. */
+  N.url = function (path, keep) {
+    var clean = String(path == null ? "" : path).replace(/^\/+/, "");
+    if (!keep) clean = clean.replace(/\.html$/, "");
+    return N.base + clean;
+  };
+
+  /* a visitor can land on /shop.html (typed, an old link, a host without
+     rewrite support): rewrite the address bar to /shop without a reload so
+     every NULL url is one shape. Folder pages rewrite to /games/, home keeps
+     /. The 404 page skips this: its address is a path that does not exist
+     and GitHub keeps it that way on purpose. */
+  N.cleanAddress = function () {
+    var p = location.pathname;
+    var isRoot = p === "/" || p === "/index.html";
+    if (!/\.html$/.test(p) || isRoot || document.documentElement.hasAttribute("data-root")) return;
+    var clean = /\/index\.html$/.test(p) ? p.replace(/index\.html$/, "") : p.replace(/\.html$/, "");
+    try {
+      history.replaceState(null, "", clean + location.search + location.hash);
+    } catch (err) {}
   };
 
   /* ---------- tiny pub/sub used to refresh lists when favorites/recent change ---------- */

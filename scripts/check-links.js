@@ -1,28 +1,31 @@
 /* NULL · check-links.js
    Every internal path the site points at must exist on disk, because GitHub
-   Pages serves files literally: a link to whatever.html is a 404 unless that
-   file is there, and an extensionless /whatever only works through 404.html.
+   Pages serves files literally. Pages are linked by their clean url
+   ("/schedule"), which the host answers through 404.html and the service
+   worker; the check maps one to the other.
 
      node scripts/check-links.js
 
-   Two passes:
+   Three passes:
 
      · the HTML pages, where a link is written relative to the page's own
-       folder, so "../shop.html" inside games/index.html means shop.html at the
+       folder, so "../shop" inside games/index.html means shop.html at the
        root. This is what catches a page moved, renamed or deleted.
      · the shipped JavaScript, which names pages by their site path
-       ("/shop.html", "/games/x/x.html"): the page index, the launch urls and
-       the thumbnails. This is what catches a game or app folder deleted while
-       something still points at it.
+       ("/shop", "/games/x/x.html"): the page index, the launch urls and
+       the thumbnails. This is what catches a game or app folder deleted
+       while something still points at it.
+     · a shape guard: internal page links carry no ".html" (clean urls only),
+       and no link points at the releases/ folder.
 
-   Development tool, not part of the site. */ 
+   Development tool, not part of the site. */
 
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const skipDir = new Set([".git", "node_modules", "dist"]);
+const skipDir = new Set([".git", "node_modules", "dist", "releases"]);
 const EXTERNAL = /^(?:[a-z][a-z0-9+.-]*:|#|\/\/)/i;
 
 function walk(dir, out = []) {
@@ -35,20 +38,25 @@ function walk(dir, out = []) {
   return out;
 }
 
-/* a folder link (/games/) is served by its index.html, anything else has to be
-   the file itself. Returns the path that answers, or null when nothing does. */
+/* the file that answers a clean path: /schedule -> schedule.html,
+   /games/ -> games/index.html, /games/x/x.html stays itself */
+function fileFor(rel) {
+  if (/\/$/.test(rel)) return exists(path.posix.join(rel, "index.html"));
+  if (/\.[a-z0-9]+$/i.test(rel)) return exists(rel);
+  return exists(rel + ".html");
+}
+
 function exists(rel) {
   const p = path.join(root, rel);
   if (fs.existsSync(p) && fs.statSync(p).isFile()) return rel;
-  if (fs.existsSync(path.join(p, "index.html"))) return path.posix.join(rel, "index.html");
   return null;
 }
 
-/* a site path ("/shop.html", "/games/"): written from the root */
+/* a site path ("/shop", "/games/"): written from the root */
 function resolve(url) {
   const clean = url.split("#")[0].split("?")[0];
   if (!clean || clean === "/") return exists("index.html");
-  return exists(clean.replace(/^\/+/, ""));
+  return fileFor(clean.replace(/^\/+/, ""));
 }
 
 /* a link inside a page: relative to the folder that page sits in */
@@ -56,19 +64,27 @@ function resolveFrom(page, url) {
   const clean = url.split("#")[0].split("?")[0];
   if (!clean) return page;
   const base = clean.startsWith("/") ? "" : path.posix.dirname(page);
-  return exists(path.posix.normalize(path.posix.join(base, clean)));
+  return fileFor(path.posix.normalize(path.posix.join(base, clean)));
 }
 
 const files = walk(".");
-const htmls = files.filter(
-  (f) => f.endsWith(".html") && !f.startsWith("releases" + path.sep),
-);
+const htmls = files.filter((f) => f.endsWith(".html"));
 const scriptFiles = files.filter(
   (f) => (f.startsWith("src" + path.sep) && f.endsWith(".js")) || f === "sw.js",
 );
 
 const problems = [];
 let checked = 0;
+
+/* clean-url shape guard: a page link written with .html defeats the whole
+   scheme (the address bar would show the extension again after it cleans) */
+function shape(url, from) {
+  const clean = url.split("#")[0].split("?")[0];
+  if (!clean || EXTERNAL.test(clean) || clean.startsWith("data:")) return;
+  if (/\.html$/i.test(clean) && clean !== "/404.html") {
+    problems.push(from + "  →  " + url + "  (clean urls: drop the .html)");
+  }
+}
 
 for (const file of htmls) {
   const html = fs.readFileSync(path.join(root, file), "utf8");
@@ -78,6 +94,7 @@ for (const file of htmls) {
   while ((m = re.exec(html))) {
     if (EXTERNAL.test(m[1]) || m[1].startsWith("data:")) continue;
     checked++;
+    shape(m[1], file);
     if (!resolveFrom(file, m[1])) problems.push(file + "  →  " + m[1]);
   }
 
@@ -88,6 +105,7 @@ for (const file of htmls) {
     const href = m[1];
     if (href.charAt(0) !== "/" || href.charAt(1) === "/" || EXTERNAL.test(href)) continue;
     checked++;
+    shape(href, file);
     if (!resolve(href)) problems.push(file + "  →  " + href);
   }
 }

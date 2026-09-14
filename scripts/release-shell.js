@@ -517,7 +517,7 @@
     var lv = S.live(blocks);
     panel.appendChild(S.grid(blocks, lv.block ? lv.i : -1, { live: true }));
     panel.appendChild(
-      d.h("p", { class: "sched-note" }, "Times are the sample bells. Rename periods and pick a lunch period on the full site's /schedule.html."),
+      d.h("p", { class: "sched-note" }, "Times are the sample bells. Rename periods and pick a lunch period on the full site's /schedule page."),
     );
 
     setInterval(function () {
