@@ -32,522 +32,680 @@
   <div class="glow-bg" aria-hidden="true"></div>
   <header data-mount="nav"></header>
 
-  <main id="main" class="page page-narrow">
+  <main id="main" class="page set-page">
     <div class="page-head">
       <span class="eyebrow"><span data-icon="settings"></span>settings</span>
       <h1>Settings</h1>
-      <p>Appearance, tab presets, performance and privacy. Everything saves to this browser as you change it.</p>
+      <p>Everything here saves to this browser the moment you change it. Cards with a chevron fold open when you need them.</p>
     </div>
 
-    <div class="set-grid">
-      <!-- appearance -->
-      <section class="set-card glass" aria-label="Appearance">
-        <h2 class="set-title"><span data-icon="sun"></span>Appearance</h2>
-
-        <div class="set-row">
-          <div class="lbl-txt">
-            <b>Theme</b>
-            <span>Dark is default; Light is NULL visually inverted.</span>
-          </div>
-          <div class="seg" id="themeSeg" role="group" aria-label="Theme">
-            <button type="button" data-val="dark"><span class="sw" style="background:#101014"></span>Dark</button>
-            <button type="button" data-val="light"><span class="sw" style="background:#f2f2f4"></span>Light</button>
-          </div>
-        </div>
-
-        <div class="set-row" style="display:block">
-          <div class="lbl-txt" style="margin-bottom:10px">
-            <b>Layout compactness</b>
-            <span>How much room the whole site gives everything: nav, page margins, sections, cards and tiles. Regular is the default.</span>
-          </div>
-          <div class="seg" id="densitySeg" role="group" aria-label="Layout compactness">
-            <button type="button" data-val="regular">Regular</button>
-            <button type="button" data-val="comfy">Comfy</button>
-            <button type="button" data-val="spacious">Spacious</button>
-            <button type="button" data-val="compact">Compact</button>
-          </div>
-        </div>
-
-        <div class="set-row" style="display:block">
-          <div class="lbl-txt" style="margin-bottom:10px">
-            <b>Accent</b>
-            <span>A single accent, or a full theme pack from the Shop with its own palette and live backdrop.</span>
-          </div>
-          <div id="accentRow" class="accent-row"></div>
-        </div>
-
-        <div class="set-row" id="accentCustomRow" style="display:none">
-          <div class="lbl-txt">
-            <b>Custom color</b>
-            <span>Unlocked in the shop. Makes accent any color you want!</span>
-          </div>
-          <input type="color" id="accentCustom" aria-label="Custom accent color" style="width:54px;height:38px;padding:3px;border:1px solid var(--line-2);border-radius:10px;background:var(--glass-bg);cursor:pointer">
-        </div>
-
-        <div class="set-row">
-          <div class="lbl-txt">
-            <b>Performance mode</b>
-            <span>Shortens animations and drops hover movement, glow and shadows for slower devices.</span>
-          </div>
-          <label class="switch">
-            <input type="checkbox" id="perfSwitch">
-            <span class="track"></span>
+    <div class="set-wrap">
+      <!-- ================= rail ================= -->
+      <aside class="set-rail">
+        <div class="rail-stick">
+          <label class="rail-find">
+            <span data-icon="search"></span>
+            <input id="setFind" type="search" placeholder="Find a setting" autocomplete="off" aria-label="Filter settings">
           </label>
+          <nav class="rail-list" id="railList" aria-label="Settings sections"></nav>
+          <p class="rail-note" id="railNote">No account, no server: your settings never leave this device.</p>
         </div>
+      </aside>
 
-        <div class="set-row">
-          <div class="lbl-txt">
-            <b>Ultra-Performance mode</b>
-            <span>
-              What is changed: no animation or transition at all, no particles, no
-              glow, no blur, and only what’s on screen is drawn. Unfortunately, most visual settings do not work whilst this is on.
-            </span>
-          </div>
-          <label class="switch">
-            <input type="checkbox" id="ultraSwitch" aria-label="Ultra-Performance mode">
-            <span class="track"></span>
-          </label>
-        </div>
+      <!-- ================= body ================= -->
+      <div class="set-body" id="setBody">
 
-        <div class="set-row">
-          <div class="lbl-txt">
-            <b>Mini-Perf mode</b>
-            <span>
-              Strips nothing. Every theme, particle, glow and animation stays
-              exactly as it is, the browser just skips the blocks that are off
-              screen and brings them straight back when you scroll to them. Easiest
-              way to speed NULL up without losing the look.
-            </span>
-          </div>
-          <label class="switch">
-            <input type="checkbox" id="miniPerfSwitch" aria-label="Mini-Perf mode">
-            <span class="track"></span>
-          </label>
-        </div>
-      </section>
-
-      <!-- glow border -->
-      <section class="set-card glass" aria-label="Glow border">
-        <h2 class="set-title"><span data-icon="zap"></span>Glow border</h2>
-        <p class="set-sub">
-          A slim 5px neon border around the whole screen edge, glowing softly.
-        </p>
-        <div class="set-row" style="display:block">
-          <label class="lbl" for="glowSelect">Preset</label>
-          <span class="select-field">
-            <select id="glowSelect" aria-label="Glow border preset">
-              <option value="off">Off</option>
-              <option value="bp">Blue + Purple</option>
-              <option value="pg">Purple + Green</option>
-              <option value="rainbow">Rainbow</option>
-              <option value="nnhs">NNHS</option>
-              <option value="custom">Custom</option>
-            </select>
-          </span>
-        </div>
-        <div class="set-row">
-          <div class="lbl-txt">
-            <b>Comet mode</b>
-            <span>A bright streak travels around the border.</span>
-          </div>
-          <label class="switch">
-            <input type="checkbox" id="cometSwitch" aria-label="Comet mode">
-            <span class="track"></span>
-          </label>
-        </div>
-        <div id="glowCustom" style="display:none;margin-top:14px">
-          <div class="lbl-txt" style="margin-bottom:8px">
-            <b>Custom colors</b>
-            <span>Pick up to two colors for your glow.</span>
-          </div>
-          <div style="display:flex;gap:14px;flex-wrap:wrap">
-            <label style="display:inline-flex;align-items:center;gap:9px;font-size:13px;color:var(--text-2);cursor:pointer">
-              <input type="color" id="glowColor1" aria-label="Custom glow color 1" style="width:42px;height:36px;padding:2px;border:1px solid var(--line-2);border-radius:9px;background:var(--glass-bg);cursor:pointer">
-              Color 1
-            </label>
-            <label style="display:inline-flex;align-items:center;gap:9px;font-size:13px;color:var(--text-2);cursor:pointer">
-              <input type="color" id="glowColor2" aria-label="Custom glow color 2" style="width:42px;height:36px;padding:2px;border:1px solid var(--line-2);border-radius:9px;background:var(--glass-bg);cursor:pointer">
-              Color 2
-            </label>
-          </div>
-        </div>
-      </section>
-
-      <!-- theme packs -->
-      <section class="set-card glass set-card--wide" aria-label="Theme packs" id="packSection">
-        <h2 class="set-title"><span data-icon="pen"></span>Theme packs</h2>
-        <p class="set-sub">
-          Full themes: a whole palette plus cool built-in particles.
-          Free packs are always available, the better ones unlock in the Shop.
-        </p>
-        <div id="packGrid" class="shop-grid shop-grid--list"></div>
-        <div class="toolbar" id="packEditorRow" style="margin:0;display:none">
-          <button type="button" class="btn btn-outline btn-sm" id="openEditor"><span data-icon="wrench"></span>Build your own</button>
-          <span class="set-sub" style="margin:0">Make your own theme pack and particle set.</span>
-        </div>
-      </section>
-
-      <!-- background particles -->
-      <section class="set-card glass set-card--wide" aria-label="Background particles">
-        <h2 class="set-title"><span data-icon="sparkle"></span>Background particles</h2>
-        <p class="set-sub">
-          A layer of drifting motion behind every page, on its own or over a theme
-          pack. Four of them are free, and the louder ones unlock in the Shop.
-          Click the applied card to switch particles off.
-        </p>
-        <div id="partGrid" class="shop-grid shop-grid--list"></div>
-      </section>
-
-      <!-- background image (Shop unlock) -->
-      <section class="set-card glass set-card--wide" aria-label="Background image" id="bgCard">
-        <h2 class="set-title"><span data-icon="file"></span>Background image</h2>
-        <p class="set-sub">
-          Put your own picture behind everything: paste a link or upload one from
-          this device. It sits under your theme pack and particles, and the page
-          tint is laid over it so the text stays readable. Off in performance mode.
-        </p>
-
-        <p class="set-sub" id="bgLocked">
-          Locked. The background image unlocks in the Shop with coins you earn by
-          playing. <a href="/shop.html">Open the Shop →</a>
-        </p>
-
-        <div id="bgBody" hidden>
-          <label class="lbl" for="bgUrl">Image link or upload</label>
-          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-            <span class="field" style="flex:1;min-width:220px">
-              <input id="bgUrl" type="text" inputmode="url" spellcheck="false" autocomplete="off" placeholder="https://example.com/picture.jpg">
-            </span>
-            <button type="button" class="btn btn-outline" id="bgUpload"><span data-icon="upload"></span>Upload</button>
-            <button type="button" class="btn btn-outline" id="bgClear"><span data-icon="trash"></span>Remove</button>
-            <input type="file" id="bgFile" accept="image/*" hidden>
-          </div>
-          <p class="set-sub" style="margin-top:8px" id="bgHint">
-            Uploads are stored in this browser, so keep them small: a link is lighter.
-          </p>
-
-          <div class="set-row" style="display:block;margin-top:6px">
-            <label class="lbl" for="bgFit">How it fits</label>
-            <span class="select-field">
-              <select id="bgFit" aria-label="Background fit">
-                <option value="cover">Fill the screen (cover)</option>
-                <option value="contain">Fit the whole picture (contain)</option>
-                <option value="tile">Repeat it (tile)</option>
-              </select>
-            </span>
-          </div>
-
-          <div class="set-row">
-            <div class="lbl-txt">
-              <b>Dim behind the page</b>
-              <span>How strongly the page tint covers the picture. Higher keeps text easier to read.</span>
+        <!-- ---------- look and feel ---------- -->
+        <section class="set-group" id="look" data-label="Look and feel" data-icon="sun">
+          <header class="grp">
+            <span class="grp-ic"><span data-icon="sun"></span></span>
+            <div class="grp-txt">
+              <h2 class="grp-t">Look and feel</h2>
+              <p class="grp-s">Theme, accent, packs, and what sits behind the page.</p>
             </div>
-            <input type="range" id="bgDim" min="0" max="0.95" step="0.05" aria-label="Background dim">
-          </div>
+          </header>
 
-          <div class="set-row">
-            <div class="lbl-txt">
-              <b>Softness</b>
-              <span>Blurs the picture a little so it reads as a background instead of a photo.</span>
+          <div class="set-grid">
+            <!-- theme -->
+            <section class="set-card glass" data-card="theme">
+              <h2 class="set-h">
+                <span class="set-ic"><span data-icon="moon"></span></span>
+                <span class="set-htxt"><b>Theme</b><span id="themeHint">Dark, NULL's default.</span></span>
+              </h2>
+              <div class="set-row">
+                <div class="lbl-txt">
+                  <b>Light mode</b>
+                  <span>Light is dark, visually inverted. Every page follows it.</span>
+                </div>
+                <label class="theme-tgl" title="Switch between dark and light">
+                  <input type="checkbox" id="themeSwitch" aria-label="Light mode">
+                  <span class="tt-track">
+                    <span class="tt-ic tt-a"><span data-icon="moon"></span></span>
+                    <span class="tt-ic tt-b"><span data-icon="sun"></span></span>
+                    <span class="tt-thumb"></span>
+                  </span>
+                </label>
+              </div>
+            </section>
+
+            <!-- accent -->
+            <section class="set-card glass" data-card="accent">
+              <h2 class="set-h">
+                <span class="set-ic"><span data-icon="sparkle"></span></span>
+                <span class="set-htxt"><b>Accent</b><span id="accentHint">One colour, or a whole theme pack.</span></span>
+              </h2>
+              <div class="set-row set-row--stack">
+                <div class="lbl-txt">
+                  <b>Colour</b>
+                  <span>A plain accent recolours buttons, links and highlights. Theme packs get their own card below.</span>
+                </div>
+                <div id="accentRow" class="accent-row"></div>
+              </div>
+              <div class="set-row" id="accentCustomRow" hidden>
+                <div class="lbl-txt">
+                  <b>Custom colour</b>
+                  <span>Unlocked in the Shop. Any colour you like.</span>
+                </div>
+                <span id="accentCustom" class="cdot cdot--lg" data-cdot="#6cc7ff"></span>
+              </div>
+            </section>
+
+            <!-- theme packs -->
+            <section class="set-card glass set-card--wide" aria-label="Theme packs" id="packSection" data-card="packs">
+              <h2 class="set-h">
+                <span class="set-ic"><span data-icon="pen"></span></span>
+                <span class="set-htxt"><b>Theme packs</b><span>A whole palette plus a live backdrop. Free ones are always there, the rest unlock in the Shop.</span></span>
+                <span class="set-val" id="packVal">None</span>
+              </h2>
+              <div id="packGrid" class="shop-grid shop-grid--list"></div>
+              <div class="toolbar" id="packEditorRow" style="margin:0;display:none">
+                <button type="button" class="btn btn-outline btn-sm" id="openEditor"><span data-icon="wrench"></span>Build your own</button>
+                <span class="set-sub set-sub--inline">Make your own theme pack and particle set.</span>
+              </div>
+            </section>
+
+            <!-- background particles -->
+            <section class="set-card glass set-card--wide" aria-label="Background particles" data-card="particles">
+              <h2 class="set-h">
+                <span class="set-ic"><span data-icon="sparkle"></span></span>
+                <span class="set-htxt"><b>Background particles</b><span>A layer of drifting motion behind every page, on its own or over a pack.</span></span>
+                <span class="set-val" id="partVal">Off</span>
+              </h2>
+              <div id="partGrid" class="shop-grid shop-grid--list"></div>
+              <p class="set-sub">Four of them are free and the louder ones unlock in the Shop. Applying the one that is already on switches particles back off.</p>
+            </section>
+
+            <!-- background image -->
+            <section class="set-card glass set-card--wide fold" data-fold="bg" data-open="0" data-card="background">
+              <h2 class="set-h">
+                <button type="button" class="set-toggle" aria-expanded="false" aria-controls="fold-bg">
+                  <span class="set-ic"><span data-icon="file"></span></span>
+                  <span class="set-htxt"><b>Background image</b><span>Your own picture behind everything.</span></span>
+                  <span class="set-val" id="bgVal">Off</span>
+                  <span class="set-chev"><span data-icon="chevD"></span></span>
+                </button>
+              </h2>
+              <div class="set-fold" id="fold-bg">
+                <p class="set-sub">
+                  Paste a link or upload one from this device. It sits under your theme pack
+                  and particles, and the page tint is laid over it so text stays readable.
+                </p>
+
+                <p class="set-sub" id="bgLocked">
+                  Locked. The background image unlocks in the Shop with coins you earn by
+                  playing. <a href="/shop.html">Open the Shop →</a>
+                </p>
+
+                <div id="bgBody" hidden>
+                  <label class="lbl" for="bgUrl">Image link or upload</label>
+                  <div class="set-inline">
+                    <span class="field" style="flex:1;min-width:200px">
+                      <input id="bgUrl" type="text" inputmode="url" spellcheck="false" autocomplete="off" placeholder="https://example.com/picture.jpg">
+                    </span>
+                    <button type="button" class="btn btn-outline" id="bgUpload"><span data-icon="upload"></span>Upload</button>
+                    <button type="button" class="btn btn-outline" id="bgClear"><span data-icon="trash"></span>Remove</button>
+                    <input type="file" id="bgFile" accept="image/*" hidden>
+                  </div>
+                  <p class="set-sub" id="bgHint">
+                    Uploads are stored in this browser, so keep them small: a link is lighter.
+                  </p>
+
+                  <div class="set-row set-row--stack">
+                    <label class="lbl" for="bgFit">How it fits</label>
+                    <span class="select-field">
+                      <select id="bgFit" aria-label="Background fit">
+                        <option value="cover">Fill the screen (cover)</option>
+                        <option value="contain">Fit the whole picture (contain)</option>
+                        <option value="tile">Repeat it (tile)</option>
+                      </select>
+                    </span>
+                  </div>
+
+                  <div class="set-row">
+                    <div class="lbl-txt">
+                      <b>Dim behind the page</b>
+                      <span>How strongly the page tint covers the picture. Higher keeps text easier to read.</span>
+                    </div>
+                    <input type="range" id="bgDim" min="0" max="0.95" step="0.05" aria-label="Background dim">
+                  </div>
+
+                  <div class="set-row">
+                    <div class="lbl-txt">
+                      <b>Softness</b>
+                      <span>Blurs the picture a little so it reads as a background instead of a photo.</span>
+                    </div>
+                    <input type="range" id="bgBlur" min="0" max="24" step="1" aria-label="Background blur">
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <!-- ---------- effects ---------- -->
+        <section class="set-group" id="effects" data-label="Effects" data-icon="sparkle">
+          <header class="grp">
+            <span class="grp-ic"><span data-icon="sparkle"></span></span>
+            <div class="grp-txt">
+              <h2 class="grp-t">Effects</h2>
+              <p class="grp-s">The extras around the screen edge and the seasons.</p>
             </div>
-            <input type="range" id="bgBlur" min="0" max="24" step="1" aria-label="Background blur">
-          </div>
-        </div>
-      </section>
+          </header>
 
-      <!-- seasonal theme -->
-      <section class="set-card glass" aria-label="Seasonal theme">
-        <h2 class="set-title"><span data-icon="leaf"></span>Seasonal theme</h2>
-        <p class="set-sub">
-          NULL quietly follows the seasons: fall leaves, winter snow, spring
-          petals, summer light drifting behind everything. Turn it off if you
-          want the original look back.
-        </p>
-        <div class="set-row">
-          <div class="lbl-txt">
-            <b id="seasonalLbl">Turn on Fall theme?</b>
-            <span id="seasonalHint">Leaves drift behind everything · switches automatically with the seasons.</span>
-          </div>
-          <span class="chip" id="seasonalChip" style="display:none">Fall</span>
-          <label class="switch">
-            <input type="checkbox" id="seasonalSwitch" aria-label="Seasonal theme">
-            <span class="track"></span>
-          </label>
-        </div>
+          <div class="set-grid">
+            <!-- glow border -->
+            <section class="set-card glass fold" data-fold="glow" data-open="0" data-card="glow">
+              <h2 class="set-h">
+                <button type="button" class="set-toggle" aria-expanded="false" aria-controls="fold-glow">
+                  <span class="set-ic"><span data-icon="zap"></span></span>
+                  <span class="set-htxt"><b>Glow border</b><span>A slim neon edge around the whole screen.</span></span>
+                  <span class="set-val" id="glowVal">Off</span>
+                  <span class="set-chev"><span data-icon="chevD"></span></span>
+                </button>
+              </h2>
+              <div class="set-fold" id="fold-glow">
+                <div class="set-row set-row--stack">
+                  <label class="lbl" for="glowSelect">Preset</label>
+                  <span class="select-field">
+                    <select id="glowSelect" aria-label="Glow border preset">
+                      <option value="off">Off</option>
+                      <option value="bp">Blue + Purple</option>
+                      <option value="pg">Purple + Green</option>
+                      <option value="rainbow">Rainbow</option>
+                      <option value="nnhs">NNHS</option>
+                      <option value="custom">Custom</option>
+                    </select>
+                  </span>
+                </div>
 
-        <div class="set-row" style="display:block" id="seasonPickRow">
-          <div class="lbl-txt" style="margin-bottom:10px">
-            <b>Which theme</b>
-            <span id="seasonPickHint">
-              Every theme for the season you're in. Holidays sit right next to
-              their season, so Fall and Halloween (or Winter and Holidays) are both here.
-            </span>
-          </div>
-          <div class="seg" id="seasonSeg" role="group" aria-label="Season theme"></div>
-        </div>
-      </section>
+                <div id="glowCustom" hidden>
+                  <div class="set-row set-row--stack">
+                    <div class="lbl-txt">
+                      <b>Custom colours</b>
+                      <span>Two colours are enough: they are blended around the ring.</span>
+                    </div>
+                    <div class="cdot-row" id="glowColors"></div>
+                  </div>
+                </div>
 
-      <!-- install as an app -->
-      <section class="set-card glass" aria-label="Install NULL">
-        <h2 class="set-title"><span data-icon="download"></span>Install NULL</h2>
-        <p class="set-sub">
-          NULL installs as its own app in Chrome, its own window and icon
-          in your launcher, and the shell keeps working offline.
-        </p>
-        <div class="set-row">
-          <div class="lbl-txt">
-            <b>Install as an app</b>
-            <span id="installHint">Checking whether this browser can install NULL…</span>
-          </div>
-          <div class="toolbar" style="margin:0">
-            <button type="button" class="btn btn-outline btn-sm" id="installHelp">How?</button>
-            <button type="button" class="btn btn-primary btn-sm" id="installBtn" hidden>Install</button>
-          </div>
-        </div>
-      </section>
+                <div class="set-row">
+                  <div class="lbl-txt">
+                    <b>Comet mode</b>
+                    <span>A bright streak travels around the border.</span>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="cometSwitch" aria-label="Comet mode">
+                    <span class="track"></span>
+                  </label>
+                </div>
+              </div>
+            </section>
 
-      <!-- tab presets -->
-      <section class="set-card glass set-card--wide" aria-label="Browser tab">
-        <h2 class="set-title"><span data-icon="tab"></span>Browser tab presets</h2>
-        <p class="set-sub">
-          The preset overrides NULL’s tab title and favicon everywhere, including
-          games/apps inside the player. Default is Google Slides-style.
-        </p>
+            <!-- seasonal theme -->
+            <section class="set-card glass fold" data-fold="season" data-open="0" data-card="seasonal">
+              <h2 class="set-h">
+                <button type="button" class="set-toggle" aria-expanded="false" aria-controls="fold-season">
+                  <span class="set-ic"><span data-icon="leaf"></span></span>
+                  <span class="set-htxt"><b>Seasonal theme</b><span>NULL follows the calendar quietly.</span></span>
+                  <span class="set-val" id="seasonVal">Off</span>
+                  <span class="set-chev"><span data-icon="chevD"></span></span>
+                </button>
+              </h2>
+              <div class="set-fold" id="fold-season">
+                <div class="set-row">
+                  <div class="lbl-txt">
+                    <b id="seasonalLbl">Turn on Fall theme?</b>
+                    <span id="seasonalHint">Leaves drift behind everything · switches automatically with the seasons.</span>
+                  </div>
+                  <span class="chip" id="seasonalChip" hidden>Fall</span>
+                  <label class="switch">
+                    <input type="checkbox" id="seasonalSwitch" aria-label="Seasonal theme">
+                    <span class="track"></span>
+                  </label>
+                </div>
 
-        <div>
-          <label class="lbl" for="tabSelect">Tab preset</label>
-          <span class="select-field">
-            <select id="tabSelect" aria-label="Tab preset"></select>
-          </span>
-          <div class="tab-preview" style="margin-top:10px" id="tabPrev">
-            <img src="/public/favicon.svg" alt="" width="18" height="18">
-            <span class="tp-txt">
-              <b class="tp-name">Untitled Slide - Google Slides</b>
-              <span class="tp-sub">Default (Google Slides)</span>
-            </span>
+                <div class="set-row set-row--stack" id="seasonPickRow">
+                  <div class="lbl-txt">
+                    <b>Which theme</b>
+                    <span id="seasonPickHint">
+                      Every theme for the season you're in. Holidays sit right next to
+                      their season, so Fall and Halloween are both here.
+                    </span>
+                  </div>
+                  <div class="seg seg--wide" id="seasonSeg" role="group" aria-label="Season theme"></div>
+                </div>
+              </div>
+            </section>
           </div>
-        </div>
+        </section>
 
-        <div class="set-row" style="margin-top:14px">
-          <div class="lbl-txt">
-            <b>Smart Tab Cloak</b>
-            <span>Cycles the tab between school presets on a timer. Pauses while this tab isn’t open. Your pick above returns when it’s off.</span>
+        <!-- ---------- layout and speed ---------- -->
+        <section class="set-group" id="layout" data-label="Layout and speed" data-icon="zap">
+          <header class="grp">
+            <span class="grp-ic"><span data-icon="zap"></span></span>
+            <div class="grp-txt">
+              <h2 class="grp-t">Layout and speed</h2>
+              <p class="grp-s">How much room NULL gives everything, and how hard it works.</p>
+            </div>
+          </header>
+
+          <div class="set-grid">
+            <!-- compactness -->
+            <section class="set-card glass" data-card="density">
+              <h2 class="set-h">
+                <span class="set-ic"><span data-icon="scale"></span></span>
+                <span class="set-htxt"><b>Layout compactness</b><span>The whole site's spacing, from tight to airy.</span></span>
+              </h2>
+              <div class="set-row set-row--stack">
+                <div class="lbl-txt">
+                  <b>Spacing</b>
+                  <span>Nav height, page margins, section rhythm, card padding and library tiles. Regular is the default.</span>
+                </div>
+                <div class="seg seg--wide" id="densitySeg" role="group" aria-label="Layout compactness">
+                  <button type="button" data-val="regular">Regular</button>
+                  <button type="button" data-val="comfy">Comfy</button>
+                  <button type="button" data-val="spacious">Spacious</button>
+                  <button type="button" data-val="compact">Compact</button>
+                </div>
+                <div class="dens-prev" aria-hidden="true"><i></i><i></i><i></i></div>
+              </div>
+            </section>
+
+            <!-- performance -->
+            <section class="set-card glass" data-card="perf">
+              <h2 class="set-h">
+                <span class="set-ic"><span data-icon="boost"></span></span>
+                <span class="set-htxt"><b>Performance</b><span>Pick how light NULL runs on your device.</span></span>
+              </h2>
+              <div class="set-row set-row--stack">
+                <div class="lbl-txt">
+                  <b>Mode</b>
+                  <span>Performance shortens animations and drops hover movement, glow and shadows.</span>
+                </div>
+                <div class="seg seg--wide" id="perfSeg" role="group" aria-label="Performance mode">
+                  <button type="button" data-val="off">Off</button>
+                  <button type="button" data-val="on">Performance</button>
+                  <button type="button" data-val="ultra">Ultra</button>
+                </div>
+                <p class="set-note" id="perfNote"></p>
+              </div>
+              <div class="set-row">
+                <div class="lbl-txt">
+                  <b>Mini-Perf mode</b>
+                  <span>Strips nothing. Every theme, particle, glow and animation stays, the browser just skips the blocks that are off screen and brings them straight back. Combines with any mode above.</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="miniPerfSwitch" aria-label="Mini-Perf mode">
+                  <span class="track"></span>
+                </label>
+              </div>
+            </section>
+
+            <!-- library extras -->
+            <section class="set-card glass set-card--wide fold" data-fold="extras" data-open="0" data-card="extras">
+              <h2 class="set-h">
+                <button type="button" class="set-toggle" aria-expanded="false" aria-controls="fold-extras">
+                  <span class="set-ic"><span data-icon="game"></span></span>
+                  <span class="set-htxt"><b>Library extras</b><span>Suggestions, marathon mode and period confetti.</span></span>
+                  <span class="set-val" id="extrasVal">3 on</span>
+                  <span class="set-chev"><span data-icon="chevD"></span></span>
+                </button>
+              </h2>
+              <div class="set-fold" id="fold-extras">
+                <div class="set-row">
+                  <div class="lbl-txt">
+                    <b>Because you played</b>
+                    <span>Suggests similar games from your recent history.</span>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="recsSwitch">
+                    <span class="track"></span>
+                  </label>
+                </div>
+
+                <div class="set-row">
+                  <div class="lbl-txt">
+                    <b>Marathon mode</b>
+                    <span>Auto-switches to a random game on a timer.</span>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="marathonSwitch">
+                    <span class="track"></span>
+                  </label>
+                </div>
+
+                <div class="set-row">
+                  <div class="lbl-txt">
+                    <b>Period confetti</b>
+                    <span>Celebrates when a class period ends.</span>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="confettiSwitch">
+                    <span class="track"></span>
+                  </label>
+                </div>
+              </div>
+            </section>
           </div>
-          <label class="switch">
-            <input type="checkbox" id="smartTabSwitch" aria-label="Smart Tab Cloak">
-            <span class="track"></span>
-          </label>
-        </div>
-        <div id="smartTabWrap" style="display:none;margin-top:12px">
-          <label class="lbl" for="smartTabMin">Change every</label>
-          <span class="select-field">
-            <select id="smartTabMin" aria-label="Smart Tab Cloak interval">
-              <option value="1">1 minute</option>
-              <option value="2">2 minutes</option>
-              <option value="5" selected>5 minutes</option>
-              <option value="10">10 minutes</option>
-              <option value="15">15 minutes</option>
-              <option value="30">30 minutes</option>
-            </select>
-          </span>
-        </div>
+        </section>
 
-        <div id="tabCustomWrap" style="display:none;margin-top:14px">
-          <div class="lbl-txt" style="margin-bottom:10px">
-            <b>Custom tab</b>
-            <span>Your own title and favicon, applied everywhere like any other preset.</span>
+        <!-- ---------- browsing ---------- -->
+        <section class="set-group" id="browsing" data-label="Browsing" data-icon="chrome">
+          <header class="grp">
+            <span class="grp-ic"><span data-icon="chrome"></span></span>
+            <div class="grp-txt">
+              <h2 class="grp-t">Browsing</h2>
+              <p class="grp-s">What the tab looks like, and how to make NULL disappear.</p>
+            </div>
+          </header>
+
+          <div class="set-grid">
+            <!-- tab presets -->
+            <section class="set-card glass set-card--wide fold" data-fold="tab" data-open="0" data-card="tab">
+              <h2 class="set-h">
+                <button type="button" class="set-toggle" aria-expanded="false" aria-controls="fold-tab">
+                  <span class="set-ic"><span data-icon="tab"></span></span>
+                  <span class="set-htxt"><b>Browser tab</b><span>The title and favicon every page wears.</span></span>
+                  <span class="set-val" id="tabVal">Google Slides</span>
+                  <span class="set-chev"><span data-icon="chevD"></span></span>
+                </button>
+              </h2>
+              <div class="set-fold" id="fold-tab">
+                <div class="set-row set-row--stack">
+                  <label class="lbl" for="tabSelect">Tab preset</label>
+                  <span class="select-field">
+                    <select id="tabSelect" aria-label="Tab preset"></select>
+                  </span>
+                  <div class="tab-preview" id="tabPrev">
+                    <img src="/public/favicon.svg" alt="" width="18" height="18">
+                    <span class="tp-txt">
+                      <b class="tp-name">Untitled Slide - Google Slides</b>
+                      <span class="tp-sub">Default (Google Slides)</span>
+                    </span>
+                  </div>
+                </div>
+
+                <div class="set-row">
+                  <div class="lbl-txt">
+                    <b>Smart Tab Cloak</b>
+                    <span>Cycles the tab between school presets on a timer. Pauses while this tab isn't open, and your pick above returns when it's off.</span>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="smartTabSwitch" aria-label="Smart Tab Cloak">
+                    <span class="track"></span>
+                  </label>
+                </div>
+                <div class="set-row" id="smartTabWrap" hidden>
+                  <label class="lbl" for="smartTabMin">Change every</label>
+                  <span class="select-field" style="max-width:200px">
+                    <select id="smartTabMin" aria-label="Smart Tab Cloak interval">
+                      <option value="1">1 minute</option>
+                      <option value="2">2 minutes</option>
+                      <option value="5" selected>5 minutes</option>
+                      <option value="10">10 minutes</option>
+                      <option value="15">15 minutes</option>
+                      <option value="30">30 minutes</option>
+                    </select>
+                  </span>
+                </div>
+
+                <div id="tabCustomWrap" hidden>
+                  <div class="set-row set-row--stack">
+                    <div class="lbl-txt">
+                      <b>Custom tab</b>
+                      <span>Your own title and favicon, applied everywhere like any other preset.</span>
+                    </div>
+                    <label class="lbl" for="tabCustomTitle">Tab title</label>
+                    <span class="field">
+                      <input id="tabCustomTitle" type="text" maxlength="80" placeholder="Untitled document" autocomplete="off">
+                    </span>
+                    <label class="lbl" for="tabCustomUrl">Real site URL</label>
+                    <span class="field">
+                      <input id="tabCustomUrl" type="url" placeholder="https://example.com/" autocomplete="off">
+                    </span>
+                    <label class="lbl" for="tabCustomIcon">Favicon</label>
+                    <div class="set-inline">
+                      <span class="field" style="flex:1;min-width:180px">
+                        <input id="tabCustomIcon" type="text" placeholder="https://example.com/icon.png" autocomplete="off">
+                      </span>
+                      <button type="button" class="btn btn-outline" id="btnCustomIconUpload"><span data-icon="upload"></span>Upload</button>
+                      <input type="file" id="tabCustomFile" accept="image/*" hidden>
+                    </div>
+                  </div>
+                </div>
+
+                <div id="gmailWrap" hidden>
+                  <label class="lbl" for="gmailAddr">Gmail address shown in the tab</label>
+                  <span class="field">
+                    <input id="gmailAddr" type="email" placeholder="you@gmail.com" autocomplete="off">
+                  </span>
+                  <label class="lbl" for="gmailUnread">Unread count indicator</label>
+                  <span class="field">
+                    <input id="gmailUnread" type="number" min="0" max="999" placeholder="0" autocomplete="off">
+                  </span>
+                </div>
+              </div>
+            </section>
+
+            <!-- privacy and cloaking -->
+            <section class="set-card glass fold" data-fold="cloak" data-open="0" data-card="cloak">
+              <h2 class="set-h">
+                <button type="button" class="set-toggle" aria-expanded="false" aria-controls="fold-cloak">
+                  <span class="set-ic"><span data-icon="lock"></span></span>
+                  <span class="set-htxt"><b>Privacy and cloaking</b><span>Where your data lives, and how to hide NULL.</span></span>
+                  <span class="set-val" id="cloakVal">On-device</span>
+                  <span class="set-chev"><span data-icon="chevD"></span></span>
+                </button>
+              </h2>
+              <div class="set-fold" id="fold-cloak">
+                <div class="set-row">
+                  <div class="lbl-txt">
+                    <b>Local data</b>
+                    <span id="dataInfo">Reading…</span>
+                  </div>
+                  <span class="chip ok"><span class="dot"></span>on-device</span>
+                </div>
+                <div class="set-row set-row--stack">
+                  <div class="lbl-txt">
+                    <b>Cloak NULL</b>
+                    <span>
+                      Opens the whole site in a window whose address bar shows
+                      <b>about:blank</b> or a <b>blob:</b> URL. If the browser blocks
+                      the popup, nothing opens and NULL says so instead.
+                    </span>
+                  </div>
+                  <div class="cloak-actions">
+                    <button type="button" class="btn btn-outline" id="btnCloakBlank"><span data-icon="ban"></span>about:blank</button>
+                    <button type="button" class="btn btn-outline" id="btnCloakBlob"><span data-icon="file"></span>blob:</button>
+                  </div>
+                </div>
+
+                <div class="set-row">
+                  <div class="lbl-txt">
+                    <b>Redirect this tab</b>
+                    <span id="cloakTargetInfo">
+                      The cloaked window opens first, then this tab goes to the real
+                      site behind your tab preset, so the address bar matches the tab
+                      title.
+                    </span>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="cloakRedirectSwitch" aria-label="Redirect this tab when cloaking">
+                    <span class="track"></span>
+                  </label>
+                </div>
+              </div>
+            </section>
+
+            <!-- panic key -->
+            <section class="set-card glass fold" data-fold="panic" data-open="0" data-card="panic">
+              <h2 class="set-h">
+                <button type="button" class="set-toggle" aria-expanded="false" aria-controls="fold-panic">
+                  <span class="set-ic"><span data-icon="ban"></span></span>
+                  <span class="set-htxt"><b>Panic key</b><span>One press and NULL is gone.</span></span>
+                  <span class="set-val" id="panicVal">`</span>
+                  <span class="set-chev"><span data-icon="chevD"></span></span>
+                </button>
+              </h2>
+              <div class="set-fold" id="fold-panic">
+                <p class="set-sub">
+                  Press the key anywhere on NULL to jump straight to a boring-looking site.
+                  Useful when someone walks up. The browser tab preset still applies, so the
+                  tab already looks like work.
+                </p>
+
+                <div class="set-row set-row--stack">
+                  <label class="lbl" for="panicKey">Key</label>
+                  <div class="set-inline">
+                    <button type="button" class="btn btn-outline keycap" id="panicKey" aria-label="Panic key: click to change">`</button>
+                    <span class="set-sub set-sub--inline" id="panicKeyHint">Click, then press any key</span>
+                  </div>
+                </div>
+
+                <div class="set-row set-row--stack">
+                  <label class="lbl" for="panicUrl">Redirect site</label>
+                  <span class="field">
+                    <input id="panicUrl" type="url" inputmode="url" spellcheck="false" autocomplete="off" placeholder="https://classroom.google.com">
+                  </span>
+                </div>
+
+                <div class="set-row">
+                  <div class="lbl-txt">
+                    <b>Double press trigger</b>
+                    <span>On = two presses within 400 ms. Off = single press.</span>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="panicSwitch" aria-label="Double press trigger">
+                    <span class="track"></span>
+                  </label>
+                </div>
+              </div>
+            </section>
           </div>
-          <label class="lbl" for="tabCustomTitle">Tab title</label>
-          <span class="field">
-            <input id="tabCustomTitle" type="text" maxlength="80" placeholder="Untitled document" autocomplete="off">
-          </span>
-          <label class="lbl" for="tabCustomUrl" style="margin-top:12px">Real site URL</label>
-          <span class="field">
-            <input id="tabCustomUrl" type="url" placeholder="https://example.com/" autocomplete="off">
-          </span>
-          <label class="lbl" for="tabCustomIcon" style="margin-top:12px">Favicon URL</label>
-          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-            <span class="field" style="flex:1;min-width:200px">
-              <input id="tabCustomIcon" type="text" placeholder="https://example.com/icon.png" autocomplete="off">
-            </span>
-            <button type="button" class="btn btn-outline" id="btnCustomIconUpload"><span data-icon="upload"></span>Upload</button>
-            <input type="file" id="tabCustomFile" accept="image/*" hidden>
+        </section>
+
+        <!-- ---------- your stuff ---------- -->
+        <section class="set-group" id="data" data-label="Your stuff" data-icon="save">
+          <header class="grp">
+            <span class="grp-ic"><span data-icon="save"></span></span>
+            <div class="grp-txt">
+              <h2 class="grp-t">Your stuff</h2>
+              <p class="grp-s">Install NULL, carry your profile around, and the resets.</p>
+            </div>
+          </header>
+
+          <div class="set-grid">
+            <!-- install -->
+            <section class="set-card glass fold" data-fold="install" data-open="0" data-card="install">
+              <h2 class="set-h">
+                <button type="button" class="set-toggle" aria-expanded="false" aria-controls="fold-install">
+                  <span class="set-ic"><span data-icon="download"></span></span>
+                  <span class="set-htxt"><b>Install NULL</b><span>Its own window, its own icon, works offline.</span></span>
+                  <span class="set-val" id="installVal">Checking…</span>
+                  <span class="set-chev"><span data-icon="chevD"></span></span>
+                </button>
+              </h2>
+              <div class="set-fold" id="fold-install">
+                <div class="set-row">
+                  <div class="lbl-txt">
+                    <b>Install as an app</b>
+                    <span id="installHint">Checking whether this browser can install NULL…</span>
+                  </div>
+                  <div class="toolbar" style="margin:0">
+                    <button type="button" class="btn btn-outline btn-sm" id="installHelp">How?</button>
+                    <button type="button" class="btn btn-primary btn-sm" id="installBtn" hidden>Install</button>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- danger zone -->
+            <section class="set-card glass danger-zone fold" data-fold="danger" data-open="0" data-card="danger">
+              <h2 class="set-h">
+                <button type="button" class="set-toggle" aria-expanded="false" aria-controls="fold-danger">
+                  <span class="set-ic"><span data-icon="warn"></span></span>
+                  <span class="set-htxt"><b>Danger zone</b><span>Whole-NULL resets.</span></span>
+                  <span class="set-chev"><span data-icon="chevD"></span></span>
+                </button>
+              </h2>
+              <div class="set-fold" id="fold-danger">
+                <p class="set-sub">
+                  Recently played has its own clear button on the home page, this is only
+                  for full resets.
+                </p>
+                <div class="toolbar" style="margin:0">
+                  <button type="button" class="btn btn-outline" id="dangerReset">Reset appearance</button>
+                  <button type="button" class="btn btn-outline-danger" id="dangerWipe">Wipe all NULL data</button>
+                </div>
+              </div>
+            </section>
+
+            <!-- your data -->
+            <section class="set-card glass set-card--wide fold" data-fold="data" data-open="0" data-card="mydata">
+              <h2 class="set-h">
+                <button type="button" class="set-toggle" aria-expanded="false" aria-controls="fold-data">
+                  <span class="set-ic"><span data-icon="save"></span></span>
+                  <span class="set-htxt"><b>Your data</b><span>Back up your profile, or move it somewhere else.</span></span>
+                  <span class="set-val" id="dataVal">Local</span>
+                  <span class="set-chev"><span data-icon="chevD"></span></span>
+                </button>
+              </h2>
+              <div class="set-fold" id="fold-data">
+                <p class="set-sub">
+                  Everything NULL knows about you lives in this browser. Anything that shares
+                  NULL's own address (a second tab, the installed app window, and the cloaked
+                  about:blank / blob: copies) stays in sync with the others on its own. A
+                  genuinely different address (another host, a preview link) can't see it, so
+                  download your file and load it up on the other side.
+                </p>
+
+                <div class="set-row">
+                  <div class="lbl-txt">
+                    <b>Download your data</b>
+                    <span>One JSON file with your settings, unlocks, favorites, history and flags.</span>
+                  </div>
+                  <div class="toolbar" style="margin:0">
+                    <button type="button" class="btn btn-primary btn-sm" id="btnDataExport"><span data-icon="download"></span>Download</button>
+                  </div>
+                </div>
+
+                <div class="set-row">
+                  <div class="lbl-txt">
+                    <b>Load data back</b>
+                    <span>Pick a NULL backup file, it replaces what's stored here and reloads NULL.</span>
+                  </div>
+                  <div class="toolbar" style="margin:0">
+                    <button type="button" class="btn btn-outline btn-sm" id="btnDataImport"><span data-icon="upload"></span>Upload</button>
+                    <input type="file" id="dataFile" accept="application/json,.json" hidden>
+                  </div>
+                </div>
+              </div>
+            </section>
           </div>
-        </div>
+        </section>
 
-        <div id="gmailWrap" style="display:none">
-          <label class="lbl" for="gmailAddr">Gmail address shown in the tab</label>
-          <span class="field">
-            <input id="gmailAddr" type="email" placeholder="you@gmail.com" autocomplete="off">
-          </span>
-          <label class="lbl" for="gmailUnread" style="margin-top:12px">Unread count indicator</label>
-          <span class="field">
-            <input id="gmailUnread" type="number" min="0" max="999" placeholder="0" autocomplete="off">
-          </span>
-        </div>
-      </section>
-
-      <!-- library extras -->
-      <section class="set-card glass" aria-label="Library extras">
-        <h2 class="set-title"><span data-icon="game"></span>Library extras</h2>
-        <p class="set-sub">A few extra toggles for the library and the schedule.</p>
-
-        <div class="set-row">
-          <div class="lbl-txt">
-            <b>Because you played</b>
-            <span>Suggests similar games from your recent history.</span>
-          </div>
-          <label class="switch">
-            <input type="checkbox" id="recsSwitch">
-            <span class="track"></span>
-          </label>
-        </div>
-
-        <div class="set-row">
-          <div class="lbl-txt">
-            <b>Marathon mode</b>
-            <span>Auto-switches to a random game on a timer.</span>
-          </div>
-          <label class="switch">
-            <input type="checkbox" id="marathonSwitch">
-            <span class="track"></span>
-          </label>
-        </div>
-
-        <div class="set-row">
-          <div class="lbl-txt">
-            <b>Period confetti</b>
-            <span>Celebrates when a class period ends.</span>
-          </div>
-          <label class="switch">
-            <input type="checkbox" id="confettiSwitch">
-            <span class="track"></span>
-          </label>
-        </div>
-      </section>
-
-      <!-- privacy / cloaking -->
-      <section class="set-card glass" aria-label="Privacy and cloaking">
-        <h2 class="set-title"><span data-icon="lock"></span>Privacy & cloaking</h2>
-        <div class="set-row">
-          <div class="lbl-txt">
-            <b>Local data</b>
-            <span id="dataInfo">Reading…</span>
-          </div>
-          <span class="chip ok"><span class="dot"></span>on-device</span>
-        </div>
-        <div class="set-row" style="flex-wrap:wrap">
-          <div class="lbl-txt">
-            <b>Cloak NULL</b>
-            <span>
-              Opens the whole site in a window whose address bar shows
-              <b>about:blank</b> or a <b>blob:</b> URL. If the browser blocks
-              the popup, nothing opens, NULL shows a warning instead.
-            </span>
-          </div>
-          <div class="cloak-actions">
-            <button type="button" class="btn btn-outline" id="btnCloakBlank"><span data-icon="ban"></span>about:blank</button>
-            <button type="button" class="btn btn-outline" id="btnCloakBlob"><span data-icon="file"></span>blob:</button>
-          </div>
-        </div>
-
-        <div class="set-row">
-          <div class="lbl-txt">
-            <b>Redirect this tab</b>
-            <span id="cloakTargetInfo">
-              The cloaked window opens first, then this tab goes to the real
-              site behind your tab preset, so the address bar matches the tab
-              title.
-            </span>
-          </div>
-          <label class="switch">
-            <input type="checkbox" id="cloakRedirectSwitch" aria-label="Redirect this tab when cloaking">
-            <span class="track"></span>
-          </label>
-        </div>
-      </section>
-
-      <!-- your data: move the local profile between origins -->
-      <section class="set-card glass set-card--wide" aria-label="Your data">
-        <h2 class="set-title"><span data-icon="download"></span>Your data</h2>
-        <p class="set-sub">
-          Everything NULL knows about you lives in this browser. Anything that shares
-          NULL’s own address (a second tab, the installed app window, and the
-          cloaked about:blank / blob: copies) stays in sync with the others on its
-          own. A genuinely different address (another host, a preview link) can’t see
-          it, so download your file and load it up on the other side.
-        </p>
-
-        <div class="set-row">
-          <div class="lbl-txt">
-            <b>Download your data</b>
-            <span>One JSON file with your settings, unlocks, favorites, history and flags: your backup, and the way to carry NULL to another address.</span>
-          </div>
-          <div class="toolbar" style="margin:0">
-            <button type="button" class="btn btn-primary btn-sm" id="btnDataExport"><span data-icon="download"></span>Download</button>
-          </div>
-        </div>
-
-        <div class="set-row">
-          <div class="lbl-txt">
-            <b>Load data back</b>
-            <span>Pick a NULL backup file, it replaces what's stored here and reloads NULL.</span>
-          </div>
-          <div class="toolbar" style="margin:0">
-            <button type="button" class="btn btn-outline btn-sm" id="btnDataImport"><span data-icon="upload"></span>Upload</button>
-            <input type="file" id="dataFile" accept="application/json,.json" hidden>
-          </div>
-        </div>
-      </section>
-
-      <!-- panic key -->
-      <section class="set-card glass set-card--wide" aria-label="Panic key">
-        <h2 class="set-title"><span data-icon="ext"></span>Panic key</h2>
-        <p class="set-sub">
-          Press the key anywhere on NULL to jump straight to a boring-looking site.
-          Useful when someone walks up. The browser tab preset still applies, so the
-          tab already looks like work.
-        </p>
-
-        <div class="set-row" style="display:block">
-          <label class="lbl" for="panicKey">Key</label>
-          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-            <button type="button" class="btn btn-outline keycap" id="panicKey" aria-label="Panic key: click to change">`</button>
-            <span class="set-sub" id="panicKeyHint" style="margin:0">Click, then press any key</span>
-          </div>
-        </div>
-
-        <div class="set-row" style="display:block">
-          <label class="lbl" for="panicUrl">Redirect site</label>
-          <span class="field">
-            <input id="panicUrl" type="url" inputmode="url" spellcheck="false" autocomplete="off" placeholder="https://classroom.google.com">
-          </span>
-        </div>
-
-        <div class="set-row">
-          <div class="lbl-txt">
-            <b>Double press trigger</b>
-            <span>On = two presses within 400 ms. Off = single press.</span>
-          </div>
-          <label class="switch">
-            <input type="checkbox" id="panicSwitch" aria-label="Double press trigger">
-            <span class="track"></span>
-          </label>
-        </div>
-      </section>
-
-      <!-- danger zone -->
-      <section class="set-card glass danger-zone set-card--wide" aria-label="Danger zone">
-        <div class="dz-head"><span data-icon="warn"></span>Danger zone</div>
-        <p class="set-sub">
-          Whole-NULL resets. Recently played has its own clear button on the
-          home page, this is only for full resets.
-        </p>
-        <div class="toolbar" style="margin:0">
-          <button type="button" class="btn btn-outline" id="dangerReset">Reset appearance</button>
-          <button type="button" class="btn btn-outline-danger" id="dangerWipe">Wipe all NULL data</button>
-        </div>
-      </section>
+        <p class="set-end" id="setEnd" hidden>Nothing matches that. <button type="button" class="link-btn" id="setClear">Show everything</button></p>
+      </div>
     </div>
   </main>
 
