@@ -502,35 +502,61 @@ for (const page of PAGES) {
   win.close();
 }
 
-/* ---------- served from a project path ----------
+/* ---------- served from a subfolder ----------
    The same files have to work from a subfolder as well, which is where a
-   GitHub Pages project site lives: user.github.io/null-edits/. Nothing is
+   GitHub Pages project site lives: user.github.io/repo-name/. Nothing is
    hardcoded to a root, so every link a page or the JS builds has to carry that
-   folder, and the nav has to still light up the right item. */
-console.log("\nserved from /null-edits/");
+   folder, and the nav has to still light up the right item. The name below is
+   made up on purpose: any folder has to work, not one in particular. */
+console.log("\nserved from /site/");
 {
-  const { dom, errors } = load("index.html", "/null-edits/");
+  const { dom, errors } = load("index.html", "/site/");
   const win = dom.window;
   const doc = win.document;
   await wait(400);
   ok(errors.length === 0, "no script errors (" + errors.slice(0, 2).join(" | ") + ")");
-  ok(win.N.base === "/null-edits/", "the folder is worked out from the page (" + win.N.base + ")");
+  ok(win.N.base === "/site/", "the folder is worked out from the page (" + win.N.base + ")");
 
   const brand = doc.querySelector("a.brand");
-  ok(!!brand && brand.getAttribute("href") === "/null-edits/", "the brand links to the root NULL is served from");
+  ok(!!brand && brand.getAttribute("href") === "/site/", "the brand links to the root NULL is served from");
   const nav = doc.querySelector("a.nav-link");
-  ok(!!nav && nav.getAttribute("href").indexOf("/null-edits/") === 0, "nav links carry the folder (" + (nav ? nav.getAttribute("href") : "none") + ")");
+  ok(!!nav && nav.getAttribute("href").indexOf("/site/") === 0, "nav links carry the folder (" + (nav ? nav.getAttribute("href") : "none") + ")");
   const foot = doc.querySelector(".site-foot a[href]");
-  ok(!!foot && foot.getAttribute("href").indexOf("/null-edits/") === 0, "footer links carry the folder (" + (foot ? foot.getAttribute("href") : "none") + ")");
+  ok(!!foot && foot.getAttribute("href").indexOf("/site/") === 0, "footer links carry the folder (" + (foot ? foot.getAttribute("href") : "none") + ")");
   ok(win.N.router.isActive("/games/") === false, "an inactive nav item stays inactive");
 
   /* the library can be empty while folders are still being added */
   const g = win.N.catalog.games()[0];
   if (g) {
-    ok(g.file.indexOf("/null-edits/") === 0, "a catalog entry's file carries the folder (" + g.file + ")");
+    ok(g.file.indexOf("/site/") === 0, "a catalog entry's file carries the folder (" + g.file + ")");
   } else {
     ok(doc.querySelectorAll(".tcard").length === 0, "an empty library still renders");
   }
+}
+
+/* ---------- the 404, answered at an address that is not a folder ----------
+   A static host answers a missing address with 404.html and keeps the address,
+   so the page cannot read its folder off the URL: /games/typo/ would look like
+   the site root. It names the root itself instead, and its own paths are
+   written from the root for the same reason. */
+console.log("\nthe 404, served from a missing path");
+{
+  const html = fs.readFileSync(path.join(root, "404.html"), "utf8");
+  const { dom, errors } = load("404.html", "/games/typo/");
+  const win = dom.window;
+  const doc = win.document;
+  await wait(400);
+  ok(errors.length === 0, "no script errors (" + errors.slice(0, 2).join(" | ") + ")");
+  ok(doc.documentElement.getAttribute("data-root") === "/", "the page names the root it is served from");
+  ok(win.N.base === "/", "the folder does not come from the address (" + win.N.base + ")");
+  const brand = doc.querySelector("a.brand");
+  ok(!!brand && brand.getAttribute("href") === "/", "the brand links to the real root, not the missing path");
+  const back = doc.querySelector("main .actions a");
+  ok(!!back && back.getAttribute("href") === "/", "its own links are root-anchored too (" + (back ? back.getAttribute("href") : "none") + ")");
+  const loose = [...html.matchAll(/(?:href|src)="([^"]+)"/g)]
+    .map((m) => m[1])
+    .filter((h) => h.charAt(0) !== "/" && h.charAt(0) !== "#" && !/^[a-z]+:/i.test(h));
+  ok(loose.length === 0, "nothing on the page is left relative (" + loose.slice(0, 3).join(", ") + ")");
 }
 
 /* ---------- folders that hold pages ----------

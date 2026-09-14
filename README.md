@@ -5,16 +5,16 @@ tools. Flat surfaces, hairline borders, a grayscale identity, built as plain
 static HTML/CSS/JS, deployable straight to GitHub Pages.
 
 ```
-Repository:  https://github.com/googleslides2026/null-edits
-Deployment:  https://googleslides2026.github.io/null-edits/
+Repository:  https://github.com/googleslides2026/googleslides2026.github.io
+Deployment:  https://googleslides2026.github.io
 ```
 
-That deployment is a **project** page, so NULL is served from a folder rather
-than a domain root. Nothing here is written to a root: the pages link to each
-other relatively and the JS asks for a page by its site path through
-`N.url()` (see `store.js`), which works out the folder from the address the
-script was loaded at. The same files therefore run unchanged at a domain root,
-under `/null-edits/`, or from a preview server.
+That is a **user** page: the repo is named after the domain, so NULL is served
+from the root and the address is the bare domain. Nothing here leans on that
+either way: the pages link to each other relatively and the JS asks for a page
+by its site path through `N.url()` (see `store.js`), which works out the folder
+from the address the script was loaded at. The same files therefore run
+unchanged at a domain root, under a subfolder, or from a preview server.
 
 No backend, no database, no framework, and **no build step for the site**:
 there is nothing to compile and nothing to deploy beyond these files. Open the
@@ -231,50 +231,62 @@ The three tiers differ only in what the build keeps:
 `scripts/check-releases.js` loads all three and drives them (nav, library, the
 player overlay, settings, shop) to catch a bad build before you ship it. The
 update Action rebuilds them whenever the library changes, so a game added to
-`games/` shows up in the standalone builds too.## Deployment
+`games/` shows up in the standalone builds too.
+
+---
+
+## Deployment
 
 Push the repo and let GitHub Pages serve it. `404.html`, `index.html` and all
 content folders sit at the root of the repo, so no build step and no special
 Pages config is needed: **Settings → Pages → Deploy from a branch → main / root**.
 
-The repo is named `null-edits`, which makes this a *project* page, so it is
-served from a folder:
+The repo is named `googleslides2026.github.io`, which makes this the **user**
+page for that account, so it answers at the bare domain:
 
 ```
-https://googleslides2026.github.io/null-edits/
+https://googleslides2026.github.io
 ```
 
-Three things make the links behave there:
+Three things keep the links working there:
 
-- **No path is written from the domain root.** The pages link to each other
+- **No page writes a path from the domain root**, so the same files also run
+  under a subfolder (`user.github.io/some-repo/`) or from a preview server, and
+  renaming the repo would not break the site. The pages link to each other
   relatively (`src="../styles/global.css"`, `href="games/"`) and the JS asks for
   a page by its site path through `N.url()` (`store.js`), which reads the folder
-  out of the address the script was loaded at. A page copied to a different
-  sub-path keeps working, and so does a preview server at the root. Nothing
-  needs a `<base>` tag.
+  out of the address the script was loaded at. Nothing needs a `<base>` tag. The
+  one exception is `404.html`, which cannot read the address and names the root
+  instead (below).
 - **The service worker and the manifest scope themselves.** `sw.js` sits next to
-  `index.html`, so its scope is `/null-edits/`, and its precache list is resolved
-  against its own address. `public/manifest.webmanifest` sets `start_url` and
-  `scope` to `../` for the same reason.
+  `index.html`, so its scope is whatever folder NULL is served from, and its
+  precache list is resolved against its own address.
+  `public/manifest.webmanifest` sets `start_url` and `scope` to `../` for the
+  same reason.
 - Library links point at directories (`games/`, `apps/`, `proxies/`): Pages
   resolves those to `games/index.html` and redirects to the trailing-slash form,
   and the nav lights up for either shape. Pages and other root pages are linked
   as their real files (`schedule.html`), because Pages serves an exact file or a
 directory index and nothing else: an extensionless `/schedule` would 404.
-  `404.html` doubles as a redirect for those anyway: it tries
-  `schedule.html`, then `schedule/index.html`, and hops to whichever exists.
 
-`robots.txt` allows the site but keeps `404.html` out of search results. Note
-that crawlers only read `/robots.txt` at an origin's root, so under
-`/null-edits/` this copy is not the one they fetch; the page's own `noindex` tag
-is what actually keeps it out.
+`404.html` does double duty. A static host answers a missing address with it and
+**keeps the address**, so a 404 for `/games/typo/` is served at `/games/typo/`
+and every relative path on the page would resolve inside that folder. It is the
+one page written from the root (`/src/styles/global.css`) and it carries
+`data-root="/"` on `<html>` so the nav and footer it mounts know where the root
+is. It also stands in as a redirect for extensionless addresses: it tries
+`schedule.html`, then `schedule/index.html`, and hops to whichever exists.
+
+`robots.txt` allows the site but keeps `404.html` out of search results, and the
+page carries its own `noindex` tag too. Crawlers only read `/robots.txt` at an
+origin's root, which is where this one is.
 
 `.nojekyll` keeps Pages from running Jekyll over the repo, so every file is
 served exactly as it is in git.
 
 `node scripts/check-links.js` re-checks that every internal path in the HTML and
 the shipped JavaScript exists as a real file before you push, and
-`node scripts/check-pages.js` loads every page (also from `/null-edits/`) to
+`node scripts/check-pages.js` loads every page (also from a made-up subfolder) to
 confirm the links it builds carry the folder.
 
 ---

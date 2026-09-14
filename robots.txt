@@ -1,9 +1,8 @@
 # NULL: a static hub, served straight from the repository by GitHub Pages.
 #
-# Crawlers only read /robots.txt at an origin's root, so when NULL runs from a
-# project path (user.github.io/null-edits/) this copy is not the one they
-# fetch. It is here for a NULL served from a root, and the 404 page carries its
-# own noindex tag either way, which is what actually keeps it out of results.
+# Crawlers only read /robots.txt at an origin's root, which is where NULL is
+# served from. The 404 page carries its own noindex tag as well, so it stays
+# out of results even if this file is never fetched.
 
 User-agent: *
 Allow: /

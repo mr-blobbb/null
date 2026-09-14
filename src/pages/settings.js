@@ -1357,7 +1357,7 @@
   /* ============================================================
      export / import
      localStorage is scoped to one origin, so a NULL profile cannot follow you
-     from googleslides2026.github.io/null-edits to an about:blank clone, a blob: window or
+     from googleslides2026.github.io to an about:blank clone, a blob: window or
      a preview URL: which NULL deliberately doesn't have a server for. A
      backup file is the honest way to carry the profile across.
      ============================================================ */
