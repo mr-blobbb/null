@@ -56,9 +56,16 @@ for (const file of htmls) {
   }
 }
 
-/* quoted absolute paths in the shipped JS (page urls, catalog files, thumbs) */
+/* quoted absolute paths in the shipped JS (page urls, catalog files, thumbs).
+   A line carrying "check-links: fixture" is dropped first: the test suite
+   builds entries out of made-up slugs, and those paths are not meant to
+   exist on disk. */
 for (const file of scriptFiles) {
-  const js = fs.readFileSync(path.join(root, file), "utf8");
+  const js = fs
+    .readFileSync(path.join(root, file), "utf8")
+    .split("\n")
+    .filter((line) => !line.includes("check-links: fixture"))
+    .join("\n");
   const re = /"(\/[A-Za-z0-9._/-]*\.(?:html|svg|png|jpg|jpeg|webp|gif|json|webmanifest))"/g;
   let m;
   while ((m = re.exec(js))) {

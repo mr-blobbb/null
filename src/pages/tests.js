@@ -291,8 +291,10 @@
         labels: "Label: Arcade",
         meta: "Name: Snake\nDescription: Eat apples\n#hot",
       });
-      ok("entry builds the launch path", e.file === "/games/snake/snake.html");
-      ok("entry builds the thumb path", e.thumb === "/games/snake/snake.svg");
+      /* "snake" here is a made-up slug, not a folder: the two path literals
+         below are marked so check-links does not look for them on disk */
+      ok("entry builds the launch path", e.file === "/games/snake/snake.html"); // check-links: fixture
+      ok("entry builds the thumb path", e.thumb === "/games/snake/snake.svg"); // check-links: fixture
       ok("entry carries labels + hot", e.labels[0] === "Arcade" && e.hot === true);
 
       var out = T.source({ games: [e], apps: [], proxies: [] }, "2026-01-01T00:00:00.000Z");
