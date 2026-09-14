@@ -246,7 +246,9 @@
           } }, [d.icon("gift"), "Open"]),
       );
     }
-    acts.appendChild(d.h("a", { class: "btn btn-outline btn-sm", href: "/shop.html" }, [d.icon("store"), "Quests"]));
+    /* data-go is for the single-file builds: they have no /shop.html to
+       point at, so their shell catches the click and shows its own Shop */
+    acts.appendChild(d.h("a", { class: "btn btn-outline btn-sm", href: N.url("/shop.html"), "data-go": "shop" }, [d.icon("store"), "Quests"]));
     host.appendChild(acts);
   }
 

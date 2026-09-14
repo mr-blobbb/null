@@ -54,19 +54,21 @@ const ok = (cond, label) => {
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
-/* swap every <script src="/src/..."> for its contents and drop the stylesheet
-   links: the page then needs nothing from outside the file system */
-function inline(html) {
+/* swap every <script src="..."> for its contents and drop the stylesheet
+   links: the page then needs nothing from outside the file system. Scripts are
+   asked for relative to the page, the way the browser asks for them. */
+function inline(html, page) {
   return html
     .replace(/<script src="([^"]+)"><\/script>/g, (whole, src) => {
-      const file = path.join(root, src.split("?")[0].replace(/^\/+/, ""));
+      const rel = path.posix.join(path.posix.dirname(page), src.split("?")[0]);
+      const file = path.resolve(root, rel);
       if (!file.startsWith(root) || !fs.existsSync(file)) return whole;
       return "<script>\n" + fs.readFileSync(file, "utf8") + "\n</script>";
     })
     .replace(/<link[^>]*rel="stylesheet"[^>]*>/g, "");
 }
 
-function load(page) {
+function load(page, prefix = "/") {
   const errors = [];
   const vc = new VirtualConsole();
   const ignore = /Could not parse CSS|Could not load|Not implemented:/i;
@@ -80,8 +82,8 @@ function load(page) {
     if (!ignore.test(msg)) errors.push(msg);
   });
 
-  const dom = new JSDOM(inline(fs.readFileSync(path.join(root, page), "utf8")), {
-    url: "https://null.test/" + page.replace(/index\.html$/, ""),
+  const dom = new JSDOM(inline(fs.readFileSync(path.join(root, page), "utf8"), page), {
+    url: "https://null.test" + prefix + page.replace(/index\.html$/, ""),
     runScripts: "dangerously",
     pretendToBeVisual: true,
     virtualConsole: vc,
@@ -500,6 +502,62 @@ for (const page of PAGES) {
   win.close();
 }
 
+/* ---------- served from a project path ----------
+   The same files have to work from a subfolder as well, which is where a
+   GitHub Pages project site lives: user.github.io/null-edits/. Nothing is
+   hardcoded to a root, so every link a page or the JS builds has to carry that
+   folder, and the nav has to still light up the right item. */
+console.log("\nserved from /null-edits/");
+{
+  const { dom, errors } = load("index.html", "/null-edits/");
+  const win = dom.window;
+  const doc = win.document;
+  await wait(400);
+  ok(errors.length === 0, "no script errors (" + errors.slice(0, 2).join(" | ") + ")");
+  ok(win.N.base === "/null-edits/", "the folder is worked out from the page (" + win.N.base + ")");
+
+  const brand = doc.querySelector("a.brand");
+  ok(!!brand && brand.getAttribute("href") === "/null-edits/", "the brand links to the root NULL is served from");
+  const nav = doc.querySelector("a.nav-link");
+  ok(!!nav && nav.getAttribute("href").indexOf("/null-edits/") === 0, "nav links carry the folder (" + (nav ? nav.getAttribute("href") : "none") + ")");
+  const foot = doc.querySelector(".site-foot a[href]");
+  ok(!!foot && foot.getAttribute("href").indexOf("/null-edits/") === 0, "footer links carry the folder (" + (foot ? foot.getAttribute("href") : "none") + ")");
+  ok(win.N.router.isActive("/games/") === false, "an inactive nav item stays inactive");
+
+  /* the library can be empty while folders are still being added */
+  const g = win.N.catalog.games()[0];
+  if (g) {
+    ok(g.file.indexOf("/null-edits/") === 0, "a catalog entry's file carries the folder (" + g.file + ")");
+  } else {
+    ok(doc.querySelectorAll(".tcard").length === 0, "an empty library still renders");
+  }
+}
+
+/* ---------- folders that hold pages ----------
+   store.js works out the served folder from the page's own address, stepping
+   back out of one of the content folders it knows about. A page dropped into a
+   folder that is not on that list would build its JS links without the prefix,
+   so the list and the folders on disk have to agree. */
+console.log("\npage folders");
+{
+  const store = fs.readFileSync(path.join(root, "src", "utilities", "store.js"), "utf8");
+  const m = store.match(/var FOLDERS = \[([^\]]*)\]/);
+  const known = m ? m[1].split(",").map((s) => s.trim().replace(/"/g, "")).filter(Boolean) : [];
+  ok(known.length > 0, "store.js lists the folders that hold pages (" + known.join(", ") + ")");
+
+  const held = fs
+    .readdirSync(root, { withFileTypes: true })
+    .filter((e) => e.isDirectory() && fs.existsSync(path.join(root, e.name, "index.html")))
+    .map((e) => e.name);
+  const stray = held.filter((name) => !known.includes(name));
+  ok(
+    stray.length === 0,
+    stray.length
+      ? stray.join(", ") + " hold(s) an index.html but is not in store.js's FOLDERS"
+      : "every folder holding an index.html is listed (" + held.join(", ") + ")",
+  );
+}
+
 /* ---------- icon font ----------
    The icon table has to hold codepoints, not the ligature names the glyphs came
    from. NULL ships a cut of the font with no letters in it (see
@@ -526,8 +584,10 @@ console.log("\nicon font");
 
   const font = "public/fonts/material-symbols-rounded.woff2";
   ok(fs.existsSync(path.join(root, font)), "the icon font is present");
+  /* relative to the stylesheet, which is what keeps it loading under a
+     project path and lets the release builds swap in a data: URI */
   ok(
-    fs.readFileSync(path.join(root, "src", "styles", "global.css"), "utf8").includes('url("/' + font + '")'),
+    fs.readFileSync(path.join(root, "src", "styles", "global.css"), "utf8").includes('url("../../' + font + '")'),
     "global.css serves it locally",
   );
 }

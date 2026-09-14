@@ -1,7 +1,8 @@
 /* NULL · catalog-tool.js
    The catalog's parsing rules, with the filesystem left out: everything here
    takes plain text and hands back catalog entries, so the Node build
-   (scripts/build-catalog.js) and the browser test suite can both drive it. */
+   (scripts/build-catalog.js), so a folder parses the same way wherever it is
+   run from. */
 (function () {
   var N = (window.N = window.N || {});
 

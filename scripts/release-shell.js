@@ -294,13 +294,14 @@
     );
     view.appendChild(hero);
 
-    /* daily crate + quests (the strip's "Quests" link points at /shop.html,
-       which does not exist here: send it to the Shop view instead) */
+    /* daily crate + quests (the strip's "Quests" link is the site's Shop,
+       which does not exist here: send it to the Shop view instead. daily.js
+       marks it, rather than the href, because a build has no fixed path) */
     if (!LITE && N.daily) {
       var strip = d.h("div", { class: "daily-strip glass", id: "dailyStrip" });
       view.appendChild(d.h("div", { class: "section" }, [strip]));
       N.daily.homeStrip();
-      d.qsa('#dailyStrip a[href="/shop.html"]').forEach(function (a) {
+      d.qsa('#dailyStrip [data-go="shop"]').forEach(function (a) {
         a.addEventListener("click", function (e) {
           e.preventDefault();
           go("shop");

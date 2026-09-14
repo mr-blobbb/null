@@ -164,15 +164,15 @@ ${t.minify ? transformSync(js, { loader: "js", minify: true, target: "es2020" })
 `;
 }
 
-/* global.css points the icon font at a path that only exists on the site, so a
-   standalone build carries the file itself: same idea as the games' code. */
+/* global.css points the icon font at a path that only exists next to the
+   stylesheet, so a standalone build carries the file itself: same idea as the
+   games' code. The pattern allows for however many levels up the stylesheet
+   sits, so moving it does not quietly drop the font out of the builds. */
 const FONT = "public/fonts/material-symbols-rounded.woff2";
 function inlineFont(css) {
   if (!exists(FONT)) return css;
-  return css.replaceAll(
-    "url(\"/" + FONT + "\")",
-    'url("' + dataUri(FONT, "font/woff2") + '")',
-  );
+  const re = /url\("(?:\.\.\/)*public\/fonts\/material-symbols-rounded\.woff2"\)/g;
+  return css.replace(re, 'url("' + dataUri(FONT, "font/woff2") + '")');
 }
 
 function cssFor(tier) {

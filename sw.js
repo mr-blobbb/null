@@ -1,6 +1,7 @@
 /* NULL · sw.js
-   Root service worker: makes NULL installable (Chrome "Install app") and
-   keeps the shell usable offline.
+   Service worker: makes NULL installable (Chrome "Install app") and keeps the
+   shell usable offline. It sits next to index.html, so its scope is whatever
+   folder NULL is served from: the domain root or a project path.
 
    Strategy:
      · navigations: network first, so updates always land; cached page on
@@ -15,58 +16,62 @@
    leaving every page unstyled.
 
    Bump CACHE/RUNTIME when the core file list changes so old caches are dropped. */
-const CACHE = "null-v9";
-const RUNTIME = "null-runtime-v9";
+const CACHE = "null-v10";
+const RUNTIME = "null-runtime-v10";
+
+/* Site paths, resolved against this script's own address: the cache then holds
+   the real URLs whether NULL is at a domain root or under a project path. */
+const at = (path) => new URL(path.replace(/^\/+/, ""), self.location).href;
 
 const CORE = [
-  "/",
-  "/index.html",
-  "/404.html",
-  "/player.html",
-  "/schedule.html",
-  "/settings.html",
-  "/announcements.html",
-  "/shop.html",
-  "/backups.html",
-  "/games/",
-  "/apps/",
-  "/proxies/",
-  "/public/favicon.svg",
-  "/public/manifest.webmanifest",
-  "/public/icon-192.png",
-  "/public/icon-512.png",
-  "/public/fonts/material-symbols-rounded.woff2",
-  "/src/styles/global.css",
-  "/src/styles/extra.css",
-  "/src/styles/particles.css",
-  "/src/styles/perf.css",
-  "/src/styles/home.css",
-  "/src/styles/dev.css",
-  "/src/utilities/store.js",
-  "/src/utilities/dom.js",
-  "/src/utilities/modal.js",
-  "/src/utilities/theme.js",
-  "/src/utilities/econ.js",
-  "/src/components/seasons.js",
-  "/src/utilities/scroll.js",
-  "/src/routing/router.js",
-  "/src/catalog/catalog.js",
-  "/src/content/content.js",
-  "/src/components/tabpresets.js",
-  "/src/components/schedule.js",
-  "/src/components/cards.js",
-  "/src/components/search.js",
-  "/src/components/daily.js",
-  "/src/components/shell.js",
-  "/src/components/devconsole.js",
-  "/src/pages/home.js",
-  "/src/pages/library.js",
-  "/src/pages/player.js",
-  "/src/pages/settings.js",
-  "/src/pages/announcements.js",
-  "/src/pages/schedule.js",
-  "/src/pages/shop.js",
-];
+  "./",
+  "index.html",
+  "404.html",
+  "player.html",
+  "schedule.html",
+  "settings.html",
+  "announcements.html",
+  "shop.html",
+  "backups.html",
+  "games/",
+  "apps/",
+  "proxies/",
+  "public/favicon.svg",
+  "public/manifest.webmanifest",
+  "public/icon-192.png",
+  "public/icon-512.png",
+  "public/fonts/material-symbols-rounded.woff2",
+  "src/styles/global.css",
+  "src/styles/extra.css",
+  "src/styles/particles.css",
+  "src/styles/perf.css",
+  "src/styles/home.css",
+  "src/styles/dev.css",
+  "src/utilities/store.js",
+  "src/utilities/dom.js",
+  "src/utilities/modal.js",
+  "src/utilities/theme.js",
+  "src/utilities/econ.js",
+  "src/components/seasons.js",
+  "src/utilities/scroll.js",
+  "src/routing/router.js",
+  "src/catalog/catalog.js",
+  "src/content/content.js",
+  "src/components/tabpresets.js",
+  "src/components/schedule.js",
+  "src/components/cards.js",
+  "src/components/search.js",
+  "src/components/daily.js",
+  "src/components/shell.js",
+  "src/components/devconsole.js",
+  "src/pages/home.js",
+  "src/pages/library.js",
+  "src/pages/player.js",
+  "src/pages/settings.js",
+  "src/pages/announcements.js",
+  "src/pages/schedule.js",
+  "src/pages/shop.js",
+].map(at);
 
 /* ---------- cache hygiene ----------
    Only store a response under a URL when its type matches what that URL is
@@ -87,7 +92,7 @@ function storable(path, res) {
 
 function keep(cache, url, res) {
   try {
-    if (storable(new URL(url, self.location.origin).pathname, res)) cache.put(url, res.clone());
+    if (storable(new URL(url, self.location).pathname, res)) cache.put(url, res.clone());
   } catch (err) {
     /* a failed cache write should never break the page */
   }
@@ -145,7 +150,7 @@ self.addEventListener("fetch", (e) => {
         .catch(() =>
           caches
             .match(req)
-            .then((hit) => hit || caches.match("/"))
+            .then((hit) => hit || caches.match(at("./")))
             .then((hit) => hit || Response.error()),
         ),
     );

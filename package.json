@@ -4,6 +4,11 @@
   "private": true,
   "type": "module",
   "description": "NULL: a plain black-and-white hub for games, apps, proxies and tools. Static HTML/CSS/JS: GitHub Pages serves these files as-is, and Node is only the build-time tooling (catalog scan, icon font subset, single-file releases, link check).",
+  "homepage": "https://googleslides2026.github.io/null-edits/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/googleslides2026/null-edits.git"
+  },
   "scripts": {
     "dev": "vite",
     "preview": "vite preview",

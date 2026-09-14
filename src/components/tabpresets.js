@@ -31,7 +31,7 @@
      url: cloaking it and redirecting would just point back here. */
   var PRESETS = [
     { id: "slides", name: "Google Slides", title: "Untitled Slide - Google Slides", icon: G.slides, url: "https://docs.google.com/presentation/u/0/" },
-    { id: "null", name: "NULL", title: "NULL", icon: "/public/favicon.svg", url: null },
+    { id: "null", name: "NULL", title: "NULL", icon: N.url("/public/favicon.svg"), url: null },
     { id: "home", name: "Home", title: "Naperville Community Unit School District 203", icon: s2("naperville203.org"), url: "https://www.naperville203.org/" },
     { id: "noredink", name: "NoRedInk", title: "NoRedInk", icon: s2("noredink.com"), url: "https://www.noredink.com/" },
     { id: "kahoot", name: "Kahoot", title: "Kahoot!", icon: s2("kahoot.it"), url: "https://kahoot.it/" },

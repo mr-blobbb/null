@@ -269,8 +269,12 @@
     app: "/public/fallback-assets/thumb-app.svg",
     proxy: "/public/fallback-assets/thumb-proxy.svg",
   };
+  /* The served folder is worked out by store.js, which the full pages load.
+     The hidden pages load this file alone, so ask for it politely instead of
+     assuming it is there. */
   N.dom.fbFor = function (kind) {
-    return N.dom.fb[kind] || N.dom.fb.game;
+    var p = N.dom.fb[kind] || N.dom.fb.game;
+    return N.url ? N.url(p) : p;
   };
   N.dom.bindImgFallback = function (img, kind) {
     img.addEventListener("error", function () {

@@ -444,7 +444,7 @@
           }),
           b("Open the shop", "store", function () {
             ok("heading to the shop");
-            setTimeout(function () { location.href = "/shop.html"; }, 150);
+            setTimeout(function () { location.href = N.url("/shop.html"); }, 150);
           }),
           b("Player, missing id", "file", function () {
             ok("opening the player with an id that does not exist");
@@ -688,10 +688,9 @@
         }),
       ] },
       { name: "pages", icon: "wrench", items: [
-        b("Test suite", "beaker", function () { location.href = "/tests.html"; }),
         b("404 page", "warn", function () {
           ok("opening 404.html");
-          location.href = "/404.html";
+          location.href = N.url("/404.html");
         }),
         b("Reload", "refresh", function () { location.reload(); }),
       ] },
@@ -700,19 +699,19 @@
       { name: "eggs", icon: "eye", items: [
         b("Void", "ban", function () {
           ok("opening the void");
-          location.href = "/void.html";
+          location.href = N.url("/void.html");
         }),
         b("Blob", "code", function () {
           ok("opening blob");
-          location.href = "/blob.html";
+          location.href = N.url("/blob.html");
         }),
         b("Time", "clock", function () {
           ok("opening time");
-          location.href = "/time.html";
+          location.href = N.url("/time.html");
         }),
         b("Credits", "star", function () {
           ok("opening credits");
-          location.href = "/credits.html";
+          location.href = N.url("/credits.html");
         }),
         b("Blob face on/off", "eye", function () {
           var st = N.shell && N.shell.orb ? N.shell.orb() : null;

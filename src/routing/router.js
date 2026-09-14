@@ -74,7 +74,11 @@
   ];
 
   function isActive(url) {
+    /* compare the page against the link *inside* NULL: strip the folder NULL
+       is served from first, so the same table lights up the right item at a
+       domain root and under a project path alike */
     var p = location.pathname;
+    if (N.base !== "/" && p.indexOf(N.base) === 0) p = "/" + p.slice(N.base.length);
     if (url === "/") return p === "/" || p === "/index.html";
     /* normalize both sides: strip the trailing slash and any /index.html
        suffix, so /games, /games/, /games/index.html and /games.html all

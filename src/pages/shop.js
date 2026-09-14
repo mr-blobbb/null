@@ -27,8 +27,8 @@
       id: b.id,
       name: b.name,
       desc: b.desc,
-      file: b.file,
-      thumb: b.thumb || null,
+      file: N.url(b.file),
+      thumb: b.thumb ? N.url(b.thumb) : null,
       labels: b.labels || [],
     };
   }
@@ -61,7 +61,7 @@
           N.flags.set("credits:shop");
           d.toast("That was the last one. Rolling credits.", { icon: "star" });
           setTimeout(function () {
-            location.href = "/credits.html";
+            location.href = N.url("/credits.html");
           }, 1100);
         }
       },
@@ -326,7 +326,7 @@
     var box = row(f, "fx");
     if (owned && f.id === "custombg") {
       box.querySelector(".shop-foot").appendChild(
-        d.h("a", { class: "btn btn-outline btn-sm", href: "/settings.html" }, [d.icon("settings"), "Settings"]),
+        d.h("a", { class: "btn btn-outline btn-sm", href: N.url("/settings.html") }, [d.icon("settings"), "Settings"]),
       );
     }
     return box;

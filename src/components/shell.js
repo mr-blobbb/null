@@ -14,7 +14,7 @@
   }
 
   function brandEl() {
-    return d.h("a", { class: "brand", href: "/", "aria-label": "NULL home" }, [
+    return d.h("a", { class: "brand", href: N.url("/"), "aria-label": "NULL home" }, [
       logoMark(),
       d.h("span", { class: "brand-name" }, "NULL"),
     ]);
@@ -31,7 +31,7 @@
     N.router.PRIMARY.forEach(function (l) {
       var a = d.h("a", {
         class: "nav-link" + (N.router.isActive(l.url) ? " on" : ""),
-        href: l.url,
+        href: N.url(l.url),
         title: l.t,
         "aria-label": l.t,
       }, [d.icon(l.icon)]);
@@ -106,7 +106,7 @@
     N.router.GROUPS.forEach(function (g) {
       drawer.appendChild(d.h("div", { class: "mg" }, g.name));
       g.links.forEach(function (l) {
-        var mi = d.h("a", { class: "mi" + (N.router.isActive(l.url) ? " on" : ""), href: l.url }, [
+        var mi = d.h("a", { class: "mi" + (N.router.isActive(l.url) ? " on" : ""), href: N.url(l.url) }, [
           d.icon(l.icon),
           d.h("span", null, l.t),
         ]);
@@ -136,7 +136,7 @@
   function paintAnnDots() {
     if (!N.ann) return;
     var unread = N.ann.unread();
-    d.qsa('a[href="/announcements.html"]').forEach(function (a) {
+    d.qsa('a[href="' + N.url("/announcements.html") + '"]').forEach(function (a) {
       var dot = a.querySelector(".nav-dot");
       if (unread && !dot) a.appendChild(annDotEl());
       else if (!unread && dot) dot.remove();
@@ -151,7 +151,7 @@
     if (!N.econ) return;
     var st = N.econ.state();
     var ready = st.canSpin || st.questsReady > 0 || st.achReady > 0;
-    d.qsa('a[href="/shop.html"]').forEach(function (a) {
+    d.qsa('a[href="' + N.url("/shop.html") + '"]').forEach(function (a) {
       var dot = a.querySelector(".nav-dot");
       if (ready && !dot) a.appendChild(d.h("span", { class: "nav-dot", "aria-hidden": "true" }));
       else if (!ready && dot) dot.remove();
@@ -191,7 +191,7 @@
     N.router.FOOT.forEach(function (col) {
       var wrap = d.h("div", { class: "col" }, [d.h("h4", null, col.name)]);
       col.links.forEach(function (l) {
-        wrap.appendChild(d.h("a", { href: l.url }, l.t));
+        wrap.appendChild(d.h("a", { href: N.url(l.url) }, l.t));
       });
       inner.appendChild(wrap);
     });
@@ -283,9 +283,9 @@ return foot;
        /time     type the current half of the day, or outlast midnight
        /credits  the shop's completion reward (see shop.js)
      ============================================================ */
-  var VOID_URL = "/void.html";
-  var BLOB_URL = "/blob.html";
-  var TIME_URL = "/time.html";
+  var VOID_URL = N.url("/void.html");
+  var BLOB_URL = N.url("/blob.html");
+  var TIME_URL = N.url("/time.html");
 
   function isTyping(t) {
     return (
@@ -612,11 +612,12 @@ return foot;
       "<!doctype html><html><head><meta charset='utf-8'><title>" +
       N.tab.titleFor(p) +
       "</title><link rel='icon' href='" +
-      (p.icon || "/public/favicon.svg") +
+      (p.icon || N.url("/public/favicon.svg")) +
       "'></head>" +
       "<body style='margin:0'><iframe src='" +
       location.origin +
-      "/' style='width:100vw;height:100vh;border:0'></iframe></body></html>"
+      N.base +
+      "' style='width:100vw;height:100vh;border:0'></iframe></body></html>"
     );
   }
 
@@ -1206,7 +1207,7 @@ return foot;
         }
       } else {
         window.addEventListener("load", function () {
-          navigator.serviceWorker.register("/sw.js").catch(function () {});
+          navigator.serviceWorker.register(N.url("sw.js")).catch(function () {});
         });
       }
     }

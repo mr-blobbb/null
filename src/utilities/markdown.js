@@ -26,7 +26,11 @@
       } else if (m[1][0] === "*") {
         out += "<em>" + esc(m[1].slice(1, -1)) + "</em>";
       } else {
-        out += '<a href="' + esc(m[3]) + '" rel="noopener">' + esc(m[2]) + "</a>";
+        /* one leading slash is a site path, so it needs the folder NULL is
+           served from; a //host/x link is somebody else's and is left alone */
+        var href = m[3];
+        if (href.charAt(0) === "/" && href.charAt(1) !== "/") href = N.url(href);
+        out += '<a href="' + esc(href) + '" rel="noopener">' + esc(m[2]) + "</a>";
       }
       last = m.index + m[0].length;
     }

@@ -27,6 +27,25 @@
 
   N.store = { read: read, write: write, del: del };
 
+  /* ---------- where NULL lives ----------
+     The pages link to each other with paths relative to the folder NULL is
+     served from, so the same files run at a domain root and under a project
+     path (github.io/null-edits/, say). The JS keeps asking for pages by their
+     site path (N.url("/shop.html")), which needs that folder. It is worked out
+     once, from the address this script was loaded at: everything above the
+     page is the folder, except the content folder the page itself sits in.
+
+     FOLDERS is that last part: the folders holding pages of their own. A new
+     one has to be added here as well as on disk, and check-pages fails if the
+     two disagree. */
+  var FOLDERS = ["games", "apps", "proxies"];
+  var segs = location.pathname.replace(/[^/]*$/, "").split("/").filter(Boolean);
+  if (segs.length && FOLDERS.indexOf(segs[segs.length - 1]) > -1) segs.pop();
+  N.base = segs.length ? "/" + segs.join("/") + "/" : "/";
+  N.url = function (path) {
+    return N.base + String(path == null ? "" : path).replace(/^\/+/, "");
+  };
+
   /* ---------- tiny pub/sub used to refresh lists when favorites/recent change ---------- */
   var busMap = {};
   N.bus = {

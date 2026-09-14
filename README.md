@@ -5,8 +5,16 @@ tools. Flat surfaces, hairline borders, a grayscale identity, built as plain
 static HTML/CSS/JS, deployable straight to GitHub Pages.
 
 ```
-Primary deployment: https://googleslides2026.github.io
+Repository:  https://github.com/googleslides2026/null-edits
+Deployment:  https://googleslides2026.github.io/null-edits/
 ```
+
+That deployment is a **project** page, so NULL is served from a folder rather
+than a domain root. Nothing here is written to a root: the pages link to each
+other relatively and the JS asks for a page by its site path through
+`N.url()` (see `store.js`), which works out the folder from the address the
+script was loaded at. The same files therefore run unchanged at a domain root,
+under `/null-edits/`, or from a preview server.
 
 No backend, no database, no framework, and **no build step for the site**:
 there is nothing to compile and nothing to deploy beyond these files. Open the
@@ -21,15 +29,16 @@ site can be previewed and the releases rebuilt; see the end of this file.)
 /
 ├── index.html             Home dashboard
 ├── 404.html               Custom NULL 404 (leaking barrel)
-├── tests.html             The test suite, run in the browser
+├── void.html, blob.html,  The hidden pages: nothing links them, you get there
+│   time.html, credits.html  by typing the address or from the dev console
 ├── games/                 Game library: index.html is the /games page
 │   ├── index.html         The /games library page
 │   └── <slug>/ …          One folder per game: the catalog build discovers them
 ├── apps/                  App library: index.html is the /apps page
 ├── proxies/               Proxy list: index.html is the /proxies page
 ├── src/
-│   ├── styles/            global.css, extra.css, home.css, tests.css,
-│   │                      particles.css, perf.css, dev.css
+│   ├── styles/            global.css, extra.css, home.css, particles.css,
+│   │                      perf.css, dev.css, eggs.css
 │   ├── utilities/         store, dom, modal, theme, scroll, markdown, econ,
 │   │                      catalog-tool (the catalog's parser)
 │   ├── components/        shell (nav/footer), cards, search, schedule,
@@ -54,7 +63,7 @@ site can be previewed and the releases rebuilt; see the end of this file.)
 │   └── build-releases.js  Rebuilds the three single-file builds
 ├── .github/workflows/     update-catalog.yml: refresh + commit on content changes
 ├── sw.js                  Service worker (installable app + offline shell)
-├── robots.txt             Keeps the test suite and the 404 out of search
+├── robots.txt             Keeps the 404 out of search (only read at a root)
 ├── .nojekyll              Serves the repo as plain files on GitHub Pages
 ├── LICENSE                AGPL-3.0 notice (the platform code's license)
 └── package.json, vite.config.js, tsconfig.json   Dev only, see below
@@ -83,7 +92,7 @@ bun run catalog            # or: node scripts/build-catalog.js
 ```
 
 The parsing rules sit in `src/utilities/catalog-tool.js`, away from the
-filesystem, so the build and the browser test suite drive the very same code.
+filesystem, so the same code parses a folder wherever it is run from.
 
 Folders without an HTML file (or without a `Link:` in `proxy.txt`) are skipped
 and listed, an unchanged library leaves the file (and its timestamp) exactly
@@ -174,18 +183,6 @@ Two things to know before touching it:
 
 ---
 
-## Tests: /tests
-
-Open **`/tests.html`**. It loads each real page into a same-origin frame and
-asserts on what it renders, then drives the economy (playtime → XP → coins,
-daily quests, achievements, the daily crate, the day rollover) and the catalog
-parser directly against the modules the site ships. It also checks that the
-stylesheets, the service worker and the catalog are all wired up.
-
-Your `null:*` localStorage keys are snapshotted before a run and put back
-afterwards; **Restore my data** does it again on demand. Like the rest of the
-site it needs to be served over http(s): the frames cannot load from `file://`.
-
 ## Dev console: type `nldev`
 
 Type **`nldev`** on any page (no input focused) for a full-screen tool panel. It
@@ -234,35 +231,51 @@ The three tiers differ only in what the build keeps:
 `scripts/check-releases.js` loads all three and drives them (nav, library, the
 player overlay, settings, shop) to catch a bad build before you ship it. The
 update Action rebuilds them whenever the library changes, so a game added to
-`games/` shows up in the standalone builds too.
+`games/` shows up in the standalone builds too.## Deployment
 
-## Deployment
+Push the repo and let GitHub Pages serve it. `404.html`, `index.html` and all
+content folders sit at the root of the repo, so no build step and no special
+Pages config is needed: **Settings → Pages → Deploy from a branch → main / root**.
 
-Push the repo and let GitHub Pages serve it from the repository root.
-`404.html`, `index.html` and all content folders live at the root on purpose, so
-no build step or special Pages config is needed.
+The repo is named `null-edits`, which makes this a *project* page, so it is
+served from a folder:
 
-Two things make the links behave on Pages:
+```
+https://googleslides2026.github.io/null-edits/
+```
 
-- Library links point at directories (`/games`, `/apps`, `/proxies`): Pages
+Three things make the links behave there:
+
+- **No path is written from the domain root.** The pages link to each other
+  relatively (`src="../styles/global.css"`, `href="games/"`) and the JS asks for
+  a page by its site path through `N.url()` (`store.js`), which reads the folder
+  out of the address the script was loaded at. A page copied to a different
+  sub-path keeps working, and so does a preview server at the root. Nothing
+  needs a `<base>` tag.
+- **The service worker and the manifest scope themselves.** `sw.js` sits next to
+  `index.html`, so its scope is `/null-edits/`, and its precache list is resolved
+  against its own address. `public/manifest.webmanifest` sets `start_url` and
+  `scope` to `../` for the same reason.
+- Library links point at directories (`games/`, `apps/`, `proxies/`): Pages
   resolves those to `games/index.html` and redirects to the trailing-slash form,
-  and the nav lights up for either shape.
-- Root pages are linked as their real files (`/schedule.html`, `/settings.html`,
-  …). Pages serves an exact file or a directory index and nothing else, so an
-  extensionless `/schedule` would 404 there. `404.html` doubles as a redirect
-  for those anyway. If someone types or bookmarks one, it tries
-  `/schedule.html`, then `/schedule/index.html`, and hops to whichever exists.
+  and the nav lights up for either shape. Pages and other root pages are linked
+  as their real files (`schedule.html`), because Pages serves an exact file or a
+directory index and nothing else: an extensionless `/schedule` would 404.
+  `404.html` doubles as a redirect for those anyway: it tries
+  `schedule.html`, then `schedule/index.html`, and hops to whichever exists.
 
-`robots.txt` allows the site but keeps the test suite and `404.html` out of
-search results: they are tools for whoever runs the site, and each carries a
-`noindex` tag of its own anyway.
+`robots.txt` allows the site but keeps `404.html` out of search results. Note
+that crawlers only read `/robots.txt` at an origin's root, so under
+`/null-edits/` this copy is not the one they fetch; the page's own `noindex` tag
+is what actually keeps it out.
 
 `.nojekyll` keeps Pages from running Jekyll over the repo, so every file is
-served exactly as it is in git. If you ever host under a sub-path instead,
-prefix a `<base>` tag in each HTML head.
+served exactly as it is in git.
 
 `node scripts/check-links.js` re-checks that every internal path in the HTML and
-the shipped JavaScript exists as a real file before you push.
+the shipped JavaScript exists as a real file before you push, and
+`node scripts/check-pages.js` loads every page (also from `/null-edits/`) to
+confirm the links it builds carry the folder.
 
 ---
 
@@ -278,6 +291,7 @@ so the site can be previewed, rebuilt and checked while working on it:
 | `scripts/build-catalog.js` | scans `games/`, `apps/`, `proxies/` and regenerates the catalog |
 | `scripts/build-font.js` | cuts the icon font down to the glyphs the site uses |
 | `scripts/build-releases.js` | regenerates the three single-file builds |
+| `scripts/check-pages.js` | loads every real page in jsdom and asserts on what it renders |
 | `scripts/check-releases.js` | drives the built releases and reports errors |
 | `scripts/check-links.js` | verifies every internal path resolves to a file |
 | `scripts/release-shell.js` + `release.css` | the app inside the releases |

@@ -27,15 +27,28 @@
     });
   }
 
+  /* An entry stores its own site paths inside the catalog: the game folder
+     plus its thumbnail. Prefix those with the folder NULL is served from, here
+     in the one place the rest of the site reads entries from, so cards, search,
+     the player and the thumbnails all get an address they can use as-is. */
+  function live(list) {
+    return (list || []).map(function (e) {
+      var out = Object.assign({}, e);
+      if (out.file) out.file = N.url(out.file);
+      if (out.thumb) out.thumb = N.url(out.thumb);
+      return out;
+    });
+  }
+
   N.catalog = {
     games: function () {
-      return raw().games.concat(betaGames());
+      return live(raw().games.concat(betaGames()));
     },
     apps: function () {
-      return raw().apps || [];
+      return live(raw().apps);
     },
     proxies: function () {
-      return raw().proxies || [];
+      return live(raw().proxies);
     },
     find: function (kind, id) {
       var list = kind === "app" ? this.apps() : kind === "proxy" ? this.proxies() : this.games();
@@ -59,7 +72,7 @@
   var KIND_LABEL = { game: "Game", app: "App", proxy: "Proxy" };
 
   function playerUrl(kind, id) {
-    return "/player.html?k=" + encodeURIComponent(kind) + "&id=" + encodeURIComponent(id);
+    return N.url("/player.html") + "?k=" + encodeURIComponent(kind) + "&id=" + encodeURIComponent(id);
   }
 
   function go(kind, entry) {

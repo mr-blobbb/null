@@ -7,14 +7,14 @@
   <meta name="theme-color" content="#09090b">
   <title>About · NULL</title>
   <meta name="description" content="What NULL is, who made it, what's in it, and how to add your own games to it.">
-  <link rel="icon" id="favicon" href="/public/favicon.svg" type="image/svg+xml">
-  <link rel="manifest" href="/public/manifest.webmanifest">
-  <link rel="apple-touch-icon" href="/public/icon-192.png">
-  <link rel="stylesheet" href="/src/styles/global.css">
-  <link rel="stylesheet" href="/src/styles/extra.css">
-  <link rel="stylesheet" href="/src/styles/particles.css">
-  <link rel="stylesheet" href="/src/styles/perf.css">
-  <link rel="stylesheet" href="/src/styles/dev.css">
+  <link rel="icon" id="favicon" href="public/favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="public/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="public/icon-192.png">
+  <link rel="stylesheet" href="src/styles/global.css">
+  <link rel="stylesheet" href="src/styles/extra.css">
+  <link rel="stylesheet" href="src/styles/particles.css">
+  <link rel="stylesheet" href="src/styles/perf.css">
+  <link rel="stylesheet" href="src/styles/dev.css">
   <script>
     (function () {
       try {
@@ -71,7 +71,7 @@ games/hollow-knight/
 
 Drop a folder in and push, and the game shows up with its own labels, thumbnail, and badges. Nothing to hand-edit: a GitHub Action walks every folder and rebuilds the library for you. Folders starting with `.` or `_` get ignored, and a missing thumbnail quietly falls back to NULL's own placeholder art.
 
-Proxies work the same way with a `proxy.txt` holding a `Link:` line. There's a [Backups](/backups) page too, for when the main domain decides to stop existing.
+Proxies work the same way with a `proxy.txt` holding a `Link:` line. There's a [Backups](/backups.html) page too, for when the main domain decides to stop existing.
 
 ## How it's built
 
@@ -79,7 +79,8 @@ Here is the part that surprises people: there's no server. None. No backend, no 
 
 - Plain **HTML**, **CSS**, and **JavaScript**. That's the whole thing.
 - Your data never leaves your browser. Favorites, history, coins, settings: all in `localStorage`, all on your device. There is nothing to hack because there is nothing of yours stored on our side.
-- It's hosted as static files on GitHub Pages, so it loads fast and stays up even when nothing else does.
+- It's hosted as static files on GitHub Pages, so it loads fast and stays up even when nothing else does. The source is at [github.com/googleslides2026/null-edits](https://github.com/googleslides2026/null-edits) and you are reading it at [googleslides2026.github.io/null-edits](https://googleslides2026.github.io/null-edits/).
+- Every link in here is written relative to the folder it is served from, so you can also download the whole thing and open it from a plain folder of your own.
 - The icon font ships with the site, so icons work offline and behind networks that block Google Fonts.
 - It's an installable app, and the service worker keeps the shell usable with no connection at all.
 - There are three single-file builds in `releases/`: **Regular** (the whole thing, readable), **Mini** (the whole thing, squashed), and **Lite** (no themes, particles, or shop, tuned for the slowest machines).
@@ -113,28 +114,28 @@ Read the [Terms](/terms.html) and the [Privacy Policy](/privacy.html) if you wan
   <footer data-mount="foot"></footer>
   <noscript>
     <nav class="ns-nav">
-      <a href="/">Home</a><a href="/games/">Games</a><a href="/apps/">Apps</a><a href="/proxies/">Proxies</a><a href="/schedule.html">Schedule</a><a href="/settings.html">Settings</a>
+      <a href="./">Home</a><a href="games/">Games</a><a href="apps/">Apps</a><a href="proxies/">Proxies</a><a href="schedule.html">Schedule</a><a href="settings.html">Settings</a>
     </nav>
   </noscript>
 
-  <script src="/src/utilities/store.js"></script>
-  <script src="/src/utilities/econ.js"></script>
-  <script src="/src/utilities/dom.js"></script>
-  <script src="/src/utilities/modal.js"></script>
-  <script src="/src/utilities/theme.js"></script>
-  <script src="/src/components/seasons.js"></script>
-  <script src="/src/utilities/scroll.js"></script>
-  <script src="/src/utilities/markdown.js"></script>
-  <script src="/src/routing/router.js"></script>
-  <script src="/src/catalog/generated-catalog.js?v=baa2c9775e"></script>
-  <script src="/src/catalog/catalog.js"></script>
-  <script src="/src/content/content.js"></script>
-  <script src="/src/components/tabpresets.js"></script>
-  <script src="/src/components/schedule.js"></script>
-  <script src="/src/components/cards.js"></script>
-  <script src="/src/components/search.js"></script>
-  <script src="/src/components/shell.js"></script>
-  <script src="/src/components/devconsole.js"></script>
-  <script src="/src/pages/legal.js"></script>
+  <script src="src/utilities/store.js"></script>
+  <script src="src/utilities/econ.js"></script>
+  <script src="src/utilities/dom.js"></script>
+  <script src="src/utilities/modal.js"></script>
+  <script src="src/utilities/theme.js"></script>
+  <script src="src/components/seasons.js"></script>
+  <script src="src/utilities/scroll.js"></script>
+  <script src="src/utilities/markdown.js"></script>
+  <script src="src/routing/router.js"></script>
+  <script src="src/catalog/generated-catalog.js?v=baa2c9775e"></script>
+  <script src="src/catalog/catalog.js"></script>
+  <script src="src/content/content.js"></script>
+  <script src="src/components/tabpresets.js"></script>
+  <script src="src/components/schedule.js"></script>
+  <script src="src/components/cards.js"></script>
+  <script src="src/components/search.js"></script>
+  <script src="src/components/shell.js"></script>
+  <script src="src/components/devconsole.js"></script>
+  <script src="src/pages/legal.js"></script>
 </body>
 </html>

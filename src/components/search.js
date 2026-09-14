@@ -101,6 +101,9 @@
   function fetchPageText(pg) {
     if (pageText[pg.url] !== undefined) return;
     pageText[pg.url] = null;
+    /* the site path, so a page reads itself back from the folder NULL is
+       actually served from */
+    var src = N.url(pg.url);
     function got(html) {
       pageText[pg.url] = stripHtml(html);
       if (live) live.rebuild();
@@ -112,7 +115,7 @@
         pageText[pg.url] = null;
         return;
       }
-      var base = pg.url.replace(/\/+$/, "");
+      var base = src.replace(/\/+$/, "");
       var alts = [base + ".html", base + "/index.html"];
       var i = 0;
       (function tryAlt() {
@@ -194,7 +197,7 @@
         _h: norm(raw),
         _x: norm(pageText[pg.url] || ""),
         run: function () {
-          location.href = pg.url;
+          location.href = N.url(pg.url);
         },
       });
       /* the hidden pages skip body indexing: their text is the joke, and
@@ -211,7 +214,7 @@
         _h: norm(raw),
         _x: "",
         run: function () {
-          location.href = "/announcements.html";
+          location.href = N.url("/announcements.html");
         },
       });
     });
@@ -276,16 +279,16 @@
         /* suggestions when empty */
         results.appendChild(d.h("div", { class: "sr-group" }, "Jump to"));
         [
-          { t: "Home", u: "/", i: "home" },
-          { t: "Games", u: "/games/", i: "game" },
-          { t: "Apps", u: "/apps/", i: "grid" },
-          { t: "Schedule", u: "/schedule.html", i: "sched" },
-          { t: "Settings", u: "/settings.html", i: "settings" },
+          { t: "Home", u: N.url("/"), i: "home" },
+          { t: "Games", u: N.url("/games/"), i: "game" },
+          { t: "Apps", u: N.url("/apps/"), i: "grid" },
+          { t: "Schedule", u: N.url("/schedule.html"), i: "sched" },
+          { t: "Settings", u: N.url("/settings.html"), i: "settings" },
         ].forEach(function (s) {
           var it = {
             kind: "page",
             title: s.t,
-            sub: s.u,
+            sub: s.u.replace(N.base, "/"),
             icon: s.i,
             run: function () {
               location.href = s.u;
