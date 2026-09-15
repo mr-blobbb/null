@@ -762,7 +762,10 @@ label.lbl {
       transparent 78%);
 }
 .nav-link:hover .msr {
-  transform: translateY(-1px);
+  /* translate, not transform: the per-icon animations below run on
+     transform, and a hovered transform would become the implicit start
+     frame of every one of them (which silently killed the 360 spin) */
+  translate: 0 -1px;
 }
 .nav-link.on {
   color: var(--text);
@@ -1062,7 +1065,10 @@ label.lbl {
   75% { transform: translateY(2px); }
 }
 @keyframes ic-turn {
-  to { transform: rotate(360deg); }
+  /* both stops spelled out: a bare `to` is interpolated as a matrix, and
+     rotate(360deg) is the identity matrix, so the gear never moved */
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 @keyframes ic-slash {
   0% { transform: scale(1) rotate(0); }
@@ -1081,7 +1087,7 @@ label.lbl {
 .nav-link[data-ic] .msr {
   display: inline-block;
   will-change: transform;
-  transition: transform 0.18s ease;
+  transition: translate 0.18s ease, transform 0.18s ease;
 }
 .nav-link[data-ic="games"]:hover .msr { animation: ic-tilt 0.55s ease; }
 .nav-link[data-ic="apps"]:hover .msr { animation: ic-squish 0.5s ease; }
@@ -1092,8 +1098,11 @@ label.lbl {
 .nav-link[data-ic="backups"]:hover .msr { animation: ic-drop 0.55s ease; }
 .nav-link[data-ic="settings"]:hover .msr { animation: ic-turn 0.6s ease-in-out; }
 
-/* brand: the slash in the NULL mark snaps through a little stretch */
-.brand:hover .brand-mark .msr { animation: ic-slash 0.5s ease; }
+/* brand: the slash in the NULL mark snaps through a little stretch. The
+   .snap class is toggled by shell.js so entering the mark OR the wordmark
+   runs it: a plain :hover would only fire once per visit to the whole
+   anchor, so sliding across the logo did nothing. */
+.brand .brand-mark .msr.snap { animation: ic-slash 0.5s ease; }
 /* search: the magnifier glances left and right, like it is looking */
 .searchbox:hover .msr { animation: ic-look 0.6s ease; }
 /* theme toggle: the sun/moon flips over like a coin
@@ -1561,7 +1570,7 @@ html[data-perf='1'] .dc-ov {
 @media (prefers-reduced-motion: reduce) {
   #null-glow-el i,
   .nav-link[data-ic] .msr,
-  .brand:hover .brand-mark .msr,
+  .brand .brand-mark .msr.snap,
   .searchbox:hover .msr,
   .theme-btn:hover .msr {
     animation: none !important;
@@ -13050,10 +13059,29 @@ window.NULL_CONTENT = {
   }
 
   function brandEl() {
-    return d.h("a", { class: "brand", href: N.url("/"), "aria-label": "NULL home" }, [
+    var el = d.h("a", { class: "brand", href: N.url("/"), "aria-label": "NULL home" }, [
       logoMark(),
       d.h("span", { class: "brand-name" }, "NULL"),
     ]);
+    bindBrand(el);
+    return el;
+  }
+
+  /* The NULL mark snaps on hover. A plain :hover on the anchor only fired
+     once per visit to the whole logo, so moving between the mark and the
+     wordmark looked dead. Entering either half replays it instead. */
+  function bindBrand(el) {
+    var ic = el.querySelector(".brand-mark .msr");
+    if (!ic) return;
+    ["brand-mark", "brand-name"].forEach(function (name) {
+      var part = el.querySelector("." + name);
+      if (!part) return;
+      part.addEventListener("mouseenter", function () {
+        ic.classList.remove("snap");
+        void ic.offsetWidth; /* reflow, so the animation restarts */
+        ic.classList.add("snap");
+      });
+    });
   }
 
   /* ---------- topbar ---------- */
@@ -13106,7 +13134,13 @@ window.NULL_CONTENT = {
       N.theme.setTheme(next);
       N.prefs.set("theme", next);
       themeBtn.textContent = "";
-      themeBtn.appendChild(themeIcon("pop-in"));
+      var ic = themeIcon("pop-in");
+      /* the pop is an entrance, not a state: drop the class once it lands
+         so it cannot outrank the hover flip afterwards */
+      ic.addEventListener("animationend", function () {
+        ic.classList.remove("pop-in");
+      });
+      themeBtn.appendChild(ic);
       d.toast(next === "light" ? "Light mode on" : "Dark mode on", { icon: next === "light" ? "sun" : "moon" });
     });
     actions.appendChild(themeBtn);

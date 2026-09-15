@@ -14,10 +14,29 @@
   }
 
   function brandEl() {
-    return d.h("a", { class: "brand", href: N.url("/"), "aria-label": "NULL home" }, [
+    var el = d.h("a", { class: "brand", href: N.url("/"), "aria-label": "NULL home" }, [
       logoMark(),
       d.h("span", { class: "brand-name" }, "NULL"),
     ]);
+    bindBrand(el);
+    return el;
+  }
+
+  /* The NULL mark snaps on hover. A plain :hover on the anchor only fired
+     once per visit to the whole logo, so moving between the mark and the
+     wordmark looked dead. Entering either half replays it instead. */
+  function bindBrand(el) {
+    var ic = el.querySelector(".brand-mark .msr");
+    if (!ic) return;
+    ["brand-mark", "brand-name"].forEach(function (name) {
+      var part = el.querySelector("." + name);
+      if (!part) return;
+      part.addEventListener("mouseenter", function () {
+        ic.classList.remove("snap");
+        void ic.offsetWidth; /* reflow, so the animation restarts */
+        ic.classList.add("snap");
+      });
+    });
   }
 
   /* ---------- topbar ---------- */
@@ -70,7 +89,13 @@
       N.theme.setTheme(next);
       N.prefs.set("theme", next);
       themeBtn.textContent = "";
-      themeBtn.appendChild(themeIcon("pop-in"));
+      var ic = themeIcon("pop-in");
+      /* the pop is an entrance, not a state: drop the class once it lands
+         so it cannot outrank the hover flip afterwards */
+      ic.addEventListener("animationend", function () {
+        ic.classList.remove("pop-in");
+      });
+      themeBtn.appendChild(ic);
       d.toast(next === "light" ? "Light mode on" : "Dark mode on", { icon: next === "light" ? "sun" : "moon" });
     });
     actions.appendChild(themeBtn);
