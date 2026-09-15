@@ -996,6 +996,61 @@ label.lbl {
 }
 
 /* ============================================================
+   top nav: each icon has its own one-shot hover animation.
+   transform only, fires once per hover (not a loop).
+   ============================================================ */
+@keyframes ic-tilt {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-14deg); }
+  65% { transform: rotate(12deg); }
+}
+@keyframes ic-squish {
+  0%, 100% { transform: scale(1); }
+  30% { transform: scale(1.12, 0.82); }
+  55% { transform: scale(0.9, 1.14); }
+  75% { transform: scale(1.06, 0.95); }
+}
+@keyframes ic-spin {
+  to { transform: rotate(180deg); }
+}
+@keyframes ic-bounce {
+  0%, 100% { transform: translateY(0); }
+  35% { transform: translateY(-5px); }
+  70% { transform: translateY(-2px); }
+}
+@keyframes ic-nudge {
+  0%, 100% { transform: rotate(0); }
+  40% { transform: rotate(-12deg); }
+}
+@keyframes ic-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-2.5px) rotate(-6deg); }
+  45% { transform: translateX(2.5px) rotate(6deg); }
+  70% { transform: translateX(-1.5px) rotate(-3deg); }
+}
+@keyframes ic-drop {
+  0%, 100% { transform: translateY(0); }
+  30% { transform: translateY(4px); }
+  55% { transform: translateY(0); }
+  75% { transform: translateY(2px); }
+}
+@keyframes ic-turn {
+  to { transform: rotate(360deg); }
+}
+.nav-link[data-ic] .msr {
+  display: inline-block;
+  will-change: transform;
+}
+.nav-link[data-ic="games"]:hover .msr { animation: ic-tilt 0.55s ease; }
+.nav-link[data-ic="apps"]:hover .msr { animation: ic-squish 0.5s ease; }
+.nav-link[data-ic="proxies"]:hover .msr { animation: ic-spin 0.45s ease-in-out; }
+.nav-link[data-ic="schedule"]:hover .msr { animation: ic-bounce 0.55s ease; }
+.nav-link[data-ic="announcements"]:hover .msr { animation: ic-nudge 0.4s ease; }
+.nav-link[data-ic="shop"]:hover .msr { animation: ic-shake 0.5s ease; }
+.nav-link[data-ic="backups"]:hover .msr { animation: ic-drop 0.55s ease; }
+.nav-link[data-ic="settings"]:hover .msr { animation: ic-turn 0.6s ease-in-out; }
+
+/* ============================================================
    dev console (type nldev: full-screen glass terminal overlay)
    ============================================================ */
 .dc-ov {
@@ -1446,7 +1501,8 @@ html[data-perf='1'] .dc-ov {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  #null-glow-el i {
+  #null-glow-el i,
+  .nav-link[data-ic] .msr {
     animation: none !important;
   }
 }

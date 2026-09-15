@@ -34,6 +34,7 @@
         href: N.url(l.url),
         title: l.t,
         "aria-label": l.t,
+        "data-ic": l.id,
       }, [d.icon(l.icon)]);
       if (l.id === "announcements") a.appendChild(annDotEl());
       links.appendChild(a);
