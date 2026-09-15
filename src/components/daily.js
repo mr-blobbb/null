@@ -203,7 +203,8 @@
 
   /* ---------- home strip ----------
      A compact card: how the crate is looking, how many quests are ready, and
-     a way into the Shop for the full list. */
+     a way into the Shop for the full list. The gift icon gets a slow tilt
+     loop while the crate is unopened. */
   function homeStrip() {
     var host = d.qs("#dailyStrip");
     if (!host) return;
@@ -218,7 +219,9 @@
 
     host.textContent = "";
     host.classList.toggle("ready", st.canSpin || ready > 0);
-    host.appendChild(d.h("div", { class: "daily-ic" }, [d.icon("gift")]));
+    var ic = d.h("div", { class: "daily-ic" }, [d.icon("gift")]);
+    if (st.canSpin) ic.classList.add("bob");
+    host.appendChild(ic);
     host.appendChild(
       d.h("div", { class: "daily-txt" }, [
         d.h("b", null, "Daily crate"),

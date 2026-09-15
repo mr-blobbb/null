@@ -34,7 +34,8 @@
   <header data-mount="nav"></header>
 
   <main id="main">
-    <!-- masthead: full-width band: meta row, tagline + search, oversized NULL -->
+    <!-- masthead: full-width band: meta row, tagline + search, oversized NULL.
+         The two spans at the end are the slow aurora blobs behind the band. -->
     <section class="mast">
       <div class="mast-in">
         <div class="mast-meta">
@@ -44,7 +45,7 @@
 
         <div class="mast-top">
           <div class="mast-lead">
-            <p class="mast-tag">Play. Create. Vanish.</p>
+            <p class="mast-tag" id="mastTag">Play. Create. Vanish.</p>
             <p class="mast-sub">
               A non-monetized alternative to our school's absolutely BUNS games sites. Currently hosts around ~2,300 games, with apps, proxies, and so much more!
             </p>
@@ -71,34 +72,29 @@
 
     <div class="page home-page">
       <!-- daily tip -->
-      <section class="section" id="tipSec" hidden>
+      <section class="section reveal" id="tipSec" hidden>
         <div class="tip-card glass" id="tipCard"></div>
       </section>
 
-      <!-- daily crate + quests -->
-      <section class="section" id="dailySec">
-        <div class="daily-strip glass" id="dailyStrip"></div>
-      </section>
-
       <!-- featured rail -->
-      <section class="section">
+      <section class="section reveal">
         <div class="section-head">
           <h2>Featured</h2>
           <span class="hint" id="featHint">Selections of the best games on NULL!</span>
         </div>
-        <div class="feat-panel">
+        <div class="feat-panel glass">
           <div id="featTrack" class="feat-track"></div>
           <a class="feat-more" href="games/">Open the full library <span data-icon="chevR"></span></a>
         </div>
       </section>
 
       <!-- game of the day -->
-      <section class="section">
+      <section class="section reveal">
         <div id="gotd" class="panel glass gotd" hidden></div>
       </section>
 
       <!-- recently played -->
-      <section class="section">
+      <section class="section reveal">
         <div class="section-head">
           <h2>Recently played</h2>
           <div class="icon-btn-row">
@@ -111,8 +107,13 @@
         </div>
       </section>
 
+      <!-- daily crate + quests: a compact strip, kept low so the games lead -->
+      <section class="section reveal" id="dailySec">
+        <div class="daily-strip glass" id="dailyStrip"></div>
+      </section>
+
       <!-- bottom columns -->
-      <section class="section home-cols">
+      <section class="section reveal home-cols">
         <div class="panel">
           <div class="panel-head">
             <h2><span data-icon="sched"></span>Today’s schedule</h2>

@@ -31,6 +31,23 @@
     var sortMode = "name"; // name = A-Z, id = folder label, plays = popularity, new = recently added
     var gridApi = null;
 
+    /* reset chip: one click back to the unfiltered view. Hidden until a
+       filter or a search is actually doing something. */
+    var resetBtn = d.h("button", {
+      type: "button",
+      class: "btn btn-outline btn-sm",
+      hidden: true,
+      onclick: function () {
+        activeLabel = "All";
+        query = "";
+        if (input) input.value = "";
+        buildChips();
+        paint();
+        if (input) input.focus();
+      },
+    }, [d.icon("x"), "Reset"]);
+    if (rowHost && resetBtn) rowHost.appendChild(resetBtn);
+
     function sorted(arr) {
       var copy = arr.slice();
       if (sortMode === "plays") {
@@ -110,6 +127,7 @@
     function paint() {
       var items = filtered();
       if (countEl) countEl.textContent = items.length + " / " + list.length;
+      if (resetBtn) resetBtn.hidden = activeLabel === "All" && !query.trim();
       if (listMode) {
         /* plain list: proxies render as one-column rows, no virtualization */
         grid.textContent = "";
@@ -137,22 +155,23 @@
       grid.style.display = showEmpty ? "none" : "";
     }
 
-    /* ---------- "because you played": games page only ---------- */
+    /* ---------- "because you played" (games) / "recently opened" (apps) ---------- */
     function renderRecs() {
       var sec = d.qs("#recSec");
-      if (!sec || kind !== "games") return;
-      if (N.prefs.get("recs") === false) {
+      if (!sec || kind === "proxies") return;
+      if (kind === "games" && N.prefs.get("recs") === false) {
         sec.hidden = true;
         sec.textContent = "";
         return;
       }
+      var favK = kind === "apps" ? "app" : "game";
       var recent = N.recent
         .list()
         .filter(function (r) {
-          return r.k === "game";
+          return r.k === favK;
         })
         .map(function (r) {
-          return N.catalog.find("game", r.id);
+          return N.catalog.find(favK, r.id);
         })
         .filter(Boolean);
       if (!recent.length) {
@@ -160,41 +179,57 @@
         sec.textContent = "";
         return;
       }
-      var seed = recent[0];
-      var games = N.catalog.games();
-      function shared(g) {
-        var n = 0;
-        (g.labels || []).forEach(function (l) {
-          if ((seed.labels || []).indexOf(l) >= 0) n++;
-        });
-        return n;
-      }
-      var cands = games.filter(function (g) {
-        return g.id !== seed.id;
-      });
-      cands.sort(function (a, b) {
-        return shared(b) - shared(a) || a.name.localeCompare(b.name);
-      });
-      var picks = cands.slice(0, 4);
-      /* top up with random picks when shared labels run dry */
-      var guard = 0;
-      while (picks.length < 4 && guard < cands.length * 2) {
-        var g = cands[Math.floor(Math.random() * cands.length)];
-        if (picks.indexOf(g) < 0) picks.push(g);
-        guard++;
-      }
       sec.hidden = false;
       sec.textContent = "";
+
+      if (kind === "games") {
+        var seed = recent[0];
+        var games = N.catalog.games();
+        function shared(g) {
+          var n = 0;
+          (g.labels || []).forEach(function (l) {
+            if ((seed.labels || []).indexOf(l) >= 0) n++;
+          });
+          return n;
+        }
+        var cands = games.filter(function (g) {
+          return g.id !== seed.id;
+        });
+        cands.sort(function (a, b) {
+          return shared(b) - shared(a) || a.name.localeCompare(b.name);
+        });
+        var picks = cands.slice(0, 4);
+        /* top up with random picks when shared labels run dry */
+        var guard = 0;
+        while (picks.length < 4 && guard < cands.length * 2) {
+          var g = cands[Math.floor(Math.random() * cands.length)];
+          if (picks.indexOf(g) < 0) picks.push(g);
+          guard++;
+        }
+        sec.appendChild(
+          d.h("div", { class: "panel-head" }, [
+            d.h("h2", null, [d.icon("heart"), "Because you played ", d.h("b", null, seed.name)]),
+          ]),
+        );
+        var sug = d.h("div", { class: "lib-sugs" });
+        picks.forEach(function (g) {
+          sug.appendChild(N.cards.card(g, "game"));
+        });
+        sec.appendChild(sug);
+        return;
+      }
+
+      /* apps: a simple row of what you opened last */
       sec.appendChild(
         d.h("div", { class: "panel-head" }, [
-          d.h("h2", null, [d.icon("heart"), "Because you played ", d.h("b", null, seed.name)]),
+          d.h("h2", null, [d.icon("clock2"), "Recently opened"]),
         ]),
       );
-      var sug = d.h("div", { class: "lib-sugs" });
-      picks.forEach(function (g) {
-        sug.appendChild(N.cards.card(g, "game"));
+      var sug2 = d.h("div", { class: "lib-sugs" });
+      recent.slice(0, 4).forEach(function (a) {
+        sug2.appendChild(N.cards.card(a, "app"));
       });
-      sec.appendChild(sug);
+      sec.appendChild(sug2);
     }
 
     /* ---------- marathon mode (games page controls) ---------- */
@@ -276,14 +311,36 @@
       else marathonConfirm(min);
     }
     function bindMarathon() {
-      if (!mSel) return;
+      var btn = d.qs("#btnMarathon");
+      var box = d.qs("#marathonBox");
+      var btnWrap = d.qs("#btnMarathonWrap");
       /* the settings toggle can disable the feature entirely */
       if (N.prefs.get("marathon") === false) {
-        var selWrap = d.qs("#marathonSelWrap");
-        if (selWrap) selWrap.hidden = true;
+        if (btnWrap) btnWrap.hidden = true;
         if (mWrap) mWrap.hidden = true;
         return;
       }
+      /* marathon folds into a small popover so the toolbar stays one row */
+      function setBox(open) {
+        if (box) box.hidden = !open;
+        if (btn) btn.setAttribute("aria-expanded", String(open));
+        if (open && mSel) N.dom.selSync(mSel);
+      }
+      if (btn) {
+        btn.addEventListener("click", function (e) {
+          e.stopPropagation();
+          setBox(box && box.hidden);
+        });
+      }
+      document.addEventListener("click", function (e) {
+        if (!box || box.hidden) return;
+        if (box.contains(e.target) || (btn && btn.contains(e.target))) return;
+        setBox(false);
+      });
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && box && !box.hidden) setBox(false);
+      });
+      if (!mSel) return;
       N.dom.upgradeSelect(mSel);
       mSel.addEventListener("change", function () {
         var v = mSel.value;
@@ -341,6 +398,9 @@
           },
         }, label + (extra ? " · " + extra : ""));
       }
+      /* the reset chip lives at the end: insert before it so it stays last */
+      rowHost.textContent = "";
+      rowHost.appendChild(resetBtn);
       rowHost.appendChild(chip("All", activeLabel === "All", list.length));
       labels.forEach(function (l) {
         rowHost.appendChild(chip(l, activeLabel === l, counts[l]));
@@ -354,6 +414,15 @@
         query = input.value;
         paint();
       }, 90));
+      /* ArrowDown from the filter drops into the first grid card; the cards
+         are real buttons, so arrow/Enter navigation keeps working from there */
+      input.addEventListener("keydown", function (e) {
+        if (e.key !== "ArrowDown") return;
+        var cards = d.qsa("#grid .tcard[tabindex='0']");
+        if (!cards.length) return;
+        e.preventDefault();
+        cards[0].focus();
+      });
     }
 
     /* sort dropdown (custom-styled via dom.upgradeSelect) */

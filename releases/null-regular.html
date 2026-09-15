@@ -4532,6 +4532,43 @@ body.player-page.fs .player-note {
   margin-left: auto;
 }
 
+/* marathon folds into a popover off a small toolbar button, so the toolbar
+   stays one row. Pops down (the toolbar sits under the page head, not under
+   the nav like the player's popovers). */
+#btnMarathonWrap {
+  display: inline-flex;
+}
+.mar-box {
+  position: absolute;
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-2);
+  z-index: 50;
+}
+.toolbar {
+  position: relative;
+}
+.toolbar #btnMarathonWrap:has(+ #marathonBox:not([hidden])) .btn {
+  border-color: var(--line-2);
+  color: var(--text);
+}
+#btnMarathon.on {
+  border-color: color-mix(in srgb, var(--ac-1) 45%, var(--line));
+  color: var(--text);
+}
+
+/* reset chip at the end of the label row: appears only when a filter or
+   search is active (library.js unhides it) */
+.filter-row .btn {
+  flex: none;
+  height: 30px;
+  border-radius: 999px;
+}
+
 /* 404: the art piece is a Material glyph now, sized like the old svg */
 .not-found .art {
   font-size: clamp(96px, 22vw, 170px);
@@ -12817,7 +12854,8 @@ window.NULL_CONTENT = {
 
   /* ---------- home strip ----------
      A compact card: how the crate is looking, how many quests are ready, and
-     a way into the Shop for the full list. */
+     a way into the Shop for the full list. The gift icon gets a slow tilt
+     loop while the crate is unopened. */
   function homeStrip() {
     var host = d.qs("#dailyStrip");
     if (!host) return;
@@ -12832,7 +12870,9 @@ window.NULL_CONTENT = {
 
     host.textContent = "";
     host.classList.toggle("ready", st.canSpin || ready > 0);
-    host.appendChild(d.h("div", { class: "daily-ic" }, [d.icon("gift")]));
+    var ic = d.h("div", { class: "daily-ic" }, [d.icon("gift")]);
+    if (st.canSpin) ic.classList.add("bob");
+    host.appendChild(ic);
     host.appendChild(
       d.h("div", { class: "daily-txt" }, [
         d.h("b", null, "Daily crate"),

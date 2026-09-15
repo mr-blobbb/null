@@ -212,6 +212,7 @@
     var box = d.qs("#recList");
     if (!box) return;
     box.textContent = "";
+    var i = 0;
     var items = N.recent
       .list()
       .filter(function (r) {
@@ -246,6 +247,7 @@
         renderRecents();
       });
       row.appendChild(x);
+      row.style.setProperty("--i", i++);
       listEl.appendChild(row);
     });
     box.appendChild(listEl);
@@ -481,9 +483,57 @@
     }
   }
 
+  /* ---------- hero animation prep ----------
+     The tagline lifts in word by word and the NULL wordmark letter by
+     letter, then the wordmark runs a slow sheen on a loop. Pure CSS after
+     this: we only split the text into spans and hand each one an index.
+     Without JS the plain text stays exactly as it is. */
+  function prepHero() {
+    var tag = d.qs("#mastTag");
+    if (tag) {
+      var words = tag.textContent.trim().split(/\s+/);
+      tag.textContent = "";
+      words.forEach(function (w, i) {
+        tag.appendChild(d.h("span", { class: "w", style: { "--i": i } }, w));
+        if (i < words.length - 1) tag.appendChild(document.createTextNode(" "));
+      });
+    }
+    var wm = d.qs(".mast-null");
+    if (wm) {
+      var text = wm.textContent;
+      wm.textContent = "";
+      text.split("").forEach(function (ch, i) {
+        wm.appendChild(d.h("span", { class: "l", style: { "--i": i } }, ch));
+      });
+    }
+  }
+
+  /* ---------- section reveals ----------
+     Sections below the fold slide up softly the first time they scroll in.
+     One observer, .in-view is left on, nothing unobserves mid-scroll. If the
+     browser has no IntersectionObserver (or JS dies) html.no-io unhides
+     everything from CSS instead. */
+  function watchReveals() {
+    if (typeof IntersectionObserver === "undefined") {
+      document.documentElement.classList.add("no-io");
+      return;
+    }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        en.target.classList.add("in-view");
+        io.unobserve(en.target);
+      });
+    }, { rootMargin: "0px 0px -8% 0px" });
+    d.qsa(".reveal, .mast-null, .tip-card, .feat-panel").forEach(function (el) {
+      io.observe(el);
+    });
+  }
+
   function init() {
     if (inited) return;
     inited = true;
+    prepHero();
     renderMastStats();
     bindSearch();
     renderFeatured();
@@ -494,6 +544,7 @@
     renderAnn();
     renderSchedHome();
     bind();
+    watchReveals();
     N.bus.on("recent", renderRecents);
     /* the dev console can change the catalog under us: keep the counts and
        the featured rail honest */
