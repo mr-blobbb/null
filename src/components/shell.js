@@ -60,7 +60,7 @@
     var actions = d.h("div", { class: "top-actions" });
     var themeBtn = d.h("button", {
       type: "button",
-      class: "btn-icon btn-outline",
+      class: "btn-icon btn-outline theme-btn",
       title: "Toggle theme",
       "aria-label": "Toggle theme",
     });
@@ -70,7 +70,7 @@
       N.theme.setTheme(next);
       N.prefs.set("theme", next);
       themeBtn.textContent = "";
-      themeBtn.appendChild(themeIcon());
+      themeBtn.appendChild(themeIcon("pop-in"));
       d.toast(next === "light" ? "Light mode on" : "Dark mode on", { icon: next === "light" ? "sun" : "moon" });
     });
     actions.appendChild(themeBtn);
@@ -173,9 +173,10 @@
     paintShopDot();
   });
 
-  function themeIcon() {
+  function themeIcon(cls) {
     return d.icon(
       document.documentElement.dataset.theme === "light" ? "moon" : "sun",
+      cls,
     );
   }
 
