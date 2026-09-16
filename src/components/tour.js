@@ -480,8 +480,13 @@
 
   /* the permission ask. Cloaking and the about:blank / blob: modes need
      popups, so it is worth saying out loud, once. */
+  /* start() can run twice on the home page (its own DOMContentLoaded and
+     home.js's firstRun both call it), and each call used to fire prompts()
+     for a second modal. Guarded so the ask is a once-per-page thing. */
+  var asked = false;
   function prompts() {
-    if (N.flags.get("popup")) return;
+    if (N.flags.get("popup") || asked) return;
+    asked = true;
     N.modal.open({
       title: "Popups & redirects",
       icon: "ext",
