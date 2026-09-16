@@ -1,10 +1,11 @@
 /* NULL · extensions.js
    The extensions manager.
 
-   Four blocks: what you have installed, the views your extensions added,
-   the two ways in (.nullext and a Chrome folder), and the file format itself
-   so nobody has to guess. Every list is rebuilt from N.ext.list(), so the
-   page, the nav menu and /root can never drift apart. */
+   Four blocks: what you have installed, the pages your extensions added,
+   the two ways in (.nullext and a Chrome folder), and the manual: two
+   starters to download and a walk through everything an extension can draw.
+   Every list is rebuilt from N.ext.list(), so the page, the nav menu and
+   /root can never drift apart. */
 (function () {
   var N = window.N;
   var d = N.dom;
@@ -156,38 +157,102 @@
     paintPages();
   }
 
-  /* ---------- views an extension added ---------- */
+  /* ---------- views an extension added ----------
+     A page an extension declares is a real page, not a panel in a list:
+     opening one takes the whole window under the nav, gets its own address
+     (#page=<id>) and its own Back, and renders whatever the extension asked
+     for. Close it, or the browser's own back, and you are back here. */
+  var pageOpen = null;
+  var pageView = null;
+
+  function pageStage() {
+    if (pageView && pageView.isConnected) return pageView;
+    pageView = d.h("div", { class: "ext-page-view", hidden: true });
+    (d.qs("#main") || document.body).appendChild(pageView);
+    return pageView;
+  }
+
+  function setPageOpen(id) {
+    pageOpen = id || null;
+    var main = d.qs("#main");
+    if (main) main.classList.toggle("ext-page-open", !!id);
+    var view = pageStage();
+    view.textContent = "";
+    view.hidden = !id;
+  }
+
+  function closePage(keepHash) {
+    setPageOpen(null);
+    if (!keepHash && /^#page=/.test(location.hash || "")) {
+      try {
+        history.replaceState(null, "", location.pathname + location.search);
+      } catch (err) {
+        /* an opaque origin (a file:// open, a sandboxed frame) refuses this:
+           the page still closes, only the address bar keeps the hash */
+        location.hash = "";
+      }
+    }
+    paintPages();
+  }
+
+  function openPage(p) {
+    setPageOpen(p.id);
+    var view = pageStage();
+    view.appendChild(
+      d.h("div", { class: "epv-head" }, [
+        d.h("button", { type: "button", class: "btn btn-outline btn-sm", onclick: function () { closePage(); } }, [
+          d.icon("back"),
+          "Back",
+        ]),
+        d.h("span", { class: "epv-ic" }, [d.icon(p.icon)]),
+        d.h("span", { class: "epv-txt" }, [
+          d.h("b", null, p.title),
+          d.h("span", null, p.desc || "Added by " + p.ext),
+        ]),
+      ]),
+    );
+    var body = d.h("div", { class: "epv-body" });
+    view.appendChild(body);
+    try {
+      p.render(body);
+    } catch (err) {
+      body.appendChild(d.h("p", { class: "ext-err" }, "That page threw: " + ((err && err.message) || err)));
+    }
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }
+
+  /* #page=<id> is the address of one of these pages */
+  function syncHash() {
+    var m = /^#page=(.+)$/.exec(location.hash || "");
+    if (!m) {
+      if (pageOpen) closePage(true);
+      return;
+    }
+    var id = decodeURIComponent(m[1]);
+    var hit = N.ext.pages().filter(function (p) {
+      return p.id === id;
+    })[0];
+    if (!hit || pageOpen === hit.id) return;
+    openPage(hit);
+  }
+
   function paintPages() {
     var list = N.ext.pages();
+    if (pageOpen && !list.filter(function (p) { return p.id === pageOpen; }).length) setPageOpen(null);
     pageHost.textContent = "";
     if (!list.length) return;
-    pageHost.appendChild(d.secHead("grid", "Pages from your extensions", "views an extension has put into NULL"));
+    pageHost.appendChild(d.secHead("grid", "Pages from your extensions", "each one opens as a full page of its own"));
     var box = d.h("div", { class: "ext-pages glass" });
-    var stage = d.h("div", { class: "ext-stage" });
-    var open = null;
     list.forEach(function (p) {
       box.appendChild(
         d.h(
           "button",
           {
             type: "button",
-            class: "chip chip-btn",
+            class: "chip chip-btn" + (pageOpen === p.id ? " on" : ""),
             onclick: function () {
-              if (open === p) {
-                stage.textContent = "";
-                open = null;
-                return;
-              }
-              open = p;
-              stage.textContent = "";
-              stage.appendChild(d.h("div", { class: "ext-stage-head" }, [d.icon(p.icon), p.title]));
-              var slot = d.h("div", { class: "ext-slot" });
-              stage.appendChild(slot);
-              try {
-                p.render(slot);
-              } catch (err) {
-                slot.appendChild(d.h("p", { class: "ext-err" }, "That view threw: " + ((err && err.message) || err)));
-              }
+              location.hash = "page=" + encodeURIComponent(p.id);
+              if (pageOpen !== p.id) openPage(p);
             },
           },
           [d.icon(p.icon), p.title],
@@ -195,7 +260,6 @@
       );
     });
     pageHost.appendChild(box);
-    pageHost.appendChild(stage);
   }
 
   /* ---------- installing ---------- */
@@ -272,7 +336,7 @@
       d.h("div", { class: "ea-card glass" }, [
         d.h("span", { class: "ea-ic" }, [d.icon("puzzle")]),
         d.h("b", null, "A .nullext file"),
-        d.h("span", { class: "ea-note" }, "Full power. A JSON manifest with an optional css and js block, or a plain .js file that becomes the code."),
+        d.h("span", { class: "ea-note" }, "Full power. A JSON manifest with an optional css and js block, or a plain .js file that becomes the code. Save the starters below and pick one here."),
         btn("Choose a file", "upload", "btn-primary", function () {
           nulInput.click();
         }),
@@ -293,27 +357,29 @@
     installHost.appendChild(chromeInput);
   }
 
-  /* ---------- the format, and a starter ---------- */
-  /* The starter is a working extension rather than a hello world: it puts a
-     live period clock in the nav bar on every page, ships its own window in
-     the manifest, and adds a page. Read it, change it, keep it. */
+  /* ---------- the two starters ----------
+     Working extensions rather than hello worlds, so there is something real
+     to read and take apart. The first reads the site's own schedule and lives
+     in the nav bar; the second is one complete page with no JavaScript at
+     all. Both are plain JSON with a css block. */
   function starter() {
     return JSON.stringify(
       {
         nullExt: 1,
         name: "Period clock",
-        version: "1.0.0",
+        version: "1.1.0",
         author: "you",
-        desc: "Shows the period you are in and how long is left, in the nav and in its own window.",
+        desc: "Shows the period you are in and the time left, in the nav bar and in its own window. Ticks every second.",
         icon: "clock",
         css: [
-          "/* injected on every page the extension runs on */",
+          "/* injected on every page this extension runs on */",
           ".pc-chip {",
           "  display: flex;",
           "  align-items: center;",
           "  gap: 7px;",
           "  height: 34px;",
-          "  padding: 0 10px;",
+          "  max-width: 100%;",
+          "  padding: 0 11px;",
           "  border-radius: 10px;",
           "  border: 1px solid var(--line);",
           "  background: var(--glass-bg-2);",
@@ -323,47 +389,54 @@
           "  overflow: hidden;",
           "}",
           ".pc-dot { width: 7px; height: 7px; border-radius: 99px; background: var(--ac-1); flex: none; }",
-          ".pc-win { padding: 2px 2px 6px; }"
+          ".pc-txt { overflow: hidden; text-overflow: ellipsis; }",
+          "/* in the side rail the words carry data-rail-hide, so NULL drops them",
+          "   while the rail is shut and slides them back on hover. Only the pill",
+          "   size needs saying here. */",
+          "@media (min-width: 1100px) {",
+          "  html[data-nav=\"side\"] .pc-chip { height: 38px; padding: 0 8px; }",
+          "}",
+          ".pc-win { padding: 2px 2px 6px; }",
+          ".pc-win p { margin: 0 0 6px; }",
+          ".pc-page { margin: 0; }",
         ].join("\n"),
         html: [
           "<div class=\"pc-win\">",
           "  <b>Period clock</b>",
-          "  <p id=\"pc-now\">Looking at the schedule...</p>",
+          "  <p id=\"pc-now\">looking at the schedule...</p>",
           "  <p id=\"pc-next\" style=\"color:var(--text-2)\"></p>",
-          "</div>"
+          "</div>",
         ].join("\n"),
         js: [
           "/* A .nullext is JavaScript with the run of the site: N is the whole",
           "   app, ctx is the friendly surface. ctx.mount('nav', html) puts your",
-          "   own markup into the bar every page has. */",
-          "var box = ctx.mount('nav', '<span class=\"pc-chip\"><i class=\"pc-dot\"></i><span>period clock</span></span>');",
-          "var chip = box ? box.querySelector('.pc-chip span:last-child') : null;",
+          "   own markup into the bar that every page has. */",
+          "var box = ctx.mount('nav',",
+          "  '<span class=\"pc-chip\"><i class=\"pc-dot\"></i><span class=\"pc-txt\" data-rail-hide>period clock</span></span>');",
+          "var chipTxt = box ? box.querySelector('.pc-txt') : null;",
           "",
+          "/* read the schedule defensively: the player and the hidden pages keep",
+          "   it lean, and one thrown error stops the whole extension */",
           "function now() {",
           "  var S = N.schedule;",
-          "  var type = S.weekType(new Date().getDay());",
-          "  if (!type) return { title: 'No school today', sub: '' };",
-          "  var blocks = S.blocksFor(type);",
-          "  var lv = S.live(blocks, new Date());",
-          "  if (!lv.block) return { title: 'Between periods', sub: '' };",
-          "  var secs = lv.passing ? lv.secToNext : lv.secLeft;",
-          "  var m = Math.floor(secs / 60);",
-          "  var s = secs % 60;",
-          "  var left = m + ':' + (s < 10 ? '0' : '') + s;",
+          "  if (!S) return { title: 'no schedule here', sub: '' };",
+          "  var t = S.todayInfo();",
+          "  if (!t || !t.type) return { title: 'no school today', sub: (t && t.dayName) || '' };",
+          "  var lv = S.live(S.blocksFor(t.type), new Date());",
+          "  if (!lv.block) return { title: 'after school', sub: '' };",
+          "  var secs = Math.max(0, lv.passing ? lv.secToNext : lv.secLeft);",
           "  return {",
-          "    title: (lv.passing ? 'Passing' : lv.block.name) + ' · ' + left,",
-          "    sub: lv.next ? 'Next: ' + lv.next.name + ' at ' + lv.next.start : ''",
+          "    title: (lv.passing ? 'passing' : lv.block.name) + ' · ' + Math.floor(secs / 60) + ':' + ('0' + (secs % 60)).slice(-2),",
+          "    sub: lv.next ? 'next: ' + lv.next.name + ' at ' + lv.next.start : 'last period of the day',",
           "  };",
           "}",
           "",
           "function paint() {",
           "  var n = now();",
-          "  if (chip) chip.textContent = n.title;",
-          "  var w = document.querySelector('.pc-win');",
-          "  if (!w) return;",
-          "  var lead = w.querySelector('#pc-now');",
-          "  var nx = w.querySelector('#pc-next');",
+          "  if (chipTxt) chipTxt.textContent = n.title;",
+          "  var lead = document.querySelector('.pc-win #pc-now');",
           "  if (lead) lead.textContent = n.title;",
+          "  var nx = document.querySelector('.pc-win #pc-next');",
           "  if (nx) nx.textContent = n.sub;",
           "}",
           "",
@@ -371,22 +444,23 @@
           "   open: popup:open hands you the element to fill */",
           "ctx.hook('popup:open', paint);",
           "paint();",
-          "setInterval(paint, 15000);",
+          "setInterval(paint, 1000); /* once a second: the countdown is live */",
           "",
-          "/* a page of your own, mounted on the Extensions page */",
+          "/* a page of your own. It opens as a full page, with its own address",
+          "   (#page=...) and a Back button, from the Pages section above. */",
           "ctx.page({",
           "  title: 'Period clock',",
           "  icon: 'clock',",
           "  desc: 'The live period, the same thing the chip shows.',",
-          "  html: '<p class=\"pc-page\">Reading the schedule...</p>',",
+          "  html: '<p class=\"pc-page\">reading the schedule...</p>',",
           "  mount: function (el) {",
           "    var out = el.querySelector('.pc-page');",
           "    function tick() {",
           "      var n = now();",
-          "      if (out) out.textContent = n.title + (n.sub ? ' - ' + n.sub : '');",
+          "      if (out) out.textContent = n.title + (n.sub ? ' · ' + n.sub : '');",
           "    }",
           "    tick();",
-          "    setInterval(tick, 15000);",
+          "    setInterval(tick, 1000);",
           "  },",
           "});",
           "",
@@ -394,8 +468,121 @@
           "ctx.hook('coins:earn', function (info) {",
           "  ctx.log('coins now', info.total);",
           "});",
-          "ctx.toast(ctx.name + ' is in your nav');",
+          "",
+          "/* say hello once, not on every page load: ctx.store keeps a note */",
+          "if (!ctx.store.get('greeted')) {",
+          "  ctx.store.set('greeted', 1);",
+          "  ctx.toast(ctx.name + ' is in your nav');",
+          "}",
         ].join("\n"),
+      },
+      null,
+      2,
+    );
+  }
+
+  function starterPage() {
+    return JSON.stringify(
+      {
+        nullExt: 1,
+        name: "Starter page",
+        version: "1.0.0",
+        author: "you",
+        desc: "Adds one whole page to NULL: a hero, a stat row and a card grid, drawn by its own CSS.",
+        icon: "file",
+        css: [
+          "/* one namespace, so nothing here can hit another page */",
+          ".sp { display: flex; flex-direction: column; gap: 24px; }",
+          ".sp-hero {",
+          "  padding: clamp(22px, 4vw, 40px);",
+          "  border-radius: var(--r-xl);",
+          "  border: 1px solid var(--line);",
+          "  background:",
+          "    radial-gradient(120% 140% at 12% 0%, color-mix(in srgb, var(--ac-1) 16%, transparent), transparent 62%),",
+          "    var(--glass-bg);",
+          "}",
+          ".sp-eyebrow {",
+          "  display: inline-block;",
+          "  margin-bottom: 10px;",
+          "  font-size: 11px;",
+          "  font-weight: 700;",
+          "  letter-spacing: 0.18em;",
+          "  text-transform: uppercase;",
+          "  color: var(--text-2);",
+          "}",
+          ".sp h1 { margin: 0 0 12px; font-size: clamp(26px, 4.6vw, 42px); letter-spacing: -0.03em; }",
+          ".sp-lead { max-width: 66ch; margin: 0 0 18px; font-size: 15.5px; line-height: 1.65; color: var(--text-2); }",
+          ".sp-cta { display: flex; gap: 10px; flex-wrap: wrap; }",
+          ".sp-stats { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }",
+          ".sp-stat { padding: 16px 18px; border-radius: var(--r-lg); border: 1px solid var(--line); background: var(--glass-bg-2); }",
+          ".sp-stat b { display: block; font-size: 28px; letter-spacing: -0.03em; }",
+          ".sp-stat span { font-size: 12.5px; color: var(--text-2); }",
+          ".sp-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }",
+          ".sp-card { padding: 18px; border-radius: var(--r-lg); border: 1px solid var(--line); background: var(--glass-bg); transition: border-color 0.2s, transform 0.2s; }",
+          ".sp-card:hover { border-color: var(--line-2); transform: translateY(-2px); }",
+          ".sp-ic {",
+          "  display: grid;",
+          "  place-items: center;",
+          "  width: 32px;",
+          "  height: 32px;",
+          "  margin-bottom: 12px;",
+          "  border-radius: 9px;",
+          "  border: 1px solid var(--line-2);",
+          "  background: var(--glass-bg-3);",
+          "  color: var(--ac-1);",
+          "}",
+          ".sp-card b { display: block; font-size: 14.5px; margin-bottom: 6px; }",
+          ".sp-card p { margin: 0; font-size: 13.5px; line-height: 1.6; color: var(--text-2); }",
+          ".sp-note {",
+          "  padding: 18px;",
+          "  border-radius: var(--r-lg);",
+          "  border: 1px solid color-mix(in srgb, var(--ac-1) 30%, var(--line));",
+          "  background: color-mix(in srgb, var(--ac-1) 8%, var(--glass-bg));",
+          "}",
+          ".sp-note p { margin: 6px 0 0; font-size: 13.5px; line-height: 1.6; color: var(--text-2); }",
+        ].join("\n"),
+        /* pages declared in the manifest are views this extension adds. Each
+           one opens as its own full page and deep-links through #page=<id>. */
+        pages: [
+          {
+            id: "home",
+            title: "My page",
+            icon: "file",
+            desc: "A full page built from nothing but HTML and CSS.",
+            html: [
+              "<div class=\"sp\">",
+              "  <header class=\"sp-hero\">",
+              "    <span class=\"sp-eyebrow\">a page from an extension</span>",
+              "    <h1>Hello from my extension</h1>",
+              "    <p class=\"sp-lead\">This whole page is one block of HTML in a .nullext file: no build step, no server, no framework. Write it, drop it in, and it is part of NULL.</p>",
+              "    <div class=\"sp-cta\">",
+              "      <a class=\"btn btn-primary\" href=\"games/\">Browse games</a>",
+              "      <a class=\"btn btn-outline\" href=\"settings\">Open settings</a>",
+              "    </div>",
+              "  </header>",
+              "",
+              "  <div class=\"sp-stats\">",
+              "    <div class=\"sp-stat\"><b>3</b><span>blocks on this page</span></div>",
+              "    <div class=\"sp-stat\"><b>0</b><span>lines of JavaScript</span></div>",
+              "    <div class=\"sp-stat\"><b>1</b><span>.nullext file</span></div>",
+              "  </div>",
+              "",
+              "  <div class=\"sp-grid\">",
+              "    <div class=\"sp-card\"><span class=\"sp-ic\">◆</span><b>Real HTML</b><p>Headings, lists, tables, buttons. Anything a browser draws, you can put here.</p></div>",
+              "    <div class=\"sp-card\"><span class=\"sp-ic\">●</span><b>Your own CSS</b><p>The css block is injected on every page, so your classes work everywhere.</p></div>",
+              "    <div class=\"sp-card\"><span class=\"sp-ic\">◇</span><b>The site's tokens</b><p>Use var(--ac-1), var(--glass-bg) and friends and this page follows the theme, the pack and light mode.</p></div>",
+              "    <div class=\"sp-card\"><span class=\"sp-ic\">◈</span><b>Zero wiring</b><p>No JavaScript at all. The page is declared in the manifest and mounted when you open it.</p></div>",
+              "  </div>",
+              "",
+              "  <div class=\"sp-note\">",
+              "    <b>Where this lives</b>",
+              "    <p>Open it from the Pages section on the Extensions page, or deep-link straight to it: the address ends in #page=starter-page:home. Nothing else in NULL had to change.</p>",
+              "  </div>",
+              "</div>",
+            ].join("\n"),
+          },
+        ],
+        js: "ctx.log(ctx.name + ' is ready: its page is in the Pages section above.');",
       },
       null,
       2,
@@ -414,71 +601,280 @@
     }, 4000);
   }
 
+  /* ---------- the manual ---------- */
+  function docBox(icon, title, open) {
+    var el = d.h("details", { class: "ext-doc glass" });
+    if (open) el.setAttribute("open", "");
+    el.appendChild(d.h("summary", null, [d.icon(icon), title]));
+    return el;
+  }
+  function codeBlock(text) {
+    var p = d.h("pre", { class: "ext-pre" });
+    p.textContent = text;
+    return p;
+  }
+  function docList(items, cols) {
+    var ul = d.h("ul", { class: "ext-list" + (cols ? " cols" : "") });
+    items.forEach(function (t) {
+      ul.appendChild(d.h("li", null, t));
+    });
+    return ul;
+  }
+  function steps(items) {
+    var ol = d.h("ol", { class: "ext-steps" });
+    items.forEach(function (t) {
+      ol.appendChild(d.h("li", null, t));
+    });
+    return ol;
+  }
+  /* one content type: a live sample over the snippet that made it */
+  function sample(title, html, code) {
+    var box = d.h("div", { class: "ext-ex" });
+    box.appendChild(d.h("div", { class: "ext-ex-head" }, title));
+    box.appendChild(d.h("div", { class: "ext-ex-demo", html: html }));
+    box.appendChild(codeBlock(code));
+    return box;
+  }
+  /* the CSS tokens, each with the swatch that proves it is the real thing */
+  function tokenTile(token, label) {
+    var sw = d.h("i");
+    sw.style.background = "var(" + token + ")";
+    return d.h("span", { class: "ext-token" }, [sw, d.h("code", null, token), label]);
+  }
+  function api(items) {
+    var box = d.h("div", { class: "ext-api" });
+    items.forEach(function (t) {
+      var parts = t.split("  ");
+      box.appendChild(d.h("div", null, [d.h("code", null, parts[0]), parts.slice(1).join("  ")]));
+    });
+    return box;
+  }
+
   function docs() {
     docHost.textContent = "";
-    docHost.appendChild(d.secHead("book", "Writing one", "the format, and everything it can reach"));
+    docHost.appendChild(d.secHead("book", "Writing one", "from an empty file to your own page, in full"));
 
-    var read = d.h("details", { class: "ext-doc glass", open: true });
-    read.appendChild(
-      d.h("summary", null, [d.icon("file"), "The .nullext format"]),
+    /* ---------- 1. the walkthrough ---------- */
+    var start = docBox("tip", "Start here: your first extension", true);
+    start.appendChild(
+      d.h("p", { class: "ext-note" }, "You do not need an account, a build step or any tooling. A .nullext is one text file."),
     );
-    var pre = d.h("pre", { class: "ext-pre" });
-    pre.textContent = starter();
-    read.appendChild(pre);
-    read.appendChild(
+    start.appendChild(
+      steps([
+        "Open any plain text editor (Notepad, TextEdit, VS Code, anything).",
+        "Copy one of the two starters below and paste it in.",
+        "Save it with a .nullext ending: my-extension.nullext. If the editor adds .txt, rename it.",
+        "Come back here, press Choose a file under A .nullext file, and pick it.",
+        "It appears in the list above and in the puzzle menu. That is the whole install.",
+      ]),
+    );
+    start.appendChild(
+      d.h("p", { class: "ext-note" }, "To change it, edit the file and install it again with the same name: the new copy replaces the old one. Nothing needs a rebuild, and nothing is uploaded anywhere."),
+    );
+    start.appendChild(
       d.h("div", { class: "ext-doc-acts" }, [
-        btn("Download this as a starter", "download", "btn-primary", function () {
-          download(starter(), "my-extension.nullext");
+        btn("Download the period clock", "download", "btn-primary", function () {
+          download(starter(), "period-clock.nullext");
+        }),
+        btn("Download the starter page", "download", "btn-outline", function () {
+          download(starterPage(), "starter-page.nullext");
         }),
       ]),
     );
+
+    docHost.appendChild(start);
+
+    /* ---------- 2. the format ---------- */
+    var read = docBox("file", "The .nullext format");
+    read.appendChild(codeBlock(starter()));
+    read.appendChild(
+      d.h("p", { class: "ext-note" }, "That is the period clock above, whole. Every field is optional except a name: leave the ones you do not need out."),
+    );
+    read.appendChild(
+      docList([
+        "name, version, author, desc: what the manager and the puzzle menu call it.",
+        "icon: one of NULL's icon names (clock, grid, file, code, zap, puzzle, star, heart...).",
+        "css: text injected as a stylesheet on every page the extension runs on.",
+        "js: the code. It runs on every page, and it gets N and ctx in scope.",
+        "html: markup for a window of your own, opened from the puzzle menu or its card.",
+        "pages: [{ id, title, icon, desc, html }] adds pages, each one a full page of its own.",
+        "nav: [{ title, icon, url }] adds links to the puzzle menu.",
+        "run: \"always\" (default, runs on every page) or \"manual\" (only when you press Run again).",
+      ]),
+    );
+    read.appendChild(
+      d.h("p", { class: "ext-note" }, "A plain .js file works too: pick one at the installer and the whole file becomes the code, with the name taken from the filename. That is the quickest possible extension."),
+    );
     docHost.appendChild(read);
 
-    /* HTML, which is the half people miss: a .nullext can be a window, a
-       page, and a strip of chrome in the nav, all from the same file */
-    var htm = d.h("details", { class: "ext-doc glass" });
-    htm.appendChild(d.h("summary", null, [d.icon("grid"), "HTML: windows, pages and nav widgets"]));
-    var hul = d.h("ul", { class: "ext-list" });
+    /* the second starter, in full: one whole page and not a line of JS */
+    var wholePage = docBox("file", "A whole page, from one file");
+    wholePage.appendChild(
+      d.h("p", { class: "ext-note" }, "The starter page is the other half of the idea: the pages field adds real pages to NULL, and each one opens full-width with its own address. This file is HTML and CSS only."),
+    );
+    wholePage.appendChild(codeBlock(starterPage()));
+    wholePage.appendChild(
+      d.h("div", { class: "ext-doc-acts" }, [
+        btn("Download the starter page", "download", "btn-primary", function () {
+          download(starterPage(), "starter-page.nullext");
+        }),
+      ]),
+    );
+    docHost.appendChild(wholePage);
+
+    /* ---------- 3. the ctx surface ---------- */
+    var apiBox = docBox("code", "What ctx gives you");
+    apiBox.appendChild(
+      d.h("p", { class: "ext-note" }, "N is the entire app and always in scope. ctx is the tidy surface on top of it, so you rarely need to reach further."),
+    );
+    apiBox.appendChild(
+      api([
+        "ctx.N  the whole app: every system, exactly as the site uses it",
+        "ctx.mount(where, html)  drop your own markup into 'nav', 'footer' or 'extensions'",
+        "ctx.slot(where)  the mount point itself, if you would rather build nodes yourself",
+        "ctx.css(text)  inject or replace your stylesheet at runtime",
+        "ctx.js(code)  run another block of code",
+        "ctx.page({title, icon, desc, html, mount})  add a page; mount runs once it is on screen",
+        "ctx.hook(name, fn) / ctx.unhook(name, fn)  listen for a core event",
+        "ctx.emit(name, data)  fire a hook other extensions can hear",
+        "ctx.store.get/set/del/load/save  your own storage, namespaced away from everyone else",
+        "ctx.prefs.get(k) / set(k, v)  saved in NULL's preferences, so backups pick them up",
+        "ctx.econ  coins, XP, streaks, unlocks. ctx.theme  packs, particles, glow, layout.",
+        "ctx.search, ctx.player, ctx.daily, ctx.eggs, ctx.dev, ctx.editor, ctx.modal, ctx.fx",
+        "ctx.toast(msg) / ctx.say(title, body)  tell the person something",
+        "ctx.log(...)  console.log with your extension's id in front",
+        "ctx.unmount()  take back everything you put in the chrome",
+      ]),
+    );
+    docHost.appendChild(apiBox);
+
+    /* ---------- 4. the content types ---------- */
+    var looks = docBox("sparkle", "Style: the pieces you can use");
+    looks.appendChild(
+      d.h("p", { class: "ext-note" }, "NULL's classes are plain CSS, so an extension can use them like anyone else. Every sample below is live: that is the real element, not a picture of one. Press a snippet to read it."),
+    );
+
+    looks.appendChild(
+      sample(
+        "Text",
+        "<h1>Big heading</h1><h2>Section heading</h2><p>Body text, at the site's own size and colour. The quieter grey is <code>var(--text-2)</code>.</p>",
+        "<h1>Big heading</h1>\n<h2>Section heading</h2>\n<p>Body text.</p>",
+      ),
+    );
+    looks.appendChild(
+      sample(
+        "Buttons",
+        "<button class=\"btn btn-primary\">Primary</button><button class=\"btn btn-outline\">Outline</button><button class=\"btn btn-ghost\">Ghost</button><button class=\"btn btn-outline-danger\">Danger</button><button class=\"btn btn-outline btn-sm\">Small</button>",
+        "<button class=\"btn btn-primary\">Primary</button>\n<button class=\"btn btn-outline\">Outline</button>\n<button class=\"btn btn-ghost\">Ghost</button>\n<button class=\"btn btn-outline-danger\">Danger</button>\n<button class=\"btn btn-outline btn-sm\">Small</button>",
+      ),
+    );
+    looks.appendChild(
+      sample(
+        "Chips and status",
+        "<span class=\"chip\">Label</span><span class=\"chip chip-btn\">Clickable</span><span class=\"chip ok\">Ready</span><span class=\"chip warn\">Soon</span><span class=\"chip bad\">Off</span><span class=\"chip accent\">New</span>",
+        "<span class=\"chip\">Label</span>\n<span class=\"chip chip-btn\">Clickable</span>\n<span class=\"chip ok\">Ready</span>\n<span class=\"chip warn\">Soon</span>\n<span class=\"chip bad\">Off</span>\n<span class=\"chip accent\">New</span>",
+      ),
+    );
+    looks.appendChild(
+      sample(
+        "Surfaces",
+        "<div class=\"panel\">A panel: glass background, border, rounded corners, padding.</div><div class=\"glass\" style=\"padding:14px 16px;border-radius:var(--r-lg)\">A bare .glass surface, when you want your own padding.</div>",
+        "<div class=\"panel\">A panel</div>\n<div class=\"glass\" style=\"padding:14px 16px;border-radius:var(--r-lg)\">A surface</div>",
+      ),
+    );
+    looks.appendChild(
+      sample(
+        "A field",
+        "<span class=\"field\" style=\"width:min(240px,100%)\"><input type=\"text\" placeholder=\"Type something\"></span><span class=\"field\" style=\"width:min(240px,100%)\"><textarea rows=\"2\" placeholder=\"Longer text\"></textarea></span>",
+        "<span class=\"field\">\n  <input type=\"text\" placeholder=\"Type something\">\n</span>\n<span class=\"field\">\n  <textarea rows=\"2\" placeholder=\"Longer text\"></textarea>\n</span>",
+      ),
+    );
+    looks.appendChild(
+      sample(
+        "Code",
+        "<code>var x = 1;</code><pre style=\"margin:0;width:100%;padding:12px 14px;border-radius:var(--r-md);border:1px solid var(--line);background:var(--bg);font-size:12px\">function hello() {\n  return 'hi';\n}</pre>",
+        "<code>var x = 1;</code>\n\n<pre>function hello() {\n  return 'hi';\n}</pre>",
+      ),
+    );
+    looks.appendChild(
+      sample(
+        "Lists and a table",
+        "<ul style=\"margin:0;line-height:1.8\"><li>First thing</li><li>Second thing</li></ul><table style=\"width:100%;border-collapse:collapse;font-size:13px\"><tr><th style=\"text-align:left;padding:6px 10px;border-bottom:1px solid var(--line)\">Period</th><th style=\"text-align:left;padding:6px 10px;border-bottom:1px solid var(--line)\">Room</th></tr><tr><td style=\"padding:6px 10px\">1</td><td style=\"padding:6px 10px\">B12</td></tr></table>",
+        "<ul><li>First thing</li><li>Second thing</li></ul>\n\n<table>\n  <tr><th>Period</th><th>Room</th></tr>\n  <tr><td>1</td><td>B12</td></tr>\n</table>",
+      ),
+    );
+    looks.appendChild(
+      sample(
+        "A note in a state colour",
+        "<div style=\"width:100%;padding:14px 16px;border-radius:var(--r-lg);border:1px solid color-mix(in srgb,var(--ok) 34%,var(--line));background:var(--ok-bg);font-size:13px\">Something went right. Swap --ok for --warn or --bad.</div>",
+        "<div class=\"my-note\">Something went right.</div>\n\n.my-note {\n  padding: 14px 16px;\n  border-radius: var(--r-lg);\n  border: 1px solid color-mix(in srgb, var(--ok) 34%, var(--line));\n  background: var(--ok-bg);\n}",
+      ),
+    );
+
+    looks.appendChild(
+      d.h("p", { class: "ext-note" }, "Every colour, border and corner on the site is a token. Use these instead of hard-coded values and your extension follows light mode, the seasonal theme and every shop pack for free."),
+    );
+    var tiles = d.h("div", { class: "ext-token-grid" });
     [
-      "html: the extension's own window, opened from the puzzle menu or its card here",
-      "pages: [{ id, title, icon, desc, html }] adds views, each mountable as a panel",
-      "nav: [{ title, icon, url }] adds links to the puzzle menu",
-      "ctx.mount('nav', html) drops your own markup into the bar on every page",
-      "ctx.page({ html, mount }) registers a view whose markup needs code behind it",
-      "ctx.hook('popup:open', fn) fires with the element when your window opens",
-      "ctx.slot(where) hands you the mount point itself, if you would rather not use mount()",
+      ["--bg", "page background"],
+      ["--glass-bg", "card surface"],
+      ["--glass-bg-2", "second surface"],
+      ["--glass-bg-3", "raised chip"],
+      ["--line", "hairline border"],
+      ["--line-2", "stronger border"],
+      ["--text", "body text"],
+      ["--text-2", "quieter text"],
+      ["--ac-1", "the accent"],
+      ["--ac-2", "accent, softer"],
+      ["--ok", "good"],
+      ["--warn", "careful"],
+      ["--bad", "error"],
+      ["--r-lg", "corner radius"],
+      ["--shadow-1", "soft shadow"],
+      ["--ease", "the site's easing"],
     ].forEach(function (t) {
-      hul.appendChild(d.h("li", null, t));
+      tiles.appendChild(tokenTile(t[0], t[1]));
     });
-    htm.appendChild(hul);
+    looks.appendChild(tiles);
+    docHost.appendChild(looks);
+
+    /* ---------- 5. nav, windows, pages ---------- */
+    var htm = docBox("grid", "Nav widgets, windows and pages");
     htm.appendChild(
-      d.h("p", { class: "ext-note" }, "The starter below is a working one: a period clock that reads the site's own schedule, lives in the nav bar and opens a window of its own."),
+      docList([
+        "ctx.mount('nav', html) drops your own markup into the bar every page has. It is a row in the top bar and a column in the side rail.",
+        "In the rail, mark the text with data-rail-hide: NULL drops it while the rail is shut and slides it back on hover, so your widget shrinks to an icon instead of getting sliced.",
+        "mount('topbar', html) is the same strip by another name. mount('footer', html) puts it in the footer instead.",
+        "html: \"...\" in the manifest is your own window, opened from the puzzle menu or your card here.",
+        "ctx.hook('popup:open', fn) fires with the element the moment that window opens, so its code can wire itself up.",
+        "pages: [{ id, title, icon, desc, html }] adds whole pages. Each opens as its own full page with a #page=... address you can share.",
+        "ctx.page({ html, mount }) is the same thing from code, for a page whose markup needs behaviour behind it.",
+        "ctx.slot(where) hands you the mount point itself, if you would rather build the nodes yourself.",
+      ]),
     );
     docHost.appendChild(htm);
 
-    var reach = d.h("details", { class: "ext-doc glass" });
-    reach.appendChild(d.h("summary", null, [d.icon("zap"), "What an extension can reach"]));
-    var ul = d.h("ul", { class: "ext-list" });
-    [
-      "the economy: coins, XP, streaks, every unlock and price",
-      "quests, achievements and the daily crate",
-      "storage keys, recents, favorites, the whole backup file",
-      "theme packs, particles, glow, seasons and the layout",
-      "the player, search, the dev console, marathon mode, the screensaver",
-      "modals, FX, toasts, hidden pages, the nav and this manager",
-      "the school schedule, so a widget can read the real bell times",
-      "and the DOM, because it is just a script on the page",
-    ].forEach(function (t) {
-      ul.appendChild(d.h("li", null, t));
-    });
-    reach.appendChild(ul);
+    /* ---------- 6. reach ---------- */
+    var reach = docBox("zap", "What an extension can reach");
+    reach.appendChild(
+      docList([
+        "the economy: coins, XP, streaks, every unlock and price",
+        "quests, achievements and the daily crate",
+        "storage keys, recents, favorites, the whole backup file",
+        "theme packs, particles, glow, seasons and the layout",
+        "the player, search, the dev console, marathon mode, the screensaver",
+        "modals, FX, toasts, hidden pages, the nav and this manager",
+        "the school schedule, so a widget can read the real bell times",
+        "and the DOM, because it is just a script on the page",
+      ]),
+    );
     reach.appendChild(
       d.h("p", { class: "ext-note" }, "Two dozen systems and one caveat: there is no sandbox. An extension that breaks something is a thing you uninstall, not something NULL can protect you from. That is the trade, and it is the one you asked for."),
     );
     docHost.appendChild(reach);
 
-    var hooks = d.h("details", { class: "ext-doc glass" });
-    hooks.appendChild(d.h("summary", null, [d.icon("code"), "Hooks you can listen to"]));
+    /* ---------- 7. hooks ---------- */
+    var hooks = docBox("code", "Hooks you can listen to");
     var hl = d.h("ul", { class: "ext-list cols" });
     (N.ext.EVENTS || []).forEach(function (t) {
       hl.appendChild(d.h("li", null, [d.h("code", null, t.split(" ")[0]), t.split(" ").slice(1).join(" ")]));
@@ -488,23 +884,45 @@
       d.h("p", { class: "ext-note" }, "ctx.hook(name, fn) returns the function, and ctx.unhook(name, fn) takes it off again. The same events are echoed onto N.bus as \"ext:<name>\"."),
     );
     docHost.appendChild(hooks);
+
+    /* ---------- 8. when it goes wrong ---------- */
+    var help = docBox("help", "When something goes wrong");
+    help.appendChild(
+      docList([
+        "Nothing installed: the file probably ends in .txt. Save it again as .nullext and pick it.",
+        "A red toast naming your extension: it threw. Read the message, fix that line, install the file again.",
+        "Want the full stack: open the dev console (type nldev, password mynameisblob123) and check the console.",
+        "Nothing shows up: js runs on page loads, so reload once after installing.",
+        "Stuck halfway: keep both starters open next to your file. They are the reference.",
+      ]),
+    );
+    docHost.appendChild(help);
   }
 
   /* ---------- boot ---------- */
   paint();
   installer();
   docs();
-  N.bus.on("ext", paint);
+  N.bus.on("ext", function () {
+    paint();
+    /* a page can be registered at boot, after this script has already run */
+    syncHash();
+  });
 
   /* #<id> highlights one extension, which is where the nav menu sends you */
   function focusHash() {
     var id = decodeURIComponent((location.hash || "").replace("#", ""));
-    if (!id) return;
+    if (!id || /^page=/.test(id)) return;
     var el = d.qs('[data-ext="' + id + '"]');
     if (!el) return;
     el.classList.add("hit");
     el.scrollIntoView({ block: "center", behavior: "smooth" });
   }
   focusHash();
-  window.addEventListener("hashchange", focusHash);
+  /* pages are registered on boot, so look for #page= just after this runs */
+  setTimeout(syncHash, 80);
+  window.addEventListener("hashchange", function () {
+    focusHash();
+    syncHash();
+  });
 })();

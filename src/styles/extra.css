@@ -703,11 +703,12 @@ html[data-perf] body.lb .toolbar.stuck {
    open on hover to show names. The page keeps its full height and the nav
    stops sitting on top of every page's first line.
 
-   Everything here hangs off html:not([data-nav="bar"]) inside one width
+   Everything here hangs off html[data-nav="side"] inside one width
    query, so the bar layout is still the whole story on a narrow screen and
-   the Settings switch (which writes data-nav="bar") undoes all of it. --nh
-   goes to zero with the rail: every offset on the site is written against
-   it, so the rail only has to move that one number and the pages follow.
+   the Settings switch (which writes data-nav="side") is the only way in.
+   --nh goes to zero with the rail: every offset on the site is written
+   against it, so the rail only has to move that one number and the pages
+   follow.
    ============================================================ */
 /* the top bar is icons only: the names the rail shows are in the markup but
    off the page there */
@@ -751,27 +752,27 @@ html[data-perf] body.lb .toolbar.stuck {
 }
 
 @media (min-width: 1100px) {
-  html:not([data-nav="bar"]) {
+  html[data-nav="side"] {
     --nh: 0px;
     --rail-w: 68px;
     --rail-w-open: 220px;
   }
-  html:not([data-nav="bar"]) .nav-link .nl-txt {
+  html[data-nav="side"] .nav-link .nl-txt {
     display: inline;
   }
   /* the puzzle menu is absolute, and the rail clips its own overflow, so in
      the rail it flies out beside it instead of hanging below the button */
-  html:not([data-nav="bar"]) .ext-nav.open .ext-menu {
+  html[data-nav="side"] .ext-nav.open .ext-menu {
     position: fixed;
     left: var(--rail-w);
     right: auto;
     top: max(96px, 16dvh);
     transform-origin: top left;
   }
-  html:not([data-nav="bar"]) body {
+  html[data-nav="side"] body {
     padding-left: var(--rail-w);
   }
-  html:not([data-nav="bar"]) .topbar {
+  html[data-nav="side"] .topbar {
     inset: 0 auto 0 0;
     width: var(--rail-w);
     height: 100dvh;
@@ -786,38 +787,47 @@ html[data-perf] body.lb .toolbar.stuck {
     z-index: 95;
     transition: width 0.24s var(--ease), box-shadow 0.24s var(--ease);
   }
-  html:not([data-nav="bar"]) .topbar:hover,
-  html:not([data-nav="bar"]) .topbar:focus-within {
+  html[data-nav="side"] .topbar:hover,
+  html[data-nav="side"] .topbar:focus-within {
     width: var(--rail-w-open);
     box-shadow: 26px 0 70px -34px rgba(0, 0, 0, 0.95);
   }
   /* the labels are always in the markup; collapsed they are only invisible
      and clipped by the rail's own overflow, so opening it is one opacity
      fade with nothing to re-lay-out */
-  html:not([data-nav="bar"]) .brand-name,
-  html:not([data-nav="bar"]) .nav-link .nl-txt,
-  html:not([data-nav="bar"]) .searchbox .sb-txt {
+  html[data-nav="side"] .topbar .brand-name,
+  html[data-nav="side"] .nav-link .nl-txt,
+  html[data-nav="side"] .searchbox .sb-txt {
     opacity: 0;
     transition: opacity 0.16s;
   }
-  html:not([data-nav="bar"]) .topbar:hover .brand-name,
-  html:not([data-nav="bar"]) .topbar:hover .nav-link .nl-txt,
-  html:not([data-nav="bar"]) .topbar:hover .searchbox .sb-txt,
-  html:not([data-nav="bar"]) .topbar:focus-within .brand-name,
-  html:not([data-nav="bar"]) .topbar:focus-within .nav-link .nl-txt,
-  html:not([data-nav="bar"]) .topbar:focus-within .searchbox .sb-txt {
+  html[data-nav="side"] .topbar:hover .brand-name,
+  html[data-nav="side"] .topbar:hover .nav-link .nl-txt,
+  html[data-nav="side"] .topbar:hover .searchbox .sb-txt,
+  html[data-nav="side"] .topbar:focus-within .brand-name,
+  html[data-nav="side"] .topbar:focus-within .nav-link .nl-txt,
+  html[data-nav="side"] .topbar:focus-within .searchbox .sb-txt {
     opacity: 1;
   }
-  html:not([data-nav="bar"]) .brand {
-    padding: 4px 3px 12px;
+  /* the brand sits in the same column as the nav rows: same 12px inset and
+     same row height, so the NULL mark lines up with every icon under it
+     instead of hanging off to the left at its own size */
+  html[data-nav="side"] .topbar .brand {
+    height: 42px;
+    padding: 0 12px;
+    gap: 12px;
+    margin-bottom: 2px;
   }
-  html:not([data-nav="bar"]) .nav-links {
+  html[data-nav="side"] .topbar .brand-mark {
+    font-size: 21px;
+  }
+  html[data-nav="side"] .nav-links {
     flex-direction: column;
     align-items: stretch;
     gap: 3px;
     margin: 0;
   }
-  html:not([data-nav="bar"]) .nav-links .nav-link {
+  html[data-nav="side"] .nav-links .nav-link {
     width: 100%;
     height: 42px;
     padding: 0 12px;
@@ -826,17 +836,17 @@ html[data-perf] body.lb .toolbar.stuck {
     border-radius: 11px;
     white-space: nowrap;
   }
-  html:not([data-nav="bar"]) .nav-link .nl-txt {
+  html[data-nav="side"] .nav-link .nl-txt {
     font-size: 13.5px;
     font-weight: 600;
   }
   /* the active marker follows the rail: a bar down the left edge instead of
      a line under the icon */
-  html:not([data-nav="bar"]) .nav-link.on {
+  html[data-nav="side"] .nav-link.on {
     background: var(--glass-bg-2);
     box-shadow: inset 2px 0 0 var(--ac-1);
   }
-  html:not([data-nav="bar"]) .searchbox {
+  html[data-nav="side"] .searchbox {
     width: 100%;
     height: 40px;
     padding: 0 12px;
@@ -844,34 +854,55 @@ html[data-perf] body.lb .toolbar.stuck {
     gap: 12px;
     flex: none;
   }
-  html:not([data-nav="bar"]) .top-actions {
+  html[data-nav="side"] .top-actions {
     margin-top: auto;
     flex-direction: column;
     align-items: stretch;
     gap: 6px;
   }
-  html:not([data-nav="bar"]) .top-actions .btn-icon {
+  html[data-nav="side"] .top-actions .btn-icon {
     width: 100%;
     height: 40px;
     border-radius: 11px;
   }
   /* extension chrome: a rail column, whatever HTML the extension mounted */
-  html:not([data-nav="bar"]) [data-slot="nav"] {
+  html[data-nav="side"] [data-slot="nav"] {
     display: flex;
     flex-direction: column;
     align-items: stretch;
     gap: 4px;
     margin-top: 6px;
   }
-  html:not([data-nav="bar"]) [data-slot="nav"] > * {
+  html[data-nav="side"] [data-slot="nav"] > * {
     overflow: hidden;
+  }
+  /* a nav widget shrinks instead of getting sliced: centred while the rail
+     is shut, left-aligned once it slides open */
+  html[data-nav="side"] [data-slot="nav"] .ext-widget {
+    justify-content: center;
+  }
+  html[data-nav="side"] .topbar:hover [data-slot="nav"] .ext-widget,
+  html[data-nav="side"] .topbar:focus-within [data-slot="nav"] .ext-widget {
+    justify-content: flex-start;
+  }
+  /* an extension marks the parts that only fit while the rail is open. Keep
+     it on a plain inline element (a <span>) so the shorthand can swap it in
+     and out without fighting a display rule of its own. */
+  html[data-nav="side"] [data-slot="nav"] [data-rail-hide] {
+    display: none;
+  }
+  html[data-nav="side"] .topbar:hover [data-slot="nav"] [data-rail-hide],
+  html[data-nav="side"] .topbar:focus-within [data-slot="nav"] [data-rail-hide] {
+    display: inline;
   }
   /* the reading progress line hangs off the top of the page, which is now
      the top of the content column, not of the window */
-  html:not([data-nav="bar"]) .read-bar {
+  html[data-nav="side"] .read-bar {
     left: var(--rail-w);
   }
-  html:not([data-nav="bar"]) .skip-link {
+  /* the skip link has to stay off the page until it is focused: only the
+     focus position changes in the rail, not the resting one */
+  html[data-nav="side"] .skip-link:focus {
     left: calc(var(--rail-w) + 12px);
   }
 }
@@ -1235,11 +1266,11 @@ html[data-perf] body.lb .toolbar.stuck {
 
 /* a compact rail on a short window: same idea, tighter rows */
 @media (min-width: 1100px) and (max-height: 700px) {
-  html:not([data-nav="bar"]) .nav-links .nav-link {
+  html[data-nav="side"] .nav-links .nav-link {
     height: 36px;
   }
-  html:not([data-nav="bar"]) .brand {
-    padding-bottom: 8px;
+  html[data-nav="side"] .topbar .brand {
+    height: 38px;
   }
 }
 

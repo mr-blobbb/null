@@ -789,9 +789,11 @@
     else delete root.dataset.density;
     if (p.miniPerf) root.dataset.mini = "1";
     else delete root.dataset.mini;
-    /* nav layout: the side rail is the layout, and data-nav="bar" is the
-       whole opt-out (see the rail block in extra.css) */
-    if (p.navLayout === "bar") root.dataset.nav = "bar";
+    /* nav layout: the top bar is the layout and needs no attribute, so the
+       first paint before this script runs is already the default. The rail
+       is the whole opt-in (see the rail block in extra.css), which keeps a
+       saved preference from flashing the wrong nav on load. */
+    if (p.navLayout === "side") root.dataset.nav = "side";
     else delete root.dataset.nav;
     /* library filter layout: library.js reads this (and the ultrawide media
        query for "auto") and moves the chip row between the rail and the
@@ -911,7 +913,7 @@
       applyLayout();
     },
     setNavLayout: function (mode) {
-      N.prefs.set("navLayout", mode === "bar" ? "bar" : "side");
+      N.prefs.set("navLayout", mode === "side" ? "side" : "bar");
       applyLayout();
     },
     setLibNav: function (mode) {
@@ -954,6 +956,14 @@
     setPerf: setPerf,
     applyAll: applyAll,
   };
+
+  /* One-time: the nav's default moved to the top bar. Saved prefs from when
+     the rail was the default carried "side", so they get nudged over once.
+     The flag means a deliberate pick after that is never fought again. */
+  if (N.flags && !N.flags.get("navDefaultBar")) {
+    N.flags.set("navDefaultBar");
+    N.prefs.set("navLayout", "bar");
+  }
 
   N.theme.applyAll();
 })();

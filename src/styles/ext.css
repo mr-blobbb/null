@@ -504,6 +504,175 @@
 }
 
 /* ============================================================
+   a page an extension added, opened full
+   The manager's own blocks step aside and the page gets the whole column,
+   under a sticky bar with a way back. Same address bar, so it deep-links.
+   ============================================================ */
+main.ext-page-open > .page-head,
+main.ext-page-open > #extBody,
+main.ext-page-open > #extPages,
+main.ext-page-open > #extInstall,
+main.ext-page-open > #extDocs {
+  display: none;
+}
+.ext-page-view {
+  animation: epv-in 0.26s var(--ease) both;
+}
+@keyframes epv-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.epv-head {
+  position: sticky;
+  top: var(--nh);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+  padding: 10px 12px;
+  border-radius: var(--r-lg);
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--bg) 84%, transparent);
+  backdrop-filter: blur(14px);
+}
+.epv-ic {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--glass-bg-2);
+  border: 1px solid var(--line-2);
+  flex: none;
+}
+.epv-ic .msr {
+  font-size: 18px;
+  color: var(--ac-1);
+}
+.epv-txt {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.epv-txt b {
+  font-size: 15px;
+}
+.epv-txt span {
+  font-size: 12px;
+  color: var(--text-2);
+}
+.epv-body {
+  padding-bottom: 30px;
+}
+
+/* ============================================================
+   the manual: steps, one sample per content type, token tiles
+   ============================================================ */
+.ext-steps {
+  margin: 10px 0 0;
+  padding-left: 20px;
+  font-size: 13.5px;
+  line-height: 1.8;
+  color: var(--text-2);
+}
+.ext-steps li {
+  margin-bottom: 4px;
+}
+.ext-steps code {
+  color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+}
+.ext-ex {
+  margin-top: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  background: var(--glass-bg);
+}
+.ext-ex-head {
+  padding: 10px 14px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  border-bottom: 1px solid var(--line);
+}
+.ext-ex-demo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 14px;
+}
+.ext-ex-demo > h1,
+.ext-ex-demo > h2 {
+  width: 100%;
+}
+.ext-ex-demo p {
+  margin: 0;
+}
+.ext-ex .ext-pre {
+  margin: 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  max-height: 260px;
+}
+.ext-token-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  margin-top: 12px;
+}
+.ext-token {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line);
+  background: var(--glass-bg);
+  font-size: 12.5px;
+}
+.ext-token i {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  border: 1px solid var(--line-2);
+  flex: none;
+}
+.ext-token code {
+  font-size: 11.5px;
+  color: var(--text-2);
+}
+.ext-api {
+  margin: 10px 0 0;
+  display: grid;
+  gap: 6px;
+}
+.ext-api div {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-2);
+}
+.ext-api code {
+  color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  margin-right: 7px;
+}
+
+/* ============================================================
    the Labs page
    ============================================================ */
 .lab-note {

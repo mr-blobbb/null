@@ -128,7 +128,7 @@
     smartTabMin: 5, // smart tab cloak: minutes between rotations
     density: "regular", // layout compactness: regular | comfy | spacious | compact
     miniPerf: false, // Mini-Perf: unload off-screen blocks, strip nothing
-    navLayout: "side", // "side": the hover-expand left rail, "bar": the top bar
+    navLayout: "bar", // "bar": the top bar (default), "side": the hover-expand left rail
     seasonVariant: null, // seasonal/holiday pick; null follows the calendar
     bgImage: "", // custom page background (Shop unlock): a URL or a data URL
     bgFit: "cover", // cover | contain | tile

@@ -139,7 +139,7 @@
   }
 
   function paintNavLayout() {
-    segPaint("#navSeg", N.prefs.get("navLayout") === "bar" ? "bar" : "side");
+    segPaint("#navSeg", N.prefs.get("navLayout") === "side" ? "side" : "bar");
   }
 
   function paintMini() {

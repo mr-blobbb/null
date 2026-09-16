@@ -888,6 +888,9 @@ return foot;
 
   function watchPeriodEnd() {
     if (!N.schedule || schedTimer) return;
+    /* the player and the hidden pages run without the site chrome: the
+       schedule is there for extension widgets, but no bells, no confetti */
+    if (document.body.classList.contains("no-chrome")) return;
     lastKey = blockKey();
     armBell();
     /* timers are throttled in a background tab, so never celebrate a bell

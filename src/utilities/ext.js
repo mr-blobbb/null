@@ -164,7 +164,12 @@
      the nav bar (the one bar every page has), the Extensions page's canvas,
      and the footer. An extension asks for one and owns everything it puts
      inside. Real HTML, because a .nullext is not sandboxed and has nothing
-     to hide from. */
+     to hide from.
+
+     The nav strip is a row in the top bar and a column in the side rail, and
+     the rail clips what does not fit. Text marked data-rail-hide is dropped
+     while the rail is shut and comes back when it slides open, so a widget
+     shrinks to its icon instead of being sliced in half. */
   var widgets = {};
   function slot(where) {
     if (where === "nav" || where === "topbar") return document.querySelector("[data-slot='nav']");
