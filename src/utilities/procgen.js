@@ -9,18 +9,6 @@
    downstream knows the difference, and there is no second theme system to
    keep in step.
 
-   Three things keep the output from being random junk:
-
-     · schemes   a base hue plus one of six relationships (analogous,
-                 complementary, split, triadic, monochrome, tetrad), which is
-                 what makes a palette look chosen rather than sampled
-     · contrast  accent colours are forced light-on-dark or dark-on-light for
-                 whichever theme is on, so text keeps its contrast against the
-                 page no matter what hue comes out
-     · the art   a borrowed backdrop is picked by hue family, so a green roll
-                 lands on the code rain and a magenta one on the grid, instead
-                 of a starfield behind everything
-
    Seeded: the same seed always rolls the same theme, which is what makes
    "share this seed" a thing you can actually do. */
 (function () {

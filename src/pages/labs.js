@@ -218,7 +218,11 @@
       d.h("p", { class: "ext-note", style: { marginTop: "0", marginBottom: "14px" } }, "Rolls a whole theme set: a four-colour palette, a tint, a backdrop picked to match the hue, drifting parts, and a particle set. It lands in the same place as the editor's own work, so a generated theme is editable, deletable and wears exactly like a bought one."),
     );
 
-    var seed = d.h("input", { class: "field", type: "text", value: rolled ? rolled.seed : String(Math.floor(Math.random() * 1e9)), placeholder: "seed" });
+    /* the seed field is a pin, not the next roll's source: leave it alone and
+       every Roll is a fresh random seed (the field updates to show what you
+       got). Type into it and Roll reuses exactly that seed, which is how you
+       reproduce a theme someone shared with you. */
+    var seed = d.h("input", { class: "field", type: "text", value: rolled ? String(rolled.seed) : "", placeholder: "random" });
     var scheme = d.h(
       "select",
       { class: "field" },
@@ -234,12 +238,23 @@
 
     var acts = d.h("div", { class: "ec-acts" }, [
       btn("Roll", "refresh", "btn-primary", function () {
-        rolled = N.gen.roll({ seed: seed.value, scheme: scheme.value || null });
+        /* a seed you typed yourself is worth honouring; otherwise the roll
+           picks a brand new one each time, so no two Rolls repeat */
+        var pinned = seed.value.trim();
+        if (!pinned) {
+          rolled = N.gen.roll({ seed: null, scheme: scheme.value || null });
+          seed.value = String(rolled.seed);
+        } else {
+          rolled = N.gen.roll({ seed: pinned, scheme: scheme.value || null });
+        }
         paintGen();
         d.toast("Rolled " + rolled.name);
       }),
       btn("Wear it", "check", "btn-outline", function () {
-        if (!rolled) rolled = N.gen.roll({ seed: seed.value, scheme: scheme.value || null });
+        if (!rolled) {
+          rolled = N.gen.roll({ seed: null, scheme: scheme.value || null });
+          seed.value = String(rolled.seed);
+        }
         if (!N.theme.craftOn()) {
           d.toast("The theme editor unlocks in the Shop first.", { type: "err" });
           return;
@@ -248,7 +263,10 @@
         d.toast(rolled.name + " is on");
       }),
       btn("Save, do not wear", "save", "btn-outline", function () {
-        if (!rolled) rolled = N.gen.roll({ seed: seed.value, scheme: scheme.value || null });
+        if (!rolled) {
+          rolled = N.gen.roll({ seed: null, scheme: scheme.value || null });
+          seed.value = String(rolled.seed);
+        }
         if (!N.theme.craftOn()) {
           d.toast("The theme editor unlocks in the Shop first.", { type: "err" });
           return;
@@ -266,7 +284,7 @@
     ]);
 
     var form = d.h("div", { class: "lab-row" }, [
-      d.h("div", { class: "lr-txt" }, [d.h("b", null, "Seed"), d.h("span", null, "The same seed always rolls the same theme, so a seed is worth pasting to someone.")]),
+      d.h("div", { class: "lr-txt" }, [d.h("b", null, "Seed"), d.h("span", null, "Blank means every roll is a fresh random one. Type a seed in and Roll replays exactly that theme, so a seed is worth pasting to someone.")]),
       d.h("span", { class: "lab-form" }, [seed, scheme]),
     ]);
 
@@ -276,7 +294,10 @@
     d.upgradeSelect(scheme);
     host.appendChild(acts);
 
-    if (!rolled) rolled = N.gen.roll({ seed: seed.value, scheme: scheme.value || null });
+    if (!rolled) {
+      rolled = N.gen.roll({ seed: null, scheme: scheme.value || null });
+      seed.value = String(rolled.seed);
+    }
     var info = d.h("div", { class: "gen-info" }, [
       d.h("b", null, rolled.name),
       d.h("span", null, rolled.tags.join(" · ") + " · seed " + rolled.seed),
