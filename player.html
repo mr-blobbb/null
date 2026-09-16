@@ -43,6 +43,9 @@
         <b id="pName">NULL</b>
         <span id="pKind">player</span>
       </div>
+      <!-- the player has no nav, but extension widgets still need somewhere
+           to live while a game is on screen (see ext.js's slot("nav")) -->
+      <div class="player-widgets" data-slot="nav"></div>
       <div class="player-coin" id="pCoin" title="NULL coins: earned by playing">
         <span data-icon="coin"></span><b id="pCoinVal">0</b>
       </div>

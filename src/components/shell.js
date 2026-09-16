@@ -815,11 +815,14 @@ return foot;
     confettiBusy = true;
     setTimeout(function () { confettiBusy = false; }, 2600);
     var ov = d.h("div", { class: "cf-ov", "aria-hidden": "true" });
-    /* golden confetti is a shop unlock: otherwise stay grayscale */
-    var cols =
-      N.econ && N.econ.isUnlocked("fx", "goldconfetti")
-        ? ["#ffd45e", "#ffb020", "#ffe9a8", "#f5c542", "#ffdf8a"]
-        : ["#f5f5f6", "#c9c9cf", "#a1a1aa", "#71717a", "#52525b"];
+    /* two shop unlocks decide the palette: rainbow beats gold, and without
+       either NULL stays grayscale */
+    var cols = ["#f5f5f6", "#c9c9cf", "#a1a1aa", "#71717a", "#52525b"];
+    if (N.econ && N.econ.isUnlocked("fx", "rainbowconfetti")) {
+      cols = ["#ff5f5f", "#ffa64d", "#ffd93d", "#6ee07a", "#4db8ff", "#b98cff", "#ff7ad9"];
+    } else if (N.econ && N.econ.isUnlocked("fx", "goldconfetti")) {
+      cols = ["#ffd45e", "#ffb020", "#ffe9a8", "#f5c542", "#ffdf8a"];
+    }
     for (var i = 0; i < 80; i++) {
       var p = d.h("span", { class: "cf-p" + (Math.random() < 0.5 ? " s" : "") });
       p.style.left = Math.random() * 100 + "%";

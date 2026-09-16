@@ -957,13 +957,5 @@
     applyAll: applyAll,
   };
 
-  /* One-time: the nav's default moved to the top bar. Saved prefs from when
-     the rail was the default carried "side", so they get nudged over once.
-     The flag means a deliberate pick after that is never fought again. */
-  if (N.flags && !N.flags.get("navDefaultBar")) {
-    N.flags.set("navDefaultBar");
-    N.prefs.set("navLayout", "bar");
-  }
-
   N.theme.applyAll();
 })();

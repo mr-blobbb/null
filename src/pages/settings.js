@@ -451,94 +451,28 @@
     d.toast(p ? "Wearing " + p.name : "Accent back to plain", { icon: p ? "pen" : "ban" });
   }
 
-  /* the recolour + edit + delete row that only your own set gets */
-  function craftTools(kind, p, strip) {
+  /* The edit + delete buttons your own pack or particle set gets. Nothing else
+     about the card changes: the palette, the tint and the follow-the-theme
+     toggle all live in the editor, which is where there is room for them, so a
+     crafted card sits in the grid exactly like every other theme. */
+  function craftBtns(kind, p) {
     var isPack = kind === "pack";
-    var colors = (p.colors || []).slice(0, 4);
-    var tint = (p.tint || ["#101016", "#08080b"]).slice(0, 2);
-    var box = d.h("div", { class: "craft-tools" });
-
-    function save() {
-      if (isPack) N.theme.craftPatch({ pack: { colors: colors.slice(), tint: tint.slice() } });
-      else N.theme.craftPatch({ part: { colors: colors.slice() } });
-      N.theme.craftApply();
-      if (strip) {
-        Array.prototype.forEach.call(strip.children, function (el, i) {
-          if (colors[i]) el.style.background = colors[i];
-        });
-      }
-    }
-
-    function pickRow(label, list, titles) {
-      var row = d.h("div", { class: "craft-row" }, d.h("span", { class: "cdot-lab" }, label));
-      list.forEach(function (c, i) {
-        row.appendChild(
-          d.colorDot(
-            c,
-            function (v) {
-              list[i] = v;
-              save();
-            },
-            { title: titles[i] },
-          ),
-        );
-      });
-      return row;
-    }
-
-    if (isPack || !p.mono) {
-      var names = ["Main colour", "Second colour", "Third colour", "Fourth colour"];
-      box.appendChild(pickRow(isPack ? "Palette" : "Colours", colors, names));
-    }
-    if (isPack) {
-      box.appendChild(pickRow("Tint", tint, ["Tint top", "Tint bottom"]));
-    }
-    if (!isPack) {
-      var sw = d.h("input", { type: "checkbox", checked: !!p.mono, "aria-label": "Follow the theme colours" });
-      sw.addEventListener("change", function () {
-        N.theme.craftPatch({ part: { mono: sw.checked } });
-        N.theme.craftApply();
-        d.toast(sw.checked ? "Particles follow the theme colours" : "Particles carry their own colours");
-        paintParts();
-      });
-      box.appendChild(
-        d.h("div", { class: "craft-row" }, [
-          d.h("span", { class: "cdot-lab" }, "Follow the theme"),
-          d.h("label", { class: "switch" }, [sw, d.h("span", { class: "track" })]),
-        ]),
+    function iconBtn(icon, label, cls, onClick) {
+      return d.h(
+        "button",
+        { type: "button", class: "btn " + cls + " btn-sm", title: label, "aria-label": label, onclick: onClick },
+        [d.icon(icon)],
       );
     }
-
-    var acts = d.h("div", { class: "craft-acts" });
-    acts.appendChild(
-      d.h(
-        "button",
-        {
-          type: "button",
-          class: "btn btn-outline btn-sm",
-          onclick: function () {
-            if (N.editor && N.editor.open) N.editor.open(refresh, isPack ? "theme" : "part");
-            else d.toast("The editor could not load here.", { type: "err" });
-          },
-        },
-        [d.icon("wrench"), "Edit"],
-      ),
-    );
-    acts.appendChild(
-      d.h(
-        "button",
-        {
-          type: "button",
-          class: "btn btn-outline-danger btn-sm",
-          onclick: function () {
-            deleteCraft(kind, p);
-          },
-        },
-        [d.icon("trash"), "Delete"],
-      ),
-    );
-    box.appendChild(acts);
-    return box;
+    return [
+      iconBtn("wrench", "Edit this " + (isPack ? "theme" : "particle set"), "btn-outline", function () {
+        if (N.editor && N.editor.open) N.editor.open(refresh, isPack ? "theme" : "part");
+        else d.toast("The editor could not load here.", { type: "err" });
+      }),
+      iconBtn("trash", "Delete this " + (isPack ? "theme" : "particle set"), "btn-outline-danger", function () {
+        deleteCraft(kind, p);
+      }),
+    ];
   }
 
   function deleteCraft(kind, p) {
@@ -575,7 +509,15 @@
       foot.appendChild(
         d.h("span", { class: "chip ok" }, [d.h("span", { class: "dot" }), p.free ? "Free" : p.crafted ? "Yours" : "Unlocked"]),
       );
-      foot.appendChild(
+      /* .shop-foot is space-between, so the chip keeps the left and this row
+         keeps the right: same foot, same height, same card as any theme */
+      var acts = d.h("div", { class: "craft-row" });
+      if (p.crafted) {
+        craftBtns("pack", p).forEach(function (b) {
+          acts.appendChild(b);
+        });
+      }
+      acts.appendChild(
         d.h(
           "button",
           {
@@ -588,6 +530,7 @@
           applied ? [d.icon("check"), "Applied"] : [d.icon("pen"), "Apply"],
         ),
       );
+      foot.appendChild(acts);
     } else {
       foot.appendChild(d.h("span", { class: "chip price-chip" }, [d.icon("coin"), String(p.price)]));
       foot.appendChild(d.h("a", { class: "btn btn-outline btn-sm", href: N.url("/shop") }, [d.icon("store"), "Shop"]));
@@ -603,7 +546,7 @@
     var card = d.h(
       "article",
       {
-        class: "shop-card pack-card glass" + (owned ? " owned" : " locked") + (applied ? " playing" : "") + (p.crafted ? " crafted" : ""),
+        class: "shop-card pack-card glass" + (owned ? " owned" : " locked") + (applied ? " playing" : ""),
       },
       [
         N.theme.packThumb(p, { lock: !owned }),
@@ -622,7 +565,6 @@
         foot,
       ],
     );
-    if (p.crafted) card.appendChild(craftTools("pack", p, strip));
     return card;
   }
 
@@ -661,7 +603,15 @@
       foot.appendChild(
         d.h("span", { class: "chip ok" }, [d.h("span", { class: "dot" }), p.free ? "Free" : p.crafted ? "Yours" : "Unlocked"]),
       );
-      foot.appendChild(
+      /* .shop-foot is space-between, so the chip keeps the left and this row
+         keeps the right: same foot, same height, same card as any theme */
+      var acts = d.h("div", { class: "craft-row" });
+      if (p.crafted) {
+        craftBtns("part", p).forEach(function (b) {
+          acts.appendChild(b);
+        });
+      }
+      acts.appendChild(
         d.h(
           "button",
           {
@@ -674,6 +624,7 @@
           applied ? [d.icon("check"), "Applied"] : [d.icon("pen"), "Apply"],
         ),
       );
+      foot.appendChild(acts);
     } else {
       foot.appendChild(d.h("span", { class: "chip price-chip" }, [d.icon("coin"), String(p.price)]));
       foot.appendChild(d.h("a", { class: "btn btn-outline btn-sm", href: N.url("/shop") }, [d.icon("store"), "Shop"]));
@@ -691,7 +642,7 @@
     var card = d.h(
       "article",
       {
-        class: "shop-card pack-card glass" + (owned ? " owned" : " locked") + (applied ? " playing" : "") + (p.crafted ? " crafted" : ""),
+        class: "shop-card pack-card glass" + (owned ? " owned" : " locked") + (applied ? " playing" : ""),
       },
       [
         N.theme.partThumb(p, { lock: !owned }),
@@ -710,7 +661,6 @@
         foot,
       ],
     );
-    if (p.crafted) card.appendChild(craftTools("part", p, strip));
     return card;
   }
 

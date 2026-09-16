@@ -374,6 +374,7 @@
   ];
   var FX = [
     { id: "goldconfetti", name: "Golden confetti", price: 30, desc: "Period-end confetti drops in gold instead of grayscale." },
+    { id: "rainbowconfetti", name: "Rainbow confetti", price: 60, desc: "Period-end confetti drops in every colour of the rainbow. Wins over golden if you own both." },
     { id: "customaccent", name: "Custom accent color", price: 80, desc: "Unlocks a color picker in Settings, so your accent can be any color at all." },
     { id: "custombg", name: "Custom background image", price: 100, desc: "Unlocks a background picture in Settings: paste a link or upload a file, then set how it fits, how far it dims behind the page and how soft it is." },
     { id: "editor", name: "Theme & particle editor", price: 150, desc: "Unlocks the editor in the Shop: build your own theme pack and particle set, pick the colours, tint, backdrop art and exactly what drifts through it." },
@@ -747,6 +748,28 @@
     });
   }
 
+  /* dev console: own every permanent shop item at once, coins untouched.
+     Timed boosts are skipped (they expire, they are not an unlock) and beta
+     games go through the same grant path so catalog.js picks them up. */
+  function unlockAll() {
+    var groups = { theme: THEMES, particle: PARTICLES, fx: FX };
+    var n = 0;
+    Object.keys(groups).forEach(function (type) {
+      groups[type].forEach(function (it) {
+        if (!it.price || isUnlocked(type, it.id)) return;
+        grant(type, it.id);
+        n++;
+      });
+    });
+    var betas = (window.NULL_CONTENT && window.NULL_CONTENT.betas) || [];
+    betas.forEach(function (b) {
+      if (isUnlocked("game", b.id)) return;
+      grant("game", b.id);
+      n++;
+    });
+    return n;
+  }
+
   /* dev console / debugging: unlock an item without spending coins, so a
      backdrop can be checked without grinding 20 hours of playtime first. */
   function grant(type, id) {
@@ -796,6 +819,7 @@
     bank: bank,
     buy: buy,
     grant: grant,
+    unlockAll: unlockAll,
     reload: reload,
     isUnlocked: isUnlocked,
     shopComplete: shopComplete,

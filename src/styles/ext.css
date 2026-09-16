@@ -673,6 +673,45 @@ main.ext-page-open > #extDocs {
 }
 
 /* ============================================================
+   the player's strip for extension widgets
+   The player runs without the site nav, so ctx.mount("nav", html) had
+   nowhere to go there. This is that strip: a row in the player bar, hidden
+   when empty. A widget never disappears on a narrow window, it just gives
+   up its words (anything marked data-rail-hide, the same contract the side
+   rail uses) so the player's own controls keep their room.
+   ============================================================ */
+.player-widgets {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  margin-left: 6px;
+}
+.player-widgets:empty {
+  display: none;
+}
+.player-widgets .ext-widget {
+  min-width: 0;
+}
+.player-widgets .pc-chip {
+  height: 30px;
+  font-size: 11.5px;
+}
+@media (max-width: 900px) {
+  .player-widgets [data-rail-hide] {
+    display: none;
+  }
+  .player-widgets .pc-chip {
+    padding: 0 8px;
+    gap: 0;
+  }
+  .player-widgets .ext-widget {
+    max-width: 150px;
+    overflow: hidden;
+  }
+}
+
+/* ============================================================
    the Labs page
    ============================================================ */
 .lab-note {

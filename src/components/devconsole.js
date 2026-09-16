@@ -69,6 +69,62 @@
   function ok(m) { log(m); }
   function err(m) { log(m, "err"); }
 
+  /* ---------- clear everything ----------
+     Factory reset deletes the keys NULL knows about, which is the honest
+     thing for resetting your own progress. This is the debugging nuke:
+     every key on the origin (known or not, including the extension registry
+     and each extension's own storage), session storage, every cache and the
+     service worker registrations, then a reload into a blank slate. */
+  function wipeAll() {
+    var jobs = [];
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+    } catch (e) {}
+    try {
+      if (window.caches && caches.keys) {
+        jobs.push(
+          caches.keys().then(function (keys) {
+            return Promise.all(
+              keys.map(function (k) {
+                return caches.delete(k);
+              }),
+            );
+          }),
+        );
+      }
+    } catch (e) {}
+    try {
+      if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) {
+        jobs.push(
+          navigator.serviceWorker.getRegistrations().then(function (rs) {
+            return Promise.all(
+              rs.map(function (r) {
+                return r.unregister();
+              }),
+            );
+          }),
+        );
+      }
+    } catch (e) {}
+    try {
+      if (window.indexedDB && indexedDB.databases) {
+        jobs.push(
+          indexedDB.databases().then(function (dbs) {
+            (dbs || []).forEach(function (db) {
+              if (db && db.name) {
+                try {
+                  indexedDB.deleteDatabase(db.name);
+                } catch (e) {}
+              }
+            });
+          }),
+        );
+      }
+    } catch (e) {}
+    return Promise.all(jobs).catch(function () {});
+  }
+
   /* ---------- placeholder library (stress test) ----------
      Dev-only fake entries pushed into the live catalog so the library, the
      virtual grid, search and the featured rail can be loaded up without
@@ -612,6 +668,12 @@
           ok("new day: quests and the crate are fresh");
           refreshStats();
         }),
+        b("Unlock everything", "unlock", function () {
+          if (!N.econ || !N.econ.unlockAll) return err("economy module missing");
+          var n = N.econ.unlockAll();
+          ok(n + " shop items unlocked: every theme, particle set and effect");
+          refreshStats();
+        }),
         b("Reset economy", "trash", function () {
           N.store.del("null:eco");
           ok("economy wiped: reload to reset balances");
@@ -683,6 +745,24 @@
               ].forEach(N.store.del);
               ok("factory reset done: reloading");
               setTimeout(function () { location.reload(); }, 600);
+            },
+          });
+        }),
+        b("Clear everything", "warn", function () {
+          N.modal.confirm({
+            title: "Clear everything?",
+            icon: "warn",
+            iconTone: "danger",
+            body:
+              "<p>Stronger than a factory reset. This erases <b>everything</b> this browser holds for NULL: preferences, economy, XP, coins, quests, achievements, unlocks, installed extensions and their own storage, crafted themes and particles, schedule edits, favorites, recents, play counts, search history, the weekly log, every flag, tour state, settings folds, every other storage key, the caches and the installed service worker.</p>" +
+              "<p style='color:var(--bad)'>There is no undo. The page reloads into a NULL that has never seen this browser.</p>",
+            okLabel: "Erase everything",
+            okVariant: "danger",
+            onOk: function () {
+              ok("wiping every key, cache and worker…");
+              wipeAll().then(function () {
+                setTimeout(function () { location.reload(); }, 500);
+              });
             },
           });
         }),

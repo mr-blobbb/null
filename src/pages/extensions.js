@@ -27,6 +27,40 @@
     ]);
   }
 
+  /* is the copy this page hands out newer than the one in storage? */
+  function newer(a, b) {
+    var x = String(a || "0").split(".");
+    var y = String(b || "0").split(".");
+    for (var i = 0; i < Math.max(x.length, y.length); i++) {
+      var p = parseInt(x[i], 10) || 0;
+      var q = parseInt(y[i], 10) || 0;
+      if (p !== q) return p > q;
+    }
+    return false;
+  }
+
+  /* The two starters on this page, parsed once. An installed copy of one is
+     offered an Update rather than left to rot: the starters get fixed, and a
+     file somebody downloaded last week should not have to be found, deleted
+     and picked again by hand. */
+  var shippedCache = null;
+  function shipped() {
+    if (!shippedCache) {
+      shippedCache = [starter(), starterPage()].map(function (text) {
+        return N.ext.parse(text, "starter.nullext");
+      });
+    }
+    return shippedCache;
+  }
+  function updateFor(e) {
+    if (e.kind === "chrome") return null;
+    return (
+      shipped().filter(function (s) {
+        return s.name === e.name && newer(s.version, e.version);
+      })[0] || null
+    );
+  }
+
   /* ---------- installed ---------- */
   function card(e) {
     var native = e.kind !== "chrome";
@@ -58,11 +92,20 @@
     acts.appendChild(d.h("label", { class: "switch", title: "On or off" }, [sw, d.h("span", { class: "track" })]));
 
     if (native) {
+      /* a newer copy of one of the starters, right there on the card */
+      var fresh = updateFor(e);
+      if (fresh) {
+        acts.appendChild(
+          btn("Update to v" + fresh.version, "download", "btn-primary", function () {
+            take(fresh, e.id);
+          }),
+        );
+      }
       /* a native extension that shipped HTML gets its own window, exactly the
          way an imported Chrome popup does, just without the sandbox */
       if (e.html) {
         acts.appendChild(
-          btn("Open window", "max", "btn-primary", function () {
+          btn("Open window", "max", fresh ? "btn-outline" : "btn-primary", function () {
             N.ext.openHtml(e.id);
           }),
         );
@@ -265,8 +308,10 @@
   /* ---------- installing ---------- */
   function confirmInstall(entry, done) {
     var native = entry.kind === "native";
+    var twin = entry.id ? N.ext.get(entry.id) : null;
+    var verb = twin ? "Update" : "Install";
     N.modal.open({
-      title: "Install " + entry.name + "?",
+      title: verb + " " + entry.name + "?",
       icon: native ? "puzzle" : "chrome",
       body: native
         ? "<p><b>" + entry.name + "</b>" + (entry.version ? " v" + entry.version : "") + (entry.author ? " by " + entry.author : "") + "</p>" +
@@ -277,17 +322,43 @@
           (entry.popup ? "<p style='color:var(--text-2)'>Popup: " + entry.popup + "</p>" : "<p style='color:var(--bad)'>No popup found in its manifest.</p>"),
       actions: [
         { label: "Cancel", variant: "outline", onClick: function () { done(false); } },
-        { label: "Install", variant: "primary", onClick: function () { done(true); } },
+        { label: verb, variant: "primary", onClick: function () { done(true); } },
       ],
     });
   }
 
-  function take(entry) {
+  /* Installing a file whose name matches something already here replaces it
+     instead of stacking a second copy, which is what the manual promises.
+     `replaceId` is how the Update button says which entry it is replacing. */
+  /* the starters greet once through their own storage, so an update stamps
+     that as already said rather than saying hello again */
+  function markGreeted(id) {
+    var bag = N.ext.data(id) || {};
+    if (bag.greeted) return;
+    bag.greeted = 1;
+    N.ext.dataWrite(id, bag);
+  }
+
+  function take(entry, replaceId) {
     if (!entry) return;
+    var twin = replaceId
+      ? N.ext.get(replaceId)
+      : N.ext.list().filter(function (e) {
+          return e.name === entry.name && e.kind === entry.kind;
+        })[0];
+    if (twin) {
+      entry.id = twin.id;
+      entry.enabled = twin.enabled;
+    }
     confirmInstall(entry, function (ok) {
       if (!ok) return;
+      var was = !!twin;
       var saved = N.ext.install(entry);
-      d.toast("Installed " + saved.name, { icon: "check" });
+      if (!saved) return;
+      /* the starters say hello once, in their own storage. Updating a copy
+         somebody installed before this existed is not that hello. */
+      if (was) markGreeted(saved.id);
+      d.toast((was ? "Updated " : "Installed ") + saved.name, { icon: "check" });
       paint();
       var el = d.qs('[data-ext="' + saved.id + '"]');
       if (el) el.scrollIntoView({ block: "center", behavior: "smooth" });
@@ -367,9 +438,9 @@
       {
         nullExt: 1,
         name: "Period clock",
-        version: "1.1.0",
+        version: "1.2.0",
         author: "you",
-        desc: "Shows the period you are in and the time left, in the nav bar and in its own window. Ticks every second.",
+        desc: "Shows the period you are in and the time left, in the nav bar, in the player and in its own window. Ticks every second.",
         icon: "clock",
         css: [
           "/* injected on every page this extension runs on */",
@@ -393,7 +464,7 @@
           "/* in the side rail the words carry data-rail-hide, so NULL drops them",
           "   while the rail is shut and slides them back on hover. Only the pill",
           "   size needs saying here. */",
-          "@media (min-width: 1100px) {",
+          "@media (min-width: 560px) {",
           "  html[data-nav=\"side\"] .pc-chip { height: 38px; padding: 0 8px; }",
           "}",
           ".pc-win { padding: 2px 2px 6px; }",

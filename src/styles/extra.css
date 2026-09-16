@@ -704,11 +704,13 @@ html[data-perf] body.lb .toolbar.stuck {
    stops sitting on top of every page's first line.
 
    Everything here hangs off html[data-nav="side"] inside one width
-   query, so the bar layout is still the whole story on a narrow screen and
-   the Settings switch (which writes data-nav="side") is the only way in.
-   --nh goes to zero with the rail: every offset on the site is written
-   against it, so the rail only has to move that one number and the pages
-   follow.
+   query, so a phone still gets the top bar and the Settings switch (which
+   writes data-nav="side") is the only way in. The floor is a phone, not a
+   desktop: a rail 68px wide is fine the moment there is a window to put it
+   beside, and gating it at 1100px made the switch look broken on anything
+   smaller. --nh goes to zero with the rail: every offset on the site is
+   written against it, so the rail only has to move that one number and the
+   pages follow.
    ============================================================ */
 /* the top bar is icons only: the names the rail shows are in the markup but
    off the page there */
@@ -751,7 +753,7 @@ html[data-perf] body.lb .toolbar.stuck {
   margin: 0 0 6px;
 }
 
-@media (min-width: 1100px) {
+@media (min-width: 560px) {
   html[data-nav="side"] {
     --nh: 0px;
     --rail-w: 68px;
@@ -1265,7 +1267,7 @@ html[data-perf] body.lb .toolbar.stuck {
 }
 
 /* a compact rail on a short window: same idea, tighter rows */
-@media (min-width: 1100px) and (max-height: 700px) {
+@media (min-width: 560px) and (max-height: 700px) {
   html[data-nav="side"] .nav-links .nav-link {
     height: 36px;
   }
