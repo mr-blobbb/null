@@ -46,8 +46,14 @@
           type: "button",
           class: BTN_CLS[a.variant || "primary"],
           onclick: function () {
-            if (a.onClick) a.onClick();
-            close(ov);
+            /* whatever the action does, the modal closes: an action that
+               throws used to leave it stuck on screen with no way out but
+               a reload */
+            try {
+              if (a.onClick) a.onClick();
+            } finally {
+              close(ov);
+            }
           },
         },
         a.label,

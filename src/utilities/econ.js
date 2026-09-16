@@ -239,11 +239,11 @@
       free: true,
       price: 0,
       mono: true,
-      desc: "Glowing dust drifting upward through soft halo blooms.",
+      desc: "Flat dots in hairline rings, rising slowly through wide panes of glass.",
       tags: ["Free", "Subtle", "Slow"],
       parts: [
         { k: "mote", n: 34, sp: "bottom" },
-        { k: "bloom", n: 10, sp: "bottom" },
+        { k: "bloom", n: 8, sp: "bottom" },
       ],
     },
     {
@@ -252,7 +252,7 @@
       free: true,
       price: 0,
       mono: true,
-      desc: "Cloud banks, curling wisps and a scatter of far-off specks.",
+      desc: "Wide frost panes, curling hairline wisps and a scatter of far-off specks.",
       tags: ["Free", "Clouds"],
       parts: [
         { k: "haze", n: 6 },
@@ -266,11 +266,11 @@
       free: true,
       price: 0,
       mono: true,
-      desc: "Pin-prick lights that fade in and out, with slow cross flares.",
+      desc: "Pin-prick dots that fade in and out, with slow hairline flares.",
       tags: ["Free", "Twinkle"],
       parts: [
-        { k: "spark", n: 34 },
-        { k: "flare", n: 10 },
+        { k: "spark", n: 36 },
+        { k: "flare", n: 8 },
       ],
     },
     {
@@ -279,12 +279,9 @@
       free: true,
       price: 0,
       mono: true,
-      desc: "Plain light-gray dots strung together by faint lines: a quiet star map.",
-      tags: ["Free", "Dots", "Lines"],
-      parts: [
-        { k: "node", n: 44 },
-        { k: "link", n: 30 },
-      ],
+      desc: "A drifting particle network: plain dots stitched together by a hairline wherever two pass close by.",
+      tags: ["Free", "Network", "Lines"],
+      parts: [{ k: "net", n: 78 }],
     },
   ];
 
@@ -294,7 +291,7 @@
       name: "Fireflies",
       price: 70,
       colors: ["#ffe98a", "#ffd45e", "#fff6c9", "#f2a93b"],
-      desc: "Warm orbs wandering with light trails, pulsing like a summer field.",
+      desc: "Small warm orbs wandering on long arcs, each trailing a short fading line.",
       tags: ["Glow", "Trails", "Wandering"],
       parts: [
         { k: "firefly", n: 22 },
@@ -307,7 +304,7 @@
       name: "Embers",
       price: 80,
       colors: ["#ff8a3d", "#ffb020", "#ff4d2e", "#ffe0a3"],
-      desc: "Sparks climb off a glowing bed, flicker, and drag smoke up with them.",
+      desc: "Sparks climb off the bottom edge, flicker, and drag thin wisps up with them.",
       tags: ["Rising", "Flicker", "Smoke"],
       parts: [
         { k: "ember", n: 38, sp: "bottom" },
@@ -320,7 +317,7 @@
       name: "Bubbles",
       price: 80,
       colors: ["#9fe6ff", "#c9f2ff", "#7cc4ff", "#ffffff"],
-      desc: "Outlined rings with glinting highlights, rising and swelling out of sight.",
+      desc: "Hairline bubbles with one glint of light, rising and swelling out of sight.",
       tags: ["Rising", "Rings", "Glint"],
       parts: [
         { k: "bubble", n: 22, sp: "bottom" },
@@ -333,7 +330,7 @@
       name: "Starlight",
       price: 90,
       colors: ["#ffffff", "#dceaff", "#bcd4ff", "#ffffff"],
-      desc: "Four-point stars bloom and vanish among slow cross flares and tiny specks.",
+      desc: "Four-point stars fade in and out among slow cross flares and tiny specks.",
       tags: ["Stars", "Flares", "Depth"],
       parts: [
         { k: "sparkle", n: 28 },
@@ -346,7 +343,7 @@
       name: "Plasma",
       price: 110,
       colors: ["#a86bff", "#3d8bff", "#ff4fa8", "#4fe0c8"],
-      desc: "Colour fields roll and spin across the page over slow halo blooms.",
+      desc: "Soft colour fields roll slowly across the page over wide panes of glass.",
       tags: ["Colour", "Swirl", "Slow"],
       parts: [
         { k: "plasma", n: 8 },
@@ -359,7 +356,7 @@
       name: "Warp",
       price: 120,
       colors: ["#ffffff", "#9fe6ff", "#c9c2ff", "#ffffff"],
-      desc: "Rings zoom out of dead centre while stars streak past: lightspeed.",
+      desc: "Hairline rings open out of dead centre while streaks race past: lightspeed.",
       tags: ["Speed", "Radial", "Tunnel"],
       parts: [
         { k: "tunnel", n: 26, sp: "center" },

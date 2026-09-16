@@ -144,14 +144,35 @@
   position: relative;
   color: color-mix(in srgb, var(--text) 78%, transparent);
 }
-/* the wordmark shimmers: a white highlight sweeps across the letters on a
-   slow loop. text is rendered per-letter (spans from home.js) so the sheen
-   can walk the glyphs; static fallback keeps the plain string. */
+/* the wordmark shimmers: a highlight sweeps across the letters on a slow
+   loop. text is rendered per-letter (spans from home.js) so the sheen can
+   walk the glyphs; static fallback keeps the plain string.
+
+   The sweep only reads if the highlight contrasts with the ink it passes
+   through, and the ink is the page's own text colour: near-white on dark,
+   near-black on light. A white highlight over near-white letters is
+   invisible, so the resting ink sits well back from the shine in BOTH
+   themes: the letters breathe between a half-strength grey and a hard
+   white glint on dark, and between solid black and white on light. */
+:root {
+  --mast-ink: color-mix(in srgb, var(--text) 52%, transparent);
+  --mast-shine: #ffffff;
+}
+html[data-theme="light"] {
+  --mast-ink: color-mix(in srgb, var(--text) 96%, transparent);
+}
 .mast-null .l {
   display: inline-block;
   animation: lRise 0.65s cubic-bezier(0.2, 0.9, 0.3, 1.15) both;
   animation-delay: calc(0.2s + var(--i) * 0.07s);
-  background: linear-gradient(100deg, var(--text) 38%, #fff 50%, var(--text) 62%);
+  background: linear-gradient(
+    100deg,
+    var(--mast-ink) 34%,
+    color-mix(in srgb, var(--mast-shine) 70%, transparent) 45%,
+    var(--mast-shine) 50%,
+    color-mix(in srgb, var(--mast-shine) 70%, transparent) 55%,
+    var(--mast-ink) 66%
+  );
   background-size: 300% 100%;
   background-position: 100% 0;
   -webkit-background-clip: text;

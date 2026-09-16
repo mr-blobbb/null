@@ -51,6 +51,7 @@
     paintPerf(p);
     paintDensity();
     paintNavLayout();
+    paintClock();
     paintLibNav();
     paintMini();
     paintGlow();
@@ -143,6 +144,11 @@
 
   function paintNavLayout() {
     segPaint("#navSeg", N.prefs.get("navLayout") === "side" ? "side" : "bar");
+  }
+
+  function paintClock() {
+    var sw = d.qs("#clockSwitch");
+    if (sw) sw.checked = N.prefs.get("showClock") !== false;
   }
 
   function paintMini() {
@@ -911,6 +917,16 @@
           return;
         }
         d.toast("Navigation: " + b.textContent);
+      });
+    }
+
+    /* the site's own period clock, in the nav and in the player */
+    var csw = d.qs("#clockSwitch");
+    if (csw) {
+      csw.addEventListener("change", function () {
+        N.prefs.set("showClock", csw.checked);
+        if (N.clock && N.clock.apply) N.clock.apply();
+        d.toast(csw.checked ? "Period clock on" : "Period clock off", { icon: "clock" });
       });
     }
 

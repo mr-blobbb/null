@@ -832,6 +832,26 @@
   /* ---------- the nav menu ----------
      shell.js builds the puzzle button and asks for its contents here, so the
      menu and the manager can never disagree about what is installed. */
+  /* the first page an extension added, if it added one (see addPage): the
+     menu uses it to send you straight to a real page instead of the manager */
+  function firstPage(id) {
+    var hit = null;
+    pages.forEach(function (p) {
+      if (!hit && p.ext === id) hit = p;
+    });
+    return hit;
+  }
+
+  /* run an extension again, from the nav menu. enable() re-runs its js and
+     re-registers its pages, so this is a real re-run and not a reminder that
+     one exists. */
+  function run(id) {
+    var e = enable(id);
+    if (!e) return;
+    emit("run", { id: id });
+    if (d.toast) d.toast("Ran " + e.name, { icon: "play" });
+  }
+
   function menu(host, close) {
     host.textContent = "";
     var all = list();
@@ -841,33 +861,63 @@
       );
     }
     all.forEach(function (e) {
-      var row = d.h("button", {
-        type: "button",
-        class: "em-row" + (e.enabled === false ? " off" : ""),
-        onclick: function () {
-          if (close) close();
-          /* a popup is a popup: a Chrome import gets its sandboxed frame, a
-             .nullext that shipped HTML gets the same panel without one */
-          if (e.kind === "chrome") {
-            openPopup(e.id);
-            return;
-          }
-          if (e.html) {
-            openHtml(e.id);
-            return;
-          }
-          location.href = N.url("/extensions") + "#" + encodeURIComponent(e.id);
-        },
-      }, [
-        d.h("span", { class: "em-ic" }, [d.icon(e.icon || (e.kind === "chrome" ? "puzzle" : "code"))]),
-        d.h("span", { class: "em-txt" }, [
-          d.h("b", null, e.name),
-          d.h(
-            "span",
-            null,
-            (e.kind === "chrome" ? "popup" : e.html ? "window" : "native") + " · " + (e.enabled === false ? "off" : "on"),
-          ),
-        ]),
+      var chrome = e.kind === "chrome";
+      var page = chrome ? null : firstPage(e.id);
+      var kind = chrome ? "popup" : e.html ? "window" : page ? "page" : "native";
+      var what = chrome ? "opens its popup" : e.html ? "opens its window" : page ? "opens " + page.title : "runs in the background";
+
+      /* one row is two targets: the name opens whatever the extension has
+         (popup, window, page), and the play button runs it again. */
+      var row = d.h("div", { class: "em-item" + (e.enabled === false ? " off" : "") }, [
+        d.h(
+          "button",
+          {
+            type: "button",
+            class: "em-row",
+            title: what,
+            onclick: function () {
+              if (close) close();
+              /* a popup is a popup: a Chrome import gets its sandboxed frame, a
+                 .nullext that shipped HTML gets the same panel without one */
+              if (chrome) {
+                openPopup(e.id);
+                return;
+              }
+              if (e.html) {
+                openHtml(e.id);
+                return;
+              }
+              /* a page an extension added is a real page: send the browser to
+                 it, which is where its Back button and address live */
+              if (page) {
+                location.href = N.url("/extensions") + "#page=" + encodeURIComponent(page.id);
+                return;
+              }
+              run(e.id);
+            },
+          },
+          [
+            d.h("span", { class: "em-ic" }, [d.icon(e.icon || (chrome ? "puzzle" : "code"))]),
+            d.h("span", { class: "em-txt" }, [
+              d.h("b", null, e.name),
+              d.h("span", null, kind + " · " + (e.enabled === false ? "off" : "on")),
+            ]),
+          ],
+        ),
+        d.h(
+          "button",
+          {
+            type: "button",
+            class: "em-run",
+            title: "Run " + e.name,
+            "aria-label": "Run " + e.name,
+            onclick: function () {
+              if (close) close();
+              run(e.id);
+            },
+          },
+          [d.icon("play")],
+        ),
       ]);
       host.appendChild(row);
     });
@@ -898,6 +948,7 @@
     "unlock      { type, id } when an item becomes owned",
     "quest:done  { id, coins }",
     "crate:open  { coins, streak }",
+    "run         { id } an extension run again from the nav menu",
     "player:open { entry } a game or app launching in the player",
     "player:close { entry }",
     "search:open open the search overlay",
@@ -937,6 +988,7 @@
     get: get,
     install: install,
     enable: enable,
+    run: run,
     disable: disable,
     remove: remove,
     clear: clear,

@@ -60,20 +60,83 @@
       }
     }
 
-    /* ---------- sticky toolbar ----------
-       The toolbar pins under the nav once it scrolls past. A 1px sentinel
-       above it decides when: the observer fires on the exact crossing, and
-       .stuck lends the backdrop it needs to sit over the cards. */
+    /* ---------- pinned toolbar ----------
+       The library scrolls inside #scrollview, not the window, and a plain
+       position:sticky bar landed a fixed distance below the nav there (the
+       scroller's own top edge plus the nav's height) instead of flush under
+       it. So the bar is pinned by measurement instead: a spacer holds its
+       place in the flow, and the moment that spacer reaches the nav's real
+       bottom edge the bar goes fixed exactly there, spanning the scroller.
+       It releases again as soon as you scroll back to the top, and follows a
+       nav that changes height (an extension widget mounting, a resize). */
     var bar = d.qs(".toolbar");
-    if (bar && typeof IntersectionObserver !== "undefined") {
-      var sent = d.h("div", { class: "stick-sent", "aria-hidden": "true" });
-      bar.parentNode.insertBefore(sent, bar);
-      new IntersectionObserver(
-        function (entries) {
-          bar.classList.toggle("stuck", !entries[0].isIntersecting);
-        },
-        { root: scroller || null, threshold: 0 },
-      ).observe(sent);
+    if (bar && scroller) {
+      var fill = d.h("div", { class: "tool-fill", "aria-hidden": "true" });
+      bar.parentNode.insertBefore(fill, bar);
+      var pinned = false;
+      /* the bar's resting box (centred page column, own width). Measured with
+         the class off, so the pinned bar keeps the same geometry the page
+         shows rather than stretching across the whole scroller. */
+      var geo = null;
+
+      /* the nav's real bottom edge. --nh is the design height; this is what
+         is on screen, which is what the bar has to sit under. A rail sits
+         beside the page instead of above it, so there is nothing to clear. */
+      function navBottom() {
+        var nav = d.qs(".topbar");
+        if (!nav || document.documentElement.dataset.nav === "side") return 0;
+        var box = nav.getBoundingClientRect();
+        return box.height ? Math.max(0, Math.round(box.bottom)) : 0;
+      }
+
+      function measure() {
+        var off = bar.classList.contains("pinned");
+        if (off) {
+          bar.classList.remove("pinned");
+          bar.style.left = bar.style.width = bar.style.top = "";
+        }
+        var box = bar.getBoundingClientRect();
+        geo = { left: Math.round(box.left), width: Math.round(box.width) };
+        if (off) bar.classList.add("pinned");
+      }
+
+      function place() {
+        if (!geo) measure();
+        bar.style.left = geo.left + "px";
+        bar.style.width = geo.width + "px";
+        bar.style.top = navBottom() + "px";
+      }
+
+      function sync() {
+        var want = navBottom();
+        var on = fill.getBoundingClientRect().top <= want;
+        if (on !== pinned) {
+          pinned = on;
+          /* the bar's own margins are what leaves the gap above and below it
+             in the flow, and pinning drops them, so the spacer has to carry
+             them: measured here, before the class swap moves anything. */
+          var cs = window.getComputedStyle(bar);
+          var air = (parseFloat(cs.marginTop) || 0) + (parseFloat(cs.marginBottom) || 0);
+          bar.classList.toggle("pinned", on);
+          fill.style.height = on ? bar.offsetHeight + air + "px" : "";
+        }
+        if (pinned) place();
+      }
+
+      function resize() {
+        geo = null;
+        sync();
+      }
+
+      scroller.addEventListener("scroll", sync, { passive: true });
+      window.addEventListener("resize", resize);
+      /* an extension widget can grow the nav, and a retexture can change the
+         page column: re-measure on either */
+      if (N.bus) {
+        N.bus.on("ext", resize);
+        N.bus.on("theme", resize);
+      }
+      sync();
     }
 
     /* reset chip: one click back to the unfiltered view. Hidden until a

@@ -653,45 +653,29 @@ html[data-lib-mode="rail"] .lib-rail {
   margin-top: 6px;
 }
 
-/* sticky toolbar: .stuck is toggled by library.js the moment the bar
-   scrolls past the nav, which is when it needs a backdrop */
-.stick-sent {
-  height: 1px;
-  margin-top: -1px;
+/* Pinned toolbar.
+   library.js measures the nav's real bottom edge and the bar's own resting
+   box; the .pinned class is what it flips on and the geometry (left / width /
+   top) arrives inline, so the bar is flush under the nav, keeps the page's
+   centred column instead of stretching, and needs no assumptions about where
+   the scroller starts. The spacer above it keeps the bar's place in the flow. */
+.tool-fill {
+  display: block;
 }
-body.lb .toolbar {
-  position: sticky;
-  top: var(--nh);
+body.lb .toolbar.pinned {
+  position: fixed;
   z-index: 30;
-  border-radius: 0 0 var(--r-md) var(--r-md);
-  transition: background 0.2s, box-shadow 0.2s, padding 0.2s;
-}
-body.lb .toolbar.stuck {
-  /* pinned flush under the nav and full-bleed: the bar stretches across the
-     whole viewport so it reads as part of the topbar, not a floating strip.
-     The -22px eats the page's own padding; on the small-screen 14px padding
-     the media query below trims it back. Padding still adds up to the
-     un-stuck margins (22 / 18), so nothing below shifts. */
-  padding: 14px max(14px, var(--pad-x)) 12px;
-  margin: 0 calc(-1 * var(--pad-x)) 6px;
-  width: calc(100% + 2 * var(--pad-x));
-  /* the page's own max-width would otherwise cap the bar to the content
-     column, which is what made it read as a floating strip */
+  margin: 0;
   max-width: none;
-  border-radius: 0;
+  padding: 10px var(--pad-x);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
   background: color-mix(in srgb, var(--bg) 82%, transparent);
-  backdrop-filter: blur(16px) saturate(140%);
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
-  box-shadow: 0 14px 28px -22px rgba(0, 0, 0, 0.95), 0 1px 0 var(--line);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  box-shadow: 0 18px 34px -26px rgba(0, 0, 0, 0.95);
 }
-@media (max-width: 620px) {
-  body.lb .toolbar.stuck {
-    margin-left: -14px;
-    margin-right: -14px;
-    width: calc(100% + 28px);
-  }
-}
-html[data-perf] body.lb .toolbar.stuck {
+html[data-perf] body.lb .toolbar.pinned {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   background: var(--bg);
@@ -716,6 +700,53 @@ html[data-perf] body.lb .toolbar.stuck {
    off the page there */
 .nav-link .nl-txt {
   display: none;
+}
+
+/* the period clock (shell.js): the site's own, so it sits beside the search
+   box rather than in the extensions strip. Same pill shape as a widget, and
+   nothing at all when there is no period to count. */
+.clock-slot {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.clock-slot:empty {
+  display: none;
+}
+.pclock {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  max-width: 100%;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--ac-1) 22%, var(--line));
+  background: var(--glass-bg-2);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.pclock[hidden] {
+  display: none;
+}
+.pclock-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 99px;
+  background: var(--ac-1);
+  flex: none;
+}
+.pclock-name {
+  color: var(--text);
+}
+.pclock-time {
+  font-variant-numeric: tabular-nums;
+}
+.pclock-next {
+  color: var(--text-2);
+  font-weight: 500;
 }
 
 /* the strip extensions mount into with ctx.mount('nav', html): a row in the
@@ -897,6 +928,25 @@ html[data-perf] body.lb .toolbar.stuck {
   html[data-nav="side"] .topbar:focus-within [data-slot="nav"] [data-rail-hide] {
     display: inline;
   }
+  /* the period clock in the rail: the dot and the time only, with the name
+     sliding back the way every other rail label does */
+  html[data-nav="side"] .clock-slot {
+    justify-content: center;
+    margin-top: 4px;
+  }
+  html[data-nav="side"] .pclock {
+    padding: 0 10px;
+    gap: 6px;
+  }
+  html[data-nav="side"] .pclock-name,
+  html[data-nav="side"] .pclock-next {
+    display: none;
+  }
+  html[data-nav="side"] .topbar:hover .pclock-name,
+  html[data-nav="side"] .topbar:focus-within .pclock-name {
+    display: inline;
+  }
+
   /* the reading progress line hangs off the top of the page, which is now
      the top of the content column, not of the window */
   html[data-nav="side"] .read-bar {

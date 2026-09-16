@@ -49,7 +49,7 @@
   function shipped() {
     if (!shippedCache) {
       shippedCache = [
-        { text: starter(), file: "period-clock.nullext" },
+        { text: starter(), file: "focus-timer.nullext" },
         { text: starterPage(), file: "starter-page.nullext" },
       ].map(function (s) {
         s.entry = N.ext.parse(s.text, s.file);
@@ -83,7 +83,7 @@
      by the shape it was written in. An edited starter keeps whatever version
      its author gave it, so it is never silently overwritten: the Update
      button in the Starters block is there for it. */
-  var STARTER_NAMES = /^(period clock|starter page)$/i;
+  var STARTER_NAMES = /^(focus timer|starter page|period clock)$/i;
   function ours(e) {
     if (e.starter) return true;
     if (e.kind !== "native" || !e.manifest || e.manifest.nullExt !== 1) return false;
@@ -92,9 +92,24 @@
     return !e.author || e.author === "you";
   }
 
+  /* Starters NULL handed out once and does not any more. The period clock is
+     part of the site itself now, so an unedited copy of it would draw a
+     second clock next to the real one: switch it off, say so once, and leave
+     it installed so nothing of theirs disappears behind their back. */
+  var RETIRED = /^period clock$/i;
+  function retireOutdated() {
+    var done = [];
+    N.ext.list().forEach(function (e) {
+      if (e.enabled === false || !RETIRED.test(e.name) || !ours(e)) return;
+      N.ext.disable(e.id);
+      done.push(e.name);
+    });
+    return done;
+  }
+
   /* Bring stale starter copies up to date on the spot. This is how a fix to
-     the period clock reaches a copy somebody installed months ago without
-     them finding the file again. Returns what changed, for one toast. */
+     a starter reaches a copy somebody installed months ago without them
+     finding the file again. Returns what changed, for one toast. */
   function autoUpgrade() {
     var done = [];
     shipped().forEach(function (s) {
@@ -555,21 +570,26 @@
 
   /* ---------- the two starters ----------
      Working extensions rather than hello worlds, so there is something real
-     to read and take apart. The first reads the site's own schedule and lives
-     in the nav bar; the second is one complete page with no JavaScript at
-     all. Both are plain JSON with a css block. */
+     to read and take apart. The first is the popup shape: a widget in the nav
+     plus a window of its own, driven by real HTML and real state. The second
+     is one complete page with no JavaScript at all. Both are plain JSON with
+     a css block.
+
+     There was a third once, a period clock. It is part of NULL itself now
+     (see shell.js), so an unedited copy of it is switched off on sight (see
+     retireOutdated) rather than left to draw a second clock in the nav. */
   function starter() {
     return JSON.stringify(
       {
         nullExt: 1,
-        name: "Period clock",
-        version: "1.3.0",
+        name: "Focus timer",
+        version: "1.0.0",
         author: "you",
-        desc: "Shows the period you are in and the time left, in the nav bar, in the player and in its own window. Ticks every second.",
-        icon: "clock",
+        desc: "A countdown with a window of your own: start, pause, reset, and the time left rides in the nav while you browse.",
+        icon: "clock2",
         css: [
           "/* injected on every page this extension runs on */",
-          ".pc-chip {",
+          ".ft-chip {",
           "  display: flex;",
           "  align-items: center;",
           "  gap: 7px;",
@@ -584,23 +604,46 @@
           "  white-space: nowrap;",
           "  overflow: hidden;",
           "}",
-          ".pc-dot { width: 7px; height: 7px; border-radius: 99px; background: var(--ac-1); flex: none; }",
-          ".pc-txt { overflow: hidden; text-overflow: ellipsis; }",
+          ".ft-dot { width: 7px; height: 7px; border-radius: 99px; background: var(--ac-1); flex: none; }",
+          ".ft-txt { overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }",
           "/* in the side rail the words carry data-rail-hide, so NULL drops them",
           "   while the rail is shut and slides them back on hover. Only the pill",
           "   size needs saying here. */",
           "@media (min-width: 560px) {",
-          "  html[data-nav=\"side\"] .pc-chip { height: 38px; padding: 0 8px; }",
+          "  html[data-nav=\"side\"] .ft-chip { height: 38px; padding: 0 8px; }",
           "}",
-          ".pc-win { padding: 2px 2px 6px; }",
-          ".pc-win p { margin: 0 0 6px; }",
-          ".pc-page { margin: 0; }",
+          "/* the extension's own window, mounted by NULL when it opens */",
+          ".ft { padding: 2px 2px 6px; }",
+          ".ft-time { font-size: 40px; font-weight: 700; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }",
+          ".ft-row { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 10px; }",
+          ".ft-btn {",
+          "  padding: 7px 13px;",
+          "  border-radius: 10px;",
+          "  border: 1px solid var(--line-2);",
+          "  background: var(--glass-bg-2);",
+          "  color: var(--text);",
+          "  font: inherit;",
+          "  font-size: 13px;",
+          "  font-weight: 600;",
+          "  cursor: pointer;",
+          "}",
+          ".ft-btn:hover { background: var(--glass-bg-3); }",
+          ".ft-note { margin: 12px 0 0; font-size: 12.5px; line-height: 1.6; color: var(--text-2); }",
         ].join("\n"),
         html: [
-          "<div class=\"pc-win\">",
-          "  <b>Period clock</b>",
-          "  <p id=\"pc-now\">looking at the schedule...</p>",
-          "  <p id=\"pc-next\" style=\"color:var(--text-2)\"></p>",
+          "<div class=\"ft\">",
+          "  <div class=\"ft-time\" data-face>25:00</div>",
+          "  <div class=\"ft-row\">",
+          "    <button type=\"button\" class=\"ft-btn\" data-act=\"start\">Start</button>",
+          "    <button type=\"button\" class=\"ft-btn\" data-act=\"pause\">Pause</button>",
+          "    <button type=\"button\" class=\"ft-btn\" data-act=\"reset\">Reset</button>",
+          "  </div>",
+          "  <div class=\"ft-row\">",
+          "    <button type=\"button\" class=\"ft-btn\" data-min=\"5\">5 min</button>",
+          "    <button type=\"button\" class=\"ft-btn\" data-min=\"10\">10 min</button>",
+          "    <button type=\"button\" class=\"ft-btn\" data-min=\"25\">25 min</button>",
+          "  </div>",
+          "  <p class=\"ft-note\">Pick a length and hit start. The pill in the nav keeps counting while you browse, and the timer remembers where it was if you close this window.",
           "</div>",
         ].join("\n"),
         js: [
@@ -608,76 +651,95 @@
           "   app, ctx is the friendly surface. ctx.mount('nav', html) puts your",
           "   own markup into the bar that every page has. */",
           "var box = ctx.mount('nav',",
-          "  '<span class=\"pc-chip\"><i class=\"pc-dot\"></i><span class=\"pc-txt\" data-rail-hide>period clock</span></span>');",
-          "var chipTxt = box ? box.querySelector('.pc-txt') : null;",
+          "  '<span class=\"ft-chip\"><i class=\"ft-dot\"></i><span class=\"ft-txt\" data-rail-hide>focus</span></span>');",
+          "var pill = box ? box.querySelector('.ft-txt') : null;",
           "",
-          "/* read the schedule defensively: the player and the hidden pages keep",
-          "   it lean, and one thrown error stops the whole extension */",
-          "function now() {",
-          "  var S = N.schedule;",
-          "  if (!S || !S.todayInfo || !S.blocksFor || !S.live) return { title: 'no schedule here', sub: '' };",
-          "  /* one try/catch around the whole read: a page without the schedule,",
-          "     or a schedule being edited, must never stop the clock */",
-          "  try {",
-          "    var t = S.todayInfo();",
-          "    if (!t || !t.type) return { title: 'no school today', sub: (t && t.dayName) || '' };",
-          "    var lv = S.live(S.blocksFor(t.type), new Date());",
-          "    if (!lv.block) return { title: 'after school', sub: '' };",
-          "    var secs = Math.max(0, lv.passing ? lv.secToNext : lv.secLeft);",
-          "    return {",
-          "      title: (lv.passing ? 'passing' : lv.block.name) + ' · ' + Math.floor(secs / 60) + ':' + ('0' + (secs % 60)).slice(-2),",
-          "      sub: lv.next ? 'next: ' + lv.next.name + ' at ' + lv.next.start : 'last period of the day',",
-          "    };",
-          "  } catch (e) {",
-          "    return { title: 'schedule unavailable', sub: '' };",
-          "  }",
+          "/* The timer keeps its state in the extension's own storage, so a",
+          "   reload, another page or a closed window never loses the count. */",
+          "var store = ctx.store.load();",
+          "var len = (store && store.len) || 25 * 60 * 1000;",
+          "var left = typeof store.left === 'number' ? store.left : len;",
+          "var running = !!store.running;",
+          "var at = store.at || 0;",
+          "",
+          "function save() {",
+          "  ctx.store.save({ len: len, left: left, running: running, at: at, greeted: store.greeted });",
+          "}",
+          "",
+          "function fmt(ms) {",
+          "  var s = Math.ceil(ms / 1000);",
+          "  return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2);",
+          "}",
+          "",
+          "/* running stores the moment it started, not a countdown, so the",
+          "   number cannot drift when the page is busy or in the background */",
+          "function rest() {",
+          "  return running ? Math.max(0, left - (Date.now() - at)) : left;",
+          "}",
+          "",
+          "function ring() {",
+          "  running = false;",
+          "  left = 0;",
+          "  save();",
+          "  ctx.toast(ctx.name + ': time is up', { icon: 'clock2', hold: 6000 });",
+          "  if (N.fx && N.fx.confetti) N.fx.confetti();",
           "}",
           "",
           "function paint() {",
-          "  var n = now();",
-          "  if (chipTxt) chipTxt.textContent = n.title;",
-          "  var lead = document.querySelector('.pc-win #pc-now');",
-          "  if (lead) lead.textContent = n.title;",
-          "  var nx = document.querySelector('.pc-win #pc-next');",
-          "  if (nx) nx.textContent = n.sub;",
+          "  var ms = rest();",
+          "  if (running && ms <= 0) ring();",
+          "  var t = fmt(ms);",
+          "  /* the window is HTML from the manifest, so it is in the document",
+          "     only while it is open (see the popup:open hook below) */",
+          "  var face = document.querySelector('.ft [data-face]');",
+          "  if (face) face.textContent = t;",
+          "  /* the pill keeps the count while it matters and gets out of the way",
+          "     when the timer is sitting idle at full length */",
+          "  if (box) box.hidden = !(running || (left > 0 && left < len));",
+          "  if (pill) pill.textContent = t;",
           "}",
           "",
-          "/* the window is HTML in the manifest, so it only exists while it is",
-          "   open: popup:open hands you the element to fill */",
-          "ctx.hook('popup:open', paint);",
-          "/* the ticker is armed before the first paint, so one bad first read",
-          "   cannot cost the clock its next second. Once a second, always. */",
+          "function use(ms) {",
+          "  len = ms;",
+          "  left = ms;",
+          "  running = false;",
+          "  save();",
+          "  paint();",
+          "}",
+          "",
+          "/* buttons in the window. popup:open hands you the element, and the",
+          "   window is rebuilt every time it opens, so wiring happens here. */",
+          "ctx.hook('popup:open', function (info) {",
+          "  var el = info && info.el;",
+          "  if (!el) return;",
+          "  el.addEventListener('click', function (e) {",
+          "    var b = e.target.closest('[data-act], [data-min]');",
+          "    if (!b) return;",
+          "    if (b.dataset.min) return use(Number(b.dataset.min) * 60000);",
+          "    if (b.dataset.act === 'start') { running = true; at = Date.now(); }",
+          "    if (b.dataset.act === 'pause') { left = rest(); running = false; }",
+          "    if (b.dataset.act === 'reset') { running = false; left = len; }",
+          "    save();",
+          "    paint();",
+          "  });",
+          "  paint();",
+          "});",
+          "",
+          "/* once a second, always: the pill is the point of the extension */",
           "setInterval(paint, 1000);",
           "paint();",
           "",
-          "/* a page of your own. It opens as a full page, with its own address",
-          "   (#page=...) and a Back button, from the Pages section above. */",
-          "ctx.page({",
-          "  title: 'Period clock',",
-          "  icon: 'clock',",
-          "  desc: 'The live period, the same thing the chip shows.',",
-          "  html: '<p class=\"pc-page\">reading the schedule...</p>',",
-          "  mount: function (el) {",
-          "    var out = el.querySelector('.pc-page');",
-          "    function tick() {",
-          "      var n = now();",
-          "      if (out) out.textContent = n.title + (n.sub ? ' · ' + n.sub : '');",
-          "    }",
-          "    setInterval(tick, 1000);",
-          "    tick();",
-          "  },",
-          "});",
-          "",
-          "/* hooks are how the core tells you things happened */",
+          "/* hooks are how the core tells you things happened, and N is the whole",
+          "   site: N.econ, N.theme, N.prefs, storage, the DOM, everything. */",
           "ctx.hook('coins:earn', function (info) {",
           "  ctx.log('coins now', info.total);",
           "});",
           "",
-          "/* A note in the extension's own storage, said once in the console: a",
-          "   toast here would fire on every page load, forever. */",
-          "if (!ctx.store.get('greeted')) {",
-          "  ctx.store.set('greeted', 1);",
-          "  ctx.log(ctx.name + ' is in your nav');",
+          "/* said once, in the console: a toast here would fire on every page */",
+          "if (!store.greeted) {",
+          "  store.greeted = 1;",
+          "  save();",
+          "  ctx.log(ctx.name + ' is ready: open its window from the puzzle menu');",
           "}",
         ].join("\n"),
       },
@@ -878,8 +940,8 @@
     );
     start.appendChild(
       d.h("div", { class: "ext-doc-acts" }, [
-        btn("Download the period clock", "download", "btn-primary", function () {
-          download(starter(), "period-clock.nullext");
+        btn("Download the focus timer", "download", "btn-primary", function () {
+          download(starter(), "focus-timer.nullext");
         }),
         btn("Download the starter page", "download", "btn-outline", function () {
           download(starterPage(), "starter-page.nullext");
@@ -893,7 +955,7 @@
     var read = docBox("file", "The .nullext format");
     read.appendChild(codeBlock(starter()));
     read.appendChild(
-      d.h("p", { class: "ext-note" }, "That is the period clock above, whole. Every field is optional except a name: leave the ones you do not need out."),
+      d.h("p", { class: "ext-note" }, "That is the focus timer above, whole. Every field is optional except a name: leave the ones you do not need out."),
     );
     read.appendChild(
       docList([
@@ -1109,10 +1171,16 @@
      so the card below already says "installed" with no version to chase. The
      starters get fixed; a copy somebody edited is left where it is. */
   var upgraded = autoUpgrade();
+  var retired = retireOutdated();
   if (upgraded.length) {
     setTimeout(function () {
       d.toast("Updated " + upgraded.join(", "), { icon: "download", hold: 5200 });
     }, 900);
+  }
+  if (retired.length) {
+    setTimeout(function () {
+      d.toast("The period clock is part of NULL now: switched off " + retired.join(", "), { icon: "clock", hold: 6400 });
+    }, 1300);
   }
   paint();
   installer();

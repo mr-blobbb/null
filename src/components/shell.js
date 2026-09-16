@@ -125,6 +125,9 @@
        slot()): a strip under the links, in the rail or in the bar */
     bar.appendChild(d.h("div", { "data-slot": "nav", class: "nav-slot" }));
 
+    /* the site's own period clock (see periodClock) */
+    bar.appendChild(d.h("span", { class: "clock-slot", "data-clock": "nav" }));
+
     /* search trigger */
     var searchBtn = d.h("button", {
       type: "button",
@@ -843,6 +846,83 @@ return foot;
     }, 3400);
   }
 
+  /* ---------- the period clock ----------
+     The schedule is the site's own data, so the clock that counts it down is
+     part of the site too, not an extension: it rides in the nav bar, in the
+     side rail (where it keeps just the dot and the time) and in the player's
+     widget strip, which has no nav bar of its own. One ticker drives every
+     copy on the page, and the whole thing hides itself when there is nothing
+     to count. Settings can switch it off. */
+  var clocks = [];
+  var clockEvery = null;
+
+  function clockChip() {
+    var chip = d.h("span", { class: "pclock", hidden: true }, [
+      d.h("i", { class: "pclock-dot", "aria-hidden": "true" }),
+      d.h("b", { class: "pclock-name" }, ""),
+      d.h("span", { class: "pclock-time" }, ""),
+      d.h("span", { class: "pclock-next", "data-rail-hide": "1" }, ""),
+    ]);
+    clocks.push({
+      root: chip,
+      name: chip.querySelector(".pclock-name"),
+      time: chip.querySelector(".pclock-time"),
+      next: chip.querySelector(".pclock-next"),
+    });
+    return chip;
+  }
+
+  /* what there is to say right now, or null when there is nothing: no
+     schedule on this page, no school today, or the last bell already rang */
+  function clockNow() {
+    var S = N.schedule;
+    if (!S || !S.todayInfo || !S.blocksFor || !S.live) return null;
+    try {
+      var info = S.todayInfo();
+      if (!info || !info.type) return null;
+      var live = S.live(S.blocksFor(info.type), new Date());
+      if (!live.block) return null;
+      var secs = Math.max(0, live.passing ? live.secToNext : live.secLeft);
+      return {
+        name: live.passing ? "Passing" : live.block.name,
+        left: Math.floor(secs / 60) + ":" + ("0" + (secs % 60)).slice(-2),
+        next: live.next ? live.next.name + " at " + live.next.start : "last bell of the day",
+      };
+    } catch (err) {
+      return null;
+    }
+  }
+
+  function paintClocks() {
+    var now = clockNow();
+    clocks.forEach(function (c) {
+      c.root.hidden = !now;
+      if (!now) return;
+      c.name.textContent = now.name;
+      c.time.textContent = now.left;
+      c.next.textContent = now.next;
+      c.root.title = now.name + " · " + now.left + " left · " + now.next;
+    });
+  }
+
+  /* (re)build every clock on the page: Settings calls this when the switch
+     moves, and a schedule edit can move the bells under it */
+  function buildClocks() {
+    clocks = [];
+    d.qsa("[data-clock]").forEach(function (slot) {
+      slot.textContent = "";
+      if (N.prefs.get("showClock") !== false) slot.appendChild(clockChip());
+    });
+    paintClocks();
+  }
+
+  function mountClocks() {
+    buildClocks();
+    if (clockEvery) return;
+    clockEvery = setInterval(paintClocks, 1000);
+    N.bus.on("sched", buildClocks);
+  }
+
   /* ---------- period bells ----------
      Confetti has to land ON the bell, not within half a minute of it: the
      schedule is read to find the seconds left in the current block (or in
@@ -1263,6 +1343,7 @@ return foot;
     initMarathon();
     initSs();
     watchPeriodEnd();
+    mountClocks();
 
     /* the hidden pages: hold Backspace, the period-four orb, the clock codes */
     armErase();
@@ -1371,6 +1452,8 @@ return foot;
   };
   N.fx = { confetti: confetti };
   N.perf = { ultra: ultraOn, watchFps: fpsWatch, floor: FPS_FLOOR };
+  /* the site's own period clock: what is on now, and the switch Settings uses */
+  N.clock = { apply: buildClocks, now: clockNow };
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);

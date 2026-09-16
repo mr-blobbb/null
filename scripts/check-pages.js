@@ -509,15 +509,15 @@ for (const page of PAGES) {
   win.close();
 }
 
-/* ---------- the two starter extensions ----------
-   NULL ships two .nullext files to install or download: a period clock and a
-   whole page of HTML. They are the copies people actually run, so the things
-   that went wrong with them are checked here: a stale install that ticked
-   every fifteen seconds, a greeting that popped up on every page, and a chip
-   that never reached the nav or the player. */
-console.log("\nstarter extensions");
+/* ---------- the starters and the site's own clock ----------
+   NULL ships two .nullext files: a focus timer (a nav widget plus a window of
+   its own) and a whole page of HTML. The period clock used to be a third, and
+   it is part of the site now, so the checks here are the three things that
+   went wrong with it: a copy left running next to the real clock, a clock that
+   never reached the player, and a second starter that was never shipped. */
+console.log("\nstarters and the site clock");
 {
-  /* exactly what a copy installed months ago looks like */
+  /* exactly what a copy installed back when it was an extension looks like */
   const OLD = {
     id: "period-clock",
     kind: "native",
@@ -550,52 +550,137 @@ console.log("\nstarter extensions");
   const { dom, errors } = load("extensions.html", "/", (w) => {
     countTicks(w);
     w.localStorage.setItem("null:ext", JSON.stringify([OLD]));
-    w.localStorage.setItem("null:extdata:period-clock", JSON.stringify({ greeted: 1 }));
   });
   const win = dom.window;
   const doc = win.document;
-  await wait(700);
+  await wait(1800);
   ok(errors.length === 0, "no script errors (" + errors.slice(0, 2).join(" | ") + ")");
+
+  ok(win.N.ext.list()[0].enabled === false, "a period-clock copy is switched off now the site has its own");
+  ok(
+    Array.from(doc.querySelectorAll(".toast")).some((t) => /part of NULL now/i.test(t.textContent)),
+    "…and it says why, once",
+  );
+  ok(!!doc.querySelector('[data-clock="nav"] .pclock'), "the site's own clock draws in the nav");
+  ok(win.__ticks > 0, "…and it ticks once a second");
+  ok(!!doc.querySelector('[data-clock="nav"] .pclock'), "the retired copy leaves no second clock behind");
 
   const cards = Array.from(doc.querySelectorAll("#extStart .start-card"));
   const names = cards.map((c) => c.querySelector("b").textContent);
   ok(cards.length === 2, "both starters are offered (" + cards.length + ")");
   ok(
-    names.indexOf("Period clock") >= 0 && names.indexOf("Starter page") >= 0,
-    "…the clock and a whole page (" + names.join(", ") + ")",
+    names.indexOf("Focus timer") >= 0 && names.indexOf("Starter page") >= 0,
+    "…a window of your own and a whole page (" + names.join(", ") + ")",
   );
-  ok(win.N.ext.list()[0].version !== "1.0.0", "a stale copy is updated on sight (v" + win.N.ext.list()[0].version + ")");
-  ok(!!doc.querySelector('[data-slot="nav"] .pc-chip'), "the period clock draws its chip in the nav");
-  ok(win.__ticks > 0, "…and it ticks once a second, not once every fifteen");
 
-  /* install the page starter from its card: a whole page, no JavaScript */
-  const pageCard = cards.find((c) => c.querySelector("b").textContent === "Starter page");
-  pageCard.querySelector(".sc-acts .btn").click();
-  await wait(150);
-  const go = Array.from(doc.querySelectorAll(".modal button")).find((b) => /install/i.test(b.textContent));
+  /* the newest modal only: a confirm can sit in the DOM for a beat after it
+     closes, and clicking its button would install the wrong thing */
+  const lastModal = () => {
+    const all = doc.querySelectorAll(".modal");
+    return all.length ? all[all.length - 1] : null;
+  };
+  const confirmBtn = () => {
+    const box = lastModal();
+    return box ? Array.from(box.querySelectorAll("button")).find((b) => /install/i.test(b.textContent)) : null;
+  };
+
+  /* install the window starter from its card and drive it */
+  const timerCard = cards.find((c) => c.querySelector("b").textContent === "Focus timer");
+  timerCard.querySelector(".sc-acts .btn").click();
+  await wait(180);
+  const go = confirmBtn();
   ok(!!go, "installing asks first");
   if (go) go.click();
-  await wait(250);
-  ok(win.N.ext.pages().length >= 2, "both starters add a page (" + win.N.ext.pages().length + ")");
-  ok(
-    !Array.from(doc.querySelectorAll(".toast")).some((t) => /is in your nav/.test(t.textContent)),
-    "nothing on the page greets you about the nav on every visit",
-  );
+  await wait(300);
+  const timer = win.N.ext.list().find((e) => e.name === "Focus timer");
+  ok(!!timer, "the focus timer installs (" + win.N.ext.list().map((e) => e.name).join(", ") + ")");
+  ok(!!doc.querySelector('[data-slot="nav"] .ft-chip'), "…and mounts its pill in the nav");
+
+  if (timer) {
+    win.N.ext.openHtml(timer.id);
+    await wait(120);
+    const face = doc.querySelector(".ext-pop .ft-time");
+    ok(!!face, "its window opens with the markup from the manifest");
+    const start = doc.querySelector('.ext-pop [data-act="start"]');
+    ok(!!start, "…with buttons to drive it");
+    if (start) {
+      start.click();
+      await wait(80);
+      const pill = doc.querySelector('[data-slot="nav"] .ft-chip');
+      ok(!!pill && !pill.hidden, "starting it puts the count in the nav");
+      /* the pill repaints on the extension's own second, so give it a few */
+      let ticked = null;
+      for (let i = 0; i < 12 && !ticked; i++) {
+        await wait(300);
+        const shown = pill.querySelector(".ft-txt").textContent;
+        if (shown !== "25:00") ticked = shown;
+      }
+      ok(!!ticked, "…and that count ticks (" + (ticked || "never moved") + ")");
+    }
+    /* install the page starter too: a real page, no JavaScript. The cards are
+       rebuilt after every install, so ask for the card again. */
+    const pageCard = Array.from(doc.querySelectorAll("#extStart .start-card")).find(
+      (c) => c.querySelector("b").textContent === "Starter page",
+    );
+    pageCard.querySelector(".sc-acts .btn").click();
+    await wait(200);
+    const go2 = confirmBtn();
+    ok(!!go2, "the page starter offers the same install step");
+    if (go2) go2.click();
+    await wait(350);
+    ok(win.N.ext.pages().length >= 1, "the page starter adds a page (" + win.N.ext.pages().length + ")");
+    ok(
+      !Array.from(doc.querySelectorAll(".toast")).some((t) => /is in your nav/.test(t.textContent)),
+      "nothing greets you about the nav on every visit",
+    );
+  }
   const reg = win.localStorage.getItem("null:ext");
   dom.window.close();
 
-  /* the player has no nav bar, so the chip needs the strip the player keeps
+  /* the player has no nav bar, so the clock needs the strip the player keeps
      for exactly this */
   const pl = load("player.html", "/", (w) => {
     countTicks(w);
     if (reg) w.localStorage.setItem("null:ext", reg);
   });
-  await wait(700);
+  await wait(800);
   ok(pl.errors.length === 0, "the player loads clean (" + pl.errors.slice(0, 2).join(" | ") + ")");
-  const chip = pl.dom.window.document.querySelector(".player-widgets .pc-chip");
-  ok(!!chip, "the period clock reaches the player");
+  const pdoc = pl.dom.window.document;
+  ok(!!pdoc.querySelector(".player-widgets .pclock"), "the site's clock reaches the player");
   ok(pl.dom.window.__ticks > 0, "…and keeps ticking there");
   pl.dom.window.close();
+}
+
+/* ---------- the particle network ----------
+   Constellation is a canvas layer now: theme.js draws the dots and the
+   hairlines between them, which is the effect people mean by a particle
+   network. The live layer animates, a thumbnail draws one frame, and a set
+   somebody saved back when this was a node/link pair has to come back as the
+   real thing instead of as nothing. */
+console.log("\nthe particle network");
+{
+  const { dom, errors } = load("settings.html", "/");
+  const win = dom.window;
+  const doc = win.document;
+  await wait(500);
+
+  win.N.theme.setParticles("constellation");
+  await wait(80);
+  ok(!!doc.querySelector(".part-fx .pt-net"), "constellation mounts a canvas layer");
+  ok(doc.querySelectorAll(".part-fx b").length === 0, "…with no DOM nodes pretending to be a network");
+  ok(!!doc.querySelector("#partGrid .part-thumb .pt-net"), "…and the shelf preview draws the same thing");
+
+  win.N.econ.grant("fx", "editor");
+  win.N.theme.craftWrite({
+    part: { name: "Old map", mono: true, colors: ["#aaa", "#bbb"], parts: [{ k: "node", n: 30 }, { k: "link", n: 20 }] },
+  });
+  const saved = win.N.theme.allParticles().find((p) => p.id === "mypart");
+  ok(
+    !!saved && saved.parts.length === 1 && saved.parts[0].k === "net",
+    "a set saved as node + link becomes one network",
+  );
+  ok(errors.length === 0, "no script errors (" + errors.slice(0, 2).join(" | ") + ")");
+  win.close();
 }
 
 /* ---------- served from a subfolder ----------

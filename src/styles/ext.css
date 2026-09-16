@@ -88,6 +88,20 @@
   line-height: 1.55;
   color: var(--text-2);
 }
+/* one installed extension: the name opens what it has, the play button runs
+   it again. The row keeps the full width so the two targets never fight. */
+.em-item {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  border-radius: var(--r-md);
+}
+.em-item:hover {
+  background: var(--glass-bg-3);
+}
+.em-item.off {
+  opacity: 0.55;
+}
 .em-row,
 .em-all {
   display: flex;
@@ -105,12 +119,27 @@
   text-decoration: none;
   cursor: pointer;
 }
-.em-row:hover,
 .em-all:hover {
   background: var(--glass-bg-3);
 }
-.em-row.off {
-  opacity: 0.55;
+.em-run {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  border: 0;
+  border-radius: var(--r-md);
+  background: none;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: color 0.16s, background 0.16s;
+}
+.em-run:hover {
+  color: var(--text);
+  background: var(--glass-bg-2);
+}
+.em-run .msr {
+  font-size: 17px;
 }
 .em-ic .msr,
 .em-all .msr {
@@ -843,13 +872,16 @@ main.ext-page-open > #extDocs {
   min-width: 0;
   margin-left: 6px;
 }
-.player-widgets:empty {
+/* the strip is only there when something is actually in it. The clock slot
+   is always in the markup, so :empty can no longer tell on its own. */
+.player-widgets:not(:has(.ext-widget, .pclock:not([hidden]))) {
   display: none;
 }
 .player-widgets .ext-widget {
   min-width: 0;
 }
-.player-widgets .pc-chip {
+.player-widgets .pc-chip,
+.player-widgets .pclock {
   height: 30px;
   font-size: 11.5px;
 }
@@ -857,7 +889,8 @@ main.ext-page-open > #extDocs {
   .player-widgets [data-rail-hide] {
     display: none;
   }
-  .player-widgets .pc-chip {
+  .player-widgets .pc-chip,
+  .player-widgets .pclock {
     padding: 0 8px;
     gap: 0;
   }

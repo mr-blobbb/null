@@ -108,7 +108,7 @@
   ];
   var PT_KINDS = [
     "mote", "bloom", "spark", "sparkle", "flare", "speck", "haze", "wisp", "firefly",
-    "trail", "ember", "bubble", "glint", "node", "link", "plasma", "swirl", "tunnel", "warp",
+    "trail", "ember", "bubble", "glint", "net", "plasma", "swirl", "tunnel", "warp",
   ];
 
   var craftCache = null;
@@ -164,6 +164,20 @@
       return x && PF_KINDS.concat(PT_KINDS).indexOf(x.k) >= 0 && x.n > 0;
     });
   }
+  /* Sets saved before the network replaced the old node/link pair: same idea,
+     so they get the real thing instead of drawing nothing. */
+  var LEGACY_KIND = { node: "net", link: "net" };
+  function kindsOf(p) {
+    var known = PF_KINDS.concat(PT_KINDS, Object.keys(LEGACY_KIND));
+    var out = [];
+    (p || []).forEach(function (x) {
+      if (!x || known.indexOf(x.k) < 0 || !(x.n > 0)) return;
+      var k = LEGACY_KIND[x.k] || x.k;
+      if (out.filter(function (o) { return o.k === k; })[0]) return;
+      out.push({ k: k, n: x.n, sp: x.sp });
+    });
+    return out;
+  }
   function crafted() {
     if (craftCache) return craftCache;
     var out = { pack: null, part: null };
@@ -200,7 +214,7 @@
         crafted: true,
         mono: mono,
         colors: mono ? null : q.colors,
-        parts: craftPartList(q.parts),
+        parts: kindsOf(q.parts),
         desc: "Your own particle set: shapes, counts and colours, built in the editor.",
         tags: ["Crafted", mono ? "Follows the theme" : "Own palette"],
       };
@@ -384,43 +398,208 @@
 
   /* NB: named ptHost, not partHost: the theme-pack builder above owns that
      name, and a second declaration would shadow it for the whole file. */
-  function ptHost(part, scale) {
+  function ptHost(part, scale, colors, mono) {
     var host = document.createElement("span");
-    host.className = "pt-p pt-p-" + part.k;
+    host.className = "pt pt-" + part.k;
     var n = Math.max(1, Math.round((part.n || 0) * scale));
     var center = part.sp === "center";
     for (var i = 0; i < n; i++) {
       var b = document.createElement("b");
-      /* depth: far particles are smaller, dimmer and take a little blur, which
-         is what turns a flat field of dots into a space you can look into */
-      var z = rnd(0.45, 1.4);
-      b.style.left = center ? "50%" : rnd(-6, 106).toFixed(1) + "%";
+      /* depth: far dots are smaller and dimmer. That is the only thing left
+         selling distance now the halos are gone, and it is enough. */
+      var z = rnd(0.5, 1.35);
+      b.style.left = center ? "50%" : rnd(-4, 104).toFixed(1) + "%";
       b.style.top = center
         ? "50%"
         : part.sp === "bottom"
-          ? rnd(72, 112).toFixed(1) + "%"
-          : rnd(-10, 100).toFixed(1) + "%";
+          ? rnd(74, 112).toFixed(1) + "%"
+          : rnd(-8, 102).toFixed(1) + "%";
       b.style.setProperty("--z", z.toFixed(2));
-      b.style.setProperty("--s", (rnd(1.6, 4.2) * z).toFixed(2) + "px");
-      b.style.setProperty("--dx", (Math.random() < 0.5 ? -1 : 1) * rnd(18, 200).toFixed(0) + "px");
-      b.style.setProperty("--o", (rnd(0.5, 1) * (0.5 + z * 0.5)).toFixed(2));
-      b.style.setProperty("--rot", rnd(-40, 40).toFixed(0) + "deg");
-      b.style.setProperty("--spin", (Math.random() < 0.5 ? -1 : 1) * rnd(90, 720).toFixed(0) + "deg");
-      b.style.setProperty("--dur", rnd(3, 9).toFixed(2));
-      b.style.setProperty("--delay", rnd(0, 18).toFixed(2));
-      /* warp streams outward from the middle, so it needs an angle + a
-         distance instead of a left/top start point */
-      if (part.k === "warp") {
+      b.style.setProperty("--s", (rnd(2, 4.6) * z).toFixed(2) + "px");
+      b.style.setProperty("--o", (rnd(0.45, 0.95) * (0.55 + z * 0.45)).toFixed(2));
+      /* one drift vector per dot: how far across and how far up or down it
+         travels over its own loop */
+      b.style.setProperty("--sx", (Math.random() < 0.5 ? -1 : 1) * rnd(10, 90).toFixed(0) + "px");
+      b.style.setProperty("--sy", (Math.random() < 0.5 ? -1 : 1) * rnd(60, 220).toFixed(0) + "px");
+      b.style.setProperty("--rot", rnd(-30, 30).toFixed(0) + "deg");
+      b.style.setProperty("--spin", (Math.random() < 0.5 ? -1 : 1) * rnd(60, 300).toFixed(0) + "deg");
+      b.style.setProperty("--dur", rnd(9, 22).toFixed(2));
+      b.style.setProperty("--delay", rnd(0, 22).toFixed(2));
+      /* a Shop set carries one tone per dot; a mono set reads its ink from
+         CSS, so it follows dark and light mode on its own */
+      if (!mono && colors && colors.length) b.style.setProperty("--c", colors[i % colors.length]);
+      /* the two radial kinds need an angle and a distance instead of a start
+         point, because they travel outward from the middle */
+      if (part.k === "warp" || part.k === "tunnel") {
         b.style.setProperty("--ang", rnd(0, 360).toFixed(0) + "deg");
-        b.style.setProperty("--dist", rnd(55, 150).toFixed(0) + "vh");
-        b.style.setProperty("--dur", rnd(1.2, 3).toFixed(2));
-      }
-      if (part.k === "tunnel") {
-        b.style.setProperty("--dur", rnd(2.2, 5).toFixed(2));
+        b.style.setProperty("--dist", rnd(45, 120).toFixed(0) + "vmin");
+        b.style.setProperty("--dur", rnd(3.5, 7).toFixed(2));
       }
       host.appendChild(b);
     }
     return host;
+  }
+
+  /* ---------- the particle network ("constellation") ----------
+     A canvas layer rather than a field of DOM nodes: dots drift and a
+     hairline is drawn between any two that pass close to each other, which
+     is the effect people mean by a particle network. It reads the same
+     palette as the rest of the set, stays flat (thin lines, small solid
+     dots, a hairline ring each) and only animates on the live layer: a Shop
+     shelf of thumbnails draws one frame instead of fifty loops. */
+  var netStops = [];
+
+  function netStop() {
+    netStops.forEach(function (stop) {
+      stop();
+    });
+    netStops = [];
+  }
+
+  function netCanvas(part, colors, mono, animate) {
+    var el = document.createElement("canvas");
+    el.className = "pt-net";
+    el.setAttribute("aria-hidden", "true");
+    var ctx = el.getContext("2d");
+    if (!ctx) return el;
+
+    /* every pair is checked each frame, so the count has a ceiling no matter
+       what the editor's slider says */
+    var count = Math.max(8, Math.min(140, Math.round(part.n || 60)));
+    var link = 148;
+    var dots = [];
+    var w = 0;
+    var h = 0;
+    var raf = 0;
+    var last = 0;
+
+    function size() {
+      var box = el.getBoundingClientRect();
+      w = Math.max(1, Math.round(box.width || window.innerWidth));
+      h = Math.max(1, Math.round(box.height || window.innerHeight));
+      var dpr = Math.min(2, window.devicePixelRatio || 1);
+      el.width = Math.round(w * dpr);
+      el.height = Math.round(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      /* reach from the density, not a fixed number: the same 78 dots on a
+         phone would otherwise be a solid mesh and on a 4K screen a few
+         lonely pairs */
+      link = Math.max(80, Math.min(180, Math.sqrt((w * h) / count) * 1.05));
+    }
+
+    /* the ink comes from the layer's own palette, resolved through the
+       browser so it follows the theme the same way the CSS does */
+    function inks() {
+      if (!mono && colors && colors.length) return colors.slice();
+      var cs = window.getComputedStyle(el);
+      var out = [];
+      for (var i = 1; i <= 4; i++) {
+        var v = cs.getPropertyValue("--pt-" + i).trim();
+        if (/^(#|rgb|hsl)/.test(v)) out.push(v);
+      }
+      return out.length ? out : [cs.color || "#e6e7ea"];
+    }
+
+    function seed() {
+      var ink = inks();
+      dots = [];
+      for (var i = 0; i < count; i++) {
+        dots.push({
+          x: Math.random() * w,
+          y: Math.random() * h,
+          vx: (Math.random() - 0.5) * 0.24,
+          vy: (Math.random() - 0.5) * 0.24,
+          r: 1 + Math.random() * 1.5,
+          ink: ink[i % ink.length],
+        });
+      }
+    }
+
+    function move(step) {
+      dots.forEach(function (d) {
+        d.x += d.vx * step;
+        d.y += d.vy * step;
+        /* wrap a little outside the frame, so a line never pops mid-screen */
+        if (d.x < -20) d.x = w + 20;
+        if (d.x > w + 20) d.x = -20;
+        if (d.y < -20) d.y = h + 20;
+        if (d.y > h + 20) d.y = -20;
+      });
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, w, h);
+      ctx.lineWidth = 1;
+      /* the web first, so the dots sit on top of it */
+      for (var i = 0; i < dots.length; i++) {
+        for (var j = i + 1; j < dots.length; j++) {
+          var a = dots[i];
+          var b = dots[j];
+          var dx = a.x - b.x;
+          var dy = a.y - b.y;
+          var d2 = dx * dx + dy * dy;
+          if (d2 > link * link) continue;
+          ctx.globalAlpha = 0.22 * (1 - Math.sqrt(d2) / link);
+          ctx.strokeStyle = a.ink;
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.stroke();
+        }
+      }
+      dots.forEach(function (d) {
+        ctx.fillStyle = d.ink;
+        ctx.globalAlpha = 0.8;
+        ctx.beginPath();
+        ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+        ctx.fill();
+        /* one hairline ring each: the glassy note, and it keeps a dot
+           readable over a busy backdrop */
+        ctx.globalAlpha = 0.3;
+        ctx.beginPath();
+        ctx.arc(d.x, d.y, d.r + 2, 0, Math.PI * 2);
+        ctx.stroke();
+      });
+      ctx.globalAlpha = 1;
+    }
+
+    /* The first pass waits a frame: a thumbnail is built detached and only
+       gets its box once it is in the page, and measuring it early would draw
+       the whole thing into a viewport-sized canvas. */
+    var booted = false;
+    function boot() {
+      if (booted) return;
+      booted = true;
+      size();
+      seed();
+      draw();
+    }
+    window.requestAnimationFrame(boot);
+
+    if (animate) {
+      var fit = function () {
+        size();
+        seed();
+        draw();
+      };
+      window.addEventListener("resize", fit);
+      var tick = function (ts) {
+        raf = window.requestAnimationFrame(tick);
+        /* hidden behind a tab, a closed player or ultra-perf: keep the loop
+           alive but stop doing the work */
+        if (!booted || document.hidden || !el.isConnected || !el.offsetParent) return;
+        var step = last ? Math.min(3, (ts - last) / 16.7) : 1;
+        last = ts;
+        move(step);
+        draw();
+      };
+      raf = window.requestAnimationFrame(tick);
+      netStops.push(function () {
+        if (raf) window.cancelAnimationFrame(raf);
+        window.removeEventListener("resize", fit);
+      });
+    }
+    return el;
   }
 
   function partArt(p, cls, opts) {
@@ -430,17 +609,25 @@
     el.setAttribute("data-part", p.id);
     el.setAttribute("aria-hidden", "true");
     var scale = opts.scale || 1;
-    (p.parts || []).forEach(function (part) {
-      el.appendChild(ptHost(part, scale));
-    });
-    /* mono particles get their colors from CSS so they follow dark/light;
-       the rest are fed their own palette inline */
-    if (!p.mono && p.colors) {
-      var colors = p.colors;
+    var mono = !!p.mono;
+    var colors = p.colors;
+    /* mono particles take their colour from CSS so they follow dark and
+       light mode; the rest get their own palette, set here because both the
+       CSS and the network canvas read it off this element */
+    if (!mono && colors) {
       for (var i = 0; i < 4; i++) {
         el.style.setProperty("--pt-" + (i + 1), colors[i] || colors[colors.length - 1]);
       }
     }
+    (p.parts || []).forEach(function (part) {
+      /* the network is one canvas for the whole layer; only the live layer
+         animates, so a shelf of thumbnails draws one frame each */
+      if (part.k === "net") {
+        el.appendChild(netCanvas(part, colors, mono, cls === "part-fx"));
+        return;
+      }
+      el.appendChild(ptHost(part, scale, colors, mono));
+    });
     return el;
   }
 
@@ -464,6 +651,7 @@
   function killPart() {
     if (partEl && partEl.parentNode) partEl.parentNode.removeChild(partEl);
     partEl = null;
+    netStop();
   }
 
   function buildPart(p) {
