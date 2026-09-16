@@ -175,6 +175,48 @@
       updateFsIcon();
     }
 
+    /* hide the bar: the game takes the full screen without going fullscreen,
+       and a small handle stays at the bottom edge to bring the controls
+       back. Same idea as the fullscreen bar, but you asked for it. */
+    var barBtn = d.qs("#btnBar");
+    var handle = d.qs("#barHandle");
+    var HINT = "player:barhint";
+    function setBarHidden(hide) {
+      document.body.classList.toggle("bar-hidden", hide);
+      if (handle) handle.hidden = !hide;
+      if (bar) bar.classList.remove("show");
+      if (barBtn) barBtn.setAttribute("aria-pressed", hide ? "true" : "false");
+      if (!hide) return;
+      /* wake the handle for a few seconds so it is obvious where the bar went,
+         then let it settle back down over the game */
+      if (handle) {
+        handle.classList.add("awake");
+        setTimeout(function () {
+          handle.classList.remove("awake");
+        }, 3800);
+      }
+      if (!N.flags.get(HINT)) {
+        N.flags.set(HINT);
+        d.toast("Bar hidden. Press H or use the handle to bring it back.", { icon: "info", hold: 4200 });
+      }
+    }
+    if (barBtn) {
+      barBtn.addEventListener("click", function () {
+        setBarHidden(!document.body.classList.contains("bar-hidden"));
+      });
+    }
+    if (handle) {
+      handle.addEventListener("click", function () {
+        setBarHidden(false);
+      });
+    }
+    document.addEventListener("keydown", function (e) {
+      if (e.key !== "h" && e.key !== "H") return;
+      var t = e.target;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+      setBarHidden(!document.body.classList.contains("bar-hidden"));
+    });
+
     /* reload */
     var rlBtn = d.qs("#btnReload");
     if (rlBtn) {

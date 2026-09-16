@@ -31,6 +31,51 @@
     var sortMode = "name"; // name = A-Z, id = folder label, plays = popularity, new = recently added
     var gridApi = null;
 
+    /* ---------- filters as a sidebar or a top row ----------
+       Ultrawide screens get the labels down the left as a sidebar; anything
+       narrower gets the chip row in the toolbar, and Settings can force
+       either one (prefs "libNav": auto | rail | bar). The chips are the same
+       nodes in both cases: this only re-parents them, so buildChips() and
+       everything that follows stays as it was. */
+    var rail = d.qs("#libRail");
+    var railBody = d.qs("#libRailBody");
+    var libBody = d.qs(".lib-body");
+    var wide = window.matchMedia ? window.matchMedia("(min-width: 1600px)") : null;
+
+    function railWanted() {
+      var pref = N.prefs.get("libNav");
+      if (pref === "rail") return true;
+      if (pref === "bar") return false;
+      return !!(wide && wide.matches);
+    }
+
+    function layout() {
+      var on = railWanted() && !!rail && !!railBody && !!libBody;
+      document.documentElement.dataset.libMode = on ? "rail" : "bar";
+      if (!libBody) return;
+      if (on) {
+        if (rowHost.parentNode !== railBody) railBody.appendChild(rowHost);
+      } else if (rowHost.parentNode !== libBody) {
+        libBody.insertBefore(rowHost, libBody.firstChild);
+      }
+    }
+
+    /* ---------- sticky toolbar ----------
+       The toolbar pins under the nav once it scrolls past. A 1px sentinel
+       above it decides when: the observer fires on the exact crossing, and
+       .stuck lends the backdrop it needs to sit over the cards. */
+    var bar = d.qs(".toolbar");
+    if (bar && typeof IntersectionObserver !== "undefined") {
+      var sent = d.h("div", { class: "stick-sent", "aria-hidden": "true" });
+      bar.parentNode.insertBefore(sent, bar);
+      new IntersectionObserver(
+        function (entries) {
+          bar.classList.toggle("stuck", !entries[0].isIntersecting);
+        },
+        { root: scroller || null, threshold: 0 },
+      ).observe(sent);
+    }
+
     /* reset chip: one click back to the unfiltered view. Hidden until a
        filter or a search is actually doing something. */
     var resetBtn = d.h("button", {
@@ -387,7 +432,13 @@
         });
       });
       var labels = Object.keys(counts).sort();
+      /* label on the left, count on the right: reads as a list in the rail
+         and as a normal chip in the top row */
       function chip(label, on, extra) {
+        var kids = [d.h("span", { class: "ch-t" }, label)];
+        if (extra !== undefined && extra !== null) {
+          kids.push(d.h("span", { class: "ch-n" }, String(extra)));
+        }
         return d.h("button", {
           type: "button",
           class: "chip chip-btn" + (on ? " on" : ""),
@@ -396,7 +447,7 @@
             buildChips();
             paint();
           },
-        }, label + (extra ? " · " + extra : ""));
+        }, kids);
       }
       /* the reset chip lives at the end: insert before it so it stays last */
       rowHost.textContent = "";
@@ -435,10 +486,13 @@
       });
     }
 
+    layout();
     buildChips();
     renderFavs();
     renderRecs();
     bindMarathon();
+    if (wide && wide.addEventListener) wide.addEventListener("change", layout);
+    N.bus.on("sync", layout); /* Settings changed the layout in another tab */
     N.bus.on("favs", function () {
       renderFavs();
       paint();

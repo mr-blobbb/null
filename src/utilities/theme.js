@@ -787,6 +787,11 @@
     else delete root.dataset.density;
     if (p.miniPerf) root.dataset.mini = "1";
     else delete root.dataset.mini;
+    /* library filter layout: library.js reads this (and the ultrawide media
+       query for "auto") and moves the chip row between the rail and the
+       toolbar. Left unset means auto. */
+    if (p.libNav === "rail" || p.libNav === "bar") root.dataset.libnav = p.libNav;
+    else delete root.dataset.libnav;
     applyBg();
   }
 
@@ -897,6 +902,10 @@
     },
     setMiniPerf: function (on) {
       N.prefs.set("miniPerf", !!on);
+      applyLayout();
+    },
+    setLibNav: function (mode) {
+      N.prefs.set("libNav", mode === "rail" || mode === "bar" ? mode : "auto");
       applyLayout();
     },
     setBg: setBg,

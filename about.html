@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="src/styles/particles.css">
   <link rel="stylesheet" href="src/styles/perf.css">
   <link rel="stylesheet" href="src/styles/dev.css">
+  <link rel="stylesheet" href="src/styles/about.css">
   <script>
     (function () {
       try {
@@ -32,13 +33,51 @@
   <div class="glow-bg" aria-hidden="true"></div>
   <header data-mount="nav"></header>
 
-  <main id="main" class="page page-narrow">
-    <div class="page-head">
-      <span class="eyebrow"><span data-icon="info"></span>about</span>
-      <h1>About NULL</h1>
-    </div>
-    <!-- WRITE MARKDOWN HERE -->
-    <article class="md-out glass" aria-label="About content"></article>
+  <main id="main" class="page about">
+    <section class="ab-hero">
+      <div class="ab-orb" aria-hidden="true"></div>
+      <div class="ab-orb b" aria-hidden="true"></div>
+      <span class="eyebrow"><span data-icon="info"></span>about NULL</span>
+      <h1 class="ab-null">NULL</h1>
+      <p class="ab-tag">Play. Create. Vanish.</p>
+      <p class="ab-lead">
+        A few thousand games, a handful of apps, a pile of proxy links and a
+        school schedule that knows what period it is. Black and white, browser
+        only, no accounts, and no server anywhere in the building. Built by a
+        student, for students, because the games sites we had were slow, ugly,
+        or blocked inside a week.
+      </p>
+      <div class="ab-actions" id="abActions"></div>
+    </section>
+
+    <div class="ab-stats" id="abStats"></div>
+
+    <section class="ab-sec">
+      <h2><span data-icon="sparkle"></span>What is actually in here</h2>
+      <p class="ab-sub">Eight things, most of which you will never have to think about again.</p>
+      <div class="ab-grid" id="abGrid"></div>
+    </section>
+
+    <section class="ab-sec" id="abStory"></section>
+    <section class="ab-sec" id="abFaq"></section>
+
+    <section class="ab-sec">
+      <h2><span data-icon="file"></span>The paperwork</h2>
+      <p class="ab-sub">The same rules as anywhere else, written by a person instead of a legal team. Each one opens with the short version.</p>
+      <div class="ab-papers" id="abPapers"></div>
+    </section>
+
+    <details class="ab-full glass">
+      <summary>
+        <span data-icon="book"></span>
+        The long version
+        <span class="ab-hint">everything above in words, plus how to add your own games</span>
+        <span data-icon="chevD"></span>
+      </summary>
+      <!-- WRITE MARKDOWN HERE -->
+      <article class="md-out" aria-label="About content"></article>
+    </details>
+
     <script type="text/markdown">
 # Hey, you found NULL
 
@@ -137,5 +176,6 @@ Read the [Terms](/terms) and the [Privacy Policy](/privacy) if you want the lawy
   <script src="src/components/shell.js"></script>
   <script src="src/components/devconsole.js"></script>
   <script src="src/pages/legal.js"></script>
+  <script src="src/pages/about.js"></script>
 </body>
 </html>

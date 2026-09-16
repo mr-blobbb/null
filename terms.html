@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="src/styles/particles.css">
   <link rel="stylesheet" href="src/styles/perf.css">
   <link rel="stylesheet" href="src/styles/dev.css">
+  <link rel="stylesheet" href="src/styles/legal.css">
   <script>
     (function () {
       try {
@@ -32,13 +33,30 @@
   <div class="glow-bg" aria-hidden="true"></div>
   <header data-mount="nav"></header>
 
-  <main id="main" class="page page-narrow">
+  <main id="main" class="page page-narrow legal">
+    <div class="read-bar" aria-hidden="true"><i></i></div>
     <div class="page-head">
       <span class="eyebrow"><span data-icon="file"></span>terms of service</span>
       <h1>Terms of Service</h1>
     </div>
-    <!-- WRITE MARKDOWN HERE -->
-    <article class="md-out glass" aria-label="Terms content"></article>
+    <aside class="legal-rail" id="legalRail">
+      <div class="legal-rail-in">
+        <b>On this page</b>
+        <nav id="legalToc"></nav>
+      </div>
+    </aside>
+    <div class="legal-body">
+      <!-- plain english. legal.js renders this into the card at the top -->
+      <script type="text/plain" id="tldr">
+- **Be decent.** Do not use NULL to break the law, or to wreck someone else's things.
+- **NULL comes as is.** If a game eats your homework, that one is on you, not on us.
+- **The games belong to whoever made them.** NULL lists them. It does not own them.
+- **Your school's rules still apply to you,** even though they do not apply to NULL.
+- **Nothing is promised about uptime.** It is a static site run by students: it goes down, it comes back.
+      </script>
+      <!-- WRITE MARKDOWN HERE -->
+      <article class="md-out glass" aria-label="Terms content"></article>
+    </div>
     <script type="text/markdown">
 # Terms of Service
 

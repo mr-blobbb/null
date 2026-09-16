@@ -1,0 +1,231 @@
+/* NULL · tour.css
+   The onboarding tour: a spotlight that cuts a hole over whatever it is
+   talking about, and a callout with a little arrow pointing at it. The dim
+   layer never swallows clicks, so the page stays usable while the tour runs. */
+
+.tour-dim {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s var(--ease);
+}
+.tour-dim.on {
+  opacity: 1;
+}
+/* the hole: one huge box-shadow does the dimming, so the page shows through
+   the middle and the edges stay rounded like the thing underneath */
+.tour-hole {
+  position: fixed;
+  border-radius: var(--r-lg);
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.58);
+  outline: 1px solid color-mix(in srgb, var(--ac-1) 55%, transparent);
+  transition: top 0.32s var(--ease), left 0.32s var(--ease), width 0.32s var(--ease),
+    height 0.32s var(--ease), border-radius 0.32s var(--ease);
+}
+html[data-theme="light"] .tour-hole {
+  box-shadow: 0 0 0 9999px rgba(20, 20, 24, 0.42);
+}
+
+/* ---------- the callout ---------- */
+.tour-box {
+  position: fixed;
+  z-index: 302;
+  width: min(340px, calc(100vw - 28px));
+  padding: 18px 18px 14px;
+  border-radius: var(--r-lg);
+  border: 1px solid var(--line-2);
+  background: var(--glass-bg);
+  box-shadow: var(--shadow-2);
+  animation: tour-in 0.28s var(--ease) both;
+}
+.tour-box.mid {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  width: min(420px, calc(100vw - 28px));
+}
+/* the triangle: rotated square, half hidden behind the box */
+.tour-arrow {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background: var(--glass-bg);
+  border: 1px solid var(--line-2);
+  transform: rotate(45deg);
+}
+.tour-box.below .tour-arrow {
+  top: -9px;
+  border-right: 0;
+  border-bottom: 0;
+}
+.tour-box.above .tour-arrow {
+  bottom: -9px;
+  border-left: 0;
+  border-top: 0;
+}
+.tour-box.right .tour-arrow {
+  left: -9px;
+  border-right: 0;
+  border-top: 0;
+}
+.tour-box.left .tour-arrow {
+  right: -9px;
+  border-left: 0;
+  border-bottom: 0;
+}
+.tour-arrow {
+  display: none;
+}
+.tour-box.below .tour-arrow,
+.tour-box.above .tour-arrow,
+.tour-box.left .tour-arrow,
+.tour-box.right .tour-arrow {
+  display: block;
+}
+
+.tour-kick {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  margin-bottom: 10px;
+}
+.tour-kick .msr {
+  font-size: 15px;
+  color: var(--ac-1);
+}
+.tour-box h3 {
+  font-size: 18px;
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+}
+.tour-box p {
+  color: var(--text-2);
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+.tour-box p b {
+  color: var(--text);
+}
+.tour-box p + p {
+  margin-top: 9px;
+}
+.tour-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 13px;
+  border-top: 1px solid var(--line);
+}
+.tour-box.mid .tour-foot {
+  justify-content: center;
+}
+.tour-dots {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-right: auto;
+}
+.tour-box.mid .tour-dots {
+  display: none;
+}
+.tour-dots i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--line-2);
+  transition: background 0.2s, transform 0.2s;
+}
+.tour-dots i.on {
+  background: var(--ac-1);
+  transform: scale(1.5);
+}
+.tour-dots i.done {
+  background: var(--text-2);
+}
+.tour-skip {
+  background: none;
+  border: 0;
+  color: var(--text-2);
+  font-size: 12.5px;
+  cursor: pointer;
+  padding: 6px 4px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.tour-skip:hover {
+  color: var(--text);
+}
+.tour-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2px;
+  z-index: 303;
+  pointer-events: none;
+}
+.tour-bar i {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--ac-1);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--ac-1) 70%, transparent);
+  transition: width 0.3s var(--ease);
+}
+
+@keyframes tour-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.tour-box.mid {
+  animation: tour-in-mid 0.3s var(--ease) both;
+}
+@keyframes tour-in-mid {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -46%) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+/* the thing being talked about gets a lift so it reads as "this one" */
+.tour-target {
+  position: relative;
+  z-index: 301;
+}
+
+@media (max-width: 620px) {
+  .tour-box {
+    width: calc(100vw - 20px);
+    padding: 15px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tour-hole,
+  .tour-dim,
+  .tour-bar i {
+    transition: none;
+  }
+  .tour-box,
+  .tour-box.mid {
+    animation: none;
+  }
+}

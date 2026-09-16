@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="src/styles/particles.css">
   <link rel="stylesheet" href="src/styles/perf.css">
   <link rel="stylesheet" href="src/styles/dev.css">
+  <link rel="stylesheet" href="src/styles/legal.css">
   <script>
     (function () {
       try {
@@ -32,13 +33,29 @@
   <div class="glow-bg" aria-hidden="true"></div>
   <header data-mount="nav"></header>
 
-  <main id="main" class="page page-narrow">
+  <main id="main" class="page page-narrow legal">
+    <div class="read-bar" aria-hidden="true"><i></i></div>
     <div class="page-head">
       <span class="eyebrow"><span data-icon="cookie"></span>cookies</span>
       <h1>Cookies</h1>
     </div>
-    <!-- WRITE MARKDOWN HERE -->
-    <article class="md-out glass" aria-label="Cookie content"></article>
+    <aside class="legal-rail" id="legalRail">
+      <div class="legal-rail-in">
+        <b>On this page</b>
+        <nav id="legalToc"></nav>
+      </div>
+    </aside>
+    <div class="legal-body">
+      <!-- plain english. legal.js renders this into the card at the top -->
+      <script type="text/plain" id="tldr">
+- **NULL does not set cookies.** Not one, not even a cheeky one.
+- **What it remembers goes in localStorage,** which is a different thing in the same browser.
+- **The service worker caches the site's own files** so it works offline. That is not a cookie either.
+- **No consent banner, because there is nothing to consent to.**
+      </script>
+      <!-- WRITE MARKDOWN HERE -->
+      <article class="md-out glass" aria-label="Cookie content"></article>
+    </div>
     <script type="text/markdown">
 # Cookies
 

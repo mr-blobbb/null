@@ -343,131 +343,15 @@
     }, 1000);
   }
 
-  /* ---------- modals ---------- */
-  function welcome() {
-    if (N.flags.get("welcome")) {
-      popupNote();
-      return;
-    }
-    N.modal.open({
-      title: "Welcome to NULL",
-      icon: "ban",
-      dismissible: false,
-      body:
-"<p style='font-size:15px; color:#a3a3a3; margin-top:0; margin-bottom:16px;'>Around 2,300 games, plus apps, proxies and backup links, all in one place.</p>" +
-"<p style='font-size:14px; margin-bottom:16px;'>NULL is a school project, so it changes whenever there's time to add something. Worth checking the announcements every so often.</p>" +
-"<p style='font-size:13.5px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; color:#737373; margin-bottom:8px;'>A few things worth knowing:</p>" +
-"<p style='font-size:13.5px; margin-top:0; line-height:1.5;'>• Games you open show up under <b>Recently played</b>, and you can star the ones you like<br>" +
-"• <b>Settings</b> covers tab cloaking, a panic key, themes and a lot more<br>" +
-"• Coins, XP and the Shop run on local progress. Nothing leaves your device, and there are no accounts</p>"
-,
-      actions: [
-        {
-          label: "Continue",
-          variant: "primary",
-          onClick: function () {
-            N.flags.set("welcome");
-            popupNote();
-          },
-        },
-      ],
-    });
-    /* 5-second cooldown on Continue: the copy is worth reading */
-    var m = Array.prototype.slice.call(document.querySelectorAll(".modal-ov")).pop();
-    var foot = m && m.querySelector(".modal-foot");
-    var btn = foot && foot.querySelector("button");
-    if (btn && foot) {
-      foot.insertBefore(
-        d.h("span", { class: "modal-cool-hint" }, "This stuff is helpful, read it!"),
-        btn,
-      );
-      var left = 5;
-      btn.disabled = true;
-      btn.textContent = "Continue (" + left + ")";
-      var iv = setInterval(function () {
-        left--;
-        if (left <= 0) {
-          clearInterval(iv);
-          btn.disabled = false;
-          btn.textContent = "Continue";
-        } else {
-          btn.textContent = "Continue (" + left + ")";
-        }
-      }, 1000);
-    }
+  /* ---------- first run ----------
+     The welcome modal grew up into the tour (components/tour.js): it opens
+     here on the home page, walks the library, the shop and settings, and
+     then chains the permission ask and the Settings nudge wherever it
+     happens to finish. home.js just hands over. */
+  function firstRun() {
+    if (N.tour) N.tour.start();
   }
 
-  function popupNote() {
-    if (N.flags.get("popup")) {
-      customizeNote();
-      return;
-    }
-    N.modal.open({
-      title: "Popups & redirects",
-      icon: "ext",
-      body:
-        "<p>Some NULL features (cloaking, about:blank / blob: modes, and opening external proxies) ask the browser to allow <b>popups</b> and <b>redirects</b>.</p>" +
-        "<p>That’s NULL requesting permission for its own functionality. It is <b>not</b> malicious, and the browser stays in control of every permission prompt.</p>",
-      onClose: customizeNote,
-      actions: [
-        {
-          label: "Please accept",
-          variant: "primary",
-          onClick: function () {
-            N.flags.set("popup");
-            var w = null;
-            try {
-              w = window.open("about:blank", "_blank");
-            } catch (err) {}
-            if (w) {
-              /* the test window opened: popups are allowed, so cloaking is on */
-              if (N.cloak && N.cloak.clear) N.cloak.clear();
-              try {
-                w.close();
-              } catch (err) {}
-            } else {
-              /* remember it: cloaking won't fire another doomed popup */
-              if (N.cloak && N.cloak.markBlocked) N.cloak.markBlocked();
-              d.toast("Popup blocked. Allow popups for NULL to enable cloaking.", { type: "err", hold: 5000 });
-            }
-          },
-        },
-      ],
-    });
-  }
-
-  /* one-time nudge after the welcome + popup modals: point new users at the
-     customization features in Settings. "Sure" jumps straight there. */
-  function customizeNote() {
-    if (N.flags.get("customize")) return;
-    N.modal.open({
-      title: "Make NULL yours",
-      icon: "pen",
-      dismissible: false,
-      body:
-        "<p style='font-size:15px; color:#a3a3a3; margin-top:0; margin-bottom:14px;'>Want to make NULL look how you like?</p>" +
-        "<p style='font-size:13.5px; margin-top:0; margin-bottom:14px; line-height:1.55;'>Settings has <b>accent colors</b>, <b>glow borders</b>, <b>dark and light mode</b>, tab <b>presets</b> and a <b>panic key</b>. Everything saves to this device as you change it.</p>" +
-        "<div style='margin:0 0 14px; padding:10px 12px; border-radius:12px; background: color-mix(in srgb, var(--ac-1) 9%, transparent); border:1px solid color-mix(in srgb, var(--ac-1) 26%, transparent); font-size:13.5px; line-height:1.5;'><b>Seasonal mode</b> is in there too: leaves in fall, snow in winter, petals in spring, extra light in summer. It follows the calendar on its own.</div>" +
-        "<p style='font-size:13px; color:#737373; margin:0;'>You can change any of it later.</p>",
-      actions: [
-        {
-          label: "Not right now",
-          variant: "outline",
-          onClick: function () {
-            N.flags.set("customize");
-          },
-        },
-        {
-          label: "Sure",
-          variant: "primary",
-          onClick: function () {
-            N.flags.set("customize");
-            location.href = N.url("/settings");
-          },
-        },
-      ],
-    });
-  }
 
   /* ---------- buttons ---------- */
   function bind() {
@@ -556,7 +440,7 @@
     N.bus.on("sched", function () {
       if (document.body.contains(d.qs("#schedHome"))) renderSchedHome();
     });
-    welcome();
+    firstRun();
   }
 
   if (document.readyState === "loading") {

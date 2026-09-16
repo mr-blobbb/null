@@ -4591,6 +4591,121 @@ body.player-page.fs .player-bar.show {
   transform: none;
   opacity: 1;
 }
+
+/* ---------- player: hide the bar, keep a handle ----------
+   Hiding drops the bar out of the layout (so the frame takes the whole
+   screen) and leaves a small chat-head at the bottom edge. It idles dimmed
+   over the game and wakes up on hover, or for a few seconds after hiding
+   so it is obvious where the controls went. */
+.player-bar {
+  transition: transform 0.28s var(--ease), opacity 0.28s var(--ease);
+}
+body.player-page.bar-hidden .player-bar {
+  position: absolute;
+  top: auto;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  border-bottom: 0;
+  border-top: 1px solid var(--line);
+  transform: translateY(calc(100% + 4px));
+  opacity: 0;
+  pointer-events: none;
+}
+.bar-handle[hidden] {
+  display: none;
+}
+.bar-handle {
+  position: fixed;
+  left: 50%;
+  bottom: 14px;
+  z-index: 6;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  padding: 0 13px 0 9px;
+  border-radius: 999px;
+  border: 1px solid var(--line-2);
+  background: color-mix(in srgb, var(--glass-bg) 90%, transparent);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  box-shadow: var(--shadow-1);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: lowercase;
+  cursor: pointer;
+  opacity: 0.34;
+  transform: translateX(-50%);
+  transition: opacity 0.2s, transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+  animation: bh-in 0.3s var(--ease) both;
+}
+.bar-handle .bh-ic {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--glass-bg-3);
+  color: var(--text);
+  flex: none;
+}
+.bar-handle .bh-ic .msr {
+  font-size: 15px;
+}
+.bar-handle .bh-txt {
+  max-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  opacity: 0;
+  transition: max-width 0.22s var(--ease), opacity 0.18s;
+}
+.bar-handle:hover,
+.bar-handle:focus-visible,
+.bar-handle.awake {
+  opacity: 1;
+}
+.bar-handle:hover,
+.bar-handle:focus-visible {
+  transform: translateX(-50%) translateY(-2px);
+  border-color: color-mix(in srgb, var(--ac-1) 45%, var(--line-2));
+  box-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.6), 0 0 0 4px color-mix(in srgb, var(--ac-1) 12%, transparent);
+}
+.bar-handle:hover .bh-txt,
+.bar-handle:focus-visible .bh-txt,
+.bar-handle.awake .bh-txt {
+  max-width: 90px;
+  opacity: 1;
+}
+.bar-handle.awake {
+  animation: bh-pulse 1.5s ease-in-out 2;
+}
+@keyframes bh-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(16px);
+  }
+  to {
+    opacity: 0.34;
+    transform: translateX(-50%);
+  }
+}
+@keyframes bh-pulse {
+  0%,
+  100% {
+    box-shadow: var(--shadow-1), 0 0 0 0 color-mix(in srgb, var(--ac-1) 30%, transparent);
+  }
+  50% {
+    box-shadow: var(--shadow-1), 0 0 0 9px color-mix(in srgb, var(--ac-1) 0%, transparent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bar-handle {
+    animation: none;
+  }
+}
 body.player-page.fs .player-note {
   bottom: 14px;
 }
@@ -4682,6 +4797,154 @@ body.player-page.fs .player-note {
   flex: none;
   height: 30px;
   border-radius: 999px;
+}
+
+/* label + count inside one chip, so the same nodes read as a chip in the
+   toolbar and as a list row in the rail */
+.chip-btn {
+  gap: 8px;
+}
+.chip-btn .ch-n {
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.7;
+}
+
+/* ============================================================
+   library layout: label rail + toolbar that pins under the nav
+   library.js sets html[data-lib-mode]: "rail" on ultrawide screens (or
+   whenever Settings asks for the sidebar), "bar" for the chip row.
+   ============================================================ */
+.lib-cols {
+  display: block;
+}
+html[data-lib-mode="rail"] .lib-cols {
+  display: grid;
+  grid-template-columns: 236px minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+  /* the library body can breathe wider than the normal page measure when
+     there is a whole sidebar next to it */
+  max-width: min(1720px, 100%);
+}
+.lib-rail {
+  display: none;
+}
+html[data-lib-mode="rail"] .lib-rail {
+  display: block;
+}
+.lib-rail-in {
+  position: sticky;
+  top: calc(var(--nh) + 78px);
+  max-height: calc(100dvh - var(--nh) - 100px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 14px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--glass-bg);
+  scrollbar-width: thin;
+}
+.lib-rail-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 4px 12px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+.lib-rail-ic {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  background: var(--glass-bg-3);
+  color: var(--text);
+  flex: none;
+}
+.lib-rail-ic .msr {
+  font-size: 17px;
+}
+.lib-rail-txt {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.lib-rail-txt b {
+  font-size: 13.5px;
+}
+.lib-rail-txt span {
+  font-size: 11.5px;
+  color: var(--text-2);
+}
+/* the chip row turns into a stack of full-width rows */
+.lib-rail .filter-row {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 3px;
+  overflow: visible;
+  padding: 0;
+}
+.lib-rail .filter-row .chip-btn {
+  width: 100%;
+  height: 32px;
+  border-color: transparent;
+  background: transparent;
+  border-radius: 9px;
+  justify-content: space-between;
+  font-size: 13.5px;
+}
+.lib-rail .filter-row .chip-btn:hover {
+  border-color: transparent;
+  background: var(--glass-bg-2);
+}
+.lib-rail .filter-row .chip-btn.on {
+  color: var(--text);
+  background: var(--glass-bg-3);
+  border-color: transparent;
+  box-shadow: inset 2px 0 0 var(--ac-1);
+}
+.lib-rail .filter-row .btn {
+  width: 100%;
+  justify-content: center;
+  margin-top: 6px;
+}
+
+/* sticky toolbar: .stuck is toggled by library.js the moment the bar
+   scrolls past the nav, which is when it needs a backdrop */
+.stick-sent {
+  height: 1px;
+  margin-top: -1px;
+}
+body.lb .toolbar {
+  position: sticky;
+  top: var(--nh);
+  z-index: 30;
+  border-radius: 0 0 var(--r-md) var(--r-md);
+  transition: background 0.2s, box-shadow 0.2s, padding 0.2s;
+}
+body.lb .toolbar.stuck {
+  /* margin + padding add up to the un-stuck margins (22 / 18), so nothing
+     below shifts when the bar pins */
+  padding: 12px 14px;
+  margin: 10px -14px 6px;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  box-shadow: 0 14px 28px -22px rgba(0, 0, 0, 0.95), 0 1px 0 var(--line);
+}
+html[data-perf] body.lb .toolbar.stuck {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: var(--bg);
+}
+
+@media (max-width: 1200px) {
+  html[data-lib-mode="rail"] .lib-cols {
+    grid-template-columns: 200px minmax(0, 1fr);
+    gap: 20px;
+  }
 }
 
 /* 404: the art piece is a Material glyph now, sized like the old svg */
@@ -7544,6 +7807,250 @@ html[data-theme="light"] .part-preview {
   border-color: rgba(0, 0, 0, 0.3);
 }
 
+/* ============================================================
+   announcements: latest-post hero + timeline
+   ============================================================ */
+.ann-top {
+  margin-bottom: 24px;
+}
+.ann-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 26px 28px 24px;
+  border-radius: var(--r-xl);
+  border: 1px solid var(--line);
+  background: var(--glass-bg);
+  animation: ann-hero-in 0.5s var(--ease) both;
+}
+.ann-hero-glow {
+  position: absolute;
+  top: -180px;
+  right: -120px;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 50% 50%,
+    color-mix(in srgb, var(--ac-1) 14%, transparent),
+    transparent 68%
+  );
+  pointer-events: none;
+  animation: ann-drift 11s ease-in-out infinite alternate;
+}
+.ann-hero-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  position: relative;
+}
+.ann-when {
+  font-size: 12px;
+  color: var(--text-2);
+}
+.latest-chip {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 10px;
+  font-weight: 700;
+}
+.ann-hero-title {
+  position: relative;
+  font-size: clamp(23px, 3.4vw, 32px);
+  letter-spacing: -0.025em;
+  margin-bottom: 10px;
+}
+.ann-hero-desc {
+  position: relative;
+  max-width: 68ch;
+  color: var(--text-2);
+  font-size: 15px;
+  line-height: 1.62;
+  margin-bottom: 18px;
+}
+.ann-hero-go {
+  position: relative;
+  display: inline-flex;
+  gap: 6px;
+}
+.ann-hero-go .msr {
+  font-size: 16px;
+  transition: transform 0.2s var(--ease);
+}
+.ann-hero-go:hover .msr {
+  transform: translateX(3px);
+}
+
+/* tools: category chips + count */
+.ann-tools {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 22px;
+}
+.ann-filter {
+  flex: 1;
+  min-width: 200px;
+}
+.ann-sum {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+.ann-sum .msr {
+  font-size: 15px;
+}
+
+/* timeline */
+.ann-feed {
+  position: relative;
+}
+.ann-row {
+  display: grid;
+  grid-template-columns: 62px 22px minmax(0, 1fr);
+  opacity: 0;
+  transform: translateY(10px);
+}
+.ann-row.in {
+  opacity: 1;
+  transform: none;
+  transition: opacity 0.45s var(--ease), transform 0.45s var(--ease);
+  transition-delay: calc(var(--i, 0) * 45ms);
+}
+.ann-gutter {
+  text-align: right;
+  padding: 16px 12px 0 0;
+}
+.ann-day {
+  display: block;
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+.ann-mon {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--text-2);
+  margin-top: 3px;
+}
+.ann-line {
+  position: relative;
+}
+.ann-line::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--line);
+  transform: translateX(-50%);
+}
+.ann-node {
+  position: absolute;
+  left: 50%;
+  top: 24px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--glass-bg-3);
+  border: 2px solid var(--line-2);
+  transform: translate(-50%, -50%);
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+.ann-row:hover .ann-node {
+  background: var(--ac-1);
+  border-color: var(--ac-1);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--ac-1) 14%, transparent);
+}
+.ann-row .ann-card {
+  margin: 0 0 14px 14px;
+  padding: 16px 18px;
+  border-radius: var(--r-lg);
+  border: 1px solid var(--line);
+  background: var(--glass-bg);
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+.ann-row .ann-card h3 {
+  font-size: 17px;
+  letter-spacing: -0.01em;
+  margin: 10px 0 7px;
+}
+.ann-row .ann-card p {
+  color: var(--text-2);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.ann-row:hover .ann-card {
+  border-color: var(--line-2);
+  transform: translateX(3px);
+  box-shadow: var(--shadow-1);
+}
+
+@keyframes ann-hero-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes ann-drift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(-30px, 26px, 0) scale(1.12);
+  }
+}
+
+@media (max-width: 620px) {
+  .ann-row {
+    grid-template-columns: 22px minmax(0, 1fr);
+  }
+  .ann-gutter {
+    grid-column: 2;
+    text-align: left;
+    padding: 0 0 6px 14px;
+  }
+  .ann-gutter .ann-day,
+  .ann-gutter .ann-mon {
+    display: inline;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+  }
+  .ann-gutter .ann-mon {
+    margin-left: 6px;
+  }
+  .ann-hero {
+    padding: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ann-row {
+    opacity: 1;
+    transform: none;
+  }
+  .ann-hero,
+  .ann-hero-glow,
+  .ann-row.in {
+    animation: none;
+    transition: none;
+  }
+}
+
 /* NULL · particles.css
    Art for the free "Constellation" set: plain light-gray dots joined by
    faint lines. The rest of the particle/backdrop art lives in extra.css;
@@ -10309,6 +10816,11 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-14T16:33:38.252Z","g
     else delete root.dataset.density;
     if (p.miniPerf) root.dataset.mini = "1";
     else delete root.dataset.mini;
+    /* library filter layout: library.js reads this (and the ultrawide media
+       query for "auto") and moves the chip row between the rail and the
+       toolbar. Left unset means auto. */
+    if (p.libNav === "rail" || p.libNav === "bar") root.dataset.libnav = p.libNav;
+    else delete root.dataset.libnav;
     applyBg();
   }
 
@@ -10419,6 +10931,10 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-14T16:33:38.252Z","g
     },
     setMiniPerf: function (on) {
       N.prefs.set("miniPerf", !!on);
+      applyLayout();
+    },
+    setLibNav: function (mode) {
+      N.prefs.set("libNav", mode === "rail" || mode === "bar" ? mode : "auto");
       applyLayout();
     },
     setBg: setBg,

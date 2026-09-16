@@ -22,6 +22,9 @@
     return (window.NULL_CONTENT && window.NULL_CONTENT.betas) || [];
   }
 
+  /* which shelf the tab bar is showing: "all" is the whole shop */
+  var tab = "all";
+
   function betaEntry(b) {
     return {
       id: b.id,
@@ -70,6 +73,12 @@
 
   function priceChip(price) {
     return d.h("span", { class: "chip price-chip" }, [d.icon("coin"), String(price)]);
+  }
+
+  /* can this be bought right now? the card says so on its own, so you can
+     see at a glance what is within reach instead of doing the maths */
+  function canAfford(price, owned) {
+    return !owned && N.econ.state().coins >= price;
   }
 
   function buyBtn(type, id, name, price) {
@@ -136,6 +145,33 @@
       bar.appendChild(d.h("span", { class: "chip" }, [d.icon("star"), st.streak + " day streak"]));
     }
 
+    /* cheapest thing still locked: says what to save for, and jumps to its
+       shelf when you have the coins */
+    var next = cheapestLocked();
+    if (next) {
+      var short = next.price - st.coins;
+      bar.appendChild(
+        d.h(
+          "button",
+          {
+            type: "button",
+            class: "chip chip-btn next-chip" + (short <= 0 ? " on" : ""),
+            title: short <= 0 ? "Open " + next.name + "" : short + " more coins for " + next.name,
+            onclick: function () {
+              tab = next.tab;
+              render();
+              var t = d.qs("#shopTabs");
+              if (t && t.scrollIntoView) t.scrollIntoView({ behavior: "smooth", block: "start" });
+            },
+          },
+          [
+            d.icon(short <= 0 ? "unlock" : "lock"),
+            short <= 0 ? "Ready: " + next.name : next.name + " · " + short + " to go",
+          ],
+        ),
+      );
+    }
+
     host.appendChild(bar);
 
     var note = d.h("p", { class: "eco-note" }, [
@@ -144,16 +180,97 @@
     host.appendChild(note);
   }
 
-  /* ---------- sections ---------- */
-  function section(title, icon, hint) {
-    var sec = d.h("section", { class: "section" });
-    sec.appendChild(
-      d.h("div", { class: "section-head" }, [
-        d.h("h2", null, [d.icon(icon), " " + title]),
-        d.h("span", { class: "hint" }, hint || ""),
-      ]),
-    );
+  /* ---------- sections ----------
+     Every section registers itself so the tab bar can filter the page and
+     count what is still locked. "all" is the default view: the whole shop,
+     the way it always was. */
+  var SECS = [];
+  function section(id, title, icon, hint, locked) {
+    var sec = d.h("section", { class: "section shop-sec", "data-sec": id });
+    var head = d.h("div", { class: "section-head" }, [
+      d.h("h2", null, [d.icon(icon), " " + title]),
+      d.h("span", { class: "hint" }, hint || ""),
+    ]);
+    if (locked) head.appendChild(d.h("span", { class: "chip lock-chip" }, [d.icon("lock"), locked + " left"]));
+    sec.appendChild(head);
+    SECS.push({ id: id, title: title, icon: icon, locked: locked || 0, el: sec });
     return sec;
+  }
+
+  /* the cheapest locked unlock anywhere in the shop */
+  function cheapestLocked() {
+    var out = [];
+    betas().forEach(function (b) {
+      if (!N.econ.isUnlocked("game", b.id)) out.push({ name: b.name, price: b.price || 60, tab: "beta" });
+    });
+    N.econ.THEMES.forEach(function (t) {
+      if (!N.econ.isUnlocked("theme", t.id)) out.push({ name: t.name, price: t.price, tab: "themes" });
+    });
+    N.econ.PARTICLES.forEach(function (p) {
+      if (!N.econ.isUnlocked("particle", p.id)) out.push({ name: p.name, price: p.price, tab: "particles" });
+    });
+    N.econ.BOOSTS.forEach(function (b) {
+      if (!N.econ.isUnlocked("boost", b.id)) out.push({ name: b.name, price: b.price, tab: "boosts" });
+    });
+    N.econ.FX.forEach(function (f) {
+      if (!N.econ.isUnlocked("fx", f.id)) out.push({ name: f.name, price: f.price, tab: "effects" });
+    });
+    out.sort(function (a, b) {
+      return a.price - b.price;
+    });
+    return out[0] || null;
+  }
+
+  function lockedCount(kind, list) {
+    return list.filter(function (x) {
+      return !N.econ.isUnlocked(kind, x.id);
+    }).length;
+  }
+
+  /* ---------- tab bar: one chip per shelf, plus All ---------- */
+  function paintSecs() {
+    SECS.forEach(function (s) {
+      s.el.hidden = tab !== "all" && tab !== s.id;
+    });
+    d.qsa("#shopTabs .chip-btn").forEach(function (b) {
+      b.classList.toggle("on", b.dataset.tab === tab);
+    });
+  }
+
+  function tabs() {
+    var host = d.qs("#shopTabs");
+    if (!host) return;
+    host.textContent = "";
+    var row = d.h("div", { class: "filter-row shop-tabs", role: "tablist", "aria-label": "Shop sections" });
+    function chip(id, label, icon, locked) {
+      return d.h(
+        "button",
+        {
+          type: "button",
+          class: "chip chip-btn" + (tab === id ? " on" : ""),
+          role: "tab",
+          "data-tab": id,
+          "aria-selected": tab === id ? "true" : "false",
+          onclick: function () {
+            tab = id;
+            paintSecs();
+          },
+        },
+        [
+          icon ? d.icon(icon) : null,
+          d.h("span", { class: "ch-t" }, label),
+          locked ? d.h("span", { class: "ch-n" }, String(locked)) : null,
+        ],
+      );
+    }
+    var total = SECS.reduce(function (n, s) {
+      return n + s.locked;
+    }, 0);
+    row.appendChild(chip("all", "Everything", "store", total));
+    SECS.forEach(function (s) {
+      row.appendChild(chip(s.id, s.title, s.icon, s.locked));
+    });
+    host.appendChild(row);
   }
 
   function betaCard(b) {
@@ -185,7 +302,8 @@
       foot.appendChild(buyBtn("game", b.id, b.name, b.price || 60));
     }
 
-    return d.h("article", { class: "shop-card glass" + (owned ? " owned" : "") }, [
+    var price = b.price || 60;
+    return d.h("article", { class: "shop-card glass" + (owned ? " owned" : canAfford(price, owned) ? " afford" : "") }, [
       thumb,
       d.h("div", { class: "shop-info" }, [
         d.h("h3", null, b.name),
@@ -237,7 +355,7 @@
       tags.appendChild(d.h("span", { class: "chip" }, x));
     });
 
-    return d.h("article", { class: "shop-card pack-card glass" + (owned ? " owned" : "") + (applied ? " playing" : "") }, [
+    return d.h("article", { class: "shop-card pack-card glass" + (owned ? " owned" : canAfford(t.price, owned) ? " afford" : "") + (applied ? " playing" : "") }, [
       packThumb(t),
       d.h("div", { class: "pack-strip" }, (t.colors || [t.c1, t.c2]).map(function (c) {
         return d.h("i", { style: { background: c } });
@@ -278,7 +396,7 @@
       foot.appendChild(buyBtn("particle", p.id, p.name, p.price));
     }
 
-    return d.h("article", { class: "shop-card pack-card glass" + (owned ? " owned" : "") + (applied ? " playing" : "") }, [
+    return d.h("article", { class: "shop-card pack-card glass" + (owned ? " owned" : canAfford(p.price, owned) ? " afford" : "") + (applied ? " playing" : "") }, [
       N.theme.partThumb(p, { lock: !owned }),
       d.h("div", { class: "pack-strip" }, (p.colors || []).map(function (c) {
         return d.h("i", { style: { background: c } });
@@ -312,7 +430,7 @@
       foot.appendChild(priceChip(item.price));
       foot.appendChild(buyBtn(type, item.id, item.name, item.price));
     }
-    return d.h("div", { class: "shop-row glass" + (owned ? " owned" : "") }, [
+    return d.h("div", { class: "shop-row glass" + (owned ? " owned" : canAfford(item.price, owned) ? " afford" : "") }, [
       d.h("div", { class: "shop-row-ic" }, [d.icon(type === "boost" ? "boost" : "sparkle")]),
       d.h("div", { class: "shop-row-txt" }, [d.h("b", null, item.name), d.h("span", null, item.desc || "")]),
       foot,
@@ -334,7 +452,7 @@
 
   /* the editor, once it's owned: one row that says what's built and opens it */
   function editorSection() {
-    var sec = section("Your theme & particles", "wrench", "built here, saved to this browser");
+    var sec = section("editor", "Your theme & particles", "wrench", "built here, saved to this browser");
     var mine = N.theme.craftPack ? N.theme.craftPack() : null;
     var mineP = N.theme.craftPart ? N.theme.craftPart() : null;
     var art = (N.theme.ART || []).find(function (a) {
@@ -418,6 +536,7 @@
 
   /* ---------- render ---------- */
   function render() {
+    SECS = [];
     renderBar();
     var body = d.qs("#shopBody");
     if (!body) return;
@@ -428,11 +547,12 @@
       return a.claimed;
     }).length;
 
-    var crateSec = section("Daily crate", "gift", st.canSpin ? "waiting for you" : "one free open every day");
+    var crateSec = section("crate", "Daily crate", "gift", st.canSpin ? "waiting for you" : "one free open every day");
     crateSec.appendChild(dailyRow());
     body.appendChild(crateSec);
 
     var questSec = section(
+      "quests",
       "Daily quests",
       "zap",
       st.questsReady ? st.questsReady + " ready to claim" : "resets at midnight",
@@ -442,7 +562,7 @@
 
     var betaList = betas();
     if (betaList.length) {
-      var betaSec = section("Beta games", "game", "unlocked builds join your library");
+      var betaSec = section("beta", "Beta games", "game", "unlocked builds join your library", lockedCount("game", betaList));
       var betaGrid = d.h("div", { class: "shop-grid" });
       betaList.forEach(function (b) {
         betaGrid.appendChild(betaCard(b));
@@ -451,7 +571,7 @@
       body.appendChild(betaSec);
     }
 
-    var themeSec = section("Theme packs", "pen", "a palette *and* a live backdrop");
+    var themeSec = section("themes", "Theme packs", "pen", "a palette *and* a live backdrop", lockedCount("theme", N.econ.THEMES));
     var themeGrid = d.h("div", { class: "shop-grid" });
     N.econ.THEMES.forEach(function (t) {
       themeGrid.appendChild(themeCard(t));
@@ -459,7 +579,7 @@
     themeSec.appendChild(themeGrid);
     body.appendChild(themeSec);
 
-    var partSec = section("Background particles", "sparkle", "ambient motion on every page");
+    var partSec = section("particles", "Background particles", "sparkle", "ambient motion on every page", lockedCount("particle", N.econ.PARTICLES));
     var partGrid = d.h("div", { class: "shop-grid" });
     N.econ.PARTICLES.forEach(function (p) {
       partGrid.appendChild(partCard(p));
@@ -472,7 +592,7 @@
     );
     body.appendChild(partSec);
 
-    var boostSec = section("Boosts", "boost", "speed up earning");
+    var boostSec = section("boosts", "Boosts", "boost", "speed up earning", lockedCount("boost", N.econ.BOOSTS));
     var boostBox = d.h("div", { class: "shop-rows" });
     N.econ.BOOSTS.forEach(function (b) {
       boostBox.appendChild(row(b, "boost"));
@@ -480,7 +600,7 @@
     boostSec.appendChild(boostBox);
     body.appendChild(boostSec);
 
-    var fxSec = section("Effects", "sparkle", "cosmetic unlocks");
+    var fxSec = section("effects", "Effects", "sparkle", "cosmetic unlocks", lockedCount("fx", N.econ.FX));
     var fxBox = d.h("div", { class: "shop-rows" });
     N.econ.FX.forEach(function (f) {
       fxBox.appendChild(fxRow(f));
@@ -496,12 +616,17 @@
     if (N.econ.isUnlocked("fx", "editor") && N.editor) body.appendChild(editorSection());
 
     var achSec = section(
+      "achievements",
       "Achievements",
       "trophy",
       st.achReady ? st.achReady + " ready to claim" : won + " of " + achs.length + " unlocked",
     );
     achSec.appendChild(N.daily.achList(render));
     body.appendChild(achSec);
+
+    /* the tab bar is built last: it needs every section to exist first */
+    tabs();
+    paintSecs();
   }
 
   function init() {

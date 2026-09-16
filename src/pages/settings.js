@@ -47,6 +47,7 @@
     paintAccent(p);
     paintPerf(p);
     paintDensity();
+    paintLibNav();
     paintMini();
     paintGlow();
     paintSeason();
@@ -129,6 +130,11 @@
 
   function paintDensity() {
     segPaint("#densitySeg", N.prefs.get("density") || "regular");
+  }
+
+  function paintLibNav() {
+    var mode = N.prefs.get("libNav");
+    segPaint("#libNavSeg", mode === "rail" || mode === "bar" ? mode : "auto");
   }
 
   function paintMini() {
@@ -918,6 +924,18 @@
         N.theme.setDensity(b.dataset.val);
         paintDensity();
         d.toast("Layout: " + b.textContent);
+      });
+    }
+
+    /* library filter layout: rail, top bar, or auto (ultrawide decides) */
+    var lseg = d.qs("#libNavSeg");
+    if (lseg) {
+      lseg.addEventListener("click", function (e) {
+        var b = e.target.closest("button");
+        if (!b) return;
+        N.theme.setLibNav(b.dataset.val);
+        paintLibNav();
+        d.toast("Library filters: " + b.textContent);
       });
     }
 

@@ -49,9 +49,23 @@
       </span>
       <span id="count" class="count"></span>
     </div>
-    <div id="labelRow" class="filter-row" role="group" aria-label="Filter by status"></div>
-    <div id="grid" class="lib-grid"></div>
-    <div id="empty"></div>
+    <div class="lib-cols">
+      <!-- status rail: same deal as the games page, moved in by library.js -->
+      <aside class="lib-rail" id="libRail">
+        <div class="lib-rail-in">
+          <div class="lib-rail-head">
+            <span class="lib-rail-ic"><span data-icon="list"></span></span>
+            <div class="lib-rail-txt"><b>Status</b><span id="railHint">Filter the list</span></div>
+          </div>
+          <div class="lib-rail-body" id="libRailBody"></div>
+        </div>
+      </aside>
+      <div class="lib-body">
+        <div id="labelRow" class="filter-row" role="group" aria-label="Filter by status"></div>
+        <div id="grid" class="lib-grid"></div>
+        <div id="empty"></div>
+      </div>
+    </div>
   </main>
 
   <noscript>

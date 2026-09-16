@@ -57,11 +57,26 @@
       </span>
       <span id="count" class="count"></span>
     </div>
-    <div id="labelRow" class="filter-row" role="group" aria-label="Filter by label"></div>
-    <div id="recSec" class="panel glass rec-sec" hidden></div>
-    <div id="favSec" class="fav-sec" hidden></div>
-    <div id="grid" class="lib-grid"></div>
-    <div id="empty"></div>
+    <div class="lib-cols">
+      <!-- label rail: library.js shows this on ultrawide screens (and when
+           Settings asks for it), and moves the chip row in here -->
+      <aside class="lib-rail" id="libRail">
+        <div class="lib-rail-in">
+          <div class="lib-rail-head">
+            <span class="lib-rail-ic"><span data-icon="list"></span></span>
+            <div class="lib-rail-txt"><b>Labels</b><span id="railHint">Filter the grid</span></div>
+          </div>
+          <div class="lib-rail-body" id="libRailBody"></div>
+        </div>
+      </aside>
+      <div class="lib-body">
+        <div id="labelRow" class="filter-row" role="group" aria-label="Filter by label"></div>
+        <div id="recSec" class="panel glass rec-sec" hidden></div>
+        <div id="favSec" class="fav-sec" hidden></div>
+        <div id="grid" class="lib-grid"></div>
+        <div id="empty"></div>
+      </div>
+    </div>
   </main>
 
   <noscript>

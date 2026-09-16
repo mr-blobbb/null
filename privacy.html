@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="src/styles/particles.css">
   <link rel="stylesheet" href="src/styles/perf.css">
   <link rel="stylesheet" href="src/styles/dev.css">
+  <link rel="stylesheet" href="src/styles/legal.css">
   <script>
     (function () {
       try {
@@ -32,13 +33,29 @@
   <div class="glow-bg" aria-hidden="true"></div>
   <header data-mount="nav"></header>
 
-  <main id="main" class="page page-narrow">
+  <main id="main" class="page page-narrow legal">
+    <div class="read-bar" aria-hidden="true"><i></i></div>
     <div class="page-head">
       <span class="eyebrow"><span data-icon="ban"></span>privacy policy</span>
       <h1>Privacy Policy</h1>
     </div>
-    <!-- WRITE MARKDOWN HERE -->
-    <article class="md-out glass" aria-label="Privacy content"></article>
+    <aside class="legal-rail" id="legalRail">
+      <div class="legal-rail-in">
+        <b>On this page</b>
+        <nav id="legalToc"></nav>
+      </div>
+    </aside>
+    <div class="legal-body">
+      <!-- plain english. legal.js renders this into the card at the top -->
+      <script type="text/plain" id="tldr">
+- **There is no server to leak.** NULL has no backend and no database of its own.
+- **No accounts, no tracking, no analytics, no ads.** You are not the product here.
+- **Everything NULL remembers lives in your browser:** favourites, coins, history, settings.
+- **Clearing your site data wipes it,** and nobody can recover it for you. That is the trade for collecting nothing.
+      </script>
+      <!-- WRITE MARKDOWN HERE -->
+      <article class="md-out glass" aria-label="Privacy content"></article>
+    </div>
     <script type="text/markdown">
 # Privacy Policy
 

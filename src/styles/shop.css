@@ -1,0 +1,86 @@
+/* NULL · shop.css
+   Shop-page chrome only: the pinned balance bar, the shelf tabs, and the
+   "you can afford this" marks. The cards themselves live in extra.css. */
+
+/* ---------- pinned balance ----------
+   The coin count rides along as you scroll the shelves, so the price on a
+   card always has the balance next to it. */
+#ecoBar {
+  position: sticky;
+  top: calc(var(--nh) + 10px);
+  z-index: 30;
+}
+#ecoBar .eco-bar {
+  /* the surface is flat already: the shadow is what lifts it once it is
+     sitting over the cards */
+  box-shadow: 0 16px 34px -26px rgba(0, 0, 0, 0.95);
+}
+.next-chip {
+  margin-left: auto;
+  gap: 7px;
+}
+.next-chip.on {
+  color: var(--bg);
+  background: var(--ac-1);
+  border-color: var(--ac-1);
+}
+
+/* ---------- shelf tabs ---------- */
+.shop-tabs {
+  margin: 18px 0 4px;
+}
+.shop-tabs .chip-btn {
+  gap: 7px;
+  height: 30px;
+}
+.shop-tabs .chip-btn .msr {
+  font-size: 15px;
+}
+.shop-sec[hidden] {
+  display: none;
+}
+.lock-chip {
+  margin-left: auto;
+  gap: 6px;
+  font-size: 11px;
+}
+
+/* ---------- what is within reach ----------
+   A card you can afford right now gets a soft accent ring and a pulsing
+   corner dot. Nothing about the click changes: it is a hint, not a gate. */
+.shop-card.afford,
+.shop-row.afford {
+  border-color: color-mix(in srgb, var(--ac-1) 38%, var(--line));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ac-1) 14%, transparent),
+    0 14px 34px -26px color-mix(in srgb, var(--ac-1) 80%, transparent);
+}
+.shop-card {
+  position: relative;
+}
+.shop-card.afford::after {
+  content: "";
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ac-1);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--ac-1) 18%, transparent);
+  animation: afford-pulse 2.6s ease-in-out infinite;
+}
+@keyframes afford-pulse {
+  0%,
+  100% {
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shop-card.afford::after {
+    animation: none;
+  }
+}

@@ -32,13 +32,16 @@
   <div class="glow-bg" aria-hidden="true"></div>
   <header data-mount="nav"></header>
 
-  <main id="main" class="page page-narrow">
+  <main id="main" class="page">
     <div class="page-head">
       <span class="eyebrow"><span data-icon="ann"></span>announcements</span>
       <h1>What’s new</h1>
-      <p>Updates, notices and releases: the latest first.</p>
+      <p>Updates, notices and releases: the newest one sits on top, the rest runs down the timeline. Filter by type if you are looking for something specific.</p>
     </div>
-    <div id="annList" class="ann-grid"></div>
+    <!-- newest post (announcements.js fills these in) -->
+    <div id="annTop" class="ann-top"></div>
+    <div id="annTools" class="ann-tools"></div>
+    <div id="annList" class="ann-feed"></div>
   </main>
 
   <footer data-mount="foot"></footer>

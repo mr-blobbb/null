@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="src/styles/particles.css">
   <link rel="stylesheet" href="src/styles/perf.css">
   <link rel="stylesheet" href="src/styles/dev.css">
+  <link rel="stylesheet" href="src/styles/tour.css">
   <script>
     (function () {
       try {
@@ -328,6 +329,25 @@
                   <button type="button" data-val="compact">Compact</button>
                 </div>
                 <div class="dens-prev" aria-hidden="true"><i></i><i></i><i></i></div>
+              </div>
+            </section>
+
+            <!-- library layout -->
+            <section class="set-card glass" data-card="libnav">
+              <h2 class="set-h">
+                <span class="set-ic"><span data-icon="list"></span></span>
+                <span class="set-htxt"><b>Library filters</b><span>Where the labels sit on the games, apps and proxies pages.</span></span>
+              </h2>
+              <div class="set-row set-row--stack">
+                <div class="lbl-txt">
+                  <b>Position</b>
+                  <span>Sidebar puts every label down the left of the page with the grid beside it. Top bar keeps them in a row above the grid. Auto picks the sidebar when your window is wide enough for both, and the top bar everywhere else.</span>
+                </div>
+                <div class="seg seg--wide" id="libNavSeg" role="group" aria-label="Library filter layout">
+                  <button type="button" data-val="auto">Auto</button>
+                  <button type="button" data-val="rail">Sidebar</button>
+                  <button type="button" data-val="bar">Top bar</button>
+                </div>
               </div>
             </section>
 
@@ -733,6 +753,7 @@
   <script src="src/components/search.js"></script>
   <script src="src/components/shell.js"></script>
   <script src="src/components/devconsole.js"></script>
+  <script src="src/components/tour.js"></script>
   <script src="src/components/editor.js"></script>
   <script src="src/pages/settings.js"></script>
 </body>

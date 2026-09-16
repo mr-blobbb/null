@@ -16,8 +16,8 @@
    leaving every page unstyled.
 
    Bump CACHE/RUNTIME when the core file list changes so old caches are dropped. */
-const CACHE = "null-v11";
-const RUNTIME = "null-runtime-v11";
+const CACHE = "null-v12";
+const RUNTIME = "null-runtime-v12";
 
 /* Site paths, resolved against this script's own address: the cache then holds
    the real URLs whether NULL is at a domain root or under a project path. */
@@ -56,6 +56,10 @@ const CORE = [
   "src/styles/perf.css",
   "src/styles/home.css",
   "src/styles/dev.css",
+  "src/styles/shop.css",
+  "src/styles/legal.css",
+  "src/styles/about.css",
+  "src/styles/tour.css",
   "src/utilities/store.js",
   "src/utilities/dom.js",
   "src/utilities/modal.js",
@@ -73,6 +77,7 @@ const CORE = [
   "src/components/daily.js",
   "src/components/shell.js",
   "src/components/devconsole.js",
+  "src/components/tour.js",
   "src/pages/home.js",
   "src/pages/library.js",
   "src/pages/player.js",
@@ -80,6 +85,8 @@ const CORE = [
   "src/pages/announcements.js",
   "src/pages/schedule.js",
   "src/pages/shop.js",
+  "src/pages/legal.js",
+  "src/pages/about.js",
 ].map(at);
 
 /* ---------- cache hygiene ----------
