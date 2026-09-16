@@ -103,7 +103,7 @@
   function paintGrid(blocks, liveMode) {
     hosts.grid.textContent = "";
     if (editing) {
-      hosts.grid.appendChild(editorGrid(blocks));
+      hosts.grid.appendChild(editorGrid());
       return;
     }
     var now = new Date();
@@ -111,6 +111,14 @@
     lastNow = lv && lv.block ? lv.i : -1;
     lastPass = lv && lv.block && lv.passing ? lv.i : null;
     hosts.grid.appendChild(S.grid(blocks, lastNow, { live: liveMode, passing: lastPass }));
+  }
+
+  /* leave the editor and put the real schedule back on screen */
+  function leave() {
+    editing = false;
+    buildEditBar();
+    hosts.editPanel.style.display = "none";
+    paintBody();
   }
 
   /* ---------- ticking ---------- */
@@ -135,115 +143,220 @@
       type: "button",
       class: "btn btn-outline btn-sm",
       id: "editBtn",
-    }, [d.icon("pen"), "Edit names & lunch"]);
+    }, [d.icon("pen"), editing ? "Editing the schedule" : "Edit the schedule"]);
     btn.addEventListener("click", function () {
+      if (editing) return;
       editing = true;
       buildEditBar();
       paintGrid(S.blocksFor(S.weekType(chosen)), false);
       hosts.editPanel.style.display = "";
+      hosts.editPanel.scrollIntoView({ block: "nearest", behavior: "smooth" });
     });
     hosts.editBar.appendChild(btn);
   }
 
-  function editorGrid(blocks) {
+  /* The panel edits one day type's bell schedule at a time: names, start and
+     end times, which period is lunch, plus adding and removing periods. It
+     works on a draft, and Save runs the rules in N.schedule.check first, so a
+     period with no time, an end before its start or a period that starts
+     inside the one before it never reaches storage. */
+  function editorGrid() {
+    var type = S.weekType(chosen) || "reg";
     var c = S.conf();
-    var wrap = d.h("div", { class: "sched-editor" });
+    var draft = S.timesFor(type);
+    var names = Object.assign({}, c.names);
+    var lunch = c.lunch;
 
-    /* lunch selector */
-    var lunchRow = d.h("div", { class: "ed-row ed-lunch" }, [
-      d.h("div", { class: "ed-txt" }, [
-        d.h("b", null, "Lunch period"),
-        d.h("span", null, "Pick which of periods 4-6 you have lunch. That block reads Lunch; the others stay editable."),
-      ]),
-      d.h("div", { class: "seg lunch-seg", role: "group", "aria-label": "Lunch period" }, [4, 5, 6].map(function (n) {
-        return d.h("button", {
-          type: "button",
-          class: "chip chip-btn" + (c.lunch === n ? " on" : ""),
-          "data-lunch": String(n),
-          onclick: function () {
-            wrap.querySelectorAll("[data-lunch]").forEach(function (b) {
-              b.classList.toggle("on", b.dataset.lunch === String(n));
-            });
-          },
-        }, "Period " + n);
-      })),
-    ]);
-    wrap.appendChild(lunchRow);
+    var rowsHost = d.h("div", { class: "sched-editor" });
+    var errBox = d.h("div", { class: "ed-errs", hidden: true });
+    var lunchSeg = d.h("div", { class: "seg lunch-seg", role: "group", "aria-label": "Lunch period" });
+    var wrap = d.h("div", null, []);
 
-    /* name inputs */
-    blocks.forEach(function (b) {
-      var label;
-      var input = null;
-      if (b.fixed) {
-        label = d.h("span", { class: "s-name fixed" }, b.name + (b.lunch ? "" : ": fixed"));
-      } else {
-        input = d.h("input", {
-          type: "text",
-          class: "ed-input",
-          maxlength: 34,
-          value: b.name,
-          placeholder: S.defaultName(b.n),
-          "aria-label": "Name for period " + b.n,
-        });
-        label = input;
+    /* a row is fixed only while it is wearing a name it does not own: WIN
+       and whichever period lunch is */
+    function fixedFor(t) {
+      if (t.key === "win") return "Homeroom/WIN";
+      if (t.n === lunch) return "Lunch";
+      return null;
+    }
+
+    function timeField(value, label, onInput) {
+      var input = d.h("input", {
+        type: "text",
+        class: "ed-input ed-time",
+        value: value,
+        inputmode: "numeric",
+        placeholder: "7:45",
+        "aria-label": label,
+      });
+      input.addEventListener("input", function () {
+        onInput(input.value);
+      });
+      return input;
+    }
+
+    function paintLunch() {
+      lunchSeg.textContent = "";
+      var options = draft.filter(function (t) {
+        return t.n >= 4 && t.n <= 6;
+      });
+      if (!options.length) {
+        lunchSeg.appendChild(d.h("span", { class: "hint" }, "No period 4, 5 or 6 on this day."));
+        return;
       }
-      var row = d.h("div", { class: "sched-row ed-row" + (b.lunch ? " lunch" : "") }, [
-        d.h("span", { class: "s-no" }, b.n ? "P" + b.n : "-"),
-        label,
-        d.h("span", { class: "s-time" }, S.spanText(b)),
-      ]);
-      wrap.appendChild(row);
-    });
+      options.forEach(function (t) {
+        lunchSeg.appendChild(
+          d.h(
+            "button",
+            {
+              type: "button",
+              class: "chip chip-btn" + (lunch === t.n ? " on" : ""),
+              onclick: function () {
+                lunch = t.n;
+                paintLunch();
+                paintRows();
+              },
+            },
+            "Period " + t.n,
+          ),
+        );
+      });
+    }
 
-    /* save / cancel */
+    function paintRows() {
+      rowsHost.textContent = "";
+      draft.forEach(function (t, i) {
+        var fixed = fixedFor(t);
+        var nameEl;
+        if (fixed) {
+          nameEl = d.h("span", { class: "s-name fixed" }, fixed + (t.key === "win" ? "" : ": lunch"));
+        } else {
+          nameEl = d.h("input", {
+            type: "text",
+            class: "ed-input",
+            maxlength: 34,
+            value: names[t.n] || "",
+            placeholder: S.defaultName(t.n),
+            "aria-label": "Name for period " + t.n,
+          });
+          nameEl.addEventListener("input", function () {
+            names[t.n] = nameEl.value.trim();
+          });
+        }
+
+        var x = d.h(
+          "button",
+          { type: "button", class: "ed-x", title: "Remove this period", "aria-label": "Remove this period" },
+          [d.icon("x")],
+        );
+        x.addEventListener("click", function () {
+          draft.splice(i, 1);
+          paintLunch();
+          paintRows();
+        });
+
+        rowsHost.appendChild(
+          d.h("div", { class: "sched-row ed-row ed-times-row" + (t.n === lunch ? " lunch" : "") }, [
+            d.h("span", { class: "s-no" }, t.n ? "P" + t.n : "-"),
+            nameEl,
+            d.h("span", { class: "ed-times" }, [
+              timeField(t.start, "Start time for " + (t.n ? "period " + t.n : "homeroom"), function (v) {
+                t.start = v;
+              }),
+              d.h("i", null, "to"),
+              timeField(t.end, "End time for " + (t.n ? "period " + t.n : "homeroom"), function (v) {
+                t.end = v;
+              }),
+            ]),
+            x,
+          ]),
+        );
+      });
+
+      /* add a period: numbered after the last one, slotted right after the
+         last bell, so the row it makes already passes validation */
+      var add = d.h("button", { type: "button", class: "btn btn-outline btn-sm" }, "Add a period");
+      add.addEventListener("click", function () {
+        var sug = S.suggest(draft);
+        draft.push({ n: sug.n, start: sug.start, end: sug.end });
+        paintLunch();
+        paintRows();
+      });
+      rowsHost.appendChild(d.h("div", { class: "ed-add" }, [add]));
+    }
+
+    function fail(errs) {
+      errBox.textContent = "";
+      errBox.hidden = false;
+      errs.slice(0, 6).forEach(function (m) {
+        errBox.appendChild(d.h("p", null, [d.icon("warn"), m]));
+      });
+      if (errs.length > 6) {
+        errBox.appendChild(d.h("p", null, [d.icon("warn"), "...and " + (errs.length - 6) + " more."]));
+      }
+      errBox.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+
+    function save() {
+      var clean = draft.map(function (t) {
+        var row = { start: String(t.start || "").trim(), end: String(t.end || "").trim() };
+        if (t.key) row.key = t.key;
+        else row.n = t.n;
+        return row;
+      });
+      var errs = S.check(clean);
+      if (errs.length) {
+        fail(errs);
+        return;
+      }
+      errBox.hidden = true;
+      var types = c.types || {};
+      types[type] = clean;
+      S.saveConf({ lunch: lunch, names: names, types: types });
+      leave();
+      d.toast("Schedule saved", { icon: "check" });
+    }
+
+    var reset = d.h("button", { type: "button", class: "btn btn-ghost btn-sm" }, [d.icon("refresh"), "School defaults"]);
     var foot = d.h("div", { class: "ed-foot" }, [
       d.h("span", { class: "hint" }, "Changes save to this browser only."),
       d.h("span", { class: "sp" }),
-      d.h("button", { type: "button", class: "btn btn-ghost btn-sm", id: "edCancel" }, "Cancel"),
-      d.h("button", { type: "button", class: "btn btn-primary btn-sm", id: "edSave" }, [d.icon("check"), "Save"]),
+      reset,
+      d.h("button", { type: "button", class: "btn btn-ghost btn-sm", onclick: leave }, "Cancel"),
+      d.h("button", { type: "button", class: "btn btn-primary btn-sm", onclick: save }, [d.icon("check"), "Save"]),
     ]);
+
+    wrap.appendChild(
+      d.h("div", { class: "ed-row ed-lunch" }, [
+        d.h("div", { class: "ed-txt" }, [
+          d.h("b", null, "Lunch period"),
+          d.h("span", null, "Which of periods 4-6 you have lunch. That row reads Lunch and keeps its time editable."),
+        ]),
+        lunchSeg,
+      ]),
+    );
+    wrap.appendChild(
+      d.h("p", { class: "ed-hint" }, "Times are written the way a bell schedule reads: 7:45, 12:30, 1:20. Periods cannot overlap and cannot end before they start."),
+    );
+    wrap.appendChild(errBox);
+    wrap.appendChild(rowsHost);
     wrap.appendChild(foot);
 
-    var sel = wrap.querySelector("[data-lunch=\"" + c.lunch + "\"]");
-    if (sel) sel.classList.add("on");
+    reset.addEventListener("click", function () {
+      draft = (S.TEMPLATES[type] || S.TEMPLATES.reg).map(function (t) {
+        return t.key ? { key: t.key, start: t.start, end: t.end } : { n: t.n, start: t.start, end: t.end };
+      });
+      errBox.hidden = true;
+      paintLunch();
+      paintRows();
+      d.toast("Back to the sample bell schedule");
+    });
 
-    /* bind save/cancel after insertion */
-    setTimeout(function () {
-      var save = wrap.querySelector("#edSave");
-      var cancel = wrap.querySelector("#edCancel");
-      if (cancel) {
-        cancel.addEventListener("click", function () {
-          editing = false;
-          buildEditBar();
-          hosts.editPanel.style.display = "none";
-          paintBody();
-        });
-      }
-      if (save) {
-        save.addEventListener("click", function () {
-          var names = {};
-          var lunch = 5;
-          var on = wrap.querySelector(".seg [data-lunch].on");
-          if (on) lunch = parseInt(on.dataset.lunch, 10);
-          wrap.querySelectorAll(".ed-input").forEach(function (inp, idx) {
-            var row = inp.closest(".sched-row");
-            var n = row ? parseInt((row.querySelector(".s-no") || { textContent: "" }).textContent.replace(/\D/g, ""), 10) : NaN;
-            if (isNaN(n) || !n) return;
-            var v = inp.value.trim();
-            names[n] = v || S.defaultName(n);
-          });
-          S.saveConf({ lunch: lunch, names: names });
-          editing = false;
-          buildEditBar();
-          hosts.editPanel.style.display = "none";
-          paintBody();
-          d.toast("Schedule saved", { icon: "check" });
-        });
-      }
-    }, 0);
-
+    paintLunch();
+    paintRows();
     return wrap;
   }
+
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);

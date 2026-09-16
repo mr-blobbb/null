@@ -4232,34 +4232,46 @@ html[data-perf="ultra"] .section {
    animation for the blocks that are off screen, then restore them the
    moment they scroll back in. Full visuals, less work per frame.
 
-   `contain-intrinsic-size: auto <size>` is the important half: `auto`
-   remembers each block's own last size, so the scrollbar does not jump
-   on the way past. Skipped on the effect layers and the fixed nav, which
-   must stay painted at all times. */
+   Two things had to be true for this to not fight the scrollbar:
+
+     · Only page-level blocks get it. The first cut put it on every tile
+       (a card, a row, a mirror in a grid), and that is what made the page
+       rubber-band: a grid item's height feeds the row height, so every
+       tile popping back in re-laid out the rows around it and shoved the
+       content under the cursor. Big standalone blocks have stable heights
+       and the same win without the fight.
+     · `contain-intrinsic-size: auto <size>` is the important half: `auto`
+       remembers each block's own last size, so the scrollbar does not jump
+       on the way back past it.
+
+   Skipped on the effect layers and the fixed nav, which must stay painted
+   at all times. */
 html[data-mini="1"] .section,
 html[data-mini="1"] .panel,
-html[data-mini="1"] .set-card,
-html[data-mini="1"] .shop-card,
-html[data-mini="1"] .shop-row,
-html[data-mini="1"] .tcard,
-html[data-mini="1"] .mirror,
-html[data-mini="1"] .ann-card,
-html[data-mini="1"] .rec-row,
-html[data-mini="1"] .tip-card,
 html[data-mini="1"] .home-cols > *,
-html[data-mini="1"] .shop-grid > *,
-html[data-mini="1"] .home-grid > * {
+html[data-mini="1"] .legal-body > * {
   content-visibility: auto;
-  contain-intrinsic-size: auto 320px;
+  contain-intrinsic-size: auto 480px;
 }
 
-/* a tile in a grid is short: a smaller remembered size keeps the estimate
-   close to the real thing on the first pass */
-html[data-mini="1"] .tcard,
-html[data-mini="1"] .mirror,
-html[data-mini="1"] .shop-card,
-html[data-mini="1"] .ann-card {
-  contain-intrinsic-size: auto 260px;
+/* a full page of cards is a known-tall block: give the first pass something
+   closer to its real height than the default guess. The library grids are
+   not in here on purpose: they are virtualized by cards.js, and the browser
+   sizing their tiles for them is what this whole comment is about. */
+html[data-mini="1"] .shop-grid,
+html[data-mini="1"] .home-grid,
+html[data-mini="1"] .ann-list {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 900px;
+}
+
+/* the library grid is virtualized: cards.js empties and refills rows as you
+   scroll. Browser scroll anchoring cannot hold on to a node that is about to
+   be removed, so it keeps re-picking one and nudging the page. Every row is
+   an explicit height, so there is nothing for anchoring to correct anyway. */
+body.lb #scrollview,
+.vgrid .vrow {
+  overflow-anchor: none;
 }
 
 /* NULL · extra.css
@@ -4931,21 +4943,580 @@ body.lb .toolbar {
   transition: background 0.2s, box-shadow 0.2s, padding 0.2s;
 }
 body.lb .toolbar.stuck {
-  /* pinned flush under the nav: no top margin or radius, so the bar reads
-     as attached to the topbar instead of floating below it. Padding still
-     adds up to the un-stuck margins (22 / 18), so nothing below shifts. */
-  padding: 14px 14px 12px;
-  margin: 0 -14px 6px;
+  /* pinned flush under the nav and full-bleed: the bar stretches across the
+     whole viewport so it reads as part of the topbar, not a floating strip.
+     The -22px eats the page's own padding; on the small-screen 14px padding
+     the media query below trims it back. Padding still adds up to the
+     un-stuck margins (22 / 18), so nothing below shifts. */
+  padding: 14px max(14px, var(--pad-x)) 12px;
+  margin: 0 calc(-1 * var(--pad-x)) 6px;
+  width: calc(100% + 2 * var(--pad-x));
+  /* the page's own max-width would otherwise cap the bar to the content
+     column, which is what made it read as a floating strip */
+  max-width: none;
   border-radius: 0;
   background: color-mix(in srgb, var(--bg) 82%, transparent);
   backdrop-filter: blur(16px) saturate(140%);
   -webkit-backdrop-filter: blur(16px) saturate(140%);
   box-shadow: 0 14px 28px -22px rgba(0, 0, 0, 0.95), 0 1px 0 var(--line);
 }
+@media (max-width: 620px) {
+  body.lb .toolbar.stuck {
+    margin-left: -14px;
+    margin-right: -14px;
+    width: calc(100% + 28px);
+  }
+}
 html[data-perf] body.lb .toolbar.stuck {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   background: var(--bg);
+}
+
+/* ============================================================
+   side rail navigation
+   The top bar turns into a left rail on a wide screen: icons only, sliding
+   open on hover to show names. The page keeps its full height and the nav
+   stops sitting on top of every page's first line.
+
+   Everything here hangs off html:not([data-nav="bar"]) inside one width
+   query, so the bar layout is still the whole story on a narrow screen and
+   the Settings switch (which writes data-nav="bar") undoes all of it. --nh
+   goes to zero with the rail: every offset on the site is written against
+   it, so the rail only has to move that one number and the pages follow.
+   ============================================================ */
+/* the top bar is icons only: the names the rail shows are in the markup but
+   off the page there */
+.nav-link .nl-txt {
+  display: none;
+}
+
+/* the strip extensions mount into with ctx.mount('nav', html): a row in the
+   top bar, a column in the rail (see the media query below) */
+.nav-slot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 4px;
+  min-width: 0;
+}
+.nav-slot:empty {
+  display: none;
+}
+.ext-widget {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+/* the body of a .nullext's own window (ext.js's openHtml) */
+.ext-html {
+  padding: 14px 16px 16px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--text);
+  max-height: min(420px, 60dvh);
+  overflow: auto;
+}
+.ext-html b {
+  display: block;
+  font-size: 15px;
+  margin-bottom: 6px;
+}
+.ext-html p {
+  margin: 0 0 6px;
+}
+
+@media (min-width: 1100px) {
+  html:not([data-nav="bar"]) {
+    --nh: 0px;
+    --rail-w: 68px;
+    --rail-w-open: 220px;
+  }
+  html:not([data-nav="bar"]) .nav-link .nl-txt {
+    display: inline;
+  }
+  /* the puzzle menu is absolute, and the rail clips its own overflow, so in
+     the rail it flies out beside it instead of hanging below the button */
+  html:not([data-nav="bar"]) .ext-nav.open .ext-menu {
+    position: fixed;
+    left: var(--rail-w);
+    right: auto;
+    top: max(96px, 16dvh);
+    transform-origin: top left;
+  }
+  html:not([data-nav="bar"]) body {
+    padding-left: var(--rail-w);
+  }
+  html:not([data-nav="bar"]) .topbar {
+    inset: 0 auto 0 0;
+    width: var(--rail-w);
+    height: 100dvh;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 14px 12px 16px;
+    border-bottom: 0;
+    border-right: 1px solid color-mix(in srgb, var(--ac-1) 12%, var(--line));
+    overflow: hidden auto;
+    scrollbar-width: none;
+    z-index: 95;
+    transition: width 0.24s var(--ease), box-shadow 0.24s var(--ease);
+  }
+  html:not([data-nav="bar"]) .topbar:hover,
+  html:not([data-nav="bar"]) .topbar:focus-within {
+    width: var(--rail-w-open);
+    box-shadow: 26px 0 70px -34px rgba(0, 0, 0, 0.95);
+  }
+  /* the labels are always in the markup; collapsed they are only invisible
+     and clipped by the rail's own overflow, so opening it is one opacity
+     fade with nothing to re-lay-out */
+  html:not([data-nav="bar"]) .brand-name,
+  html:not([data-nav="bar"]) .nav-link .nl-txt,
+  html:not([data-nav="bar"]) .searchbox .sb-txt {
+    opacity: 0;
+    transition: opacity 0.16s;
+  }
+  html:not([data-nav="bar"]) .topbar:hover .brand-name,
+  html:not([data-nav="bar"]) .topbar:hover .nav-link .nl-txt,
+  html:not([data-nav="bar"]) .topbar:hover .searchbox .sb-txt,
+  html:not([data-nav="bar"]) .topbar:focus-within .brand-name,
+  html:not([data-nav="bar"]) .topbar:focus-within .nav-link .nl-txt,
+  html:not([data-nav="bar"]) .topbar:focus-within .searchbox .sb-txt {
+    opacity: 1;
+  }
+  html:not([data-nav="bar"]) .brand {
+    padding: 4px 3px 12px;
+  }
+  html:not([data-nav="bar"]) .nav-links {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 3px;
+    margin: 0;
+  }
+  html:not([data-nav="bar"]) .nav-links .nav-link {
+    width: 100%;
+    height: 42px;
+    padding: 0 12px;
+    justify-content: flex-start;
+    gap: 12px;
+    border-radius: 11px;
+    white-space: nowrap;
+  }
+  html:not([data-nav="bar"]) .nav-link .nl-txt {
+    font-size: 13.5px;
+    font-weight: 600;
+  }
+  /* the active marker follows the rail: a bar down the left edge instead of
+     a line under the icon */
+  html:not([data-nav="bar"]) .nav-link.on {
+    background: var(--glass-bg-2);
+    box-shadow: inset 2px 0 0 var(--ac-1);
+  }
+  html:not([data-nav="bar"]) .searchbox {
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    justify-content: flex-start;
+    gap: 12px;
+    flex: none;
+  }
+  html:not([data-nav="bar"]) .top-actions {
+    margin-top: auto;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+  html:not([data-nav="bar"]) .top-actions .btn-icon {
+    width: 100%;
+    height: 40px;
+    border-radius: 11px;
+  }
+  /* extension chrome: a rail column, whatever HTML the extension mounted */
+  html:not([data-nav="bar"]) [data-slot="nav"] {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    margin-top: 6px;
+  }
+  html:not([data-nav="bar"]) [data-slot="nav"] > * {
+    overflow: hidden;
+  }
+  /* the reading progress line hangs off the top of the page, which is now
+     the top of the content column, not of the window */
+  html:not([data-nav="bar"]) .read-bar {
+    left: var(--rail-w);
+  }
+  html:not([data-nav="bar"]) .skip-link {
+    left: calc(var(--rail-w) + 12px);
+  }
+}
+
+/* ============================================================
+   schedule editor rows
+   Number, name, two times and a remove button. Written with the parent in
+   the selector so it outranks the shared .sched-row at any width.
+   ============================================================ */
+.sched-editor .ed-times-row {
+  grid-template-columns: 34px minmax(0, 1fr) minmax(170px, auto) 32px;
+  align-items: center;
+}
+.sched-editor .ed-times {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex: none;
+}
+.sched-editor .ed-times i {
+  font-style: normal;
+  font-size: 11.5px;
+  color: var(--text-2);
+}
+.sched-editor .ed-time {
+  width: 74px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.ed-x {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--glass-bg-2);
+  color: var(--text-2);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.ed-x:hover {
+  color: var(--bad);
+  border-color: color-mix(in srgb, var(--bad) 45%, var(--line));
+  background: color-mix(in srgb, var(--bad) 10%, var(--glass-bg-2));
+}
+.ed-x .msr {
+  font-size: 15px;
+}
+.ed-add {
+  margin-top: 4px;
+}
+.ed-hint {
+  font-size: 12px;
+  color: var(--text-2);
+  line-height: 1.5;
+  margin: 8px 0 2px;
+}
+.ed-errs {
+  margin: 10px 0 4px;
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  border: 1px solid color-mix(in srgb, var(--bad) 42%, var(--line));
+  background: color-mix(in srgb, var(--bad) 10%, transparent);
+}
+.ed-errs p {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text);
+  margin: 0 0 5px;
+}
+.ed-errs p:last-child {
+  margin-bottom: 0;
+}
+.ed-errs .msr {
+  font-size: 15px;
+  color: var(--bad);
+  flex: none;
+  margin-top: 1px;
+}
+@media (max-width: 760px) {
+  .sched-editor .ed-times-row {
+    grid-template-columns: 30px minmax(0, 1fr) 30px;
+    row-gap: 6px;
+  }
+  .sched-editor .ed-times-row .s-no {
+    grid-row: 1 / 3;
+  }
+  .sched-editor .ed-times-row .s-name,
+  .sched-editor .ed-times-row .ed-input,
+  .sched-editor .ed-times-row .ed-times {
+    grid-column: 2;
+  }
+  .sched-editor .ed-times-row .ed-x {
+    grid-column: 3;
+    grid-row: 1;
+  }
+}
+
+/* ============================================================
+   search, rebuilt
+   The overlay is a palette now rather than a list in a box: a big field, a
+   shelf of kind chips with counts, grouped results that answer the pointer,
+   and a footer that says what the keyboard does. These rules override the
+   block in global.css (this file loads after it), so the old shapes are
+   still there for anything that predates the parts below.
+   ============================================================ */
+.search-ov {
+  padding: calc(var(--nh) + 46px) 16px 40px;
+  background: var(--overlay);
+}
+/* a soft wash behind the panel, so it reads as lit rather than pasted on */
+.search-ov::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(60% 40% at 50% 0%, color-mix(in srgb, var(--ac-1) 16%, transparent), transparent 70%),
+    radial-gradient(40% 30% at 50% 100%, color-mix(in srgb, var(--ac-1) 8%, transparent), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.search-ov.open::before {
+  opacity: 1;
+}
+.search-panel {
+  width: min(760px, 100%);
+  max-height: calc(100dvh - var(--nh) - 96px);
+  position: relative;
+  border-radius: 22px;
+  border: 1px solid color-mix(in srgb, var(--ac-1) 22%, var(--line-2));
+  box-shadow:
+    0 40px 90px -40px rgba(0, 0, 0, 0.95),
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+  transform: translateY(-10px) scale(0.985);
+  opacity: 0;
+  transition: transform 0.22s var(--ease), opacity 0.22s var(--ease);
+}
+.search-ov.open .search-panel {
+  transform: none;
+  opacity: 1;
+}
+/* the lit edge across the top, in the site's own accent */
+.search-panel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 14%;
+  right: 14%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--ac-1) 80%, transparent), transparent);
+  pointer-events: none;
+}
+
+.search-input {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 17px 20px;
+  border-bottom: 1px solid var(--line);
+}
+.search-input .si {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  flex: none;
+  font-size: 19px;
+  color: var(--ac-1);
+  border: 1px solid color-mix(in srgb, var(--ac-1) 24%, var(--line));
+  background: color-mix(in srgb, var(--ac-1) 11%, var(--glass-bg-2));
+}
+.search-input input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-size: 17.5px;
+  font-weight: 520;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+.search-input input::placeholder {
+  color: var(--text-2);
+}
+.kbd {
+  font-size: 10.5px;
+  font-weight: 650;
+  color: var(--text-2);
+  border: 1px solid var(--line-2);
+  border-radius: 7px;
+  padding: 2px 7px;
+  flex: none;
+  line-height: 1.5;
+}
+.search-input .kbd-x {
+  cursor: pointer;
+  background: transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+.search-input .kbd-x:hover {
+  color: var(--text);
+  border-color: var(--ac-1);
+}
+
+/* the shelf row */
+.sp-filters {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.sp-filters[hidden] {
+  display: none;
+}
+.sp-filters .chip-btn {
+  height: 28px;
+  font-size: 12px;
+}
+.sp-filters .sp-clear {
+  margin-left: auto;
+  color: var(--text-2);
+}
+
+.search-results {
+  overflow-y: auto;
+  padding: 8px 10px 12px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--thumb) transparent;
+}
+.sr-group {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10.5px;
+  font-weight: 750;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  padding: 12px 12px 6px;
+  background: linear-gradient(180deg, var(--glass-bg-2) 70%, transparent);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.sr-group i {
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 1px 7px;
+  opacity: 0.8;
+}
+.sr-row {
+  position: relative;
+  gap: 13px;
+  padding: 10px 12px;
+  border-radius: 13px;
+  border: 1px solid transparent;
+  transition: background 0.14s, border-color 0.14s, transform 0.14s;
+}
+.sr-row:hover {
+  background: var(--glass-bg-2);
+  transform: translateX(2px);
+}
+.sr-row.sel {
+  background: color-mix(in srgb, var(--ac-1) 12%, var(--glass-bg-2));
+  border-color: color-mix(in srgb, var(--ac-1) 34%, var(--line));
+  transform: translateX(2px);
+}
+/* the little marker down the left of the row the keyboard is on */
+.sr-row.sel::before {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 50%;
+  width: 3px;
+  height: 18px;
+  margin-top: -9px;
+  border-radius: 99px;
+  background: var(--ac-1);
+}
+.sr-row .sr-ic {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  color: var(--ac-1);
+}
+.sr-row .sr-txt b {
+  font-size: 14.5px;
+  letter-spacing: -0.01em;
+}
+.sr-row .chip {
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  opacity: 0.75;
+}
+.sr-row.sel .chip {
+  opacity: 1;
+}
+.sr-none {
+  padding: 20px 16px 26px;
+  text-align: center;
+  color: var(--text-2);
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+/* footer: what the keyboard does, and what the query found */
+.sp-foot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--line);
+  font-size: 11.5px;
+  color: var(--text-2);
+  flex-wrap: wrap;
+}
+.sp-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.sp-spark {
+  opacity: 0.4;
+}
+.sp-count {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 620px) {
+  .search-ov {
+    padding: calc(var(--nh) + 12px) 10px 20px;
+  }
+  .search-panel {
+    border-radius: 18px;
+    max-height: calc(100dvh - var(--nh) - 40px);
+  }
+  .sp-foot .sp-hint {
+    display: none;
+  }
+  .sp-count {
+    margin-left: 0;
+  }
+}
+
+/* a compact rail on a short window: same idea, tighter rows */
+@media (min-width: 1100px) and (max-height: 700px) {
+  html:not([data-nav="bar"]) .nav-links .nav-link {
+    height: 36px;
+  }
+  html:not([data-nav="bar"]) .brand {
+    padding-bottom: 8px;
+  }
 }
 
 /* ============================================================
@@ -5603,6 +6174,37 @@ html[data-perf="1"] .nav-dot {
   line-height: 1.45;
   color: var(--text-2);
 }
+/* ---------- standalone section head ----------
+   dom.js's secHead() builds Labs and Extensions a head with the same innards
+   as a Settings card. A Settings head sits inside a card that supplies the
+   spacing; out here the heading owns it, and has to look like a section
+   start rather than a line of text pressed against the top of the block. */
+.sec-head {
+  align-items: center;
+  margin: 36px 0 16px;
+}
+.sec-head:first-child {
+  margin-top: 0;
+}
+.sec-head .set-ic {
+  width: 36px;
+  height: 36px;
+  margin-top: 0;
+  border-radius: 12px;
+  border-color: color-mix(in srgb, var(--ac-1) 24%, var(--line));
+  background: color-mix(in srgb, var(--ac-1) 11%, var(--glass-bg-2));
+}
+.sec-head .set-ic .msr {
+  font-size: 19px;
+}
+.sec-head .set-htxt b {
+  font-size: 17.5px;
+  letter-spacing: -0.015em;
+}
+.sec-head .set-htxt > span {
+  font-size: 13px;
+}
+
 .set-val {
   flex: none;
   margin-left: auto;
@@ -8459,6 +9061,7 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-14T16:33:38.252Z","g
     smartTabMin: 5, // smart tab cloak: minutes between rotations
     density: "regular", // layout compactness: regular | comfy | spacious | compact
     miniPerf: false, // Mini-Perf: unload off-screen blocks, strip nothing
+    navLayout: "side", // "side": the hover-expand left rail, "bar": the top bar
     seasonVariant: null, // seasonal/holiday pick; null follows the calendar
     bgImage: "", // custom page background (Shop unlock): a URL or a data URL
     bgFit: "cover", // cover | contain | tile
@@ -9763,6 +10366,19 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-14T16:33:38.252Z","g
     return span;
   }
 
+  /* ---------- section heading ----------
+     The Settings page hand-writes its card heads: an icon in its own box, a
+     title, and a line under it. Labs and Extensions are built from JS, so
+     they cannot do that by hand, and a loose glyph next to a raw string is
+     exactly what they used to look like. Same shape, one builder. */
+  function secHead(name, title, sub) {
+    return h("h2", { class: "set-h sec-head" }, [
+      h("span", { class: "set-ic" }, [icon(name)]),
+      h("span", { class: "set-htxt" }, [h("b", null, title), sub ? h("span", null, sub) : null]),
+    ]);
+  }
+
+
   /* ---------- custom selects (upgrade a native <select> in place) ---------- */
   var openSel = null;
   function closeSel() {
@@ -9887,6 +10503,7 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-14T16:33:38.252Z","g
     qs: qs,
     qsa: qsa,
     icon: icon,
+    secHead: secHead,
     icons: P,
     colorDot: colorDot,
     upgradeSelect: upgradeSelect,
@@ -10912,6 +11529,10 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-14T16:33:38.252Z","g
     else delete root.dataset.density;
     if (p.miniPerf) root.dataset.mini = "1";
     else delete root.dataset.mini;
+    /* nav layout: the side rail is the layout, and data-nav="bar" is the
+       whole opt-out (see the rail block in extra.css) */
+    if (p.navLayout === "bar") root.dataset.nav = "bar";
+    else delete root.dataset.nav;
     /* library filter layout: library.js reads this (and the ultrawide media
        query for "auto") and moves the chip row between the rail and the
        toolbar. Left unset means auto. */
@@ -11027,6 +11648,10 @@ window.NULL_CATALOG = {"site":"NULL","generatedAt":"2026-09-14T16:33:38.252Z","g
     },
     setMiniPerf: function (on) {
       N.prefs.set("miniPerf", !!on);
+      applyLayout();
+    },
+    setNavLayout: function (mode) {
+      N.prefs.set("navLayout", mode === "bar" ? "bar" : "side");
       applyLayout();
     },
     setLibNav: function (mode) {
@@ -12172,11 +12797,14 @@ window.NULL_CONTENT = {
    One of periods 4/5/6 is your lunch period (settable on /schedule/,
    default 5). That row reads "Lunch" instead of a class name.
 
-   Times below are sample data. To match the real bell schedule, edit the
-   TEMPLATES object: that is the only thing that needs to change.
+   Times below are sample data, and they are the starting point rather than
+   the law: /schedule's editor can rename periods, move the bells, add
+   periods and remove them, per day type. Whatever it saves lands in
+   null:sched under "types", and nothing read back out of storage is trusted
+   (see sanitize) because that storage is editable by hand.
 
-   Rendered compact on the home dashboard and full-size on /schedule,
-   which also exposes the editor (rename periods, pick a lunch period). */
+   Rendered compact on the home dashboard and full-size on /schedule, which
+   also exposes the editor. */
 (function () {
   var N = (window.N = window.N || {});
   var d = N.dom;
@@ -12243,16 +12871,46 @@ window.NULL_CONTENT = {
 
   var KEY = "null:sched";
 
-  /* ---------- config (names + lunch, saved locally) ---------- */
+  /* ---------- config (names, lunch and bell times, saved locally) ---------- */
+  /* A stored block is { n } or { key: "win" }, plus start and end. Anything
+     that does not look like that is dropped rather than loaded, so a bad
+     hand-edit in localStorage cannot take the schedule page down. */
+  function sanitize(list) {
+    if (!Array.isArray(list)) return null;
+    var out = [];
+    list.forEach(function (t) {
+      if (!t || typeof t !== "object") return;
+      var start = String(t.start || "").trim();
+      var end = String(t.end || "").trim();
+      if (!start || !end) return;
+      var row = { start: start, end: end };
+      if (t.key) row.key = String(t.key);
+      else {
+        var n = parseInt(t.n, 10);
+        if (!n) return;
+        row.n = n;
+      }
+      out.push(row);
+    });
+    return out.length ? out : null;
+  }
+
+  var TYPES = ["reg", "win", "late"];
+
   function conf() {
     var c = N.store.read(KEY, null) || {};
     var lunch = c.lunch >= 4 && c.lunch <= 6 ? c.lunch : 5;
     var names = c.names && typeof c.names === "object" ? c.names : {};
-    return { lunch: lunch, names: names };
+    var types = {};
+    TYPES.forEach(function (k) {
+      var clean = sanitize(c.types && c.types[k]);
+      if (clean) types[k] = clean;
+    });
+    return { lunch: lunch, names: names, types: types };
   }
 
   function saveConf(c) {
-    N.store.write(KEY, { lunch: c.lunch, names: c.names });
+    N.store.write(KEY, { lunch: c.lunch, names: c.names || {}, types: c.types || {} });
     N.bus.emit("sched");
   }
 
@@ -12260,6 +12918,73 @@ window.NULL_CONTENT = {
     var c = conf();
     c.lunch = lunch;
     saveConf(c);
+  }
+
+  /* the bell times in force for a day type: whatever was saved, or the
+     template above. Always a fresh copy, so an editor can hold one and
+     scribble on it without touching the stored one. */
+  function timesFor(type) {
+    var c = conf();
+    var list = c.types[type] || TEMPLATES[type] || TEMPLATES.reg;
+    return list.map(function (t) {
+      return t.key ? { key: t.key, start: t.start, end: t.end } : { n: t.n, start: t.start, end: t.end };
+    });
+  }
+
+  /* ---------- what the editor enforces ----------
+     One list of rules, in one place, so the page, the tick in the strip and
+     the countdown all mean the same thing by a valid schedule: every row
+     has a readable start and end, ends after it starts, sits inside a
+     school day, and does not start inside the period before it. */
+  var DAY_START = 6 * 60 + 30; // 6:30 AM
+  var DAY_END = 19 * 60; // 7:00 PM
+
+  function check(list) {
+    var errs = [];
+    if (!list || !list.length) return ["A day needs at least one period."];
+    var prevEnd = -1;
+    list.forEach(function (t, i) {
+      var label = t.key === "win" ? "Homeroom/WIN" : "Period " + t.n;
+      var s = parseHM(t.start);
+      var e = parseHM(t.end);
+      var bad = false;
+      if (s < 0) {
+        errs.push(label + ': "' + t.start + '" is not a time. Write it like 7:45 or 12:30.');
+        bad = true;
+      }
+      if (e < 0) {
+        errs.push(label + ': "' + t.end + '" is not a time. Write it like 8:35 or 1:20.');
+        bad = true;
+      }
+      if (bad) return;
+      if (s < DAY_START || e > DAY_END) {
+        errs.push(label + " sits outside a school day (6:30 AM to 7:00 PM).");
+        return;
+      }
+      if (e <= s) {
+        errs.push(label + " ends at " + fmtHM(e) + ", which is not after " + fmtHM(s) + ".");
+        return;
+      }
+      if (s < prevEnd) {
+        errs.push(label + " starts at " + fmtHM(s) + ", inside the period before it (ends " + fmtHM(prevEnd) + ").");
+      } else if (s === prevEnd) {
+        errs.push(label + " starts the moment the period before it ends. Leave a minute for passing.");
+      }
+      prevEnd = e;
+    });
+    return errs;
+  }
+
+  /* the next free number and a suggested slot, so Add always produces a row
+     a person can just accept */
+  function suggest(list) {
+    var last = list[list.length - 1];
+    var top = 0;
+    list.forEach(function (t) {
+      if (t.n && t.n > top) top = t.n;
+    });
+    var start = last && parseHM(last.end) > 0 ? parseHM(last.end) + 5 : 7 * 60 + 45;
+    return { n: top + 1, start: fmtHM(start), end: fmtHM(start + 46) };
   }
 
   function defaultName(n) {
@@ -12327,7 +13052,7 @@ window.NULL_CONTENT = {
      fixed rows (WIN, Lunch) cannot be renamed. */
   function blocksFor(type) {
     var c = conf();
-    return (TEMPLATES[type] || TEMPLATES.reg).map(function (t) {
+    return (c.types[type] || TEMPLATES[type] || TEMPLATES.reg).map(function (t) {
       var b = {
         n: t.n || null,
         key: t.key || ("p" + t.n),
@@ -12537,6 +13262,9 @@ window.NULL_CONTENT = {
     conf: conf,
     saveConf: saveConf,
     saveLunch: saveLunch,
+    timesFor: timesFor,
+    check: check,
+    suggest: suggest,
     defaultName: defaultName,
     parseHM: parseHM,
     fmtHM: fmtHM,
@@ -13223,12 +13951,29 @@ window.NULL_CONTENT = {
       placeholder: "Search games, apps, proxies, pages…",
       value: initial || "",
       "aria-label": "Search NULL",
+      spellcheck: "false",
+      autocomplete: "off",
     });
-    var inputRow = d.h("div", { class: "search-input" }, [d.icon("search"), input]);
+    var closeBtn = d.h("button", { type: "button", class: "kbd kbd-x", title: "Close", "aria-label": "Close search" }, "esc");
+    var inputRow = d.h("div", { class: "search-input" }, [d.icon("search", "si"), input, closeBtn]);
 
+    /* the shelf row: one chip per kind that actually turned up, with the
+       count on it. Filtering is client-side on the hits we already have, so
+       it is instant and never costs another pass over the index. */
+    var filters = d.h("div", { class: "sp-filters" });
     var results = d.h("div", { class: "search-results", role: "listbox" });
-    var panel = d.h("div", { class: "search-panel glass-2 elev" }, [inputRow, results]);
+    var count = d.h("span", { class: "sp-count" });
+    var foot = d.h("div", { class: "sp-foot" }, [
+      d.h("span", { class: "sp-hint" }, [d.h("span", { class: "kbd" }, "↑"), d.h("span", { class: "kbd" }, "↓"), "move"]),
+      d.h("span", { class: "sp-hint" }, [d.h("span", { class: "kbd" }, "↵"), "open"]),
+      d.h("span", { class: "sp-spark", "aria-hidden": "true" }, "•𐃷•"),
+      count,
+    ]);
+    var panel = d.h("div", { class: "search-panel glass-2 elev" }, [inputRow, filters, results, foot]);
     var ov = d.h("div", { class: "search-ov" }, [panel]);
+    /* null = everything. Set by the shelf row, cleared by a query change. */
+    var kind = null;
+    var lastQ = null;
 
     function clear() {
       rows.forEach(function (r) {
@@ -13238,11 +13983,62 @@ window.NULL_CONTENT = {
       sel = 0;
     }
 
-    function render(q) {
+    function chip(label, k, n) {
+      return d.h(
+        "button",
+        {
+          type: "button",
+          class: "chip chip-btn" + (kind === k ? " on" : ""),
+          onclick: function () {
+            kind = k;
+            render(lastQ || "", true);
+          },
+        },
+        [label, n == null ? null : d.h("span", { class: "ch-n" }, String(n))],
+      );
+    }
+
+    function paintFilters(hits) {
+      filters.textContent = "";
+      var seen = {};
+      var order = [];
+      hits.forEach(function (h) {
+        var k = h.it.kind;
+        if (!seen[k]) {
+          seen[k] = 0;
+          order.push(k);
+        }
+        seen[k]++;
+      });
+      if (order.length < 2) {
+        filters.hidden = true;
+        return;
+      }
+      filters.hidden = false;
+      filters.appendChild(chip("Everything", null, hits.length));
+      order.forEach(function (k) {
+        filters.appendChild(chip(GROUP[k] || k, k, seen[k]));
+      });
+      filters.appendChild(
+        d.h("button", { type: "button", class: "chip chip-btn sp-clear", hidden: !kind, onclick: function () { kind = null; render(lastQ || "", true); } }, [
+          d.icon("x"),
+          "Clear",
+        ]),
+      );
+    }
+
+    function render(q, keepKind) {
       results.textContent = "";
       clear();
+      if (!keepKind) kind = null;
+      if (q !== lastQ) lastQ = q;
       var hits = search(q, idx);
       if (N.ext) N.ext.emit("search:query", { q: q, n: hits.length });
+      paintFilters(hits);
+      count.textContent = q
+        ? (kind ? hits.filter(function (h) { return h.it.kind === kind; }).length : hits.length) +
+          " for “" + q + "”"
+        : idx.length + " things indexed";
       if (!q) {
         /* suggestions when empty */
         results.appendChild(d.h("div", { class: "sr-group" }, "Jump to"));
@@ -13274,15 +14070,28 @@ window.NULL_CONTENT = {
         ]));
         return;
       }
+      var picked = kind
+        ? hits.filter(function (h) {
+            return h.it.kind === kind;
+          })
+        : hits;
       var byGroup = {};
-      hits.slice(0, 36).forEach(function (h) {
+      var order = [];
+      picked.slice(0, 48).forEach(function (h) {
         var k = h.it.kind;
-        (byGroup[k] = byGroup[k] || []).push(h);
+        if (!byGroup[k]) {
+          byGroup[k] = [];
+          order.push(k);
+        }
+        byGroup[k].push(h);
       });
-      Object.keys(byGroup).forEach(function (k) {
-        var head = d.h("div", { class: "sr-group" }, GROUP[k] || k);
+      order.forEach(function (k) {
+        var head = d.h("div", { class: "sr-group" }, [
+          GROUP[k] || k,
+          d.h("i", null, String(byGroup[k].length)),
+        ]);
         results.appendChild(head);
-        byGroup[k].slice(0, 6).forEach(function (h) {
+        byGroup[k].slice(0, kind ? 24 : 6).forEach(function (h) {
           var el = rowEl(h.it);
           results.appendChild(el);
           rows.push({ el: el, _it: h.it });
@@ -13345,8 +14154,7 @@ window.NULL_CONTENT = {
         e.preventDefault();
         close();
       }
-    }
-    input.addEventListener("keydown", onKey);
+    }      input.addEventListener("keydown", onKey);
     input.addEventListener("input", d.debounce(function () {
       render(input.value);
     }, 70));
@@ -13362,6 +14170,7 @@ window.NULL_CONTENT = {
     ov.addEventListener("mousedown", function (e) {
       if (e.target === ov) close();
     });
+    closeBtn.addEventListener("click", close);
 
     /* the active overlay: page-body fetches rebuild its index live */
     live = {
@@ -13371,7 +14180,7 @@ window.NULL_CONTENT = {
       rebuild: function () {
         if (!ov.isConnected) return;
         idx = buildIndex();
-        render(input.value);
+        render(input.value, true);
       },
     };
 
@@ -13730,7 +14539,28 @@ window.NULL_CONTENT = {
   /* the six relationships a palette can be built on */
   var SCHEMES = ["analogous", "complementary", "split", "triadic", "tetrad", "mono"];
 
-  function palette(rand, scheme, base, light) {
+  /* How loud a roll is allowed to be. The first cut always ran the palette at
+     its brightest (saturation climbing to 90% at lightness 64), which is why
+     every roll came back looking like the same shouty neon. A roll now picks
+     a mood first, and the loud end is the rarer one. */
+  var MOODS = [
+    { id: "calm", w: 5, s: 0.58, l: [68, 55, 78, 45] },
+    { id: "soft", w: 3, s: 0.42, l: [73, 60, 82, 50] },
+    { id: "bold", w: 2, s: 1, l: [63, 50, 73, 41] },
+  ];
+  function moodFor(rand) {
+    var total = MOODS.reduce(function (n, m) {
+      return n + m.w;
+    }, 0);
+    var pick = rand() * total;
+    for (var i = 0; i < MOODS.length; i++) {
+      pick -= MOODS[i].w;
+      if (pick <= 0) return MOODS[i];
+    }
+    return MOODS[0];
+  }
+
+  function palette(rand, scheme, base, light, mood) {
     var off = {
       analogous: [0, 22, -20, 44],
       complementary: [0, 180, 24, 204],
@@ -13740,10 +14570,10 @@ window.NULL_CONTENT = {
       mono: [0, 6, -8, 12],
     }[scheme] || [0, 22, -20, 44];
     /* mono keeps one hue, so its variety has to come from lightness */
-    var lightSpots = scheme === "mono" ? [58, 44, 70, 34] : [64, 52, 74, 42];
+    var lightSpots = scheme === "mono" ? [58, 44, 70, 34] : mood.l;
     return off.map(function (d, i) {
       var h = base + d;
-      var s = scheme === "mono" ? 8 + (i % 2) * 6 : 52 + ((i * 13) % 34);
+      var s = scheme === "mono" ? 8 + (i % 2) * 6 : mood.s * (52 + ((i * 13) % 34));
       /* dark pages want light ink on them, light pages the reverse: this is
          the line that keeps the accent readable in either theme */
       var l = light ? 100 - lightSpots[i] : lightSpots[i];
@@ -13774,17 +14604,22 @@ window.NULL_CONTENT = {
     return OPENERS[Math.floor(rand() * OPENERS.length)] + " " + noun;
   }
 
-  /* ---------- art by hue family ---------- */
+  /* ---------- art by hue family ----------
+     Each backdrop owns an even slice of the wheel. The first cut let four of
+     the nine backdrops pile onto the same 165-300 degree band, so a third of
+     all rolls came back as some shade of violet no matter what the palette
+     was. Even slices keep the "picked to match the hue" idea without the
+     purple pile-up. */
   var ART_HUE = {
-    synthwave: [300, 350],
-    matrix: [95, 165],
-    gold: [30, 60],
-    aurora: [165, 300],
-    cosmos: [215, 275],
-    vapor: [295, 345],
-    neon: [175, 300],
-    dawn: [0, 45],
-    mist: [180, 250],
+    dawn: [0, 40],
+    gold: [40, 80],
+    matrix: [80, 120],
+    mist: [120, 160],
+    aurora: [160, 200],
+    cosmos: [200, 240],
+    neon: [240, 280],
+    vapor: [280, 320],
+    synthwave: [320, 360],
   };
   function artFor(rand, hue) {
     var arts = (N.theme.ART || []).map(function (a) {
@@ -13794,7 +14629,7 @@ window.NULL_CONTENT = {
     var fits = arts.filter(function (id) {
       var r = ART_HUE[id];
       if (!r) return false;
-      return hue >= r[0] && hue <= r[1];
+      return hue >= r[0] && hue < r[1];
     });
     var pool = fits.length ? fits : arts;
     return pool[Math.floor(rand() * pool.length)];
@@ -13809,9 +14644,12 @@ window.NULL_CONTENT = {
     var scheme = opts.scheme && SCHEMES.indexOf(opts.scheme) >= 0 ? opts.scheme : SCHEMES[Math.floor(rand() * SCHEMES.length)];
     var hue = opts.hue == null ? Math.floor(rand() * 360) : Number(opts.hue);
     var quiet = N.prefs.get("perf") || N.prefs.get("miniPerf");
+    var mood = opts.mood ? MOODS.filter(function (m) {
+      return m.id === opts.mood;
+    })[0] || moodFor(rand) : moodFor(rand);
     var name = opts.name || nameFor(rand, hue);
 
-    var colors = palette(rand, scheme, hue, light);
+    var colors = palette(rand, scheme, hue, light, mood);
     var art = artFor(rand, hue);
 
     /* the tint is the backdrop behind everything: a dark pair on a dark page,
@@ -13850,6 +14688,7 @@ window.NULL_CONTENT = {
     return {
       seed: seed,
       scheme: scheme,
+      mood: mood.id,
       hue: hue,
       name: name,
       pack: {
@@ -13865,13 +14704,13 @@ window.NULL_CONTENT = {
         colors: colors.slice(),
         parts: bits,
       },
-      tags: [scheme, art, "hue " + Math.round(hue)],
+      tags: [scheme, mood.id, art],
     };
   }
 
   /* ---------- using one ---------- */
   /* writes the roll into null:craft. Nothing is worn yet: the caller decides,
-     which is what lets the Labs preview show a theme before it is applied. */
+     which is what lets the editor show a rolled theme before it is applied. */
   function save(rolled) {
     if (!rolled) return null;
     if (!N.theme.craftOn || !N.theme.craftOn()) return null;
@@ -13892,6 +14731,9 @@ window.NULL_CONTENT = {
 
   N.gen = {
     SCHEMES: SCHEMES,
+    MOODS: MOODS.map(function (m) {
+      return m.id;
+    }),
     roll: roll,
     save: save,
     wear: wear,
@@ -14064,21 +14906,63 @@ window.NULL_CONTENT = {
     if (el) el.remove();
   }
 
+  /* ---------- slots: where an extension draws its own chrome ----------
+     The shell owns the markup, so it hands out the mount points: a strip in
+     the nav bar (the one bar every page has), the Extensions page's canvas,
+     and the footer. An extension asks for one and owns everything it puts
+     inside. Real HTML, because a .nullext is not sandboxed and has nothing
+     to hide from. */
+  var widgets = {};
+  function slot(where) {
+    if (where === "nav" || where === "topbar") return document.querySelector("[data-slot='nav']");
+    if (where === "extensions" || where === "ext") return document.querySelector("[data-slot='ext']");
+    if (where === "footer") return document.querySelector("[data-slot='foot']");
+    if (!where) return null;
+    if (where.charAt(0) === "[") return document.querySelector(where);
+    return document.querySelector("[data-slot='" + where + "']");
+  }
+  /* unmount everything one extension put into the chrome, so disabling or
+     removing it leaves the page exactly as it found it */
+  function dropWidgets(id) {
+    (widgets[id] || []).forEach(function (el) {
+      if (el && el.parentNode) el.parentNode.removeChild(el);
+    });
+    delete widgets[id];
+  }
+
   /* ---------- pages an extension can add ----------
-     A page is a render function the Extensions page (and /root) can mount.
-     Nothing here goes near the router: a page is a view, and the manager is
-     where views from your own extensions belong. */
+     A page is either a render function or a block of HTML; either way the
+     Extensions page (and /root) can mount it. Nothing here goes near the
+     router: a page is a view, and the manager is exactly where views from
+     your own extensions belong.
+
+     A page id is unique per extension, so re-activating one replaces it
+     rather than stacking a second copy. */
   var pages = [];
   function addPage(extId, spec) {
-    if (!spec || typeof spec.render !== "function") return null;
+    if (!spec) return null;
+    var html = typeof spec.html === "string" ? spec.html : "";
+    if (typeof spec.render !== "function" && !html) return null;
     var page = {
       ext: extId,
       id: extId + ":" + (spec.id || "page"),
       title: spec.title || "Untitled page",
       icon: spec.icon || "code",
       desc: spec.desc || "",
-      render: spec.render,
+      html: html,
+      render:
+        typeof spec.render === "function"
+          ? spec.render
+          : function (el) {
+              el.innerHTML = html;
+              /* the one thing HTML cannot do on its own is run code after it
+                 is in the document, so a page may bring a mount function */
+              if (typeof spec.mount === "function") spec.mount(el);
+            },
     };
+    pages = pages.filter(function (p) {
+      return p.id !== page.id;
+    });
     pages.push(page);
     if (N.bus && N.bus.emit) N.bus.emit("ext");
     return page;
@@ -14150,6 +15034,25 @@ window.NULL_CONTENT = {
       page: function (spec) {
         return addPage(id, spec);
       },
+      /* draw your own chrome: "nav" is the bar every page has, "extensions"
+         is the canvas on the manager page. html is real markup and the
+         returned element is yours. */
+      mount: function (where, html) {
+        var host = slot(where);
+        if (!host) return null;
+        var box = document.createElement("div");
+        box.className = "ext-widget";
+        box.setAttribute("data-ext", slug(id));
+        if (html != null) box.innerHTML = String(html);
+        host.appendChild(box);
+        (widgets[id] = widgets[id] || []).push(box);
+        if (N.bus && N.bus.emit) N.bus.emit("ext");
+        return box;
+      },
+      slot: slot,
+      unmount: function () {
+        dropWidgets(id);
+      },
       toast: function (msg, opts) {
         if (d.toast) d.toast(msg, opts);
       },
@@ -14183,6 +15086,19 @@ window.NULL_CONTENT = {
 
   function activate(entry) {
     if (entry.css) styleFor(entry.id).textContent = entry.css;
+    /* pages the manifest declares, so an extension can be pure JSON: no js
+       block needed to add a view */
+    (entry.pages || []).forEach(function (p) {
+      if (!p) return;
+      addPage(entry.id, {
+        id: p.id,
+        title: p.title,
+        icon: p.icon,
+        desc: p.desc,
+        html: p.html,
+        mount: null,
+      });
+    });
     var ok = entry.js ? runCode(entry, entry.js) : true;
     var ctx = api(entry);
     if (N.fx) ctx.fx = N.fx;
@@ -14220,6 +15136,11 @@ window.NULL_CONTENT = {
         run: obj.run === "manual" ? "manual" : "always",
         css: String(obj.css || ""),
         js: String(obj.js || obj.code || ""),
+        /* HTML is first class here: a window this extension opens from the
+           puzzle menu, and any number of views, declared in the manifest */
+        html: String(obj.html || ""),
+        pages: Array.isArray(obj.pages) ? obj.pages : [],
+        nav: Array.isArray(obj.nav) ? obj.nav : [],
         manifest: obj,
       };
     }
@@ -14233,6 +15154,9 @@ window.NULL_CONTENT = {
       run: "always",
       css: "",
       js: String(text),
+      html: "",
+      pages: [],
+      nav: [],
       manifest: { nullExt: 1, js: true },
     };
   }
@@ -14357,6 +15281,10 @@ window.NULL_CONTENT = {
     if (!e) return null;
     e.enabled = false;
     dropStyle(id);
+    dropWidgets(id);
+    pages = pages.filter(function (p) {
+      return p.ext !== id;
+    });
     put(e);
     return e;
   }
@@ -14378,7 +15306,9 @@ window.NULL_CONTENT = {
   function clear() {
     list().forEach(function (e) {
       dropStyle(e.id);
+      dropWidgets(e.id);
     });
+    pages = [];
     N.store.del(KEY);
     write([]);
   }
@@ -14500,6 +15430,45 @@ window.NULL_CONTENT = {
     openId = null;
   }
 
+  /* under the puzzle button when there is one, which is where a browser puts
+     a popup; otherwise pinned to the top right. */
+  function placePanel() {
+    var anchor = document.querySelector('[data-ic="extensions"]');
+    var r = anchor ? anchor.getBoundingClientRect() : null;
+    var w = Math.min(380, window.innerWidth - 20);
+    panel.style.width = w + "px";
+    var left = r ? Math.min(Math.max(10, r.right - w), window.innerWidth - w - 10) : window.innerWidth - w - 16;
+    var top = r ? r.bottom + 8 : 16;
+    panel.style.left = left + "px";
+    panel.style.top = Math.min(top, Math.max(16, window.innerHeight - 120)) + "px";
+  }
+
+  /* a native extension's own window: the same panel a Chrome popup gets, but
+     no iframe, because a .nullext already runs in the page. Whatever it put
+     in "html" is mounted here, then popup:open fires with the element so its
+     own code can wire it up. */
+  function openHtml(id) {
+    var e = get(id);
+    if (!e || !e.html) return null;
+    closePopup();
+    openId = id;
+    var box = d.h("div", { class: "ext-html" });
+    box.innerHTML = e.html;
+    panel = d.h("div", { class: "ext-pop glass", role: "dialog", "aria-label": e.name + " window" }, [
+      d.h("div", { class: "ep-head" }, [
+        d.h("span", { class: "ep-ic" }, [d.icon(e.icon || "puzzle")]),
+        d.h("div", { class: "ep-txt" }, [d.h("b", null, e.name), d.h("span", null, "native · v" + e.version)]),
+        d.h("button", { type: "button", class: "ep-x", title: "Close", "aria-label": "Close window", onclick: closePopup }, [d.icon("x")]),
+      ]),
+      box,
+      d.h("div", { class: "ep-foot" }, "Runs inside NULL with full power, exactly like the extension itself."),
+    ]);
+    document.body.appendChild(panel);
+    placePanel();
+    emit("popup:open", { id: id, el: box });
+    return panel;
+  }
+
   function openPopup(id) {
     var e = get(id);
     if (!e) return null;
@@ -14523,17 +15492,7 @@ window.NULL_CONTENT = {
       d.h("div", { class: "ep-foot" }, "Runs sandboxed: it can show UI and keep its own storage, nothing else."),
     ]);
     document.body.appendChild(panel);
-
-    /* under the puzzle button when there is one, which is where a browser
-       puts a popup; otherwise pinned to the top right */
-    var anchor = document.querySelector('[data-ic="extensions"]');
-    var r = anchor ? anchor.getBoundingClientRect() : null;
-    var w = Math.min(380, window.innerWidth - 20);
-    panel.style.width = w + "px";
-    var left = r ? Math.min(Math.max(10, r.right - w), window.innerWidth - w - 10) : window.innerWidth - w - 16;
-    var top = r ? r.bottom + 8 : 16;
-    panel.style.left = left + "px";
-    panel.style.top = Math.min(top, Math.max(16, window.innerHeight - 120)) + "px";
+    placePanel();
     return panel;
   }
 
@@ -14628,19 +15587,28 @@ window.NULL_CONTENT = {
         type: "button",
         class: "em-row" + (e.enabled === false ? " off" : ""),
         onclick: function () {
+          if (close) close();
+          /* a popup is a popup: a Chrome import gets its sandboxed frame, a
+             .nullext that shipped HTML gets the same panel without one */
           if (e.kind === "chrome") {
-            if (close) close();
             openPopup(e.id);
             return;
           }
-          if (close) close();
+          if (e.html) {
+            openHtml(e.id);
+            return;
+          }
           location.href = N.url("/extensions") + "#" + encodeURIComponent(e.id);
         },
       }, [
         d.h("span", { class: "em-ic" }, [d.icon(e.icon || (e.kind === "chrome" ? "puzzle" : "code"))]),
         d.h("span", { class: "em-txt" }, [
           d.h("b", null, e.name),
-          d.h("span", null, (e.kind === "chrome" ? "popup" : "native") + " · " + (e.enabled === false ? "off" : "on")),
+          d.h(
+            "span",
+            null,
+            (e.kind === "chrome" ? "popup" : e.html ? "window" : "native") + " · " + (e.enabled === false ? "off" : "on"),
+          ),
         ]),
       ]);
       host.appendChild(row);
@@ -14676,6 +15644,7 @@ window.NULL_CONTENT = {
     "player:close { entry }",
     "search:open open the search overlay",
     "search:query { q, n } every keystroke it uses",
+    "popup:open  { id, el } a .nullext's own window opening",
     "egg:pop     { text } when a hidden page talks back",
     "theme:apply { kind, id } a pack or particle set going on",
     "tour:done   { skipped } the first-run tour ending",
@@ -14725,7 +15694,9 @@ window.NULL_CONTENT = {
     api: api,
     pages: pageList,
     menu: menu,
+    slot: slot,
     openPopup: openPopup,
+    openHtml: openHtml,
     closePopup: closePopup,
     popupOpen: function () {
       return openId;
@@ -14804,7 +15775,7 @@ window.NULL_CONTENT = {
         "aria-expanded": "false",
         "data-ic": "extensions",
       },
-      [d.icon("puzzle")],
+      [d.icon("puzzle"), d.h("span", { class: "nl-txt" }, "Extensions")],
     );
     var menu = d.h("div", { class: "ext-menu glass" });
 
@@ -14854,17 +15825,23 @@ window.NULL_CONTENT = {
         links.appendChild(extNav());
         return;
       }
+      /* the name rides along in the markup: the side rail shows it when it
+         opens, the top bar just lets it sit there clipped */
       var a = d.h("a", {
         class: "nav-link" + (N.router.isActive(l.url) ? " on" : ""),
         href: N.url(l.url),
         title: l.t,
         "aria-label": l.t,
         "data-ic": l.id,
-      }, [d.icon(l.icon)]);
+      }, [d.icon(l.icon), d.h("span", { class: "nl-txt" }, l.t)]);
       if (l.id === "announcements") a.appendChild(annDotEl());
       links.appendChild(a);
     });
     bar.appendChild(links);
+
+    /* the mount point extensions get for their own nav chrome (see ext.js's
+       slot()): a strip under the links, in the rail or in the bar */
+    bar.appendChild(d.h("div", { "data-slot": "nav", class: "nav-slot" }));
 
     /* search trigger */
     var searchBtn = d.h("button", {
@@ -15028,6 +16005,8 @@ window.NULL_CONTENT = {
       });
       inner.appendChild(wrap);
     });
+    /* extensions can mount here too (ext.js's slot("footer")) */
+    inner.appendChild(d.h("div", { "data-slot": "foot", class: "foot-slot" }));
 var foot = d.h("footer", { class: "site-foot" }, [inner]); 
 foot.appendChild( 
   d.h("div", { class: "bottom" }, [ 

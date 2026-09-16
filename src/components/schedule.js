@@ -10,11 +10,14 @@
    One of periods 4/5/6 is your lunch period (settable on /schedule/,
    default 5). That row reads "Lunch" instead of a class name.
 
-   Times below are sample data. To match the real bell schedule, edit the
-   TEMPLATES object: that is the only thing that needs to change.
+   Times below are sample data, and they are the starting point rather than
+   the law: /schedule's editor can rename periods, move the bells, add
+   periods and remove them, per day type. Whatever it saves lands in
+   null:sched under "types", and nothing read back out of storage is trusted
+   (see sanitize) because that storage is editable by hand.
 
-   Rendered compact on the home dashboard and full-size on /schedule,
-   which also exposes the editor (rename periods, pick a lunch period). */
+   Rendered compact on the home dashboard and full-size on /schedule, which
+   also exposes the editor. */
 (function () {
   var N = (window.N = window.N || {});
   var d = N.dom;
@@ -81,16 +84,46 @@
 
   var KEY = "null:sched";
 
-  /* ---------- config (names + lunch, saved locally) ---------- */
+  /* ---------- config (names, lunch and bell times, saved locally) ---------- */
+  /* A stored block is { n } or { key: "win" }, plus start and end. Anything
+     that does not look like that is dropped rather than loaded, so a bad
+     hand-edit in localStorage cannot take the schedule page down. */
+  function sanitize(list) {
+    if (!Array.isArray(list)) return null;
+    var out = [];
+    list.forEach(function (t) {
+      if (!t || typeof t !== "object") return;
+      var start = String(t.start || "").trim();
+      var end = String(t.end || "").trim();
+      if (!start || !end) return;
+      var row = { start: start, end: end };
+      if (t.key) row.key = String(t.key);
+      else {
+        var n = parseInt(t.n, 10);
+        if (!n) return;
+        row.n = n;
+      }
+      out.push(row);
+    });
+    return out.length ? out : null;
+  }
+
+  var TYPES = ["reg", "win", "late"];
+
   function conf() {
     var c = N.store.read(KEY, null) || {};
     var lunch = c.lunch >= 4 && c.lunch <= 6 ? c.lunch : 5;
     var names = c.names && typeof c.names === "object" ? c.names : {};
-    return { lunch: lunch, names: names };
+    var types = {};
+    TYPES.forEach(function (k) {
+      var clean = sanitize(c.types && c.types[k]);
+      if (clean) types[k] = clean;
+    });
+    return { lunch: lunch, names: names, types: types };
   }
 
   function saveConf(c) {
-    N.store.write(KEY, { lunch: c.lunch, names: c.names });
+    N.store.write(KEY, { lunch: c.lunch, names: c.names || {}, types: c.types || {} });
     N.bus.emit("sched");
   }
 
@@ -98,6 +131,73 @@
     var c = conf();
     c.lunch = lunch;
     saveConf(c);
+  }
+
+  /* the bell times in force for a day type: whatever was saved, or the
+     template above. Always a fresh copy, so an editor can hold one and
+     scribble on it without touching the stored one. */
+  function timesFor(type) {
+    var c = conf();
+    var list = c.types[type] || TEMPLATES[type] || TEMPLATES.reg;
+    return list.map(function (t) {
+      return t.key ? { key: t.key, start: t.start, end: t.end } : { n: t.n, start: t.start, end: t.end };
+    });
+  }
+
+  /* ---------- what the editor enforces ----------
+     One list of rules, in one place, so the page, the tick in the strip and
+     the countdown all mean the same thing by a valid schedule: every row
+     has a readable start and end, ends after it starts, sits inside a
+     school day, and does not start inside the period before it. */
+  var DAY_START = 6 * 60 + 30; // 6:30 AM
+  var DAY_END = 19 * 60; // 7:00 PM
+
+  function check(list) {
+    var errs = [];
+    if (!list || !list.length) return ["A day needs at least one period."];
+    var prevEnd = -1;
+    list.forEach(function (t, i) {
+      var label = t.key === "win" ? "Homeroom/WIN" : "Period " + t.n;
+      var s = parseHM(t.start);
+      var e = parseHM(t.end);
+      var bad = false;
+      if (s < 0) {
+        errs.push(label + ': "' + t.start + '" is not a time. Write it like 7:45 or 12:30.');
+        bad = true;
+      }
+      if (e < 0) {
+        errs.push(label + ': "' + t.end + '" is not a time. Write it like 8:35 or 1:20.');
+        bad = true;
+      }
+      if (bad) return;
+      if (s < DAY_START || e > DAY_END) {
+        errs.push(label + " sits outside a school day (6:30 AM to 7:00 PM).");
+        return;
+      }
+      if (e <= s) {
+        errs.push(label + " ends at " + fmtHM(e) + ", which is not after " + fmtHM(s) + ".");
+        return;
+      }
+      if (s < prevEnd) {
+        errs.push(label + " starts at " + fmtHM(s) + ", inside the period before it (ends " + fmtHM(prevEnd) + ").");
+      } else if (s === prevEnd) {
+        errs.push(label + " starts the moment the period before it ends. Leave a minute for passing.");
+      }
+      prevEnd = e;
+    });
+    return errs;
+  }
+
+  /* the next free number and a suggested slot, so Add always produces a row
+     a person can just accept */
+  function suggest(list) {
+    var last = list[list.length - 1];
+    var top = 0;
+    list.forEach(function (t) {
+      if (t.n && t.n > top) top = t.n;
+    });
+    var start = last && parseHM(last.end) > 0 ? parseHM(last.end) + 5 : 7 * 60 + 45;
+    return { n: top + 1, start: fmtHM(start), end: fmtHM(start + 46) };
   }
 
   function defaultName(n) {
@@ -165,7 +265,7 @@
      fixed rows (WIN, Lunch) cannot be renamed. */
   function blocksFor(type) {
     var c = conf();
-    return (TEMPLATES[type] || TEMPLATES.reg).map(function (t) {
+    return (c.types[type] || TEMPLATES[type] || TEMPLATES.reg).map(function (t) {
       var b = {
         n: t.n || null,
         key: t.key || ("p" + t.n),
@@ -375,6 +475,9 @@
     conf: conf,
     saveConf: saveConf,
     saveLunch: saveLunch,
+    timesFor: timesFor,
+    check: check,
+    suggest: suggest,
     defaultName: defaultName,
     parseHM: parseHM,
     fmtHM: fmtHM,

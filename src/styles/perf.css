@@ -69,32 +69,44 @@ html[data-perf="ultra"] .section {
    animation for the blocks that are off screen, then restore them the
    moment they scroll back in. Full visuals, less work per frame.
 
-   `contain-intrinsic-size: auto <size>` is the important half: `auto`
-   remembers each block's own last size, so the scrollbar does not jump
-   on the way past. Skipped on the effect layers and the fixed nav, which
-   must stay painted at all times. */
+   Two things had to be true for this to not fight the scrollbar:
+
+     · Only page-level blocks get it. The first cut put it on every tile
+       (a card, a row, a mirror in a grid), and that is what made the page
+       rubber-band: a grid item's height feeds the row height, so every
+       tile popping back in re-laid out the rows around it and shoved the
+       content under the cursor. Big standalone blocks have stable heights
+       and the same win without the fight.
+     · `contain-intrinsic-size: auto <size>` is the important half: `auto`
+       remembers each block's own last size, so the scrollbar does not jump
+       on the way back past it.
+
+   Skipped on the effect layers and the fixed nav, which must stay painted
+   at all times. */
 html[data-mini="1"] .section,
 html[data-mini="1"] .panel,
-html[data-mini="1"] .set-card,
-html[data-mini="1"] .shop-card,
-html[data-mini="1"] .shop-row,
-html[data-mini="1"] .tcard,
-html[data-mini="1"] .mirror,
-html[data-mini="1"] .ann-card,
-html[data-mini="1"] .rec-row,
-html[data-mini="1"] .tip-card,
 html[data-mini="1"] .home-cols > *,
-html[data-mini="1"] .shop-grid > *,
-html[data-mini="1"] .home-grid > * {
+html[data-mini="1"] .legal-body > * {
   content-visibility: auto;
-  contain-intrinsic-size: auto 320px;
+  contain-intrinsic-size: auto 480px;
 }
 
-/* a tile in a grid is short: a smaller remembered size keeps the estimate
-   close to the real thing on the first pass */
-html[data-mini="1"] .tcard,
-html[data-mini="1"] .mirror,
-html[data-mini="1"] .shop-card,
-html[data-mini="1"] .ann-card {
-  contain-intrinsic-size: auto 260px;
+/* a full page of cards is a known-tall block: give the first pass something
+   closer to its real height than the default guess. The library grids are
+   not in here on purpose: they are virtualized by cards.js, and the browser
+   sizing their tiles for them is what this whole comment is about. */
+html[data-mini="1"] .shop-grid,
+html[data-mini="1"] .home-grid,
+html[data-mini="1"] .ann-list {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 900px;
+}
+
+/* the library grid is virtualized: cards.js empties and refills rows as you
+   scroll. Browser scroll anchoring cannot hold on to a node that is about to
+   be removed, so it keeps re-picking one and nudging the page. Every row is
+   an explicit height, so there is nothing for anchoring to correct anyway. */
+body.lb #scrollview,
+.vgrid .vrow {
+  overflow-anchor: none;
 }

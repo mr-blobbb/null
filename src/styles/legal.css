@@ -5,13 +5,21 @@
    to know what they are agreeing to. */
 
 /* the page itself is the grid: head across the top, contents in the left
-   column next to the text. No extra wrapper to keep in sync in the HTML. */
+   column next to the text. No extra wrapper to keep in sync in the HTML.
+
+   The grid only turns on once the contents rail is actually there. A page
+   with two headings gets no rail, and a reserved 216px first column with
+   nothing in it drops the whole document into a column that narrow, which
+   is unreadable. Block layout by default, grid when the rail shows up. */
 .legal {
+  display: block;
+  max-width: 1080px;
+}
+.legal:has(.legal-rail.on) {
   display: grid;
   grid-template-columns: 216px minmax(0, 1fr);
   gap: 34px;
   align-items: start;
-  max-width: 1080px;
 }
 .legal > .page-head,
 .legal > .read-bar {
@@ -142,12 +150,18 @@
 }
 .tl-ic .msr {
   font-size: 18px;
+  /* the bolt glyph leans: its outline is drawn a hair off the em centre,
+     which a rounded square makes obvious. Half a pixel back onto centre. */
+  translate: 0 0.5px;
 }
 .tl-head b {
   font-size: 16px;
   letter-spacing: -0.01em;
 }
-.tl-head span {
+/* the sub label only. This used to be `.tl-head span`, which also caught
+   .tl-ic: the badge inherited margin-left:auto and a muted colour, so the
+   bolt sat off to the right of the title instead of leading it. */
+.tl-head .tl-sub {
   margin-left: auto;
   font-size: 11.5px;
   color: var(--text-2);

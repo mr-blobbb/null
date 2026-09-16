@@ -63,7 +63,28 @@
   /* the six relationships a palette can be built on */
   var SCHEMES = ["analogous", "complementary", "split", "triadic", "tetrad", "mono"];
 
-  function palette(rand, scheme, base, light) {
+  /* How loud a roll is allowed to be. The first cut always ran the palette at
+     its brightest (saturation climbing to 90% at lightness 64), which is why
+     every roll came back looking like the same shouty neon. A roll now picks
+     a mood first, and the loud end is the rarer one. */
+  var MOODS = [
+    { id: "calm", w: 5, s: 0.58, l: [68, 55, 78, 45] },
+    { id: "soft", w: 3, s: 0.42, l: [73, 60, 82, 50] },
+    { id: "bold", w: 2, s: 1, l: [63, 50, 73, 41] },
+  ];
+  function moodFor(rand) {
+    var total = MOODS.reduce(function (n, m) {
+      return n + m.w;
+    }, 0);
+    var pick = rand() * total;
+    for (var i = 0; i < MOODS.length; i++) {
+      pick -= MOODS[i].w;
+      if (pick <= 0) return MOODS[i];
+    }
+    return MOODS[0];
+  }
+
+  function palette(rand, scheme, base, light, mood) {
     var off = {
       analogous: [0, 22, -20, 44],
       complementary: [0, 180, 24, 204],
@@ -73,10 +94,10 @@
       mono: [0, 6, -8, 12],
     }[scheme] || [0, 22, -20, 44];
     /* mono keeps one hue, so its variety has to come from lightness */
-    var lightSpots = scheme === "mono" ? [58, 44, 70, 34] : [64, 52, 74, 42];
+    var lightSpots = scheme === "mono" ? [58, 44, 70, 34] : mood.l;
     return off.map(function (d, i) {
       var h = base + d;
-      var s = scheme === "mono" ? 8 + (i % 2) * 6 : 52 + ((i * 13) % 34);
+      var s = scheme === "mono" ? 8 + (i % 2) * 6 : mood.s * (52 + ((i * 13) % 34));
       /* dark pages want light ink on them, light pages the reverse: this is
          the line that keeps the accent readable in either theme */
       var l = light ? 100 - lightSpots[i] : lightSpots[i];
@@ -107,17 +128,22 @@
     return OPENERS[Math.floor(rand() * OPENERS.length)] + " " + noun;
   }
 
-  /* ---------- art by hue family ---------- */
+  /* ---------- art by hue family ----------
+     Each backdrop owns an even slice of the wheel. The first cut let four of
+     the nine backdrops pile onto the same 165-300 degree band, so a third of
+     all rolls came back as some shade of violet no matter what the palette
+     was. Even slices keep the "picked to match the hue" idea without the
+     purple pile-up. */
   var ART_HUE = {
-    synthwave: [300, 350],
-    matrix: [95, 165],
-    gold: [30, 60],
-    aurora: [165, 300],
-    cosmos: [215, 275],
-    vapor: [295, 345],
-    neon: [175, 300],
-    dawn: [0, 45],
-    mist: [180, 250],
+    dawn: [0, 40],
+    gold: [40, 80],
+    matrix: [80, 120],
+    mist: [120, 160],
+    aurora: [160, 200],
+    cosmos: [200, 240],
+    neon: [240, 280],
+    vapor: [280, 320],
+    synthwave: [320, 360],
   };
   function artFor(rand, hue) {
     var arts = (N.theme.ART || []).map(function (a) {
@@ -127,7 +153,7 @@
     var fits = arts.filter(function (id) {
       var r = ART_HUE[id];
       if (!r) return false;
-      return hue >= r[0] && hue <= r[1];
+      return hue >= r[0] && hue < r[1];
     });
     var pool = fits.length ? fits : arts;
     return pool[Math.floor(rand() * pool.length)];
@@ -142,9 +168,12 @@
     var scheme = opts.scheme && SCHEMES.indexOf(opts.scheme) >= 0 ? opts.scheme : SCHEMES[Math.floor(rand() * SCHEMES.length)];
     var hue = opts.hue == null ? Math.floor(rand() * 360) : Number(opts.hue);
     var quiet = N.prefs.get("perf") || N.prefs.get("miniPerf");
+    var mood = opts.mood ? MOODS.filter(function (m) {
+      return m.id === opts.mood;
+    })[0] || moodFor(rand) : moodFor(rand);
     var name = opts.name || nameFor(rand, hue);
 
-    var colors = palette(rand, scheme, hue, light);
+    var colors = palette(rand, scheme, hue, light, mood);
     var art = artFor(rand, hue);
 
     /* the tint is the backdrop behind everything: a dark pair on a dark page,
@@ -183,6 +212,7 @@
     return {
       seed: seed,
       scheme: scheme,
+      mood: mood.id,
       hue: hue,
       name: name,
       pack: {
@@ -198,13 +228,13 @@
         colors: colors.slice(),
         parts: bits,
       },
-      tags: [scheme, art, "hue " + Math.round(hue)],
+      tags: [scheme, mood.id, art],
     };
   }
 
   /* ---------- using one ---------- */
   /* writes the roll into null:craft. Nothing is worn yet: the caller decides,
-     which is what lets the Labs preview show a theme before it is applied. */
+     which is what lets the editor show a rolled theme before it is applied. */
   function save(rolled) {
     if (!rolled) return null;
     if (!N.theme.craftOn || !N.theme.craftOn()) return null;
@@ -225,6 +255,9 @@
 
   N.gen = {
     SCHEMES: SCHEMES,
+    MOODS: MOODS.map(function (m) {
+      return m.id;
+    }),
     roll: roll,
     save: save,
     wear: wear,

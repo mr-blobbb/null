@@ -159,21 +159,63 @@
     if (el) el.remove();
   }
 
+  /* ---------- slots: where an extension draws its own chrome ----------
+     The shell owns the markup, so it hands out the mount points: a strip in
+     the nav bar (the one bar every page has), the Extensions page's canvas,
+     and the footer. An extension asks for one and owns everything it puts
+     inside. Real HTML, because a .nullext is not sandboxed and has nothing
+     to hide from. */
+  var widgets = {};
+  function slot(where) {
+    if (where === "nav" || where === "topbar") return document.querySelector("[data-slot='nav']");
+    if (where === "extensions" || where === "ext") return document.querySelector("[data-slot='ext']");
+    if (where === "footer") return document.querySelector("[data-slot='foot']");
+    if (!where) return null;
+    if (where.charAt(0) === "[") return document.querySelector(where);
+    return document.querySelector("[data-slot='" + where + "']");
+  }
+  /* unmount everything one extension put into the chrome, so disabling or
+     removing it leaves the page exactly as it found it */
+  function dropWidgets(id) {
+    (widgets[id] || []).forEach(function (el) {
+      if (el && el.parentNode) el.parentNode.removeChild(el);
+    });
+    delete widgets[id];
+  }
+
   /* ---------- pages an extension can add ----------
-     A page is a render function the Extensions page (and /root) can mount.
-     Nothing here goes near the router: a page is a view, and the manager is
-     where views from your own extensions belong. */
+     A page is either a render function or a block of HTML; either way the
+     Extensions page (and /root) can mount it. Nothing here goes near the
+     router: a page is a view, and the manager is exactly where views from
+     your own extensions belong.
+
+     A page id is unique per extension, so re-activating one replaces it
+     rather than stacking a second copy. */
   var pages = [];
   function addPage(extId, spec) {
-    if (!spec || typeof spec.render !== "function") return null;
+    if (!spec) return null;
+    var html = typeof spec.html === "string" ? spec.html : "";
+    if (typeof spec.render !== "function" && !html) return null;
     var page = {
       ext: extId,
       id: extId + ":" + (spec.id || "page"),
       title: spec.title || "Untitled page",
       icon: spec.icon || "code",
       desc: spec.desc || "",
-      render: spec.render,
+      html: html,
+      render:
+        typeof spec.render === "function"
+          ? spec.render
+          : function (el) {
+              el.innerHTML = html;
+              /* the one thing HTML cannot do on its own is run code after it
+                 is in the document, so a page may bring a mount function */
+              if (typeof spec.mount === "function") spec.mount(el);
+            },
     };
+    pages = pages.filter(function (p) {
+      return p.id !== page.id;
+    });
     pages.push(page);
     if (N.bus && N.bus.emit) N.bus.emit("ext");
     return page;
@@ -245,6 +287,25 @@
       page: function (spec) {
         return addPage(id, spec);
       },
+      /* draw your own chrome: "nav" is the bar every page has, "extensions"
+         is the canvas on the manager page. html is real markup and the
+         returned element is yours. */
+      mount: function (where, html) {
+        var host = slot(where);
+        if (!host) return null;
+        var box = document.createElement("div");
+        box.className = "ext-widget";
+        box.setAttribute("data-ext", slug(id));
+        if (html != null) box.innerHTML = String(html);
+        host.appendChild(box);
+        (widgets[id] = widgets[id] || []).push(box);
+        if (N.bus && N.bus.emit) N.bus.emit("ext");
+        return box;
+      },
+      slot: slot,
+      unmount: function () {
+        dropWidgets(id);
+      },
       toast: function (msg, opts) {
         if (d.toast) d.toast(msg, opts);
       },
@@ -278,6 +339,19 @@
 
   function activate(entry) {
     if (entry.css) styleFor(entry.id).textContent = entry.css;
+    /* pages the manifest declares, so an extension can be pure JSON: no js
+       block needed to add a view */
+    (entry.pages || []).forEach(function (p) {
+      if (!p) return;
+      addPage(entry.id, {
+        id: p.id,
+        title: p.title,
+        icon: p.icon,
+        desc: p.desc,
+        html: p.html,
+        mount: null,
+      });
+    });
     var ok = entry.js ? runCode(entry, entry.js) : true;
     var ctx = api(entry);
     if (N.fx) ctx.fx = N.fx;
@@ -315,6 +389,11 @@
         run: obj.run === "manual" ? "manual" : "always",
         css: String(obj.css || ""),
         js: String(obj.js || obj.code || ""),
+        /* HTML is first class here: a window this extension opens from the
+           puzzle menu, and any number of views, declared in the manifest */
+        html: String(obj.html || ""),
+        pages: Array.isArray(obj.pages) ? obj.pages : [],
+        nav: Array.isArray(obj.nav) ? obj.nav : [],
         manifest: obj,
       };
     }
@@ -328,6 +407,9 @@
       run: "always",
       css: "",
       js: String(text),
+      html: "",
+      pages: [],
+      nav: [],
       manifest: { nullExt: 1, js: true },
     };
   }
@@ -452,6 +534,10 @@
     if (!e) return null;
     e.enabled = false;
     dropStyle(id);
+    dropWidgets(id);
+    pages = pages.filter(function (p) {
+      return p.ext !== id;
+    });
     put(e);
     return e;
   }
@@ -473,7 +559,9 @@
   function clear() {
     list().forEach(function (e) {
       dropStyle(e.id);
+      dropWidgets(e.id);
     });
+    pages = [];
     N.store.del(KEY);
     write([]);
   }
@@ -595,6 +683,45 @@
     openId = null;
   }
 
+  /* under the puzzle button when there is one, which is where a browser puts
+     a popup; otherwise pinned to the top right. */
+  function placePanel() {
+    var anchor = document.querySelector('[data-ic="extensions"]');
+    var r = anchor ? anchor.getBoundingClientRect() : null;
+    var w = Math.min(380, window.innerWidth - 20);
+    panel.style.width = w + "px";
+    var left = r ? Math.min(Math.max(10, r.right - w), window.innerWidth - w - 10) : window.innerWidth - w - 16;
+    var top = r ? r.bottom + 8 : 16;
+    panel.style.left = left + "px";
+    panel.style.top = Math.min(top, Math.max(16, window.innerHeight - 120)) + "px";
+  }
+
+  /* a native extension's own window: the same panel a Chrome popup gets, but
+     no iframe, because a .nullext already runs in the page. Whatever it put
+     in "html" is mounted here, then popup:open fires with the element so its
+     own code can wire it up. */
+  function openHtml(id) {
+    var e = get(id);
+    if (!e || !e.html) return null;
+    closePopup();
+    openId = id;
+    var box = d.h("div", { class: "ext-html" });
+    box.innerHTML = e.html;
+    panel = d.h("div", { class: "ext-pop glass", role: "dialog", "aria-label": e.name + " window" }, [
+      d.h("div", { class: "ep-head" }, [
+        d.h("span", { class: "ep-ic" }, [d.icon(e.icon || "puzzle")]),
+        d.h("div", { class: "ep-txt" }, [d.h("b", null, e.name), d.h("span", null, "native · v" + e.version)]),
+        d.h("button", { type: "button", class: "ep-x", title: "Close", "aria-label": "Close window", onclick: closePopup }, [d.icon("x")]),
+      ]),
+      box,
+      d.h("div", { class: "ep-foot" }, "Runs inside NULL with full power, exactly like the extension itself."),
+    ]);
+    document.body.appendChild(panel);
+    placePanel();
+    emit("popup:open", { id: id, el: box });
+    return panel;
+  }
+
   function openPopup(id) {
     var e = get(id);
     if (!e) return null;
@@ -618,17 +745,7 @@
       d.h("div", { class: "ep-foot" }, "Runs sandboxed: it can show UI and keep its own storage, nothing else."),
     ]);
     document.body.appendChild(panel);
-
-    /* under the puzzle button when there is one, which is where a browser
-       puts a popup; otherwise pinned to the top right */
-    var anchor = document.querySelector('[data-ic="extensions"]');
-    var r = anchor ? anchor.getBoundingClientRect() : null;
-    var w = Math.min(380, window.innerWidth - 20);
-    panel.style.width = w + "px";
-    var left = r ? Math.min(Math.max(10, r.right - w), window.innerWidth - w - 10) : window.innerWidth - w - 16;
-    var top = r ? r.bottom + 8 : 16;
-    panel.style.left = left + "px";
-    panel.style.top = Math.min(top, Math.max(16, window.innerHeight - 120)) + "px";
+    placePanel();
     return panel;
   }
 
@@ -723,19 +840,28 @@
         type: "button",
         class: "em-row" + (e.enabled === false ? " off" : ""),
         onclick: function () {
+          if (close) close();
+          /* a popup is a popup: a Chrome import gets its sandboxed frame, a
+             .nullext that shipped HTML gets the same panel without one */
           if (e.kind === "chrome") {
-            if (close) close();
             openPopup(e.id);
             return;
           }
-          if (close) close();
+          if (e.html) {
+            openHtml(e.id);
+            return;
+          }
           location.href = N.url("/extensions") + "#" + encodeURIComponent(e.id);
         },
       }, [
         d.h("span", { class: "em-ic" }, [d.icon(e.icon || (e.kind === "chrome" ? "puzzle" : "code"))]),
         d.h("span", { class: "em-txt" }, [
           d.h("b", null, e.name),
-          d.h("span", null, (e.kind === "chrome" ? "popup" : "native") + " · " + (e.enabled === false ? "off" : "on")),
+          d.h(
+            "span",
+            null,
+            (e.kind === "chrome" ? "popup" : e.html ? "window" : "native") + " · " + (e.enabled === false ? "off" : "on"),
+          ),
         ]),
       ]);
       host.appendChild(row);
@@ -771,6 +897,7 @@
     "player:close { entry }",
     "search:open open the search overlay",
     "search:query { q, n } every keystroke it uses",
+    "popup:open  { id, el } a .nullext's own window opening",
     "egg:pop     { text } when a hidden page talks back",
     "theme:apply { kind, id } a pack or particle set going on",
     "tour:done   { skipped } the first-run tour ending",
@@ -820,7 +947,9 @@
     api: api,
     pages: pageList,
     menu: menu,
+    slot: slot,
     openPopup: openPopup,
+    openHtml: openHtml,
     closePopup: closePopup,
     popupOpen: function () {
       return openId;

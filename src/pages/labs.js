@@ -105,18 +105,11 @@
   var ROADMAP = [
     { tag: "live", name: "Extensions", desc: "Native .nullext files with full power, and sandboxed Chrome popups." },
     { tag: "live", name: "Retextures", desc: "Whole-site redesigns, picked above, kept black and white." },
-    { tag: "live", name: "Theme generator", desc: "Rolls a complete theme set from a seed." },
+    { tag: "live", name: "Theme generator", desc: "Rolls a complete theme set from a seed. Lives in the Shop's theme editor, not here." },
     { tag: "soon", name: "Extension store", desc: "A page of community extensions you can install in one click." },
     { tag: "soon", name: "Theme sharing", desc: "A generated theme as a link you can paste to someone." },
     { tag: "soon", name: "More retextures", desc: "Whatever wins the vote." },
   ];
-
-  function btn(label, icon, cls, onClick) {
-    return d.h("button", { type: "button", class: "btn " + (cls || "btn-outline") + " btn-sm", onclick: onClick }, [
-      d.icon(icon),
-      label,
-    ]);
-  }
 
   /* ---------- experiments ---------- */
   function labsOn() {
@@ -150,7 +143,7 @@
     var host = d.qs("#labsExperiments");
     var on = labsOn();
     host.textContent = "";
-    host.appendChild(d.h("h2", { class: "set-h" }, [d.icon("beaker"), "Experiments"]));
+    host.appendChild(d.secHead("beaker", "Experiments", "CSS-only, and instant on and off"));
     var rows = d.h("div", { class: "lab-rows" });
     EXPERIMENTS.forEach(function (x) {
       var sw = d.h("input", { type: "checkbox", checked: on.indexOf(x.id) >= 0, "aria-label": x.name });
@@ -176,7 +169,7 @@
     var host = d.qs("#labsRetexture");
     var cur = N.prefs.get("retexture") || "off";
     host.textContent = "";
-    host.appendChild(d.h("h2", { class: "set-h" }, [d.icon("pen"), "Retextures"]));
+    host.appendChild(d.secHead("pen", "Retextures", "a complete redesign of every page"));
     host.appendChild(
       d.h("p", { class: "ext-note", style: { marginTop: "0", marginBottom: "14px" } }, "A retexture is a complete redesign of NULL, not a colour swap. All of them keep the black-and-white identity and every one of them applies to every page, the libraries and the player."),
     );
@@ -207,124 +200,35 @@
     host.appendChild(grid);
   }
 
-  /* ---------- the generator ---------- */
-  var rolled = null;
-
+  /* ---------- the generator, which moved ----------
+     Rolling a theme is part of building one, so the generator is a tab inside
+     the Shop's theme editor now: a roll drops straight into the editor's own
+     fields, which means you can tweak whatever it hands you instead of
+     accepting or discarding the whole thing. This page keeps a pointer so
+     nobody goes hunting for it. */
   function paintGen() {
     var host = d.qs("#labsGen");
+    if (!host) return;
     host.textContent = "";
-    host.appendChild(d.h("h2", { class: "set-h" }, [d.icon("sparkle"), "Theme generator"]));
+    host.appendChild(d.secHead("sparkle", "Theme generator", "now part of the theme editor, in the Shop"));
     host.appendChild(
-      d.h("p", { class: "ext-note", style: { marginTop: "0", marginBottom: "14px" } }, "Rolls a whole theme set: a four-colour palette, a tint, a backdrop picked to match the hue, drifting parts, and a particle set. It lands in the same place as the editor's own work, so a generated theme is editable, deletable and wears exactly like a bought one."),
+      d.h("div", { class: "lab-note" }, [
+        d.icon("wrench"),
+        d.h("span", null, "A roll hands back a whole set: a four-colour palette, a tint, a backdrop picked to match the hue, drifting parts and a particle layer. It opens in the theme editor and writes itself into the editor's own fields, so a generated theme is editable, deletable and wears exactly like one you built by hand."),
+      ]),
     );
-
-    /* the seed field is a pin, not the next roll's source: leave it alone and
-       every Roll is a fresh random seed (the field updates to show what you
-       got). Type into it and Roll reuses exactly that seed, which is how you
-       reproduce a theme someone shared with you. */
-    var seed = d.h("input", { class: "field", type: "text", value: rolled ? String(rolled.seed) : "", placeholder: "random" });
-    var scheme = d.h(
-      "select",
-      { class: "field" },
-      [{ id: "", name: "Surprise me" }].concat(
-        N.gen.SCHEMES.map(function (s) {
-          return { id: s, name: s };
-        }),
-      ).map(function (o) {
-        return d.h("option", { value: o.id }, o.name);
-      }),
+    host.appendChild(
+      d.h("div", { class: "ec-acts" }, [
+        d.h("a", { class: "btn btn-primary btn-sm", href: N.url("/shop") }, [d.icon("store"), "Open the Shop"]),
+      ]),
     );
-    if (rolled && rolled.scheme) scheme.value = rolled.scheme;
-
-    var acts = d.h("div", { class: "ec-acts" }, [
-      btn("Roll", "refresh", "btn-primary", function () {
-        /* a seed you typed yourself is worth honouring; otherwise the roll
-           picks a brand new one each time, so no two Rolls repeat */
-        var pinned = seed.value.trim();
-        if (!pinned) {
-          rolled = N.gen.roll({ seed: null, scheme: scheme.value || null });
-          seed.value = String(rolled.seed);
-        } else {
-          rolled = N.gen.roll({ seed: pinned, scheme: scheme.value || null });
-        }
-        paintGen();
-        d.toast("Rolled " + rolled.name);
-      }),
-      btn("Wear it", "check", "btn-outline", function () {
-        if (!rolled) {
-          rolled = N.gen.roll({ seed: null, scheme: scheme.value || null });
-          seed.value = String(rolled.seed);
-        }
-        if (!N.theme.craftOn()) {
-          d.toast("The theme editor unlocks in the Shop first.", { type: "err" });
-          return;
-        }
-        N.gen.wear(rolled);
-        d.toast(rolled.name + " is on");
-      }),
-      btn("Save, do not wear", "save", "btn-outline", function () {
-        if (!rolled) {
-          rolled = N.gen.roll({ seed: null, scheme: scheme.value || null });
-          seed.value = String(rolled.seed);
-        }
-        if (!N.theme.craftOn()) {
-          d.toast("The theme editor unlocks in the Shop first.", { type: "err" });
-          return;
-        }
-        N.gen.save(rolled);
-        d.toast("Saved to your theme");
-      }),
-      btn("Stop wearing", "x", "btn-ghost", function () {
-        N.gen.unwear();
-        d.toast("Back to plain NULL");
-      }),
-      btn("Open the editor", "pen", "btn-ghost", function () {
-        if (N.editor && N.editor.open) N.editor.open();
-      }),
-    ]);
-
-    var form = d.h("div", { class: "lab-row" }, [
-      d.h("div", { class: "lr-txt" }, [d.h("b", null, "Seed"), d.h("span", null, "Blank means every roll is a fresh random one. Type a seed in and Roll replays exactly that theme, so a seed is worth pasting to someone.")]),
-      d.h("span", { class: "lab-form" }, [seed, scheme]),
-    ]);
-
-    host.appendChild(form);
-    /* the select is upgraded once it is in the document: the custom control
-       wraps the real one in place, so it needs a parent to sit in */
-    d.upgradeSelect(scheme);
-    host.appendChild(acts);
-
-    if (!rolled) {
-      rolled = N.gen.roll({ seed: null, scheme: scheme.value || null });
-      seed.value = String(rolled.seed);
-    }
-    var info = d.h("div", { class: "gen-info" }, [
-      d.h("b", null, rolled.name),
-      d.h("span", null, rolled.tags.join(" · ") + " · seed " + rolled.seed),
-    ]);
-    host.appendChild(info);
-
-    var preview = d.h("div", { class: "gen-preview" });
-    try {
-      preview.appendChild(d.h("div", { class: "gp-box" }, [d.h("span", { class: "gp-lab" }, "backdrop"), N.theme.packPreview(rolled.pack, {})]));
-      preview.appendChild(d.h("div", { class: "gp-box" }, [d.h("span", { class: "gp-lab" }, "particles"), N.theme.partPreview(rolled.part, {})]));
-    } catch (err) {
-      preview.appendChild(d.h("p", { class: "ext-err" }, "Could not draw a preview: " + ((err && err.message) || err)));
-    }
-    host.appendChild(preview);
-
-    if (!N.theme.craftOn()) {
-      host.appendChild(
-        d.h("p", { class: "ext-note" }, "The generator can preview anything for free. Saving or wearing a theme needs the editor unlock from the Shop, because that is the thing that owns your own theme pack."),
-      );
-    }
   }
 
   /* ---------- prototype UI ---------- */
   function paintProto() {
     var host = d.qs("#labsProto");
     host.textContent = "";
-    host.appendChild(d.h("h2", { class: "set-h" }, [d.icon("grid"), "Prototype UI"]));
+    host.appendChild(d.secHead("grid", "Prototype UI", "built for real here, used nowhere else"));
     host.appendChild(
       d.h("p", { class: "ext-note", style: { marginTop: "0", marginBottom: "14px" } }, "Components that do not exist in the site yet. They are built for real here and used nowhere else, which is the point of a lab: try it, then decide."),
     );
@@ -381,7 +285,7 @@
   function paintPolls() {
     var host = d.qs("#labsPolls");
     host.textContent = "";
-    host.appendChild(d.h("h2", { class: "set-h" }, [d.icon("trend"), "Have a say"]));
+    host.appendChild(d.secHead("trend", "Have a say", "vote on what gets built next"));
     var grid = d.h("div", { class: "lab-polls" });
     POLLS.forEach(function (p) {
       grid.appendChild(
@@ -398,7 +302,7 @@
   function paintRoadmap() {
     var host = d.qs("#labsRoadmap");
     host.textContent = "";
-    host.appendChild(d.h("h2", { class: "set-h" }, [d.icon("list"), "What is in the lab"]));
+    host.appendChild(d.secHead("list", "What is in the lab", "what is live and what is still coming"));
     var rows = d.h("div", { class: "lab-rows" });
     ROADMAP.forEach(function (r) {
       rows.appendChild(

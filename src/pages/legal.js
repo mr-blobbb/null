@@ -106,7 +106,7 @@
       d.h("div", { class: "tl-head" }, [
         d.h("span", { class: "tl-ic" }, [d.icon("zap")]),
         d.h("b", null, "The short version"),
-        d.h("span", null, "no lawyer required"),
+        d.h("span", { class: "tl-sub" }, "no lawyer required"),
       ]),
       d.h("div", { class: "md-out tl-md", html: N.md.render(text) }),
       d.h("div", { class: "tl-note" }, [

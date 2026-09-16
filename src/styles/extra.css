@@ -675,6 +675,9 @@ body.lb .toolbar.stuck {
   padding: 14px max(14px, var(--pad-x)) 12px;
   margin: 0 calc(-1 * var(--pad-x)) 6px;
   width: calc(100% + 2 * var(--pad-x));
+  /* the page's own max-width would otherwise cap the bar to the content
+     column, which is what made it read as a floating strip */
+  max-width: none;
   border-radius: 0;
   background: color-mix(in srgb, var(--bg) 82%, transparent);
   backdrop-filter: blur(16px) saturate(140%);
@@ -692,6 +695,552 @@ html[data-perf] body.lb .toolbar.stuck {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   background: var(--bg);
+}
+
+/* ============================================================
+   side rail navigation
+   The top bar turns into a left rail on a wide screen: icons only, sliding
+   open on hover to show names. The page keeps its full height and the nav
+   stops sitting on top of every page's first line.
+
+   Everything here hangs off html:not([data-nav="bar"]) inside one width
+   query, so the bar layout is still the whole story on a narrow screen and
+   the Settings switch (which writes data-nav="bar") undoes all of it. --nh
+   goes to zero with the rail: every offset on the site is written against
+   it, so the rail only has to move that one number and the pages follow.
+   ============================================================ */
+/* the top bar is icons only: the names the rail shows are in the markup but
+   off the page there */
+.nav-link .nl-txt {
+  display: none;
+}
+
+/* the strip extensions mount into with ctx.mount('nav', html): a row in the
+   top bar, a column in the rail (see the media query below) */
+.nav-slot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 4px;
+  min-width: 0;
+}
+.nav-slot:empty {
+  display: none;
+}
+.ext-widget {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+/* the body of a .nullext's own window (ext.js's openHtml) */
+.ext-html {
+  padding: 14px 16px 16px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--text);
+  max-height: min(420px, 60dvh);
+  overflow: auto;
+}
+.ext-html b {
+  display: block;
+  font-size: 15px;
+  margin-bottom: 6px;
+}
+.ext-html p {
+  margin: 0 0 6px;
+}
+
+@media (min-width: 1100px) {
+  html:not([data-nav="bar"]) {
+    --nh: 0px;
+    --rail-w: 68px;
+    --rail-w-open: 220px;
+  }
+  html:not([data-nav="bar"]) .nav-link .nl-txt {
+    display: inline;
+  }
+  /* the puzzle menu is absolute, and the rail clips its own overflow, so in
+     the rail it flies out beside it instead of hanging below the button */
+  html:not([data-nav="bar"]) .ext-nav.open .ext-menu {
+    position: fixed;
+    left: var(--rail-w);
+    right: auto;
+    top: max(96px, 16dvh);
+    transform-origin: top left;
+  }
+  html:not([data-nav="bar"]) body {
+    padding-left: var(--rail-w);
+  }
+  html:not([data-nav="bar"]) .topbar {
+    inset: 0 auto 0 0;
+    width: var(--rail-w);
+    height: 100dvh;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 14px 12px 16px;
+    border-bottom: 0;
+    border-right: 1px solid color-mix(in srgb, var(--ac-1) 12%, var(--line));
+    overflow: hidden auto;
+    scrollbar-width: none;
+    z-index: 95;
+    transition: width 0.24s var(--ease), box-shadow 0.24s var(--ease);
+  }
+  html:not([data-nav="bar"]) .topbar:hover,
+  html:not([data-nav="bar"]) .topbar:focus-within {
+    width: var(--rail-w-open);
+    box-shadow: 26px 0 70px -34px rgba(0, 0, 0, 0.95);
+  }
+  /* the labels are always in the markup; collapsed they are only invisible
+     and clipped by the rail's own overflow, so opening it is one opacity
+     fade with nothing to re-lay-out */
+  html:not([data-nav="bar"]) .brand-name,
+  html:not([data-nav="bar"]) .nav-link .nl-txt,
+  html:not([data-nav="bar"]) .searchbox .sb-txt {
+    opacity: 0;
+    transition: opacity 0.16s;
+  }
+  html:not([data-nav="bar"]) .topbar:hover .brand-name,
+  html:not([data-nav="bar"]) .topbar:hover .nav-link .nl-txt,
+  html:not([data-nav="bar"]) .topbar:hover .searchbox .sb-txt,
+  html:not([data-nav="bar"]) .topbar:focus-within .brand-name,
+  html:not([data-nav="bar"]) .topbar:focus-within .nav-link .nl-txt,
+  html:not([data-nav="bar"]) .topbar:focus-within .searchbox .sb-txt {
+    opacity: 1;
+  }
+  html:not([data-nav="bar"]) .brand {
+    padding: 4px 3px 12px;
+  }
+  html:not([data-nav="bar"]) .nav-links {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 3px;
+    margin: 0;
+  }
+  html:not([data-nav="bar"]) .nav-links .nav-link {
+    width: 100%;
+    height: 42px;
+    padding: 0 12px;
+    justify-content: flex-start;
+    gap: 12px;
+    border-radius: 11px;
+    white-space: nowrap;
+  }
+  html:not([data-nav="bar"]) .nav-link .nl-txt {
+    font-size: 13.5px;
+    font-weight: 600;
+  }
+  /* the active marker follows the rail: a bar down the left edge instead of
+     a line under the icon */
+  html:not([data-nav="bar"]) .nav-link.on {
+    background: var(--glass-bg-2);
+    box-shadow: inset 2px 0 0 var(--ac-1);
+  }
+  html:not([data-nav="bar"]) .searchbox {
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    justify-content: flex-start;
+    gap: 12px;
+    flex: none;
+  }
+  html:not([data-nav="bar"]) .top-actions {
+    margin-top: auto;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+  html:not([data-nav="bar"]) .top-actions .btn-icon {
+    width: 100%;
+    height: 40px;
+    border-radius: 11px;
+  }
+  /* extension chrome: a rail column, whatever HTML the extension mounted */
+  html:not([data-nav="bar"]) [data-slot="nav"] {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    margin-top: 6px;
+  }
+  html:not([data-nav="bar"]) [data-slot="nav"] > * {
+    overflow: hidden;
+  }
+  /* the reading progress line hangs off the top of the page, which is now
+     the top of the content column, not of the window */
+  html:not([data-nav="bar"]) .read-bar {
+    left: var(--rail-w);
+  }
+  html:not([data-nav="bar"]) .skip-link {
+    left: calc(var(--rail-w) + 12px);
+  }
+}
+
+/* ============================================================
+   schedule editor rows
+   Number, name, two times and a remove button. Written with the parent in
+   the selector so it outranks the shared .sched-row at any width.
+   ============================================================ */
+.sched-editor .ed-times-row {
+  grid-template-columns: 34px minmax(0, 1fr) minmax(170px, auto) 32px;
+  align-items: center;
+}
+.sched-editor .ed-times {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex: none;
+}
+.sched-editor .ed-times i {
+  font-style: normal;
+  font-size: 11.5px;
+  color: var(--text-2);
+}
+.sched-editor .ed-time {
+  width: 74px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.ed-x {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--glass-bg-2);
+  color: var(--text-2);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.ed-x:hover {
+  color: var(--bad);
+  border-color: color-mix(in srgb, var(--bad) 45%, var(--line));
+  background: color-mix(in srgb, var(--bad) 10%, var(--glass-bg-2));
+}
+.ed-x .msr {
+  font-size: 15px;
+}
+.ed-add {
+  margin-top: 4px;
+}
+.ed-hint {
+  font-size: 12px;
+  color: var(--text-2);
+  line-height: 1.5;
+  margin: 8px 0 2px;
+}
+.ed-errs {
+  margin: 10px 0 4px;
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  border: 1px solid color-mix(in srgb, var(--bad) 42%, var(--line));
+  background: color-mix(in srgb, var(--bad) 10%, transparent);
+}
+.ed-errs p {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text);
+  margin: 0 0 5px;
+}
+.ed-errs p:last-child {
+  margin-bottom: 0;
+}
+.ed-errs .msr {
+  font-size: 15px;
+  color: var(--bad);
+  flex: none;
+  margin-top: 1px;
+}
+@media (max-width: 760px) {
+  .sched-editor .ed-times-row {
+    grid-template-columns: 30px minmax(0, 1fr) 30px;
+    row-gap: 6px;
+  }
+  .sched-editor .ed-times-row .s-no {
+    grid-row: 1 / 3;
+  }
+  .sched-editor .ed-times-row .s-name,
+  .sched-editor .ed-times-row .ed-input,
+  .sched-editor .ed-times-row .ed-times {
+    grid-column: 2;
+  }
+  .sched-editor .ed-times-row .ed-x {
+    grid-column: 3;
+    grid-row: 1;
+  }
+}
+
+/* ============================================================
+   search, rebuilt
+   The overlay is a palette now rather than a list in a box: a big field, a
+   shelf of kind chips with counts, grouped results that answer the pointer,
+   and a footer that says what the keyboard does. These rules override the
+   block in global.css (this file loads after it), so the old shapes are
+   still there for anything that predates the parts below.
+   ============================================================ */
+.search-ov {
+  padding: calc(var(--nh) + 46px) 16px 40px;
+  background: var(--overlay);
+}
+/* a soft wash behind the panel, so it reads as lit rather than pasted on */
+.search-ov::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(60% 40% at 50% 0%, color-mix(in srgb, var(--ac-1) 16%, transparent), transparent 70%),
+    radial-gradient(40% 30% at 50% 100%, color-mix(in srgb, var(--ac-1) 8%, transparent), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.search-ov.open::before {
+  opacity: 1;
+}
+.search-panel {
+  width: min(760px, 100%);
+  max-height: calc(100dvh - var(--nh) - 96px);
+  position: relative;
+  border-radius: 22px;
+  border: 1px solid color-mix(in srgb, var(--ac-1) 22%, var(--line-2));
+  box-shadow:
+    0 40px 90px -40px rgba(0, 0, 0, 0.95),
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+  transform: translateY(-10px) scale(0.985);
+  opacity: 0;
+  transition: transform 0.22s var(--ease), opacity 0.22s var(--ease);
+}
+.search-ov.open .search-panel {
+  transform: none;
+  opacity: 1;
+}
+/* the lit edge across the top, in the site's own accent */
+.search-panel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 14%;
+  right: 14%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--ac-1) 80%, transparent), transparent);
+  pointer-events: none;
+}
+
+.search-input {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 17px 20px;
+  border-bottom: 1px solid var(--line);
+}
+.search-input .si {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  flex: none;
+  font-size: 19px;
+  color: var(--ac-1);
+  border: 1px solid color-mix(in srgb, var(--ac-1) 24%, var(--line));
+  background: color-mix(in srgb, var(--ac-1) 11%, var(--glass-bg-2));
+}
+.search-input input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-size: 17.5px;
+  font-weight: 520;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+.search-input input::placeholder {
+  color: var(--text-2);
+}
+.kbd {
+  font-size: 10.5px;
+  font-weight: 650;
+  color: var(--text-2);
+  border: 1px solid var(--line-2);
+  border-radius: 7px;
+  padding: 2px 7px;
+  flex: none;
+  line-height: 1.5;
+}
+.search-input .kbd-x {
+  cursor: pointer;
+  background: transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+.search-input .kbd-x:hover {
+  color: var(--text);
+  border-color: var(--ac-1);
+}
+
+/* the shelf row */
+.sp-filters {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.sp-filters[hidden] {
+  display: none;
+}
+.sp-filters .chip-btn {
+  height: 28px;
+  font-size: 12px;
+}
+.sp-filters .sp-clear {
+  margin-left: auto;
+  color: var(--text-2);
+}
+
+.search-results {
+  overflow-y: auto;
+  padding: 8px 10px 12px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--thumb) transparent;
+}
+.sr-group {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10.5px;
+  font-weight: 750;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  padding: 12px 12px 6px;
+  background: linear-gradient(180deg, var(--glass-bg-2) 70%, transparent);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.sr-group i {
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 1px 7px;
+  opacity: 0.8;
+}
+.sr-row {
+  position: relative;
+  gap: 13px;
+  padding: 10px 12px;
+  border-radius: 13px;
+  border: 1px solid transparent;
+  transition: background 0.14s, border-color 0.14s, transform 0.14s;
+}
+.sr-row:hover {
+  background: var(--glass-bg-2);
+  transform: translateX(2px);
+}
+.sr-row.sel {
+  background: color-mix(in srgb, var(--ac-1) 12%, var(--glass-bg-2));
+  border-color: color-mix(in srgb, var(--ac-1) 34%, var(--line));
+  transform: translateX(2px);
+}
+/* the little marker down the left of the row the keyboard is on */
+.sr-row.sel::before {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 50%;
+  width: 3px;
+  height: 18px;
+  margin-top: -9px;
+  border-radius: 99px;
+  background: var(--ac-1);
+}
+.sr-row .sr-ic {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  color: var(--ac-1);
+}
+.sr-row .sr-txt b {
+  font-size: 14.5px;
+  letter-spacing: -0.01em;
+}
+.sr-row .chip {
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  opacity: 0.75;
+}
+.sr-row.sel .chip {
+  opacity: 1;
+}
+.sr-none {
+  padding: 20px 16px 26px;
+  text-align: center;
+  color: var(--text-2);
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+/* footer: what the keyboard does, and what the query found */
+.sp-foot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--line);
+  font-size: 11.5px;
+  color: var(--text-2);
+  flex-wrap: wrap;
+}
+.sp-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.sp-spark {
+  opacity: 0.4;
+}
+.sp-count {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 620px) {
+  .search-ov {
+    padding: calc(var(--nh) + 12px) 10px 20px;
+  }
+  .search-panel {
+    border-radius: 18px;
+    max-height: calc(100dvh - var(--nh) - 40px);
+  }
+  .sp-foot .sp-hint {
+    display: none;
+  }
+  .sp-count {
+    margin-left: 0;
+  }
+}
+
+/* a compact rail on a short window: same idea, tighter rows */
+@media (min-width: 1100px) and (max-height: 700px) {
+  html:not([data-nav="bar"]) .nav-links .nav-link {
+    height: 36px;
+  }
+  html:not([data-nav="bar"]) .brand {
+    padding-bottom: 8px;
+  }
 }
 
 /* ============================================================
@@ -1349,6 +1898,37 @@ html[data-perf="1"] .nav-dot {
   line-height: 1.45;
   color: var(--text-2);
 }
+/* ---------- standalone section head ----------
+   dom.js's secHead() builds Labs and Extensions a head with the same innards
+   as a Settings card. A Settings head sits inside a card that supplies the
+   spacing; out here the heading owns it, and has to look like a section
+   start rather than a line of text pressed against the top of the block. */
+.sec-head {
+  align-items: center;
+  margin: 36px 0 16px;
+}
+.sec-head:first-child {
+  margin-top: 0;
+}
+.sec-head .set-ic {
+  width: 36px;
+  height: 36px;
+  margin-top: 0;
+  border-radius: 12px;
+  border-color: color-mix(in srgb, var(--ac-1) 24%, var(--line));
+  background: color-mix(in srgb, var(--ac-1) 11%, var(--glass-bg-2));
+}
+.sec-head .set-ic .msr {
+  font-size: 19px;
+}
+.sec-head .set-htxt b {
+  font-size: 17.5px;
+  letter-spacing: -0.015em;
+}
+.sec-head .set-htxt > span {
+  font-size: 13px;
+}
+
 .set-val {
   flex: none;
   margin-left: auto;

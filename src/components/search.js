@@ -253,12 +253,29 @@
       placeholder: "Search games, apps, proxies, pages…",
       value: initial || "",
       "aria-label": "Search NULL",
+      spellcheck: "false",
+      autocomplete: "off",
     });
-    var inputRow = d.h("div", { class: "search-input" }, [d.icon("search"), input]);
+    var closeBtn = d.h("button", { type: "button", class: "kbd kbd-x", title: "Close", "aria-label": "Close search" }, "esc");
+    var inputRow = d.h("div", { class: "search-input" }, [d.icon("search", "si"), input, closeBtn]);
 
+    /* the shelf row: one chip per kind that actually turned up, with the
+       count on it. Filtering is client-side on the hits we already have, so
+       it is instant and never costs another pass over the index. */
+    var filters = d.h("div", { class: "sp-filters" });
     var results = d.h("div", { class: "search-results", role: "listbox" });
-    var panel = d.h("div", { class: "search-panel glass-2 elev" }, [inputRow, results]);
+    var count = d.h("span", { class: "sp-count" });
+    var foot = d.h("div", { class: "sp-foot" }, [
+      d.h("span", { class: "sp-hint" }, [d.h("span", { class: "kbd" }, "↑"), d.h("span", { class: "kbd" }, "↓"), "move"]),
+      d.h("span", { class: "sp-hint" }, [d.h("span", { class: "kbd" }, "↵"), "open"]),
+      d.h("span", { class: "sp-spark", "aria-hidden": "true" }, "•𐃷•"),
+      count,
+    ]);
+    var panel = d.h("div", { class: "search-panel glass-2 elev" }, [inputRow, filters, results, foot]);
     var ov = d.h("div", { class: "search-ov" }, [panel]);
+    /* null = everything. Set by the shelf row, cleared by a query change. */
+    var kind = null;
+    var lastQ = null;
 
     function clear() {
       rows.forEach(function (r) {
@@ -268,11 +285,62 @@
       sel = 0;
     }
 
-    function render(q) {
+    function chip(label, k, n) {
+      return d.h(
+        "button",
+        {
+          type: "button",
+          class: "chip chip-btn" + (kind === k ? " on" : ""),
+          onclick: function () {
+            kind = k;
+            render(lastQ || "", true);
+          },
+        },
+        [label, n == null ? null : d.h("span", { class: "ch-n" }, String(n))],
+      );
+    }
+
+    function paintFilters(hits) {
+      filters.textContent = "";
+      var seen = {};
+      var order = [];
+      hits.forEach(function (h) {
+        var k = h.it.kind;
+        if (!seen[k]) {
+          seen[k] = 0;
+          order.push(k);
+        }
+        seen[k]++;
+      });
+      if (order.length < 2) {
+        filters.hidden = true;
+        return;
+      }
+      filters.hidden = false;
+      filters.appendChild(chip("Everything", null, hits.length));
+      order.forEach(function (k) {
+        filters.appendChild(chip(GROUP[k] || k, k, seen[k]));
+      });
+      filters.appendChild(
+        d.h("button", { type: "button", class: "chip chip-btn sp-clear", hidden: !kind, onclick: function () { kind = null; render(lastQ || "", true); } }, [
+          d.icon("x"),
+          "Clear",
+        ]),
+      );
+    }
+
+    function render(q, keepKind) {
       results.textContent = "";
       clear();
+      if (!keepKind) kind = null;
+      if (q !== lastQ) lastQ = q;
       var hits = search(q, idx);
       if (N.ext) N.ext.emit("search:query", { q: q, n: hits.length });
+      paintFilters(hits);
+      count.textContent = q
+        ? (kind ? hits.filter(function (h) { return h.it.kind === kind; }).length : hits.length) +
+          " for “" + q + "”"
+        : idx.length + " things indexed";
       if (!q) {
         /* suggestions when empty */
         results.appendChild(d.h("div", { class: "sr-group" }, "Jump to"));
@@ -304,15 +372,28 @@
         ]));
         return;
       }
+      var picked = kind
+        ? hits.filter(function (h) {
+            return h.it.kind === kind;
+          })
+        : hits;
       var byGroup = {};
-      hits.slice(0, 36).forEach(function (h) {
+      var order = [];
+      picked.slice(0, 48).forEach(function (h) {
         var k = h.it.kind;
-        (byGroup[k] = byGroup[k] || []).push(h);
+        if (!byGroup[k]) {
+          byGroup[k] = [];
+          order.push(k);
+        }
+        byGroup[k].push(h);
       });
-      Object.keys(byGroup).forEach(function (k) {
-        var head = d.h("div", { class: "sr-group" }, GROUP[k] || k);
+      order.forEach(function (k) {
+        var head = d.h("div", { class: "sr-group" }, [
+          GROUP[k] || k,
+          d.h("i", null, String(byGroup[k].length)),
+        ]);
         results.appendChild(head);
-        byGroup[k].slice(0, 6).forEach(function (h) {
+        byGroup[k].slice(0, kind ? 24 : 6).forEach(function (h) {
           var el = rowEl(h.it);
           results.appendChild(el);
           rows.push({ el: el, _it: h.it });
@@ -375,8 +456,7 @@
         e.preventDefault();
         close();
       }
-    }
-    input.addEventListener("keydown", onKey);
+    }      input.addEventListener("keydown", onKey);
     input.addEventListener("input", d.debounce(function () {
       render(input.value);
     }, 70));
@@ -392,6 +472,7 @@
     ov.addEventListener("mousedown", function (e) {
       if (e.target === ov) close();
     });
+    closeBtn.addEventListener("click", close);
 
     /* the active overlay: page-body fetches rebuild its index live */
     live = {
@@ -401,7 +482,7 @@
       rebuild: function () {
         if (!ov.isConnected) return;
         idx = buildIndex();
-        render(input.value);
+        render(input.value, true);
       },
     };
 

@@ -57,7 +57,7 @@
         "aria-expanded": "false",
         "data-ic": "extensions",
       },
-      [d.icon("puzzle")],
+      [d.icon("puzzle"), d.h("span", { class: "nl-txt" }, "Extensions")],
     );
     var menu = d.h("div", { class: "ext-menu glass" });
 
@@ -107,17 +107,23 @@
         links.appendChild(extNav());
         return;
       }
+      /* the name rides along in the markup: the side rail shows it when it
+         opens, the top bar just lets it sit there clipped */
       var a = d.h("a", {
         class: "nav-link" + (N.router.isActive(l.url) ? " on" : ""),
         href: N.url(l.url),
         title: l.t,
         "aria-label": l.t,
         "data-ic": l.id,
-      }, [d.icon(l.icon)]);
+      }, [d.icon(l.icon), d.h("span", { class: "nl-txt" }, l.t)]);
       if (l.id === "announcements") a.appendChild(annDotEl());
       links.appendChild(a);
     });
     bar.appendChild(links);
+
+    /* the mount point extensions get for their own nav chrome (see ext.js's
+       slot()): a strip under the links, in the rail or in the bar */
+    bar.appendChild(d.h("div", { "data-slot": "nav", class: "nav-slot" }));
 
     /* search trigger */
     var searchBtn = d.h("button", {
@@ -281,6 +287,8 @@
       });
       inner.appendChild(wrap);
     });
+    /* extensions can mount here too (ext.js's slot("footer")) */
+    inner.appendChild(d.h("div", { "data-slot": "foot", class: "foot-slot" }));
 var foot = d.h("footer", { class: "site-foot" }, [inner]); 
 foot.appendChild( 
   d.h("div", { class: "bottom" }, [ 

@@ -47,6 +47,7 @@
     paintAccent(p);
     paintPerf(p);
     paintDensity();
+    paintNavLayout();
     paintLibNav();
     paintMini();
     paintGlow();
@@ -135,6 +136,10 @@
   function paintLibNav() {
     var mode = N.prefs.get("libNav");
     segPaint("#libNavSeg", mode === "rail" || mode === "bar" ? mode : "auto");
+  }
+
+  function paintNavLayout() {
+    segPaint("#navSeg", N.prefs.get("navLayout") === "bar" ? "bar" : "side");
   }
 
   function paintMini() {
@@ -924,6 +929,18 @@
         N.theme.setDensity(b.dataset.val);
         paintDensity();
         d.toast("Layout: " + b.textContent);
+      });
+    }
+
+    /* the site's own nav: side rail or top bar */
+    var nseg = d.qs("#navSeg");
+    if (nseg) {
+      nseg.addEventListener("click", function (e) {
+        var b = e.target.closest("button");
+        if (!b) return;
+        N.theme.setNavLayout(b.dataset.val);
+        paintNavLayout();
+        d.toast("Navigation: " + b.textContent);
       });
     }
 

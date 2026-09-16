@@ -462,6 +462,22 @@
     if (mine) what.push(mine.name + " (" + (art ? art.name : "backdrop") + ")");
     if (mineP) what.push(mineP.name);
     var foot = d.h("div", { class: "shop-foot" }, [
+      /* the generator lives inside the editor: rolling is part of building,
+         and a roll fills the editor's own fields rather than making a second
+         kind of theme the editor cannot touch. */
+      N.gen
+        ? d.h(
+            "button",
+            {
+              type: "button",
+              class: "btn btn-outline btn-sm",
+              onclick: function () {
+                if (N.editor && N.editor.open) N.editor.open(render, "gen");
+              },
+            },
+            [d.icon("sparkle"), "Roll one"],
+          )
+        : null,
       d.h(
         "button",
         {
@@ -485,7 +501,7 @@
               null,
               what.length
                 ? "Yours so far: " + what.join(" · ")
-                : "Nothing built yet. Pick four colors, a backdrop and what drifts through it.",
+                : "Nothing built yet. Pick four colors, a backdrop and what drifts through it, or let the generator roll a whole set for you to edit.",
             ),
           ]),
           foot,

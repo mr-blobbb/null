@@ -57,6 +57,15 @@
     acts.appendChild(d.h("label", { class: "switch", title: "On or off" }, [sw, d.h("span", { class: "track" })]));
 
     if (native) {
+      /* a native extension that shipped HTML gets its own window, exactly the
+         way an imported Chrome popup does, just without the sandbox */
+      if (e.html) {
+        acts.appendChild(
+          btn("Open window", "max", "btn-primary", function () {
+            N.ext.openHtml(e.id);
+          }),
+        );
+      }
       acts.appendChild(
         btn("Run again", "play", "btn-outline", function () {
           N.ext.enable(e.id);
@@ -96,6 +105,9 @@
       ? [
           e.css ? "css · " + size(e.css) : null,
           e.js ? "js · " + size(e.js) : null,
+          e.html ? "html · " + size(e.html) : null,
+          (e.pages || []).length ? (e.pages || []).length + " page" + ((e.pages || []).length === 1 ? "" : "s") : null,
+          (e.nav || []).length ? (e.nav || []).length + " nav item" + ((e.nav || []).length === 1 ? "" : "s") : null,
         ].filter(Boolean)
       : Object.keys(e.files || {}).concat(Object.keys(e.assets || {}));
     var store = size(JSON.stringify(N.ext.data(e.id) || {}));
@@ -108,7 +120,9 @@
     );
     var pre = d.h("pre");
     pre.textContent = native
-      ? (e.css ? "/* css */\n" + e.css + "\n\n" : "") + (e.js ? "/* js */\n" + e.js : "/* nothing to show */")
+      ? (e.css ? "/* css */\n" + e.css + "\n\n" : "") +
+        (e.html ? "<!-- html (its own window) -->\n" + e.html + "\n\n" : "") +
+        (e.js ? "/* js */\n" + e.js : "/* nothing to show */")
       : files.map(function (f) {
           return f;
         }).join("\n");
@@ -121,10 +135,7 @@
     var all = N.ext.list();
     host.textContent = "";
     host.appendChild(
-      d.h("h2", { class: "set-h" }, [
-        d.icon("puzzle"),
-        all.length ? "Installed (" + all.length + ")" : "Installed",
-      ]),
+      d.secHead("puzzle", all.length ? "Installed (" + all.length + ")" : "Installed", "everything you have added to NULL"),
     );
 
     if (!all.length) {
@@ -150,7 +161,7 @@
     var list = N.ext.pages();
     pageHost.textContent = "";
     if (!list.length) return;
-    pageHost.appendChild(d.h("h2", { class: "set-h" }, [d.icon("grid"), "Pages from your extensions"]));
+    pageHost.appendChild(d.secHead("grid", "Pages from your extensions", "views an extension has put into NULL"));
     var box = d.h("div", { class: "ext-pages glass" });
     var stage = d.h("div", { class: "ext-stage" });
     var open = null;
@@ -221,7 +232,7 @@
 
   function installer() {
     installHost.textContent = "";
-    installHost.appendChild(d.h("h2", { class: "set-h" }, [d.icon("download"), "Add an extension"]));
+    installHost.appendChild(d.secHead("download", "Add an extension", "a .nullext file, or a Chrome popup folder"));
 
     var nulInput = d.h("input", { type: "file", accept: ".nullext,.json,.js,.txt", class: "hider" });
     nulInput.addEventListener("change", function () {
@@ -283,37 +294,107 @@
   }
 
   /* ---------- the format, and a starter ---------- */
+  /* The starter is a working extension rather than a hello world: it puts a
+     live period clock in the nav bar on every page, ships its own window in
+     the manifest, and adds a page. Read it, change it, keep it. */
   function starter() {
     return JSON.stringify(
       {
         nullExt: 1,
-        name: "My extension",
+        name: "Period clock",
         version: "1.0.0",
         author: "you",
-        desc: "What it does, in one line.",
-        icon: "bolt",
-        css: "/* injected on every page with the extension on */\n.ext-hello { color: var(--ac-1); }",
+        desc: "Shows the period you are in and how long is left, in the nav and in its own window.",
+        icon: "clock",
+        css: [
+          "/* injected on every page the extension runs on */",
+          ".pc-chip {",
+          "  display: flex;",
+          "  align-items: center;",
+          "  gap: 7px;",
+          "  height: 34px;",
+          "  padding: 0 10px;",
+          "  border-radius: 10px;",
+          "  border: 1px solid var(--line);",
+          "  background: var(--glass-bg-2);",
+          "  font-size: 12px;",
+          "  font-weight: 600;",
+          "  white-space: nowrap;",
+          "  overflow: hidden;",
+          "}",
+          ".pc-dot { width: 7px; height: 7px; border-radius: 99px; background: var(--ac-1); flex: none; }",
+          ".pc-win { padding: 2px 2px 6px; }"
+        ].join("\n"),
+        html: [
+          "<div class=\"pc-win\">",
+          "  <b>Period clock</b>",
+          "  <p id=\"pc-now\">Looking at the schedule...</p>",
+          "  <p id=\"pc-next\" style=\"color:var(--text-2)\"></p>",
+          "</div>"
+        ].join("\n"),
         js: [
-          "/* Everything in NULL is reachable: N is the whole app, ctx is the",
-          "   friendly surface. This runs on every page, after the page mounts. */",
-          "ctx.toast(ctx.name + ' loaded');",
+          "/* A .nullext is JavaScript with the run of the site: N is the whole",
+          "   app, ctx is the friendly surface. ctx.mount('nav', html) puts your",
+          "   own markup into the bar every page has. */",
+          "var box = ctx.mount('nav', '<span class=\"pc-chip\"><i class=\"pc-dot\"></i><span>period clock</span></span>');",
+          "var chip = box ? box.querySelector('.pc-chip span:last-child') : null;",
           "",
-          "/* hooks fire as things happen */",
+          "function now() {",
+          "  var S = N.schedule;",
+          "  var type = S.weekType(new Date().getDay());",
+          "  if (!type) return { title: 'No school today', sub: '' };",
+          "  var blocks = S.blocksFor(type);",
+          "  var lv = S.live(blocks, new Date());",
+          "  if (!lv.block) return { title: 'Between periods', sub: '' };",
+          "  var secs = lv.passing ? lv.secToNext : lv.secLeft;",
+          "  var m = Math.floor(secs / 60);",
+          "  var s = secs % 60;",
+          "  var left = m + ':' + (s < 10 ? '0' : '') + s;",
+          "  return {",
+          "    title: (lv.passing ? 'Passing' : lv.block.name) + ' · ' + left,",
+          "    sub: lv.next ? 'Next: ' + lv.next.name + ' at ' + lv.next.start : ''",
+          "  };",
+          "}",
+          "",
+          "function paint() {",
+          "  var n = now();",
+          "  if (chip) chip.textContent = n.title;",
+          "  var w = document.querySelector('.pc-win');",
+          "  if (!w) return;",
+          "  var lead = w.querySelector('#pc-now');",
+          "  var nx = w.querySelector('#pc-next');",
+          "  if (lead) lead.textContent = n.title;",
+          "  if (nx) nx.textContent = n.sub;",
+          "}",
+          "",
+          "/* the window is HTML in the manifest, so it only exists while it is",
+          "   open: popup:open hands you the element to fill */",
+          "ctx.hook('popup:open', paint);",
+          "paint();",
+          "setInterval(paint, 15000);",
+          "",
+          "/* a page of your own, mounted on the Extensions page */",
+          "ctx.page({",
+          "  title: 'Period clock',",
+          "  icon: 'clock',",
+          "  desc: 'The live period, the same thing the chip shows.',",
+          "  html: '<p class=\"pc-page\">Reading the schedule...</p>',",
+          "  mount: function (el) {",
+          "    var out = el.querySelector('.pc-page');",
+          "    function tick() {",
+          "      var n = now();",
+          "      if (out) out.textContent = n.title + (n.sub ? ' - ' + n.sub : '');",
+          "    }",
+          "    tick();",
+          "    setInterval(tick, 15000);",
+          "  },",
+          "});",
+          "",
+          "/* hooks are how the core tells you things happened */",
           "ctx.hook('coins:earn', function (info) {",
           "  ctx.log('coins now', info.total);",
           "});",
-          "",
-          "/* give yourself something: giveCoins is the public way in */",
-          "if (N.econ) N.econ.giveCoins(250);",
-          "",
-          "/* and add a view, which shows up under Pages from your extensions */",
-          "ctx.page({",
-          "  title: 'Hello',",
-          "  icon: 'star',",
-          "  render: function (host) {",
-          "    host.appendChild(N.dom.h('p', { class: 'ext-hello' }, 'Hello from an extension.'));",
-          "  },",
-          "});",
+          "ctx.toast(ctx.name + ' is in your nav');",
         ].join("\n"),
       },
       null,
@@ -335,7 +416,7 @@
 
   function docs() {
     docHost.textContent = "";
-    docHost.appendChild(d.h("h2", { class: "set-h" }, [d.icon("book"), "Writing one"]));
+    docHost.appendChild(d.secHead("book", "Writing one", "the format, and everything it can reach"));
 
     var read = d.h("details", { class: "ext-doc glass", open: true });
     read.appendChild(
@@ -353,6 +434,28 @@
     );
     docHost.appendChild(read);
 
+    /* HTML, which is the half people miss: a .nullext can be a window, a
+       page, and a strip of chrome in the nav, all from the same file */
+    var htm = d.h("details", { class: "ext-doc glass" });
+    htm.appendChild(d.h("summary", null, [d.icon("grid"), "HTML: windows, pages and nav widgets"]));
+    var hul = d.h("ul", { class: "ext-list" });
+    [
+      "html: the extension's own window, opened from the puzzle menu or its card here",
+      "pages: [{ id, title, icon, desc, html }] adds views, each mountable as a panel",
+      "nav: [{ title, icon, url }] adds links to the puzzle menu",
+      "ctx.mount('nav', html) drops your own markup into the bar on every page",
+      "ctx.page({ html, mount }) registers a view whose markup needs code behind it",
+      "ctx.hook('popup:open', fn) fires with the element when your window opens",
+      "ctx.slot(where) hands you the mount point itself, if you would rather not use mount()",
+    ].forEach(function (t) {
+      hul.appendChild(d.h("li", null, t));
+    });
+    htm.appendChild(hul);
+    htm.appendChild(
+      d.h("p", { class: "ext-note" }, "The starter below is a working one: a period clock that reads the site's own schedule, lives in the nav bar and opens a window of its own."),
+    );
+    docHost.appendChild(htm);
+
     var reach = d.h("details", { class: "ext-doc glass" });
     reach.appendChild(d.h("summary", null, [d.icon("zap"), "What an extension can reach"]));
     var ul = d.h("ul", { class: "ext-list" });
@@ -363,6 +466,7 @@
       "theme packs, particles, glow, seasons and the layout",
       "the player, search, the dev console, marathon mode, the screensaver",
       "modals, FX, toasts, hidden pages, the nav and this manager",
+      "the school schedule, so a widget can read the real bell times",
       "and the DOM, because it is just a script on the page",
     ].forEach(function (t) {
       ul.appendChild(d.h("li", null, t));

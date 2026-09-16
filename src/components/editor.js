@@ -95,6 +95,7 @@
     var input = d.h("input", {
       type: opts.type || "text",
       value: value,
+      placeholder: opts.placeholder,
       min: opts.min,
       max: opts.max,
       step: opts.step,
@@ -143,7 +144,11 @@
     var stored = N.store.read(CRAFT_KEY, {}) || {};
     var pack = seed(stored.pack, DEFAULT_PACK, "pf");
     var part = seed(stored.part, DEFAULT_PART, "pt");
-    var tab = startTab === "part" ? "part" : "theme";
+    /* the generator is a tab in here rather than a page of its own: a roll
+       fills these very fields, so the two halves are the same editor. Without
+       procgen.js on the page the tab simply is not offered. */
+    var canGen = !!(N.gen && N.gen.roll);
+    var tab = !canGen || startTab === "theme" || startTab == null ? "theme" : startTab === "part" ? "part" : "gen";
     var handle = null;
     /* whether there is anything saved to throw away. A fresh install has
        nothing, so Delete only shows up once you've built something. */
@@ -195,17 +200,21 @@
     }
 
     /* repaint just the preview: dragging a color picker never rebuilds the
-       form under the cursor */
+       form under the cursor. A roll shows the pack, because that is the half
+       you are actually looking at. */
     function paintPreview() {
       preview.textContent = "";
-      var def = tab === "theme" ? packDef() : partDef();
-      preview.appendChild(tab === "theme" ? N.theme.packThumb(def) : N.theme.partThumb(def));
+      var onPack = tab !== "part";
+      var def = onPack ? packDef() : partDef();
+      preview.appendChild(onPack ? N.theme.packThumb(def) : N.theme.partThumb(def));
       note.textContent =
-        tab === "theme"
-          ? "Palette, tint and backdrop: the four colors drive the accents and the drifting parts, the tint is the sheet behind the page."
-          : part.mono
-            ? "This set follows the site's own colors, so it reads correctly in dark and light."
-            : "This set carries its own four colors, the same way a Shop particle set does.";
+        tab === "gen"
+          ? "A generated set is a crafted set: the roll drops into the two tabs beside this one, so everything it hands you is editable."
+          : tab === "theme"
+            ? "Palette, tint and backdrop: the four colors drive the accents and the drifting parts, the tint is the sheet behind the page."
+            : part.mono
+              ? "This set follows the site's own colors, so it reads correctly in dark and light."
+              : "This set carries its own four colors, the same way a Shop particle set does.";
     }
 
     function partRows(list, kinds) {
@@ -302,12 +311,113 @@
       });
     }
 
+    /* ---------- the generator ----------
+       A roll hands back a whole set: palette, tint, backdrop, drifting parts
+       and a matching particle layer. It writes into the editor's own two
+       tabs and saves to null:craft, so what comes out is not a preview you
+       have to accept but the thing the other two tabs now edit. The seed
+       field is a pin, not the next roll's source: leave it blank and every
+       Roll is fresh, type a seed in and Roll replays exactly that theme. */
+    var rolled = null;
+    var genSeed = "";
+    var genScheme = "";
+
+    function genPanel() {
+      var seedIn = textInput(rolled ? String(rolled.seed) : "", function (v) {
+        genSeed = v.trim();
+      }, { placeholder: "random" });
+      var scheme = selectInput(
+        [{ id: "", name: "Surprise me" }].concat(
+          (N.gen.SCHEMES || []).map(function (s) {
+            return { id: s, name: s };
+          }),
+        ),
+        genScheme,
+        function (v) {
+          genScheme = v;
+        },
+      );
+
+      var info = d.h("div", { class: "gen-info" });
+      function describe() {
+        info.textContent = "";
+        if (!rolled) {
+          info.appendChild(
+            d.h(
+              "span",
+              null,
+              "Nothing rolled yet. Roll takes a fresh seed every time, so each press lands somewhere new. Paste a seed back in and Roll replays exactly that theme.",
+            ),
+          );
+          return;
+        }
+        info.appendChild(d.h("b", null, rolled.name));
+        info.appendChild(
+          d.h(
+            "span",
+            { class: "chips-row" },
+            rolled.tags.map(function (t) {
+              return d.h("span", { class: "chip" }, t);
+            }),
+          ),
+        );
+      }
+
+      function doRoll() {
+        rolled = N.gen.roll({ seed: genSeed, scheme: genScheme });
+        genSeed = String(rolled.seed);
+        pack = seed(rolled.pack, DEFAULT_PACK, "pf");
+        part = seed(rolled.part, DEFAULT_PART, "pt");
+        write();
+        seedIn.querySelector("input").value = genSeed;
+        describe();
+        paintPreview();
+        if (onSave) onSave();
+        d.toast("Rolled " + rolled.name, { icon: "sparkle" });
+      }
+
+      function doWear() {
+        if (!rolled) return doRoll();
+        N.gen.wear(rolled);
+        if (onSave) onSave();
+        d.toast("Wearing " + rolled.name, { icon: "check" });
+      }
+
+      describe();
+      panel.appendChild(
+        row(
+          "Seed",
+          d.h("div", { class: "lab-form" }, [
+            seedIn,
+            d.h("button", { type: "button", class: "btn btn-outline btn-sm", onclick: doRoll }, [d.icon("refresh"), "Roll"]),
+          ]),
+        ),
+      );
+      panel.appendChild(row("Colours", scheme));
+      panel.appendChild(info);
+      panel.appendChild(
+        d.h("div", { class: "ec-acts" }, [
+          d.h("button", { type: "button", class: "btn btn-primary btn-sm", onclick: doWear }, [d.icon("check"), "Save and wear"]),
+          d.h(
+            "span",
+            { class: "ed-note" },
+            "Wearing overwrites the theme you built by hand: the editor keeps one.",
+          ),
+        ]),
+      );
+    }
+
     function paintTabs() {
       tabs.textContent = "";
       [
         { id: "theme", name: "Theme pack" },
         { id: "part", name: "Particles" },
-      ].forEach(function (t) {
+        { id: "gen", name: "Generate" },
+      ]
+        .filter(function (t) {
+          return t.id !== "gen" || canGen;
+        })
+        .forEach(function (t) {
         var b = d.h("button", { type: "button" }, t.name);
         if (tab === t.id) b.classList.add("on");
         b.addEventListener("click", function () {
@@ -323,7 +433,9 @@
     /* keep the unpicked set in the file: saving one tab never wipes the other */
     function paintPanel() {
       panel.textContent = "";
-      if (tab === "theme") {
+      if (tab === "gen") {
+        genPanel();
+      } else if (tab === "theme") {
         panel.appendChild(row("Name", textInput(pack.name, function (v) { pack.name = v.slice(0, 40); })));
         panel.appendChild(
           row(

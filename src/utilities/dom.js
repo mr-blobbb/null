@@ -134,6 +134,19 @@
     return span;
   }
 
+  /* ---------- section heading ----------
+     The Settings page hand-writes its card heads: an icon in its own box, a
+     title, and a line under it. Labs and Extensions are built from JS, so
+     they cannot do that by hand, and a loose glyph next to a raw string is
+     exactly what they used to look like. Same shape, one builder. */
+  function secHead(name, title, sub) {
+    return h("h2", { class: "set-h sec-head" }, [
+      h("span", { class: "set-ic" }, [icon(name)]),
+      h("span", { class: "set-htxt" }, [h("b", null, title), sub ? h("span", null, sub) : null]),
+    ]);
+  }
+
+
   /* ---------- custom selects (upgrade a native <select> in place) ---------- */
   var openSel = null;
   function closeSel() {
@@ -258,6 +271,7 @@
     qs: qs,
     qsa: qsa,
     icon: icon,
+    secHead: secHead,
     icons: P,
     colorDot: colorDot,
     upgradeSelect: upgradeSelect,

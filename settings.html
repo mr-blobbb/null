@@ -338,6 +338,24 @@
               </div>
             </section>
 
+            <!-- navigation layout -->
+            <section class="set-card glass" data-card="nav">
+              <h2 class="set-h">
+                <span class="set-ic"><span data-icon="menu"></span></span>
+                <span class="set-htxt"><b>Navigation</b><span>Where the site's own nav lives.</span></span>
+              </h2>
+              <div class="set-row set-row--stack">
+                <div class="lbl-txt">
+                  <b>Layout</b>
+                  <span>Side rail keeps the nav down the left as icons, sliding open with names when you hover it, and gives every page its full height back. Top bar is the row across the top. The rail needs a window at least 1100px wide; narrower windows always use the top bar.</span>
+                </div>
+                <div class="seg seg--wide" id="navSeg" role="group" aria-label="Navigation layout">
+                  <button type="button" data-val="side">Side rail</button>
+                  <button type="button" data-val="bar">Top bar</button>
+                </div>
+              </div>
+            </section>
+
             <!-- library layout -->
             <section class="set-card glass" data-card="libnav">
               <h2 class="set-h">
@@ -762,6 +780,8 @@
   <script src="src/components/shell.js"></script>
   <script src="src/components/devconsole.js"></script>
   <script src="src/components/tour.js"></script>
+  <!-- the generator is a tab inside the editor, so it loads with it -->
+  <script src="src/utilities/procgen.js"></script>
   <script src="src/components/editor.js"></script>
   <script src="src/pages/settings.js"></script>
 </body>
