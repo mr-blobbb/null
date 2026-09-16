@@ -522,6 +522,15 @@
 
   /* ---------- entry point ---------- */
   function start() {
+    /* inside a cloaked iframe (the about:blank / blob: copy) this page is a
+       clone: storage is shared, so the tour is already done and prompts()
+       would just open the permission ask a second time in the new tab. The
+       ask belongs to the real tab. */
+    try {
+      if (window.top !== window.self) return;
+    } catch (err) {
+      return; /* cross-origin access threw: we are framed, same answer */
+    }
     /* anyone who dismissed the old welcome modal has been here before */
     if (!N.flags.get(DONE) && N.flags.get("welcome")) N.flags.set(DONE);
     if (N.flags.get(DONE)) {

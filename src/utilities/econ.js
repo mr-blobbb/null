@@ -524,6 +524,7 @@
     addCoins(q.reward);
     save();
     N.bus.emit("eco");
+    if (N.ext) N.ext.emit("quest:done", { id: id, coins: q.reward });
     return { ok: true, reward: q.reward };
   }
 
@@ -587,6 +588,7 @@
     addCoins(a.reward);
     save();
     N.bus.emit("eco");
+    if (N.ext) N.ext.emit("quest:done", { id: id, coins: a.reward, ach: true });
     return { ok: true, reward: a.reward };
   }
 
@@ -638,6 +640,10 @@
     if (bonus) addCoins(bonus);
     save();
     N.bus.emit("eco");
+    if (N.ext) {
+      N.ext.emit("crate:open", { coins: prize.type === "coins" ? prize.amount + bonus : bonus, streak: data.spinStreak });
+      if (prize.type === "coins") N.ext.emit("coins:earn", { n: prize.amount + bonus, total: data.coins, from: "crate" });
+    }
     return { ok: true, type: prize.type, amount: prize.amount, bonus: bonus, streak: data.spinStreak };
   }
 

@@ -229,11 +229,13 @@
       });
     }
 
-    /* back */
+    /* back. Leaves tell extensions too: the player:close hook is documented
+       in ext.js, so it should actually fire. */
     var backBtn = d.qs("#btnBack");
     if (backBtn) {
       backBtn.addEventListener("click", function () {
         var back = N.url("/" + (p.k === "app" ? "apps" : p.k === "proxy" ? "proxies" : "games") + "/");
+        if (N.ext) N.ext.emit("player:close", { entry: { kind: p.k, id: p.id } });
         if (history.length > 1) history.back();
         else location.href = back;
       });
