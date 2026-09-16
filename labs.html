@@ -22,6 +22,9 @@
         var t = p.theme === "light" ? "light" : "dark";
         document.documentElement.dataset.theme = t;
         if (p.perf) document.documentElement.dataset.perf = p.perf === "ultra" ? "ultra" : "1";
+        /* the side rail is the default nav, so which one is on is decided
+           here: without this the top bar shows for a frame first */
+        document.documentElement.dataset.nav = p.navLayout === "bar" ? "bar" : "side";
         if (p.glow && p.glow !== "off") document.documentElement.dataset.glow = p.glow;
         if (p.retexture && p.retexture !== "off") document.documentElement.dataset.retexture = p.retexture;
         if (p.labs) document.documentElement.dataset.labs = p.labs;

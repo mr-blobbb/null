@@ -46,14 +46,16 @@
   --ac-1: #e6e7ea;
   --ac-2: #a2a6ae;
 
-  --r-sm: 9px;
-  --r-md: 12px;
-  --r-lg: 16px;
-  --r-xl: 22px;
+  --r-sm: 5px;
+  --r-md: 8px;
+  --r-lg: 10px;
+  --r-xl: 14px;
   --nh: 60px;
   --maxw: 1180px;
-  --shadow-1: 0 8px 26px rgba(0, 0, 0, 0.3);
-  --shadow-2: 0 18px 54px rgba(0, 0, 0, 0.45);
+  /* flat depth. Nothing on NULL floats: a raised surface is the same box with
+     a brighter hairline around it, so the two "shadows" are just rings. */
+  --shadow-1: 0 0 0 1px var(--line);
+  --shadow-2: 0 0 0 1px var(--line-2);
   --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
@@ -82,8 +84,6 @@ html[data-theme="light"] {
   --thumb-hi: #9d9da5;
   --ac-1: #26262b;
   --ac-2: #55555f;
-  --shadow-1: 0 8px 24px rgba(20, 20, 28, 0.09);
-  --shadow-2: 0 18px 52px rgba(20, 20, 28, 0.16);
 }
 
 /* ---------- layout compactness ----------
@@ -411,6 +411,46 @@ main.sview > * {
   border-radius: var(--r-lg);
 }
 
+/* ---------- flat pass ----------
+   The components that still painted a gradient wash or a glow live further
+   down extra.css, which loads after this file, so each override below is
+   scoped with `body` to out-rank the original. Behaviour is untouched: the
+   accent still marks what is live (icons, chips, a bar that is ready), it
+   just stops covering whole cards. */
+body .crate-box,
+body .pg-row.ready,
+body .shop-row.ready {
+  background: var(--glass-bg-2);
+  border-color: var(--line-2);
+}
+body .pg-bar i,
+body .eco-track i {
+  border-radius: 2px;
+  background: var(--ac-1);
+}
+body .pg-row.ready .pg-bar i {
+  box-shadow: none;
+}
+/* nothing lifts on hover either: the surface changes colour, the page stays put */
+body .shop-card:hover,
+body .ann-row:hover .ann-card {
+  transform: none;
+}
+/* the announcement glow was a pool of light behind the hero, and the settings
+   rail is a plain sticky column now instead of a blurred pane */
+body .ann-hero-glow {
+  display: none;
+}
+body .rail-stick {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+/* one set of headings for the whole site: tight and heavy like the wordmark */
+body .page-head h1 {
+  font-weight: 780;
+  letter-spacing: -0.045em;
+}
+
 /* ============================================================
    buttons / chips / fields
    ============================================================ */
@@ -421,18 +461,14 @@ main.sview > * {
   gap: 8px;
   height: 40px;
   padding: 0 18px;
-  border-radius: 999px;
+  border-radius: var(--r-md);
   border: 1px solid transparent;
   font-weight: 600;
   font-size: 14px;
   letter-spacing: 0.01em;
-  transition: transform 0.14s var(--ease), box-shadow 0.18s, background 0.18s,
-    border-color 0.18s, color 0.18s, opacity 0.18s;
+  transition: background 0.16s, border-color 0.16s, color 0.16s, opacity 0.16s;
   user-select: none;
   white-space: nowrap;
-}
-.btn:active {
-  transform: translateY(1px) scale(0.985);
 }
 .btn:disabled {
   opacity: 0.5;
@@ -450,7 +486,7 @@ main.sview > * {
   border-color: transparent;
 }
 .btn-primary:hover {
-  filter: brightness(1.07);
+  opacity: 0.86;
 }
 
 .btn-outline {
@@ -476,8 +512,7 @@ main.sview > * {
   border-color: color-mix(in srgb, var(--bad) 70%, #000);
 }
 .btn-danger:hover {
-  filter: brightness(1.08);
-  transform: translateY(-1px);
+  opacity: 0.86;
 }
 
 .btn-outline-danger {
@@ -501,7 +536,7 @@ main.sview > * {
   width: 40px;
   height: 40px;
   padding: 0;
-  border-radius: 12px;
+  border-radius: var(--r-md);
 }
 .btn-icon svg {
   width: 19px;
@@ -513,7 +548,7 @@ main.sview > * {
   justify-content: center;
   width: 32px;
   height: 32px;
-  border-radius: 9px;
+  border-radius: var(--r-sm);
 }
 .btn-icon-sm svg {
   width: 18px;
@@ -537,7 +572,7 @@ main.sview > * {
   gap: 6px;
   height: 24px;
   padding: 0 10px;
-  border-radius: 999px;
+  border-radius: 6px;
   border: 1px solid var(--line);
   background: var(--glass-bg);
   font-size: 11.5px;
@@ -604,8 +639,7 @@ main.sview > * {
   border-color: var(--thumb);
 }
 .field:focus-within {
-  border-color: var(--ac-1);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ac-1) 16%, transparent);
+  border-color: var(--text-2);
 }
 .field input,
 .field select,
@@ -1111,9 +1145,7 @@ label.lbl {
   display: grid;
   place-items: center;
   padding: 22px;
-  background: rgba(0, 0, 0, 0.68);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
+  background: rgba(0, 0, 0, 0.78);
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.18s var(--ease), visibility 0.18s;
@@ -1238,7 +1270,6 @@ label.lbl {
   color: var(--text);
   border-color: var(--line-2);
   background: var(--glass-bg-3);
-  transform: translateY(-1px);
 }
 .dc-b .msr {
   font-size: 14px;
@@ -1338,15 +1369,14 @@ html[data-perf='1'] .dc-ov {
   font-size: 14px;
   text-align: left;
   cursor: pointer;
-  transition: border-color 0.16s, background 0.16s, box-shadow 0.16s;
+  transition: border-color 0.16s, background 0.16s;
 }
 .csel-btn:hover {
   border-color: var(--thumb);
   background: var(--glass-bg-2);
 }
 .csel.open .csel-btn {
-  border-color: var(--ac-1);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ac-1) 16%, transparent);
+  border-color: var(--text-2);
 }
 .csel-val {
   flex: 1;
@@ -1731,13 +1761,8 @@ body.lb .site-foot {
   border: 1px solid var(--line);
 }
 .tcard:hover {
-  transform: translateY(-3px);
-  border-color: color-mix(in srgb, var(--ac-1) 26%, var(--line-2));
-  box-shadow: var(--shadow-1);
+  border-color: var(--line-2);
   background: var(--glass-bg-2);
-}
-.tcard:active {
-  transform: translateY(-1px);
 }
 
 .tmedia {
@@ -1827,8 +1852,6 @@ body.lb .site-foot {
   color: var(--text);
   background: var(--glass-bg-2);
   border: 1px solid var(--line-2);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
 }
 /* inside the virtualized grid the title lives on the thumbnail badge;
    the body h3 stays hidden there so a name never renders twice. */
@@ -1860,9 +1883,6 @@ body.lb .site-foot {
   line-height: 1.3;
   color: var(--bg);
   border-color: transparent;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
 }
 .tb.b-new {
   background: color-mix(in srgb, var(--ac-1) 84%, transparent);
@@ -2012,16 +2032,15 @@ body.lb .site-foot {
   align-items: center;
   gap: 8px;
   padding: 9px 16px;
-  border-radius: 999px;
+  border-radius: var(--r-md);
   border: 1px solid var(--line);
   background: var(--glass-bg);
   font-size: 13px;
   color: var(--text-2);
   font-weight: 560;
-  transition: transform 0.16s var(--ease), background 0.16s;
+  transition: background 0.16s;
 }
 .stat:hover {
-  transform: translateY(-2px);
   background: var(--glass-bg-2);
 }
 .stat svg {
@@ -2052,9 +2071,8 @@ body.lb .site-foot {
   cursor: pointer;
 }
 .tile:hover {
-  transform: translateY(-3px);
   border-color: var(--line-2);
-  box-shadow: var(--shadow-1);
+  background: var(--glass-bg-2);
 }
 .tile .tile-ic {
   width: 38px;

@@ -287,8 +287,6 @@ html[data-perf="1"] .bg-fx {
   padding: 0;
   border: 1px solid var(--line-2);
   background: var(--glass-bg-2);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
   box-shadow: var(--shadow-1);
   color: var(--text-2);
   font-size: 15px;
@@ -369,10 +367,7 @@ body.player-page.bar-hidden .player-bar {
   padding: 0 13px 0 9px;
   border-radius: 999px;
   border: 1px solid var(--line-2);
-  background: color-mix(in srgb, var(--glass-bg) 90%, transparent);
-  backdrop-filter: blur(14px) saturate(140%);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
-  box-shadow: var(--shadow-1);
+  background: var(--glass-bg-2);
   color: var(--text);
   font-size: 12px;
   font-weight: 600;
@@ -411,18 +406,13 @@ body.player-page.bar-hidden .player-bar {
 }
 .bar-handle:hover,
 .bar-handle:focus-visible {
-  transform: translateX(-50%) translateY(-2px);
-  border-color: color-mix(in srgb, var(--ac-1) 45%, var(--line-2));
-  box-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.6), 0 0 0 4px color-mix(in srgb, var(--ac-1) 12%, transparent);
+  border-color: var(--line-2);
 }
 .bar-handle:hover .bh-txt,
 .bar-handle:focus-visible .bh-txt,
 .bar-handle.awake .bh-txt {
   max-width: 90px;
   opacity: 1;
-}
-.bar-handle.awake {
-  animation: bh-pulse 1.5s ease-in-out 2;
 }
 @keyframes bh-in {
   from {
@@ -434,15 +424,7 @@ body.player-page.bar-hidden .player-bar {
     transform: translateX(-50%);
   }
 }
-@keyframes bh-pulse {
-  0%,
-  100% {
-    box-shadow: var(--shadow-1), 0 0 0 0 color-mix(in srgb, var(--ac-1) 30%, transparent);
-  }
-  50% {
-    box-shadow: var(--shadow-1), 0 0 0 9px color-mix(in srgb, var(--ac-1) 0%, transparent);
-  }
-}
+
 @media (prefers-reduced-motion: reduce) {
   .bar-handle {
     animation: none;
@@ -513,8 +495,8 @@ body.player-page.fs .player-note {
 }
 .lib-head h1 {
   font-size: clamp(30px, 4.4vw, 44px);
-  font-weight: 760;
-  letter-spacing: -0.03em;
+  font-weight: 780;
+  letter-spacing: -0.045em;
   line-height: 1;
 }
 .lib-total {
@@ -791,15 +773,8 @@ body.lb .lib-bar.pinned {
   padding: 10px var(--pad-x);
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
-  background: color-mix(in srgb, var(--bg) 82%, transparent);
-  backdrop-filter: blur(18px) saturate(150%);
-  -webkit-backdrop-filter: blur(18px) saturate(150%);
-  box-shadow: 0 18px 34px -26px rgba(0, 0, 0, 0.95);
-}
-html[data-perf] body.lb .lib-bar.pinned {
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
   background: var(--bg);
+  border-bottom-color: var(--line-2);
 }
 
 /* ============================================================
@@ -841,7 +816,7 @@ html[data-perf] body.lb .lib-bar.pinned {
   height: 34px;
   max-width: 100%;
   padding: 0 12px;
-  border-radius: 999px;
+  border-radius: var(--r-sm);
   border: 1px solid color-mix(in srgb, var(--ac-1) 22%, var(--line));
   background: var(--glass-bg-2);
   font-size: 12px;
@@ -935,7 +910,6 @@ html[data-perf] body.lb .lib-bar.pinned {
   html[data-nav="side"] .topbar:hover,
   html[data-nav="side"] .topbar:focus-within {
     width: var(--rail-w-open);
-    box-shadow: 26px 0 70px -34px rgba(0, 0, 0, 0.95);
   }
   /* the labels are always in the markup; collapsed they are only invisible
      and clipped by the rail's own overflow, so opening it is one opacity
@@ -978,18 +952,17 @@ html[data-perf] body.lb .lib-bar.pinned {
     padding: 0 12px;
     justify-content: flex-start;
     gap: 12px;
-    border-radius: 11px;
+    border-radius: var(--r-md);
     white-space: nowrap;
   }
   html[data-nav="side"] .nav-link .nl-txt {
     font-size: 13.5px;
     font-weight: 600;
   }
-  /* the active marker follows the rail: a bar down the left edge instead of
-     a line under the icon */
+  /* the page you are on is white text on a slightly lifted row: no bar, no
+     accent, same as the top bar */
   html[data-nav="side"] .nav-link.on {
     background: var(--glass-bg-2);
-    box-shadow: inset 2px 0 0 var(--ac-1);
   }
   html[data-nav="side"] .searchbox {
     width: 100%;
@@ -1008,7 +981,7 @@ html[data-perf] body.lb .lib-bar.pinned {
   html[data-nav="side"] .top-actions .btn-icon {
     width: 100%;
     height: 40px;
-    border-radius: 11px;
+    border-radius: var(--r-md);
   }
   /* extension chrome: a rail column, whatever HTML the extension mounted */
   html[data-nav="side"] [data-slot="nav"] {

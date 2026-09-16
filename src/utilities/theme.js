@@ -977,12 +977,11 @@
     else delete root.dataset.density;
     if (p.miniPerf) root.dataset.mini = "1";
     else delete root.dataset.mini;
-    /* nav layout: the top bar is the layout and needs no attribute, so the
-       first paint before this script runs is already the default. The rail
-       is the whole opt-in (see the rail block in extra.css), which keeps a
-       saved preference from flashing the wrong nav on load. */
-    if (p.navLayout === "side") root.dataset.nav = "side";
-    else delete root.dataset.nav;
+    /* nav layout: the attribute always says which one is on, so the rail CSS
+       (see the rail block in extra.css) and any extension CSS can both key
+       off it. The head script on each page writes the same value before the
+       first paint, so it never flashes the other nav. */
+    root.dataset.nav = p.navLayout === "bar" ? "bar" : "side";
     applyBg();
   }
 

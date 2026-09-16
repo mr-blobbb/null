@@ -25,6 +25,9 @@
         var t = p.theme === "light" ? "light" : "dark";
         document.documentElement.dataset.theme = t;
         if (p.perf) document.documentElement.dataset.perf = p.perf === "ultra" ? "ultra" : "1";
+        /* the side rail is the default nav, so which one is on is decided
+           here: without this the top bar shows for a frame first */
+        document.documentElement.dataset.nav = p.navLayout === "bar" ? "bar" : "side";
         if (p.glow && p.glow !== "off") document.documentElement.dataset.glow = p.glow;
         /* a retexture redesigns every page, so it has to land before the
            first paint, exactly like the theme */
@@ -347,8 +350,7 @@
               <div class="set-row set-row--stack">
                 <div class="lbl-txt">
                   <b>Layout</b>
-                  <span>Top bar is the default: the row across the top of every page. Side rail moves the same nav down the left as icons, sliding open with names when you hover it, and gives every page its full height back. The rail needs a window at least 420px wide; anything
-                narrower keeps the top bar.</span>
+                  <span>Side rail is the default: the same nav down the left as icons, sliding open with names when you hover it, with every page keeping its full height. It needs a window at least 420px wide; anything narrower gets the top bar instead, which you can also pick here.</span>
                 </div>
                 <div class="seg seg--wide" id="navSeg" role="group" aria-label="Navigation layout">
                   <button type="button" data-val="bar">Top bar</button>

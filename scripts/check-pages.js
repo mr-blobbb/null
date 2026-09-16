@@ -120,6 +120,14 @@ for (const page of PAGES) {
 
   const chrome = !doc.body.classList.contains("no-chrome");
   ok(!!doc.querySelector(".topbar") === chrome, chrome ? "nav mounts" : "nav stays off (raw page)");
+  if (chrome) {
+    /* the rail is the default nav (Settings can still pick the top bar), and
+       the head script has to have decided before the first paint */
+    ok(
+      doc.documentElement.dataset.nav === (win.N.prefs.get("navLayout") === "bar" ? "bar" : "side"),
+      "the nav layout is written on <html> (" + doc.documentElement.dataset.nav + ")",
+    );
+  }
   ok(
     !!doc.querySelector(".site-foot") === !!doc.querySelector('[data-mount="foot"]'),
     "footer mounts exactly where the page asks for one",
@@ -130,24 +138,11 @@ for (const page of PAGES) {
   }
 
   if (page === "index.html") {
-    /* the library can be empty while you are still adding folders, so the
-       home page is asked to agree with the catalog rather than to have cards */
-    const g = win.N.catalog.games().length;
-    const a = win.N.catalog.apps().length;
-    const p = win.N.catalog.proxies().length;
-    const featured = doc.querySelectorAll(".tcard").length;
-    ok(
-      g ? featured > 0 : !!doc.querySelector(".feat-empty"),
-      g ? "home lists featured cards (" + featured + ")" : "an empty library shows the featured empty state",
-    );
-    const n = (count, one, many) => (count ? count.toLocaleString() + " " + (count === 1 ? one : many) : "");
-    const want = [n(g, "game", "games"), n(a, "app", "apps"), n(p, "proxy", "proxies")].filter(Boolean).join(" · ");
-    const stats = doc.querySelector("#mastStats");
-    ok(
-      !!stats && stats.textContent === want,
-      "masthead shows the live catalog counts (\"" + (stats ? stats.textContent : "") + "\")",
-    );
-    ok(!!doc.querySelector(".mast-quick a"), "masthead quick links render");
+    /* the front door is one wordmark, one search box and the ways in: the
+       shelves and the counts live on the library pages now */
+    ok(!!doc.querySelector(".door-word"), "the front door shows the wordmark");
+    ok(!!doc.querySelector("#homeSearch #searchInput"), "the front door carries the site search");
+    ok(doc.querySelectorAll(".door-links a").length >= 4, "the quick links render");
   }
 
   /* the dev console (type nldev) has to build, filter, and actually seed a
@@ -203,7 +198,10 @@ for (const page of PAGES) {
         /* jsdom has no layout, so the virtual grid renders nothing to count:
            the library's own counter is the honest signal that it refreshed */
         const counter = doc.querySelector("#count");
-        ok(!!counter && new RegExp(after + " / " + after).test(counter.textContent), "the library page re-counts itself (\"" + (counter ? counter.textContent : "") + "\")");
+        /* with nothing filtered the count is just the total: a filter is what
+           turns it into "shown / total" */
+        const seen = counter ? counter.textContent : "";
+        ok(!!counter && (seen === String(after) || seen === after + " / " + after), "the library page re-counts itself (\"" + seen + "\")");
         const clear = Array.from(doc.querySelectorAll(".dc-b")).find((b) => /Clear placeholders/.test(b.textContent));
         if (clear) clear.click();
         ok(win.N.catalog.games().length === before, "clearing removes them again (" + win.N.catalog.games().length + ")");
@@ -691,7 +689,9 @@ console.log("\nthe particle network");
    made up on purpose: any folder has to work, not one in particular. */
 console.log("\nserved from /site/");
 {
-  const { dom, errors } = load("index.html", "/site/");
+  /* a page with the full chrome: the front door has no footer of its own, and
+     the folder has to reach every link a page builds */
+  const { dom, errors } = load("announcements.html", "/site/");
   const win = dom.window;
   const doc = win.document;
   await wait(400);

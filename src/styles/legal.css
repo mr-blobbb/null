@@ -46,7 +46,6 @@
   height: 100%;
   width: 0;
   background: var(--ac-1);
-  box-shadow: 0 0 12px color-mix(in srgb, var(--ac-1) 60%, transparent);
 }
 
 /* ---------- contents rail ---------- */
@@ -123,12 +122,8 @@
   margin-bottom: 22px;
   padding: 20px 22px;
   border-radius: var(--r-lg);
-  border: 1px solid color-mix(in srgb, var(--ac-1) 26%, var(--line));
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--ac-1) 7%, var(--glass-bg)),
-    var(--glass-bg)
-  );
+  border: 1px solid var(--line);
+  background: var(--glass-bg);
   position: relative;
   overflow: hidden;
 }
@@ -143,8 +138,9 @@
   place-items: center;
   width: 32px;
   height: 32px;
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--ac-1) 16%, transparent);
+  border-radius: var(--r-sm);
+  background: var(--glass-bg-2);
+  border: 1px solid var(--line);
   color: var(--text);
   flex: none;
 }
