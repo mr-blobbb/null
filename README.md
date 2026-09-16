@@ -213,7 +213,7 @@ between them is the whole design:
 
 | kind | what it is | what it can touch |
 | --- | --- | --- |
-| **.nullext** | a NULL-native file: a JSON manifest with an optional `css` and `js` block, or a bare `.js` file that becomes the code | **everything.** It runs in the page's own realm with `N` in scope: the economy, coins, XP, quests, achievements, storage keys, recents, favorites, theme packs, particles, seasons, the player, search, hidden pages, the dev console, marathon mode, the screensaver, modals, FX. No sandbox, on purpose |
+| **.nullext** | a NULL-native file: a JSON manifest with an optional `css` and `js` block, or a bare `.js` file that becomes the code | **everything.** It runs in the page's own realm with `N` in scope: the economy, coins, XP, quests, achievements, storage keys, recents, favorites, theme packs, particles, seasons, the player, search, hidden pages, the dev console, the screensaver, modals, FX. No sandbox, on purpose |
 | Chrome import | a manifest.json plus its popup files, picked as a folder | only its own popup, **sandboxed**: an iframe with an opaque origin, its local css/js inlined, and a `chrome.*` shim that bridges `storage.local`/`sync` and `sendMessage` back through postMessage. No background script, no tabs, no content scripts, no host permissions |
 
 The manager is `/extensions` (also in the nav menu, which lists what you have

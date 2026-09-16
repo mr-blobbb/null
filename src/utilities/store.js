@@ -111,10 +111,8 @@
     tab: "slides", // tab preset id from tabpresets.js (default: Google Slides)
     tabCustom: {}, // custom tab preset: { title, icon }
     recs: true, // "Because you played" suggestions on the games page
-    marathon: true, // marathon mode feature enabled (settings toggle)
+
     confetti: true, // celebrate when a class period ends
-    marathonMin: 0, // marathon mode: 0 = off, else minutes between switches
-    marathonAt: 0, // timestamp of the next auto-switch (ms)
     perf: false, // performance mode: false | true | "ultra" (see perf.css)
     cloakRedirect: true, // hand this tab to the preset's real site when cloaking
     gmailAddr: "you@gmail.com",
@@ -129,6 +127,7 @@
     density: "regular", // layout compactness: regular | comfy | spacious | compact
     miniPerf: false, // Mini-Perf: unload off-screen blocks, strip nothing
     navLayout: "bar", // "bar": the top bar (default), "side": the hover-expand left rail
+    navReset: false, // set once the bar was restored for a rail user; see prefs below
     showClock: true, // the site's own period clock in the nav (and the player)
     seasonVariant: null, // seasonal/holiday pick; null follows the calendar
     bgImage: "", // custom page background (Shop unlock): a URL or a data URL
@@ -139,6 +138,15 @@
 
   N.prefs = (function () {
     var data = Object.assign({}, DEFAULTS, read(PREFS_KEY, {}));
+    /* One-time reset: everyone who had the side rail on goes back to the top
+       bar. The rail's offsets and its puzzle-piece panel were a mess, and the
+       bar is the default again. It is still a setting, and this only fires
+       once per browser, so switching back to the rail sticks. */
+    if (data.navLayout === "side" && !data.navReset) {
+      data.navLayout = "bar";
+      data.navReset = true;
+      write(PREFS_KEY, data);
+    }
     return {
       defaults: DEFAULTS,
       data: data,

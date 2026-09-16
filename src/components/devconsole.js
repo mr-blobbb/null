@@ -506,23 +506,6 @@
             ok("opening the player with an id that does not exist");
             setTimeout(function () { location.href = N.launch.playerUrl("game", "nope-not-a-game"); }, 150);
           }),
-          b("Marathon in 5m", "clock", function () {
-            if (N.prefs.get("marathon") === false) return err("marathon is off in Settings");
-            N.prefs.set("marathonMin", 5);
-            N.prefs.set("marathonAt", Date.now() + 5 * 60000);
-            ok("marathon armed: next switch in 5:00");
-          }),
-          b("Marathon due now", "zap", function () {
-            if (N.prefs.get("marathon") === false) return err("marathon is off in Settings");
-            N.prefs.set("marathonMin", 5);
-            N.prefs.set("marathonAt", 1);
-            ok("marathon fired: the ticker switches within a second");
-          }),
-          b("Disarm marathon", "ban", function () {
-            N.prefs.set("marathonMin", 0);
-            N.prefs.set("marathonAt", 0);
-            ok("marathon disarmed");
-          }),
         ],
       },
       {

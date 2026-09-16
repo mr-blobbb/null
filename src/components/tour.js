@@ -53,55 +53,20 @@
         "Hover an icon: they each wave back.",
     },
     {
-      page: "home",
-      target: "#featTrack",
-      icon: "star",
-      kick: "3 · hand picked",
-      title: "Featured",
-      body: "The good ones, in the order whoever runs this site thinks you should play them. Games only, no filler.",
-    },
-    {
-      page: "home",
-      target: "#gotd",
-      icon: "calendar",
-      kick: "4 · every day",
-      title: "Game of the day",
-      body: "One pick a day, the same for everyone, fresh tomorrow. If you cannot decide, start here.",
-    },
-    {
-      page: "home",
-      target: "#dailyStrip",
-      icon: "gift",
-      kick: "5 · free coins",
-      title: "Open the daily crate",
-      body:
-        "A free open every day, and the streak bonus grows the longer you keep coming back. Coins buy the fun stuff in the shop.",
-    },
-    {
-      page: "home",
-      target: "#tipCard",
-      icon: "tip",
-      kick: "6 · one a day",
-      title: "Tip of the day",
-      body:
-        "Something real about NULL you probably have not found yet: the panic key, tab disguises, marathon mode, save sharing.\n" +
-        "That is today's. Only one way to see tomorrow's.",
-    },
-    {
       page: "games",
       target: "#grid",
       icon: "game",
-      kick: "7 · the library, live",
+      kick: "3 · the library, live",
       title: "This is where the games are",
       body:
-        "Every game with its own labels, warnings and badges, and only what is on screen is drawn, so it stays quick even with thousands of them.\n" +
-        "Filter labels, sort, star the ones you like, and the toolbar pins itself under the nav while you scroll.",
+        "Every game is a tile: art, name, nothing else. The labels are still there under the hood (hover a tile, or open the Labels button) and only what is on screen is drawn, so it stays quick even with thousands of them.\n" +
+        "Filter, sort, star the ones you like, and the tool row pins itself under the nav while you scroll.",
     },
     {
       page: "shop",
       target: "#ecoBar",
       icon: "coin",
-      kick: "8 · the shop",
+      kick: "4 · the shop",
       title: "Coins come from playing",
       body:
         "Time in the player banks XP, XP banks coins, coins buy themes, particle effects and a few extras. No real money, ever, and nothing leaves this browser.\n" +
@@ -111,7 +76,7 @@
       page: "about",
       target: ".ab-hero",
       icon: "info",
-      kick: "9 · what this actually is",
+      kick: "5 · what this actually is",
       title: "About NULL",
       body:
         "One page with the whole story: what is in the library, where the coins come from, what happens to what you save, and how to put your own games in here.\n" +
@@ -121,7 +86,7 @@
       page: "settings",
       target: ".theme-tgl",
       icon: "pen",
-      kick: "10 · make it yours",
+      kick: "6 · make it yours",
       title: "Make NULL yours",
       body:
         "Dark or light is this one switch. Two rows down you get accent colours, glow borders, seasonal themes, tab disguises and a panic key.\n" +

@@ -35,54 +35,38 @@
 </head>
 <body data-page="apps" class="lb">
   <a class="skip-link" href="#main">Skip to content</a>
-  <div class="glow-bg" aria-hidden="true"></div>
   <header data-mount="nav"></header>
 
   <main id="scrollview" class="sview">
-    <div class="page-head">
-      <span class="eyebrow"><span data-icon="grid"></span>apps · auto-discovered</span>
-      <h1>Apps & tools</h1>
-      <p>
-        Small tools that live inside NULL instead of sending you off to another
-        site. Same deal as games: drop a folder into apps/ and it gets picked
-        up automatically, then opens in the player.
-      </p>
+    <div class="lib-head">
+      <h1>Apps &amp; tools</h1>
+      <span class="lib-total" id="count"></span>
     </div>
-    <div class="toolbar">
-      <span class="field" style="width:min(280px,100%)">
+
+    <!-- one tool row: filter, sort, labels, reset. Nothing else. -->
+    <div class="lib-bar">
+      <span class="lib-find">
         <span data-icon="search"></span>
-        <input id="libSearch" type="text" placeholder="Filter by name or label" aria-label="Filter apps">
+        <input id="libSearch" type="text" placeholder="Filter apps" aria-label="Filter apps">
       </span>
-      <span class="select-field sel-wrap" style="width:min(150px,100%)">
+      <span class="select-field sel-wrap lib-sort">
         <select id="sortSel" aria-label="Sort apps">
           <option value="name">A-Z</option>
-          <option value="id">Label</option>
           <option value="plays">Popularity</option>
           <option value="new">Recently added</option>
+          <option value="id">Label</option>
         </select>
       </span>
-      <span id="count" class="count"></span>
+      <button type="button" class="lib-btn" id="btnLabels" aria-expanded="false" aria-controls="labelRow">
+        <span data-icon="list"></span>Labels<span class="lib-pick" id="labelCount" hidden></span>
+      </button>
+      <div id="labelRow" class="lib-labels" role="group" aria-label="Filter by label" hidden></div>
     </div>
-    <div class="lib-cols">
-      <!-- label rail: library.js shows this on ultrawide screens (and when
-           Settings asks for it), and moves the chip row in here -->
-      <aside class="lib-rail" id="libRail">
-        <div class="lib-rail-in">
-          <div class="lib-rail-head">
-            <span class="lib-rail-ic"><span data-icon="list"></span></span>
-            <div class="lib-rail-txt"><b>Labels</b><span id="railHint">Filter the grid</span></div>
-          </div>
-          <div class="lib-rail-body" id="libRailBody"></div>
-        </div>
-      </aside>
-      <div class="lib-body">
-        <div id="labelRow" class="filter-row" role="group" aria-label="Filter by label"></div>
-        <div id="recSec" class="panel glass rec-sec" hidden></div>
-        <div id="favSec" class="fav-sec" hidden></div>
-        <div id="grid" class="lib-grid"></div>
-        <div id="empty"></div>
-      </div>
-    </div>
+
+    <div id="recSec" class="rec-sec" hidden></div>
+    <div id="favSec" class="fav-sec"></div>
+    <div id="grid" class="lib-grid"></div>
+    <div id="empty"></div>
   </main>
 
   <noscript>

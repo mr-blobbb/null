@@ -259,19 +259,18 @@
     var closeBtn = d.h("button", { type: "button", class: "kbd kbd-x", title: "Close", "aria-label": "Close search" }, "esc");
     var inputRow = d.h("div", { class: "search-input" }, [d.icon("search", "si"), input, closeBtn]);
 
-    /* the shelf row: one chip per kind that actually turned up, with the
-       count on it. Filtering is client-side on the hits we already have, so
-       it is instant and never costs another pass over the index. */
-    var filters = d.h("div", { class: "sp-filters" });
+    /* One line of plain text tabs per kind that actually turned up. Filtering
+       happens on the hits we already have, so it is instant and never costs
+       another pass over the index. */
+    var filters = d.h("div", { class: "sp-tabs" });
     var results = d.h("div", { class: "search-results", role: "listbox" });
     var count = d.h("span", { class: "sp-count" });
     var foot = d.h("div", { class: "sp-foot" }, [
       d.h("span", { class: "sp-hint" }, [d.h("span", { class: "kbd" }, "↑"), d.h("span", { class: "kbd" }, "↓"), "move"]),
       d.h("span", { class: "sp-hint" }, [d.h("span", { class: "kbd" }, "↵"), "open"]),
-      d.h("span", { class: "sp-spark", "aria-hidden": "true" }, "•𐃷•"),
       count,
     ]);
-    var panel = d.h("div", { class: "search-panel glass-2 elev" }, [inputRow, filters, results, foot]);
+    var panel = d.h("div", { class: "search-panel" }, [inputRow, filters, results, foot]);
     var ov = d.h("div", { class: "search-ov" }, [panel]);
     /* null = everything. Set by the shelf row, cleared by a query change. */
     var kind = null;
@@ -285,18 +284,18 @@
       sel = 0;
     }
 
-    function chip(label, k, n) {
+    function tab(label, k, n) {
       return d.h(
         "button",
         {
           type: "button",
-          class: "chip chip-btn" + (kind === k ? " on" : ""),
+          class: "sp-tab" + (kind === k ? " on" : ""),
           onclick: function () {
             kind = k;
             render(lastQ || "", true);
           },
         },
-        [label, n == null ? null : d.h("span", { class: "ch-n" }, String(n))],
+        [d.h("span", null, label), n == null ? null : d.h("i", null, String(n))],
       );
     }
 
@@ -317,16 +316,10 @@
         return;
       }
       filters.hidden = false;
-      filters.appendChild(chip("Everything", null, hits.length));
+      filters.appendChild(tab("All", null, hits.length));
       order.forEach(function (k) {
-        filters.appendChild(chip(GROUP[k] || k, k, seen[k]));
+        filters.appendChild(tab(GROUP[k] || k, k, seen[k]));
       });
-      filters.appendChild(
-        d.h("button", { type: "button", class: "chip chip-btn sp-clear", hidden: !kind, onclick: function () { kind = null; render(lastQ || "", true); } }, [
-          d.icon("x"),
-          "Clear",
-        ]),
-      );
     }
 
     function render(q, keepKind) {
@@ -423,7 +416,7 @@
           d.h("b", null, it.title),
           d.h("span", null, it.sub || ""),
         ]),
-        d.h("span", { class: "chip" }, GROUP[it.kind] || it.kind),
+        d.h("span", { class: "sr-kind" }, GROUP[it.kind] || it.kind),
       ]);
       el._it = it;
       return el;

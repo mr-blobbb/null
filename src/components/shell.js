@@ -59,7 +59,25 @@
       },
       [d.icon("puzzle"), d.h("span", { class: "nl-txt" }, "Extensions")],
     );
-    var menu = d.h("div", { class: "ext-menu glass" });
+    var menu = d.h("div", { class: "ext-menu" });
+
+    /* The panel is measured onto the button instead of hung off CSS: the nav
+       is a top bar on some screens and a left rail on others, and a rail has
+       no room below the button for an absolute panel (it used to fly out near
+       the top of the window, nowhere near what was clicked). Anchored here,
+       it always opens 8px under the button, aligned to its outer edge. */
+    function place() {
+      var r = btn.getBoundingClientRect();
+      var gap = 8;
+      var w = menu.offsetWidth || 290;
+      var left = r.left;
+      if (left + w > window.innerWidth - 12) left = Math.max(12, r.right - w);
+      menu.style.position = "fixed";
+      menu.style.top = Math.round(r.bottom + gap) + "px";
+      menu.style.left = Math.round(left) + "px";
+      menu.style.right = "auto";
+      menu.style.maxHeight = Math.max(180, window.innerHeight - r.bottom - gap - 16) + "px";
+    }
 
     function close() {
       wrap.classList.remove("open");
@@ -68,11 +86,14 @@
     function open() {
       if (!N.ext) return;
       N.ext.menu(menu, close);
+      place();
       wrap.classList.add("open");
       btn.setAttribute("aria-expanded", "true");
     }
     function paint() {
-      if (wrap.classList.contains("open") && N.ext) N.ext.menu(menu, close);
+      if (!wrap.classList.contains("open") || !N.ext) return;
+      N.ext.menu(menu, close);
+      place();
     }
 
     btn.addEventListener("click", function (e) {
@@ -85,6 +106,9 @@
     });
     document.addEventListener("keydown", function (e) {
       if (e.key === "Escape") close();
+    });
+    window.addEventListener("resize", function () {
+      if (wrap.classList.contains("open")) place();
     });
     if (N.bus && N.bus.on) N.bus.on("ext", paint);
 
@@ -128,45 +152,11 @@
     /* the site's own period clock (see periodClock) */
     bar.appendChild(d.h("span", { class: "clock-slot", "data-clock": "nav" }));
 
-    /* search trigger */
-    var searchBtn = d.h("button", {
-      type: "button",
-      class: "searchbox field",
-      "aria-label": "Search",
-      title: "Search NULL  ( / )",
-    }, [
-      d.icon("search"),
-      d.h("span", { class: "sb-txt", style: { color: "var(--text-2)", fontSize: "14px" } }, "Search NULL"),
-    ]);
-    searchBtn.addEventListener("click", function () {
-      N.search.open();
-    });
-    bar.appendChild(searchBtn);
-
-    /* right actions */
+    /* Right actions. The bar used to carry a search field and a light/dark
+       flip as well: both are gone. Search is "/" anywhere, the front door's
+       own box, and the first row of the mobile drawer; the theme switch is a
+       real setting in Settings. */
     var actions = d.h("div", { class: "top-actions" });
-    var themeBtn = d.h("button", {
-      type: "button",
-      class: "btn-icon btn-outline theme-btn",
-      title: "Toggle theme",
-      "aria-label": "Toggle theme",
-    });
-    themeBtn.appendChild(themeIcon());
-    themeBtn.addEventListener("click", function () {
-      var next = document.documentElement.dataset.theme === "light" ? "dark" : "light";
-      N.theme.setTheme(next);
-      N.prefs.set("theme", next);
-      themeBtn.textContent = "";
-      var ic = themeIcon("pop-in");
-      /* the pop is an entrance, not a state: drop the class once it lands
-         so it cannot outrank the hover flip afterwards */
-      ic.addEventListener("animationend", function () {
-        ic.classList.remove("pop-in");
-      });
-      themeBtn.appendChild(ic);
-      d.toast(next === "light" ? "Light mode on" : "Dark mode on", { icon: next === "light" ? "sun" : "moon" });
-    });
-    actions.appendChild(themeBtn);
 
     var burger = d.h("button", {
       type: "button",
@@ -197,6 +187,18 @@
         }, [d.icon("x")]),
       ]),
     );
+    /* search, first thing in the drawer: without a nav field this is how a
+       phone reaches it */
+    var drawerSearch = d.h("button", { type: "button", class: "drawer-search" }, [
+      d.icon("search"),
+      d.h("span", null, "Search NULL"),
+    ]);
+    drawerSearch.addEventListener("click", function () {
+      drawerOv.classList.remove("open");
+      document.body.style.overflow = "";
+      N.search.open();
+    });
+    drawer.appendChild(drawerSearch);
     N.router.GROUPS.forEach(function (g) {
       drawer.appendChild(d.h("div", { class: "mg" }, g.name));
       g.links.forEach(function (l) {
@@ -265,13 +267,6 @@
     paintAnnDots();
     paintShopDot();
   });
-
-  function themeIcon(cls) {
-    return d.icon(
-      document.documentElement.dataset.theme === "light" ? "moon" : "sun",
-      cls,
-    );
-  }
 
   /* ---------- footer ---------- */
   function footer() {
@@ -1102,38 +1097,6 @@ return foot;
     ssArm();
   }
 
-  /* ---------- marathon mode: auto-switch games on a timer ----------
-     The ticker lives here so it keeps running on any NULL page. The games
-     page owns the controls; prefs hold the interval (marathonMin) and the
-     next-fire time (marathonAt). */
-  var marathonTimer = null;
-  function marathonTick() {
-    if (document.hidden) return;
-    if (N.prefs.get("marathon") === false) return; // feature disabled in settings
-    var min = parseInt(N.prefs.get("marathonMin"), 10) || 0;
-    if (!min) {
-      if (marathonTimer) {
-        clearInterval(marathonTimer);
-        marathonTimer = null;
-      }
-      return;
-    }
-    var at = parseInt(N.prefs.get("marathonAt"), 10) || 0;
-    if (!at || Date.now() < at) return;
-    /* due: launch a random game directly, no warning modal mid-marathon */
-    N.prefs.set("marathonAt", Date.now() + min * 60000);
-    var g = N.catalog.games();
-    if (!g.length) return;
-    var pick = g[Math.floor(Math.random() * g.length)];
-    N.recent.add("game", pick.id);
-    location.href = N.launch.playerUrl("game", pick.id);
-  }
-  function initMarathon() {
-    if (marathonTimer) return;
-    if (parseInt(N.prefs.get("marathonMin"), 10) > 0) marathonTick();
-    marathonTimer = setInterval(marathonTick, 1000);
-  }
-
   /* ---------- performance-mode suggestion ----------
      Weak devices (low device memory / few cores) get a one-time nudge to
      turn on performance mode, plus a friendly "close some tabs" tip. */
@@ -1340,7 +1303,6 @@ return foot;
     shortcuts();
     N.tab.apply();
     N.tab.smartStart();
-    initMarathon();
     initSs();
     watchPeriodEnd();
     mountClocks();

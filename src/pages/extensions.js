@@ -1129,7 +1129,7 @@
         "quests, achievements and the daily crate",
         "storage keys, recents, favorites, the whole backup file",
         "theme packs, particles, glow, seasons and the layout",
-        "the player, search, the dev console, marathon mode, the screensaver",
+        "the player, search, the dev console, the screensaver",
         "modals, FX, toasts, hidden pages, the nav and this manager",
         "the school schedule, so a widget can read the real bell times",
         "and the DOM, because it is just a script on the page",

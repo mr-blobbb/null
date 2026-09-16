@@ -500,45 +500,267 @@ body.player-page.fs .player-note {
   grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
   gap: 18px;
 }
-.toolbar .sel-wrap {
-  margin-left: auto;
+/* ============================================================
+   library pages: head, one tool row, label dropdown, tiles
+   The wall of label chips and the auto sidebar are gone. What is left is a
+   title, the count, and one flat row: filter, sort, labels, reset.
+   ============================================================ */
+.lib-head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+.lib-head h1 {
+  font-size: clamp(30px, 4.4vw, 44px);
+  font-weight: 760;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+.lib-total {
+  font-size: 13.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-2);
 }
 
-/* marathon folds into a popover off a small toolbar button, so the toolbar
-   stays one row. Pops down (the toolbar sits under the page head, not under
-   the nav like the player's popovers). */
-#btnMarathonWrap {
-  display: inline-flex;
+.lib-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0 0 22px;
+  padding: 8px 0;
 }
-.mar-box {
-  position: absolute;
-  margin-top: 8px;
+.lib-find {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex: 1 1 220px;
+  min-width: 0;
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--bg-2);
+}
+.lib-find:focus-within {
+  border-color: var(--line-2);
+}
+.lib-find .msr {
+  font-size: 18px;
+  color: var(--text-2);
+  flex: none;
+}
+.lib-find input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  outline: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+}
+.lib-sort {
+  flex: none;
+  width: 132px;
+}
+.lib-btn {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
+  gap: 8px;
+  height: 38px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
   border-radius: var(--r-md);
-  box-shadow: var(--shadow-2);
-  z-index: 50;
+  background: var(--bg-2);
+  color: var(--text-2);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 560;
+  cursor: pointer;
+  transition: color 0.14s, border-color 0.14s;
 }
-.toolbar {
-  position: relative;
+.lib-btn .msr {
+  font-size: 18px;
 }
-.toolbar #btnMarathonWrap:has(+ #marathonBox:not([hidden])) .btn {
+.lib-btn:hover,
+.lib-btn.on {
+  color: var(--text);
   border-color: var(--line-2);
-  color: var(--text);
 }
-#btnMarathon.on {
-  border-color: color-mix(in srgb, var(--ac-1) 45%, var(--line));
+.lib-pick {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11.5px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
   color: var(--text);
+  border-left: 1px solid var(--line);
+  padding-left: 9px;
+}
+.lib-pick[hidden] {
+  display: none;
+}
+.lib-reset {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: var(--r-md);
+  background: none;
+  color: var(--text-2);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.lib-reset[hidden] {
+  display: none;
+}
+.lib-reset:hover {
+  color: var(--text);
+  border-color: var(--line);
+}
+.lib-reset .msr {
+  font-size: 17px;
 }
 
-/* reset chip at the end of the label row: appears only when a filter or
-   search is active (library.js unhides it) */
-.filter-row .btn {
-  flex: none;
-  height: 30px;
-  border-radius: 999px;
+/* the label dropdown: hangs off the button, above the grid */
+.lib-labels {
+  position: absolute;
+  top: calc(100% - 4px);
+  left: 0;
+  right: 0;
+  z-index: 40;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: min(340px, 46dvh);
+  overflow-y: auto;
+  padding: 12px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-md);
+  background: var(--bg-2);
+  scrollbar-width: thin;
+}
+.lib-labels[hidden] {
+  display: none;
+}
+.lib-labels .filter-row {
+  display: contents;
+}
+.filter-row {
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: none;
+}
+
+/* Pinned library pages: favourites + recs blocks above the grid */
+.rec-sec {
+  margin-bottom: 26px;
+}
+.rec-sec[hidden] {
+  display: none;
+}
+
+/* ---------- tiles ----------
+   A card is one square of art with the name in a bubble on it. No
+   description, no label pills, no button row: the labels still exist (they
+   filter, they search, they are in the tooltip), they are just not printed.
+   library.js sets --tile-h to the exact row height the vgrid reserves. */
+.tcard.tile {
+  height: var(--tile-h, 190px);
+  padding: 0;
+  border-radius: var(--r-md);
+  background: var(--bg-2);
+}
+.tcard.tile:hover {
+  transform: none;
+  background: var(--bg-2);
+  border-color: var(--line-2);
+  box-shadow: none;
+}
+.tcard.tile .tmedia {
+  flex: 1;
+  height: auto;
+  min-height: 0;
+  border-bottom: 0;
+}
+.tcard.tile .tmedia img {
+  opacity: 1;
+}
+/* no art: the kind's glyph, big and centred, on the same flat square */
+.tile-glyph {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--text-2);
+  opacity: 0.4;
+}
+.tile-glyph .msr {
+  font-size: 38px;
+}
+.tcard.tile .tname-badge {
+  display: block;
+  left: 8px;
+  bottom: 8px;
+  max-width: calc(100% - 16px);
+  padding: 4px 10px;
+  border-radius: var(--r-sm);
+  font-size: 12px;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  border: 0;
+}
+.tcard.tile .tbadges {
+  top: 8px;
+  right: auto;
+  left: 8px;
+  align-items: flex-start;
+}
+.tile-fav {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 3;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
+  color: var(--text-2);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.14s, color 0.14s;
+}
+.tcard.tile .tmedia:hover .tile-fav,
+.tcard.tile .tmedia:focus-within .tile-fav,
+.tile-fav.on {
+  opacity: 1;
+}
+.tile-fav:hover,
+.tile-fav.on {
+  color: var(--text);
+}
+.tile-fav .msr {
+  font-size: 17px;
+}
+/* in a normal grid (favourites, suggestions) a tile is square instead of a
+   fixed row height */
+.fav-grid .tcard.tile,
+.lib-sugs .tcard.tile {
+  height: auto;
+  aspect-ratio: 1 / 1;
 }
 
 /* label + count inside one chip, so the same nodes read as a chip in the
@@ -552,107 +774,6 @@ body.player-page.fs .player-note {
   opacity: 0.7;
 }
 
-/* ============================================================
-   library layout: label rail + toolbar that pins under the nav
-   library.js sets html[data-lib-mode]: "rail" on ultrawide screens (or
-   whenever Settings asks for the sidebar), "bar" for the chip row.
-   ============================================================ */
-.lib-cols {
-  display: block;
-}
-html[data-lib-mode="rail"] .lib-cols {
-  display: grid;
-  grid-template-columns: 236px minmax(0, 1fr);
-  gap: 28px;
-  align-items: start;
-  /* the library body can breathe wider than the normal page measure when
-     there is a whole sidebar next to it */
-  max-width: min(1720px, 100%);
-}
-.lib-rail {
-  display: none;
-}
-html[data-lib-mode="rail"] .lib-rail {
-  display: block;
-}
-.lib-rail-in {
-  position: sticky;
-  top: calc(var(--nh) + 78px);
-  max-height: calc(100dvh - var(--nh) - 100px);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding: 14px 12px;
-  border: 1px solid var(--line);
-  border-radius: var(--r-lg);
-  background: var(--glass-bg);
-  scrollbar-width: thin;
-}
-.lib-rail-head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 4px 12px;
-  margin-bottom: 10px;
-  border-bottom: 1px solid var(--line);
-}
-.lib-rail-ic {
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 10px;
-  background: var(--glass-bg-3);
-  color: var(--text);
-  flex: none;
-}
-.lib-rail-ic .msr {
-  font-size: 17px;
-}
-.lib-rail-txt {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-.lib-rail-txt b {
-  font-size: 13.5px;
-}
-.lib-rail-txt span {
-  font-size: 11.5px;
-  color: var(--text-2);
-}
-/* the chip row turns into a stack of full-width rows */
-.lib-rail .filter-row {
-  flex-direction: column;
-  align-items: stretch;
-  gap: 3px;
-  overflow: visible;
-  padding: 0;
-}
-.lib-rail .filter-row .chip-btn {
-  width: 100%;
-  height: 32px;
-  border-color: transparent;
-  background: transparent;
-  border-radius: 9px;
-  justify-content: space-between;
-  font-size: 13.5px;
-}
-.lib-rail .filter-row .chip-btn:hover {
-  border-color: transparent;
-  background: var(--glass-bg-2);
-}
-.lib-rail .filter-row .chip-btn.on {
-  color: var(--text);
-  background: var(--glass-bg-3);
-  border-color: transparent;
-  box-shadow: inset 2px 0 0 var(--ac-1);
-}
-.lib-rail .filter-row .btn {
-  width: 100%;
-  justify-content: center;
-  margin-top: 6px;
-}
-
 /* Pinned toolbar.
    library.js measures the nav's real bottom edge and the bar's own resting
    box; the .pinned class is what it flips on and the geometry (left / width /
@@ -662,7 +783,7 @@ html[data-lib-mode="rail"] .lib-rail {
 .tool-fill {
   display: block;
 }
-body.lb .toolbar.pinned {
+body.lb .lib-bar.pinned {
   position: fixed;
   z-index: 30;
   margin: 0;
@@ -675,7 +796,7 @@ body.lb .toolbar.pinned {
   -webkit-backdrop-filter: blur(18px) saturate(150%);
   box-shadow: 0 18px 34px -26px rgba(0, 0, 0, 0.95);
 }
-html[data-perf] body.lb .toolbar.pinned {
+html[data-perf] body.lb .lib-bar.pinned {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   background: var(--bg);
@@ -792,15 +913,6 @@ html[data-perf] body.lb .toolbar.pinned {
   }
   html[data-nav="side"] .nav-link .nl-txt {
     display: inline;
-  }
-  /* the puzzle menu is absolute, and the rail clips its own overflow, so in
-     the rail it flies out beside it instead of hanging below the button */
-  html[data-nav="side"] .ext-nav.open .ext-menu {
-    position: fixed;
-    left: var(--rail-w);
-    right: auto;
-    top: max(96px, 16dvh);
-    transform-origin: top left;
   }
   html[data-nav="side"] body {
     padding-left: var(--rail-w);
@@ -1058,79 +1170,45 @@ html[data-perf] body.lb .toolbar.pinned {
 }
 
 /* ============================================================
-   search, rebuilt
-   The overlay is a palette now rather than a list in a box: a big field, a
-   shelf of kind chips with counts, grouped results that answer the pointer,
-   and a footer that says what the keyboard does. These rules override the
-   block in global.css (this file loads after it), so the old shapes are
-   still there for anything that predates the parts below.
+   search
+   Not a popup: the overlay is the page, black, with one big field on top and
+   plain rows under it. No card, no shadow, no chips, no wash behind it. The
+   kind filter is a line of text tabs, and every result is a row you can
+   arrow through.
    ============================================================ */
 .search-ov {
-  padding: calc(var(--nh) + 46px) 16px 40px;
-  background: var(--overlay);
-}
-/* a soft wash behind the panel, so it reads as lit rather than pasted on */
-.search-ov::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(60% 40% at 50% 0%, color-mix(in srgb, var(--ac-1) 16%, transparent), transparent 70%),
-    radial-gradient(40% 30% at 50% 100%, color-mix(in srgb, var(--ac-1) 8%, transparent), transparent 70%);
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-.search-ov.open::before {
-  opacity: 1;
+  padding: calc(var(--nh) + 40px) 0 0;
+  background: var(--bg);
+  align-items: flex-start;
 }
 .search-panel {
-  width: min(760px, 100%);
-  max-height: calc(100dvh - var(--nh) - 96px);
+  width: min(720px, 100%);
+  max-height: calc(100dvh - var(--nh) - 56px);
   position: relative;
-  border-radius: 22px;
-  border: 1px solid color-mix(in srgb, var(--ac-1) 22%, var(--line-2));
-  box-shadow:
-    0 40px 90px -40px rgba(0, 0, 0, 0.95),
-    0 0 0 1px rgba(255, 255, 255, 0.03) inset;
-  transform: translateY(-10px) scale(0.985);
+  border-radius: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  transform: translateY(-6px);
   opacity: 0;
-  transition: transform 0.22s var(--ease), opacity 0.22s var(--ease);
+  transition: transform 0.18s var(--ease), opacity 0.18s var(--ease);
 }
 .search-ov.open .search-panel {
   transform: none;
   opacity: 1;
 }
-/* the lit edge across the top, in the site's own accent */
-.search-panel::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 14%;
-  right: 14%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--ac-1) 80%, transparent), transparent);
-  pointer-events: none;
-}
 
 .search-input {
   display: flex;
   align-items: center;
-  gap: 13px;
-  padding: 17px 20px;
+  gap: 14px;
+  padding: 0 4px 18px;
   border-bottom: 1px solid var(--line);
 }
 .search-input .si {
-  width: 34px;
-  height: 34px;
-  border-radius: 11px;
-  display: grid;
-  place-items: center;
   flex: none;
-  font-size: 19px;
-  color: var(--ac-1);
-  border: 1px solid color-mix(in srgb, var(--ac-1) 24%, var(--line));
-  background: color-mix(in srgb, var(--ac-1) 11%, var(--glass-bg-2));
+  font-size: 24px;
+  color: var(--text-2);
 }
 .search-input input {
   flex: 1;
@@ -1138,9 +1216,9 @@ html[data-perf] body.lb .toolbar.pinned {
   border: 0;
   outline: 0;
   background: transparent;
-  font-size: 17.5px;
-  font-weight: 520;
-  letter-spacing: -0.01em;
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
   color: var(--text);
 }
 .search-input input::placeholder {
@@ -1166,107 +1244,120 @@ html[data-perf] body.lb .toolbar.pinned {
   border-color: var(--ac-1);
 }
 
-/* the shelf row */
-.sp-filters {
+/* the kind filter: plain text tabs, nothing to click twice */
+.sp-tabs {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 18px;
   flex-wrap: wrap;
-  padding: 11px 16px;
+  padding: 14px 4px;
   border-bottom: 1px solid var(--line);
 }
-.sp-filters[hidden] {
+.sp-tabs[hidden] {
   display: none;
 }
-.sp-filters .chip-btn {
-  height: 28px;
-  font-size: 12px;
-}
-.sp-filters .sp-clear {
-  margin-left: auto;
+.sp-tab {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
   color: var(--text-2);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 560;
+  cursor: pointer;
+  transition: color 0.14s;
+}
+.sp-tab i {
+  font-style: normal;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.6;
+}
+.sp-tab:hover {
+  color: var(--text);
+}
+.sp-tab.on {
+  color: var(--text);
 }
 
 .search-results {
   overflow-y: auto;
-  padding: 8px 10px 12px;
+  padding: 6px 0 10px;
   scrollbar-width: thin;
   scrollbar-color: var(--thumb) transparent;
 }
 .sr-group {
-  position: sticky;
-  top: 0;
-  z-index: 2;
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 8px;
-  font-size: 10.5px;
-  font-weight: 750;
-  letter-spacing: 0.16em;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--text-2);
-  padding: 12px 12px 6px;
-  background: linear-gradient(180deg, var(--glass-bg-2) 70%, transparent);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  padding: 16px 4px 8px;
 }
 .sr-group i {
   font-style: normal;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  color: var(--text-2);
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 1px 7px;
-  opacity: 0.8;
+  font-size: 11px;
+  letter-spacing: 0;
+  opacity: 0.7;
 }
 .sr-row {
-  position: relative;
-  gap: 13px;
-  padding: 10px 12px;
-  border-radius: 13px;
-  border: 1px solid transparent;
-  transition: background 0.14s, border-color 0.14s, transform 0.14s;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s;
 }
-.sr-row:hover {
-  background: var(--glass-bg-2);
-  transform: translateX(2px);
-}
+.sr-row:hover,
 .sr-row.sel {
-  background: color-mix(in srgb, var(--ac-1) 12%, var(--glass-bg-2));
-  border-color: color-mix(in srgb, var(--ac-1) 34%, var(--line));
-  transform: translateX(2px);
-}
-/* the little marker down the left of the row the keyboard is on */
-.sr-row.sel::before {
-  content: "";
-  position: absolute;
-  left: 3px;
-  top: 50%;
-  width: 3px;
-  height: 18px;
-  margin-top: -9px;
-  border-radius: 99px;
-  background: var(--ac-1);
+  background: var(--bg-2);
 }
 .sr-row .sr-ic {
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
-  color: var(--ac-1);
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-sm);
+  color: var(--text-2);
+}
+.sr-row .sr-txt {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
 }
 .sr-row .sr-txt b {
   font-size: 14.5px;
+  font-weight: 600;
   letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.sr-row .chip {
-  font-size: 10.5px;
-  letter-spacing: 0.04em;
-  opacity: 0.75;
+.sr-row .sr-txt span {
+  font-size: 12px;
+  color: var(--text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.sr-row.sel .chip {
-  opacity: 1;
+.sr-kind {
+  flex: none;
+  font-size: 11.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-2);
 }
 .sr-none {
   padding: 20px 16px 26px;
@@ -1292,9 +1383,6 @@ html[data-perf] body.lb .toolbar.pinned {
   align-items: center;
   gap: 5px;
 }
-.sp-spark {
-  opacity: 0.4;
-}
 .sp-count {
   margin-left: auto;
   font-variant-numeric: tabular-nums;
@@ -1302,11 +1390,10 @@ html[data-perf] body.lb .toolbar.pinned {
 
 @media (max-width: 620px) {
   .search-ov {
-    padding: calc(var(--nh) + 12px) 10px 20px;
+    padding: calc(var(--nh) + 20px) 14px 20px;
   }
-  .search-panel {
-    border-radius: 18px;
-    max-height: calc(100dvh - var(--nh) - 40px);
+  .search-input input {
+    font-size: 21px;
   }
   .sp-foot .sp-hint {
     display: none;
@@ -1370,13 +1457,6 @@ html[data-pack] :where(.btn-primary) {
 }
 html[data-pack] ::selection {
   background: color-mix(in srgb, var(--pk-1) 34%, transparent);
-}
-
-@media (max-width: 1200px) {
-  html[data-lib-mode="rail"] .lib-cols {
-    grid-template-columns: 200px minmax(0, 1fr);
-    gap: 20px;
-  }
 }
 
 /* 404: the art piece is a Material glyph now, sized like the old svg */
@@ -1507,11 +1587,8 @@ html[data-pack] ::selection {
 
 /* ============================================================
    hidden-attribute guards: display rules on these components
-   must never resurrect a box that JS explicitly hid (empty
-   game-of-the-day card, marathon controls when off)
+   must never resurrect a box that JS explicitly hid
    ============================================================ */
-.gotd[hidden],
-.m-wrap[hidden],
 .fav-sec[hidden],
 .rec-sec[hidden] {
   display: none !important;

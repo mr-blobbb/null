@@ -35,43 +35,24 @@
 </head>
 <body data-page="proxies" class="lb">
   <a class="skip-link" href="#main">Skip to content</a>
-  <div class="glow-bg" aria-hidden="true"></div>
   <header data-mount="nav"></header>
 
   <main id="scrollview" class="sview">
-    <div class="page-head">
-      <span class="eyebrow"><span data-icon="proxy"></span>proxies · external links</span>
+    <div class="lib-head">
       <h1>Proxies</h1>
-      <p>
-        Proxies work differently from games and apps. Picking one opens the
-        external site in a new tab and NULL stays out of it. The status markers
-        below are set by hand, so treat them as a rough guide.
-      </p>
+      <span class="lib-total" id="count"></span>
     </div>
-    <div class="toolbar">
-      <span class="field" style="width:min(280px,100%)">
+
+    <div class="lib-bar">
+      <span class="lib-find">
         <span data-icon="search"></span>
         <input id="libSearch" type="text" placeholder="Filter proxies" aria-label="Filter proxies">
       </span>
-      <span id="count" class="count"></span>
+      <div id="labelRow" class="lib-labels" role="group" aria-label="Proxies" hidden></div>
     </div>
-    <div class="lib-cols">
-      <!-- status rail: same deal as the games page, moved in by library.js -->
-      <aside class="lib-rail" id="libRail">
-        <div class="lib-rail-in">
-          <div class="lib-rail-head">
-            <span class="lib-rail-ic"><span data-icon="list"></span></span>
-            <div class="lib-rail-txt"><b>Status</b><span id="railHint">Filter the list</span></div>
-          </div>
-          <div class="lib-rail-body" id="libRailBody"></div>
-        </div>
-      </aside>
-      <div class="lib-body">
-        <div id="labelRow" class="filter-row" role="group" aria-label="Filter by status"></div>
-        <div id="grid" class="lib-grid"></div>
-        <div id="empty"></div>
-      </div>
-    </div>
+
+    <div id="grid" class="lib-grid"></div>
+    <div id="empty"></div>
   </main>
 
   <noscript>

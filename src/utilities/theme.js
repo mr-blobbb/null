@@ -983,11 +983,6 @@
        saved preference from flashing the wrong nav on load. */
     if (p.navLayout === "side") root.dataset.nav = "side";
     else delete root.dataset.nav;
-    /* library filter layout: library.js reads this (and the ultrawide media
-       query for "auto") and moves the chip row between the rail and the
-       toolbar. Left unset means auto. */
-    if (p.libNav === "rail" || p.libNav === "bar") root.dataset.libnav = p.libNav;
-    else delete root.dataset.libnav;
     applyBg();
   }
 
@@ -1102,10 +1097,6 @@
     },
     setNavLayout: function (mode) {
       N.prefs.set("navLayout", mode === "side" ? "side" : "bar");
-      applyLayout();
-    },
-    setLibNav: function (mode) {
-      N.prefs.set("libNav", mode === "rail" || mode === "bar" ? mode : "auto");
       applyLayout();
     },
     setBg: setBg,

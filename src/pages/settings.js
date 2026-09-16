@@ -52,7 +52,6 @@
     paintDensity();
     paintNavLayout();
     paintClock();
-    paintLibNav();
     paintMini();
     paintGlow();
     paintSeason();
@@ -135,11 +134,6 @@
 
   function paintDensity() {
     segPaint("#densitySeg", N.prefs.get("density") || "regular");
-  }
-
-  function paintLibNav() {
-    var mode = N.prefs.get("libNav");
-    segPaint("#libNavSeg", mode === "rail" || mode === "bar" ? mode : "auto");
   }
 
   function paintNavLayout() {
@@ -368,14 +362,12 @@
   function paintExtras(p) {
     var rsw = d.qs("#recsSwitch");
     if (rsw) rsw.checked = p.recs !== false;
-    var msw = d.qs("#marathonSwitch");
-    if (msw) msw.checked = p.marathon !== false;
     var cfsw = d.qs("#confettiSwitch");
     if (cfsw) cfsw.checked = p.confetti !== false;
-    var on = [p.recs !== false, p.marathon !== false, p.confetti !== false].filter(function (b) {
+    var on = [p.recs !== false, p.confetti !== false].filter(function (b) {
       return b;
     }).length;
-    setText("#extrasVal", on === 0 ? "All off" : on + " of 3 on");
+    setText("#extrasVal", on === 0 ? "All off" : on + " of 2 on");
   }
 
   /* ---------- install as an app ---------- */
@@ -930,18 +922,6 @@
       });
     }
 
-    /* library filter layout: rail, top bar, or auto (ultrawide decides) */
-    var lseg = d.qs("#libNavSeg");
-    if (lseg) {
-      lseg.addEventListener("click", function (e) {
-        var b = e.target.closest("button");
-        if (!b) return;
-        N.theme.setLibNav(b.dataset.val);
-        paintLibNav();
-        d.toast("Library filters: " + b.textContent);
-      });
-    }
-
     /* seasonal theme */
     var ssw = d.qs("#seasonalSwitch");
     if (ssw) {
@@ -1108,19 +1088,6 @@
         N.prefs.set("recs", rsw.checked);
         paintExtras(N.prefs.data);
         d.toast(rsw.checked ? "Because you played: on" : "Because you played: off");
-      });
-    }
-    var msw = d.qs("#marathonSwitch");
-    if (msw) {
-      msw.addEventListener("change", function () {
-        N.prefs.set("marathon", msw.checked);
-        if (!msw.checked) {
-          /* fully disarm: the games toolbar shows no controls at all then */
-          N.prefs.set("marathonMin", 0);
-          N.prefs.set("marathonAt", 0);
-        }
-        paintExtras(N.prefs.data);
-        d.toast(msw.checked ? "Marathon mode: on" : "Marathon mode: off");
       });
     }
     var cfsw = d.qs("#confettiSwitch");

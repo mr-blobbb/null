@@ -1,6 +1,8 @@
 /* NULL · library.js
-   Powers the Games, Apps and Proxies pages: label chips + quick filter over
-   the discovered catalog, rendered into the chunk-virtualized grid. */
+   Powers the Games, Apps and Proxies pages: one flat tool row (filter, sort,
+   a label dropdown and the count) over the discovered catalog, rendered into
+   the chunk-virtualized grid. Labels are still real filters, they just live
+   behind one button now instead of a wall of chips. */
 (function () {
   var N = (window.N = window.N || {});
   var d = N.dom;
@@ -10,7 +12,9 @@
     return pg === "games" || pg === "apps" || pg === "proxies" ? pg : "games";
   }
 
-  var CARD_H = { games: 270, apps: 270, proxies: 268 };
+  /* tile heights: roughly square in the virtualized grid, so the vgrid's
+     fixed row maths still holds at every width */
+  var CARD_H = { games: 190, apps: 190, proxies: 190 };
 
   function init() {
     var kind = kindOf(document.body);
@@ -18,7 +22,10 @@
     var favKind = kind === "apps" ? "app" : kind === "proxies" ? "proxy" : "game";
     var listMode = kind === "proxies"; // proxies are a plain vertical list
 
-    var rowHost = d.qs("#labelRow");
+    var bar = d.qs(".lib-bar");
+    var panel = d.qs("#labelRow");
+    var labelBtn = d.qs("#btnLabels");
+    var labelN = d.qs("#labelCount");
     var input = d.qs("#libSearch");
     var countEl = d.qs("#count");
     var grid = d.qs("#grid");
@@ -31,36 +38,35 @@
     var sortMode = "name"; // name = A-Z, id = folder label, plays = popularity, new = recently added
     var gridApi = null;
 
-    /* ---------- filters as a sidebar or a top row ----------
-       Ultrawide screens get the labels down the left as a sidebar; anything
-       narrower gets the chip row in the toolbar, and Settings can force
-       either one (prefs "libNav": auto | rail | bar). The chips are the same
-       nodes in both cases: this only re-parents them, so buildChips() and
-       everything that follows stays as it was. */
-    var rail = d.qs("#libRail");
-    var railBody = d.qs("#libRailBody");
-    var libBody = d.qs(".lib-body");
-    var wide = window.matchMedia ? window.matchMedia("(min-width: 1600px)") : null;
-
-    function railWanted() {
-      var pref = N.prefs.get("libNav");
-      if (pref === "rail") return true;
-      if (pref === "bar") return false;
-      return !!(wide && wide.matches);
+    /* ---------- the label dropdown ----------
+       One button, one panel. Open state lives on the bar so the pinned bar
+       carries it along while you scroll, and a click anywhere else, Escape or
+       a pick closes it. */
+    function labelsOpen() {
+      return !!panel && !panel.hidden;
     }
-
-    function layout() {
-      var on = railWanted() && !!rail && !!railBody && !!libBody;
-      document.documentElement.dataset.libMode = on ? "rail" : "bar";
-      if (!libBody) return;
-      if (on) {
-        if (rowHost.parentNode !== railBody) railBody.appendChild(rowHost);
-      } else if (rowHost.parentNode !== libBody) {
-        libBody.insertBefore(rowHost, libBody.firstChild);
-      }
+    function setLabels(on) {
+      if (!panel || !labelBtn) return;
+      panel.hidden = !on;
+      labelBtn.setAttribute("aria-expanded", String(!!on));
     }
+    if (labelBtn) {
+      labelBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        setLabels(!labelsOpen());
+      });
+    }
+    if (panel) panel.addEventListener("click", function (e) {
+      e.stopPropagation();
+    });
+    document.addEventListener("click", function () {
+      if (labelsOpen()) setLabels(false);
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && labelsOpen()) setLabels(false);
+    });
 
-    /* ---------- pinned toolbar ----------
+    /* ---------- pinned tool bar ----------
        The library scrolls inside #scrollview, not the window, and a plain
        position:sticky bar landed a fixed distance below the nav there (the
        scroller's own top edge plus the nav's height) instead of flush under
@@ -69,7 +75,6 @@
        bottom edge the bar goes fixed exactly there, spanning the scroller.
        It releases again as soon as you scroll back to the top, and follows a
        nav that changes height (an extension widget mounting, a resize). */
-    var bar = d.qs(".toolbar");
     if (bar && scroller) {
       var fill = d.h("div", { class: "tool-fill", "aria-hidden": "true" });
       bar.parentNode.insertBefore(fill, bar);
@@ -139,22 +144,22 @@
       sync();
     }
 
-    /* reset chip: one click back to the unfiltered view. Hidden until a
+    /* reset button: one click back to the unfiltered view. Hidden until a
        filter or a search is actually doing something. */
     var resetBtn = d.h("button", {
       type: "button",
-      class: "btn btn-outline btn-sm",
+      class: "lib-reset",
       hidden: true,
       onclick: function () {
         activeLabel = "All";
         query = "";
         if (input) input.value = "";
-        buildChips();
+        buildLabels();
         paint();
         if (input) input.focus();
       },
     }, [d.icon("x"), "Reset"]);
-    if (rowHost && resetBtn) rowHost.appendChild(resetBtn);
+    if (bar) bar.appendChild(resetBtn);
 
     function sorted(arr) {
       var copy = arr.slice();
@@ -234,8 +239,15 @@
 
     function paint() {
       var items = filtered();
-      if (countEl) countEl.textContent = items.length + " / " + list.length;
+      if (countEl) {
+        countEl.textContent = items.length === list.length ? list.length + "" : items.length + " / " + list.length;
+      }
       if (resetBtn) resetBtn.hidden = activeLabel === "All" && !query.trim();
+      if (labelBtn) labelBtn.classList.toggle("on", activeLabel !== "All");
+      if (labelN) {
+        labelN.hidden = activeLabel === "All";
+        labelN.textContent = activeLabel;
+      }
       if (listMode) {
         /* plain list: proxies render as one-column rows, no virtualization */
         grid.textContent = "";
@@ -340,154 +352,10 @@
       sec.appendChild(sug2);
     }
 
-    /* ---------- marathon mode (games page controls) ---------- */
-    var mSel = d.qs("#marathonSel");
-    var mWrap = d.qs("#marathonWrap");
-    var mCustom = d.qs("#marathonCustom");
-    var mCount = d.qs("#marathonCount");
-    var mStop = d.qs("#btnMarathonStop");
-    var mTimer = null;
-
-    function fmtClock(s) {
-      var m = Math.floor(s / 60);
-      var r = Math.floor(s % 60);
-      return m + ":" + (r < 10 ? "0" : "") + r;
-    }
-    function marPaint() {
-      if (!mWrap) return;
-      var min = parseInt(N.prefs.get("marathonMin"), 10) || 0;
-      mWrap.hidden = !min;
-      if (!mSel) return;
-      /* sync the select to the armed state; never fight the user while
-         they're mid-way through picking "Custom minutes…" */
-      if (min > 0) {
-        var want = min >= 2 && min <= 5 ? String(min) : "custom";
-        if (mSel.value !== want) {
-          mSel.value = want;
-          N.dom.selSync(mSel);
-        }
-      }
-      var showingCustom = mSel.value === "custom";
-      if (mCustom) {
-        mCustom.style.display = showingCustom ? "" : "none";
-        if (showingCustom && !mCustom.value && min > 0) mCustom.value = String(min);
-      }
-    }
-    function marTick() {
-      if (!mCount) return;
-      if (!document.body.contains(mCount)) {
-        clearInterval(mTimer);
-        return;
-      }
-      var min = parseInt(N.prefs.get("marathonMin"), 10) || 0;
-      if (!min) {
-        mCount.textContent = "-";
-        return;
-      }
-      var left = Math.max(0, Math.ceil((parseInt(N.prefs.get("marathonAt"), 10) || 0) - Date.now()) / 1000);
-      mCount.textContent = fmtClock(left);
-    }
-    function marArm(min) {
-      N.prefs.set("marathonMin", min);
-      N.prefs.set("marathonAt", min ? Date.now() + min * 60000 : 0);
-      marPaint();
-      d.toast(min ? "Marathon on: next switch in " + min + " min" : "Marathon off", {
-        icon: min ? "clock2" : "x",
-      });
-    }
-    /* turning marathon on asks first: Cancel keeps it off */
-    function marathonConfirm(min) {
-      N.modal.open({
-        title: "Marathon mode",
-        icon: "clock2",
-        body:
-          "<p><b>Marathon mode</b> auto-launches a random game every " +
-          min +
-          " minute" +
-          (min === 1 ? "" : "s") +
-          ", anywhere on NULL, even while you’re in the middle of something.</p>" +
-          "<p>Stop it anytime from the games toolbar or in Settings.</p>",
-        actions: [
-          { label: "Cancel", variant: "outline", onClick: function () { marArm(0); } },
-          { label: "Okay, proceed", variant: "primary", onClick: function () { marArm(min); } },
-        ],
-      });
-    }
-    function marTurnOn(min) {
-      /* already running? just change the interval: no need to ask again */
-      if (parseInt(N.prefs.get("marathonMin"), 10) > 0) marArm(min);
-      else marathonConfirm(min);
-    }
-    function bindMarathon() {
-      var btn = d.qs("#btnMarathon");
-      var box = d.qs("#marathonBox");
-      var btnWrap = d.qs("#btnMarathonWrap");
-      /* the settings toggle can disable the feature entirely */
-      if (N.prefs.get("marathon") === false) {
-        if (btnWrap) btnWrap.hidden = true;
-        if (mWrap) mWrap.hidden = true;
-        return;
-      }
-      /* marathon folds into a small popover so the toolbar stays one row */
-      function setBox(open) {
-        if (box) box.hidden = !open;
-        if (btn) btn.setAttribute("aria-expanded", String(open));
-        if (open && mSel) N.dom.selSync(mSel);
-      }
-      if (btn) {
-        btn.addEventListener("click", function (e) {
-          e.stopPropagation();
-          setBox(box && box.hidden);
-        });
-      }
-      document.addEventListener("click", function (e) {
-        if (!box || box.hidden) return;
-        if (box.contains(e.target) || (btn && btn.contains(e.target))) return;
-        setBox(false);
-      });
-      document.addEventListener("keydown", function (e) {
-        if (e.key === "Escape" && box && !box.hidden) setBox(false);
-      });
-      if (!mSel) return;
-      N.dom.upgradeSelect(mSel);
-      mSel.addEventListener("change", function () {
-        var v = mSel.value;
-        if (v === "0") {
-          marArm(0);
-          return;
-        }
-        if (v === "custom") {
-          marPaint();
-          if (mCustom) mCustom.focus();
-          return;
-        }
-        marTurnOn(parseInt(v, 10));
-      });
-      if (mCustom) {
-        mCustom.addEventListener("change", function () {
-          var n = parseInt(mCustom.value, 10);
-          if (n > 0 && mSel && mSel.value === "custom") marTurnOn(n);
-        });
-        mCustom.addEventListener("keydown", function (e) {
-          if (e.key === "Enter") {
-            var n = parseInt(mCustom.value, 10);
-            if (n > 0) marTurnOn(n);
-          }
-        });
-      }
-      if (mStop) {
-        mStop.addEventListener("click", function () {
-          marArm(0);
-        });
-      }
-      marPaint();
-      mTimer = setInterval(marTick, 1000);
-      marTick();
-    }
-
-    /* label chips */
-    function buildChips() {
-      rowHost.textContent = "";
+    /* ---------- the label list ---------- */
+    function buildLabels() {
+      if (!panel) return;
+      panel.textContent = "";
       var counts = {};
       list.forEach(function (e) {
         (e.labels || []).forEach(function (l) {
@@ -495,8 +363,6 @@
         });
       });
       var labels = Object.keys(counts).sort();
-      /* label on the left, count on the right: reads as a list in the rail
-         and as a normal chip in the top row */
       function chip(label, on, extra) {
         var kids = [d.h("span", { class: "ch-t" }, label)];
         if (extra !== undefined && extra !== null) {
@@ -507,19 +373,16 @@
           class: "chip chip-btn" + (on ? " on" : ""),
           onclick: function () {
             activeLabel = label;
-            buildChips();
+            buildLabels();
             paint();
+            setLabels(false);
           },
         }, kids);
       }
-      /* the reset chip lives at the end: insert before it so it stays last */
-      rowHost.textContent = "";
-      rowHost.appendChild(resetBtn);
-      rowHost.appendChild(chip("All", activeLabel === "All", list.length));
+      panel.appendChild(chip("All", activeLabel === "All", list.length));
       labels.forEach(function (l) {
-        rowHost.appendChild(chip(l, activeLabel === l, counts[l]));
+        panel.appendChild(chip(l, activeLabel === l, counts[l]));
       });
-      rowHost.scrollLeft = 0;
     }
 
     /* quick filter */
@@ -549,13 +412,9 @@
       });
     }
 
-    layout();
-    buildChips();
+    buildLabels();
     renderFavs();
     renderRecs();
-    bindMarathon();
-    if (wide && wide.addEventListener) wide.addEventListener("change", layout);
-    N.bus.on("sync", layout); /* Settings changed the layout in another tab */
     N.bus.on("favs", function () {
       renderFavs();
       paint();
@@ -563,21 +422,24 @@
     N.bus.on("recent", renderRecs);
 
     /* the dev console can push placeholder entries into the catalog while a
-       page is open: rebuild the list, chips and grid when it does */
+       page is open: rebuild the list, labels and grid when it does */
     N.bus.on("catalog", function () {
       list = kind === "apps" ? N.catalog.apps() : kind === "proxies" ? N.catalog.proxies() : N.catalog.games();
-      if (rowHost) buildChips();
+      buildLabels();
       renderFavs();
       renderRecs();
       paint();
     });
 
     if (!listMode) {
+      /* the tile is exactly as tall as the row the vgrid reserves, so the
+         squares line up with the chunk maths */
+      grid.style.setProperty("--tile-h", CARD_H[kind] + "px");
       gridApi = N.cards.vgrid(grid, {
         items: filtered(),
         cardH: CARD_H[kind],
-        minW: 168,
-        gap: 18,
+        minW: 170,
+        gap: 14,
         buffer: 2,
         scroll: scroller || window,
         render: function (entry) {

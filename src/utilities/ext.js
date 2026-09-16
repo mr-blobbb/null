@@ -11,7 +11,7 @@
                 scope, so it can rewrite the economy, XP, coins, quests,
                 achievements, storage keys, recents, favorites, theme packs,
                 particles, seasonal modes, the player, search, hidden pages,
-                the dev console, marathon mode, the screensaver, modals, FX.
+                the dev console, the screensaver, modals, FX.
                 That is the point of it. Nothing is filtered, and nothing
                 stops it from breaking its own install: uninstall it again
                 from the Extensions page.

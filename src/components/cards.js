@@ -34,9 +34,16 @@
     return out;
   }
 
-  /* ---------- thumb (games/apps only: proxies use rows) ---------- */
-  function thumbEl(entry, kind) {
+  /* ---------- the tile (games/apps; proxies use rows) ----------
+     One square of art with the name in a bubble on it. That is the whole
+     card: no description, no label pills, no button row. The labels are
+     still on the entry (they filter, search and the tooltip reads them),
+     they just are not furniture any more. */
+  function tileEl(entry, kind) {
+    var meta = META[kind];
     var media = d.h("div", { class: "tmedia" });
+    /* no art? the kind's own glyph, big and centred: still one clean square */
+    media.appendChild(d.h("span", { class: "tile-glyph" }, [d.icon(meta.icon)]));
     if (entry.thumb) {
       var img = d.h("img", {
         src: entry.thumb,
@@ -50,11 +57,6 @@
       d.bindImgFallback(img, kind);
       media.appendChild(img);
     }
-    /* name badge: drawn on the thumbnail so the title can never be
-       squeezed out of view (the virtualized grid rows keep the body
-       name hidden; featured/recs rails use the body name below) */
-    media.appendChild(d.h("span", { class: "tname-badge", title: entry.name }, entry.name));
-    /* corner badges (NEW / HOT) */
     var badges = badgesFor(entry);
     if (badges.length) {
       var host = d.h("div", { class: "tbadges" });
@@ -63,6 +65,9 @@
       });
       media.appendChild(host);
     }
+    var star = favBtn(entry, kind, "tile-fav");
+    if (star) media.appendChild(star);
+    media.appendChild(d.h("span", { class: "tname-badge", title: entry.name }, entry.name));
     return media;
   }
 
@@ -121,12 +126,12 @@
   }
 
   /* ---------- favorites star ---------- */
-  function favBtn(entry, kind) {
+  function favBtn(entry, kind, extra) {
     if (kind === "proxy") return null;
     var on = N.favs.has(kind, entry.id);
     var btn = d.h("button", {
       type: "button",
-      class: "fav" + (on ? " on" : ""),
+      class: "fav" + (on ? " on" : "") + (extra ? " " + extra : ""),
       "aria-label": on ? "Remove from favorites" : "Add to favorites",
       title: on ? "Remove from favorites" : "Add to favorites",
     }, [d.icon("star")]);
@@ -144,31 +149,23 @@
   function card(entry, kind) {
     if (kind === KIND.proxy) return proxyRow(entry);
     var meta = META[kind];
+    var labels = entry.labels || [];
     var open = function () {
       if (kind === KIND.game) N.launch.game(entry);
       else N.launch.app(entry);
     };
 
-    var body = d.h("div", { class: "tbody" }, [
-      d.h("h3", { class: "tname", title: entry.name }, entry.name),
-      d.h("div", { class: "chips-row" }, kind === "proxy" ? [statusChip(entry.status), null] : chipsFor(entry)),
-      d.h("p", { class: "tdesc" }, entry.desc || meta.label + " in the NULL library."),
-    ]);
-
-    /* no play button: the whole card is the click target (plus a star) */
-    var foot = d.h("div", { class: "tfoot tfoot-solo" }, [
-      favBtn(entry, kind),
-    ]);
-
     var el = d.h("article", {
-      class: "tcard",
+      class: "tcard tile",
       role: "button",
       tabindex: "0",
       "aria-label": meta.label + ": " + entry.name,
+      /* the labels ride along in the tooltip and in a data attribute: they
+         still filter, they just do not print on the card */
+      title: entry.name + (labels.length ? "\n" + labels.join(" · ") : ""),
+      "data-labels": labels.join(","),
     }, [
-      thumbEl(entry, kind),
-      body,
-      foot,
+      tileEl(entry, kind),
     ]);
     el.addEventListener("click", open);
     el.addEventListener("keydown", function (e) {

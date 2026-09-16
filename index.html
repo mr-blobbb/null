@@ -37,110 +37,30 @@
 </head>
 <body data-page="home">
   <a class="skip-link" href="#main">Skip to content</a>
-  <div class="glow-bg" aria-hidden="true"></div>
   <header data-mount="nav"></header>
 
-  <main id="main">
-    <!-- masthead: full-width band: meta row, tagline + search, oversized NULL.
-         The two spans at the end are the slow aurora blobs behind the band. -->
-    <section class="mast">
-      <div class="mast-in">
-        <div class="mast-meta">
-          <span class="mast-kicker">Site created by Mr Blob</span>
-          <span class="mast-stats" id="mastStats"></span>
-        </div>
+  <!-- the front door and nothing else: the wordmark, one search box, four
+       ways in. Every other page is one link from here, and the nav bar
+       carries the rest. -->
+  <main id="main" class="home-main">
+    <section class="door">
+      <h1 class="door-word">NULL</h1>
 
-        <div class="mast-top">
-          <div class="mast-lead">
-            <p class="mast-tag" id="mastTag">Play. Create. Vanish.</p>
-            <p class="mast-sub">
-              A non-monetized alternative to our school's absolutely BUNS games sites. Currently hosts around ~2,300 games, with apps, proxies, and so much more!
-            </p>
-          </div>
+      <form class="door-search" id="homeSearch" role="search" aria-label="Search NULL">
+        <span data-icon="search"></span>
+        <input id="searchInput" type="text" placeholder="Search games, apps, pages…" autocomplete="off" spellcheck="false" aria-label="Search NULL">
+        <span class="door-key">/</span>
+      </form>
 
-          <form class="hero-search field" id="homeSearch" role="search" aria-label="Search NULL">
-            <span data-icon="search"></span>
-            <input id="searchInput" type="text" placeholder="Search games, apps, proxies…" autocomplete="off" aria-label="Search NULL">
-            <button type="submit" class="btn btn-primary btn-sm">Search</button>
-          </form>
-        </div>
-
-        <div class="mast-floor">
-          <h1 class="mast-null">NULL</h1>
-          <nav class="mast-quick" aria-label="Browse NULL">
-            <a href="games/">Games</a>
-            <a href="apps/">Apps</a>
-            <a href="proxies/">Proxies</a>
-            <a href="schedule">Schedule</a>
-          </nav>
-        </div>
-      </div>
+      <nav class="door-links" aria-label="Browse NULL">
+        <a href="games/"><span data-icon="game"></span>Games</a>
+        <a href="apps/"><span data-icon="grid"></span>Apps</a>
+        <a href="announcements"><span data-icon="ann"></span>Announcements</a>
+        <a href="settings"><span data-icon="settings"></span>Settings</a>
+      </nav>
     </section>
-
-    <div class="page home-page">
-      <!-- daily tip -->
-      <section class="section reveal" id="tipSec" hidden>
-        <div class="tip-card glass" id="tipCard"></div>
-      </section>
-
-      <!-- featured rail -->
-      <section class="section reveal">
-        <div class="section-head">
-          <h2>Featured</h2>
-          <span class="hint" id="featHint">Selections of the best games on NULL!</span>
-        </div>
-        <div class="feat-panel glass">
-          <div id="featTrack" class="feat-track"></div>
-          <a class="feat-more" href="games/">Open the full library <span data-icon="chevR"></span></a>
-        </div>
-      </section>
-
-      <!-- game of the day -->
-      <section class="section reveal">
-        <div id="gotd" class="panel glass gotd" hidden></div>
-      </section>
-
-      <!-- recently played -->
-      <section class="section reveal">
-        <div class="section-head">
-          <h2>Recently played</h2>
-          <div class="icon-btn-row">
-            <button type="button" class="btn btn-outline btn-sm" id="btnRandom"><span data-icon="zap"></span>Play random</button>
-            <button type="button" class="btn btn-outline btn-sm" id="btnClearRec"><span data-icon="trash"></span>Clear list</button>
-          </div>
-        </div>
-        <div class="panel" id="recPanel">
-          <div id="recList"></div>
-        </div>
-      </section>
-
-      <!-- daily crate + quests: a compact strip, kept low so the games lead -->
-      <section class="section reveal" id="dailySec">
-        <div class="daily-strip glass" id="dailyStrip"></div>
-      </section>
-
-      <!-- bottom columns -->
-      <section class="section reveal home-cols">
-        <div class="panel">
-          <div class="panel-head">
-            <h2><span data-icon="sched"></span>Today’s schedule</h2>
-            <a class="more" href="schedule">full page &rarr;</a>
-          </div>
-          <div id="schedHome"></div>
-        </div>
-
-        <div class="panel">
-          <div class="panel-head">
-            <h2><span data-icon="ann"></span>Announcements</h2>
-            <a class="more" href="announcements">all &rarr;</a>
-          </div>
-          <div id="annHome"></div>
-        </div>
-      </section>
-    </div>
   </main>
 
-  <footer data-mount="foot"></footer>
   <noscript>
     <nav class="ns-nav">
       <a href="./">Home</a><a href="games/">Games</a><a href="apps/">Apps</a><a href="proxies/">Proxies</a><a href="schedule">Schedule</a><a href="settings">Settings</a>
