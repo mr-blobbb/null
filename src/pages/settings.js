@@ -439,7 +439,7 @@
      Free packs are always available; Shop packs show veiled until bought.
      Each card previews the real backdrop through theme.js, so settings and
      the Shop can never disagree about what a pack looks like. Your own
-     crafted pack gets a recolour row and a delete button right here.
+     crafted pack is the same card with an edit and a delete button added.
      ============================================================ */
   function applyPack(p) {
     if (!p) {
@@ -549,7 +549,11 @@
     var card = d.h(
       "article",
       {
-        class: "shop-card pack-card glass" + (owned ? " owned" : " locked") + (applied ? " playing" : ""),
+        class:
+          "shop-card pack-card glass" +
+          (owned ? " owned" : " locked") +
+          (p.crafted ? " crafted" : "") +
+          (applied ? " playing" : ""),
       },
       [
         N.theme.packThumb(p, { lock: !owned }),
@@ -645,7 +649,11 @@
     var card = d.h(
       "article",
       {
-        class: "shop-card pack-card glass" + (owned ? " owned" : " locked") + (applied ? " playing" : ""),
+        class:
+          "shop-card pack-card glass" +
+          (owned ? " owned" : " locked") +
+          (p.crafted ? " crafted" : "") +
+          (applied ? " playing" : ""),
       },
       [
         N.theme.partThumb(p, { lock: !owned }),

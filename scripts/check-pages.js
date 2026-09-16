@@ -71,7 +71,7 @@ function inline(html, page) {
     .replace(/<link[^>]*rel="stylesheet"[^>]*>/g, "");
 }
 
-function load(page, prefix = "/") {
+function load(page, prefix = "/", seed) {
   const errors = [];
   const vc = new VirtualConsole();
   const ignore = /Could not parse CSS|Could not load|Not implemented:/i;
@@ -102,6 +102,9 @@ function load(page, prefix = "/") {
           addListener() {},
           removeListener() {},
         }));
+      /* a page that wants a store to already exist (an installed extension)
+         seeds it here, before the first script runs */
+      if (seed) seed(win);
     },
   });
   return { dom, errors };
@@ -446,31 +449,32 @@ for (const page of PAGES) {
     ok(!!cfx && !!cfx.querySelector(".pf-p-star b"), "the crafted pack draws its borrowed art and its parts");
     win.N.theme.setAccent("off");
 
-    /* your own pair gets a card each, with circles you can recolour and a
-       delete button, without opening the editor */
+    /* Your own pair gets a card each, shaped exactly like every other theme:
+       no palette or tint controls crowding it (those live in the editor),
+       just the edit and delete buttons added to the usual Apply. */
     win.N.bus.emit("sync"); /* the page repaints its grids */
     const own = qa("#packGrid .pack-card.crafted");
     ok(own.length === 1, "your own pack gets a card of its own");
+    ok(own[0].querySelectorAll(".craft-tools").length === 0, "…with no palette or tint controls on it");
     ok(
-      own[0].querySelectorAll(".craft-tools .cdot").length === 6,
-      "…with four palette circles and two tint circles",
+      own[0].querySelector(".pack-thumb") && own[0].querySelector(".shop-info") && own[0].querySelector(".shop-foot"),
+      "…and the same three blocks as every other theme card",
     );
-    const dots = own[0].querySelectorAll(".craft-tools .cdot input[type=color]");
-    ok(dots.length === 6, "every circle owns a real colour input");
-    dots[0].value = "#123456";
-    dots[0].dispatchEvent(new win.Event("input", { bubbles: true }));
-    ok(win.N.theme.craftPack().colors[0] === "#123456", "picking a colour writes it back to the pack");
+    ok(
+      own[0].querySelector(".pack-info h3, .shop-info h3").textContent === "Check pack",
+      "…carrying its own name",
+    );
     ok(
       own[0].querySelector(".pack-strip i").style.background !== "",
-      "…and the colour strip follows it",
+      "…and its colour strip still shows the palette",
     );
+    ok(own[0].querySelectorAll(".shop-foot .btn").length === 3, "…and Apply plus one edit and one delete button");
+    ok(!!own[0].querySelector(".shop-foot .btn-outline-danger"), "your own pack can be deleted from the card");
 
     const ownPart = qa("#partGrid .pack-card.crafted")[0];
-    ok(
-      !!ownPart && !!ownPart.querySelector(".craft-tools .switch"),
-      "your particle set can follow the theme colours or carry its own",
-    );
-    ok(!!own[0].querySelector(".craft-tools .btn-outline-danger"), "your own pack can be deleted from the card");
+    ok(!!ownPart, "your particle set gets a card of its own");
+    ok(!!ownPart && ownPart.querySelectorAll(".craft-tools").length === 0, "…shaped like every other particle set");
+    ok(!!ownPart && ownPart.querySelectorAll(".shop-foot .btn").length === 3, "…with the same edit and delete buttons");
 
     win.N.theme.setAccent("mypack");
     win.N.theme.removeCraft("pack");
@@ -503,6 +507,95 @@ for (const page of PAGES) {
 
   ok(errors.length === 0, "no uncaught errors");
   win.close();
+}
+
+/* ---------- the two starter extensions ----------
+   NULL ships two .nullext files to install or download: a period clock and a
+   whole page of HTML. They are the copies people actually run, so the things
+   that went wrong with them are checked here: a stale install that ticked
+   every fifteen seconds, a greeting that popped up on every page, and a chip
+   that never reached the nav or the player. */
+console.log("\nstarter extensions");
+{
+  /* exactly what a copy installed months ago looks like */
+  const OLD = {
+    id: "period-clock",
+    kind: "native",
+    name: "Period clock",
+    version: "1.0.0",
+    author: "you",
+    icon: "clock",
+    run: "always",
+    css: "",
+    js: "setInterval(function(){}, 15000);",
+    html: "",
+    pages: [],
+    nav: [],
+    manifest: { nullExt: 1, name: "Period clock", version: "1.0.0" },
+    enabled: true,
+    at: Date.now(),
+  };
+
+  /* count the once-a-second tickers a page arms: "the clock is live" is a
+     claim about a timer, so read the timer */
+  const countTicks = (w) => {
+    const raw = w.setInterval;
+    w.__ticks = 0;
+    w.setInterval = function (fn, ms) {
+      if (ms === 1000) w.__ticks++;
+      return raw.apply(w, arguments);
+    };
+  };
+
+  const { dom, errors } = load("extensions.html", "/", (w) => {
+    countTicks(w);
+    w.localStorage.setItem("null:ext", JSON.stringify([OLD]));
+    w.localStorage.setItem("null:extdata:period-clock", JSON.stringify({ greeted: 1 }));
+  });
+  const win = dom.window;
+  const doc = win.document;
+  await wait(700);
+  ok(errors.length === 0, "no script errors (" + errors.slice(0, 2).join(" | ") + ")");
+
+  const cards = Array.from(doc.querySelectorAll("#extStart .start-card"));
+  const names = cards.map((c) => c.querySelector("b").textContent);
+  ok(cards.length === 2, "both starters are offered (" + cards.length + ")");
+  ok(
+    names.indexOf("Period clock") >= 0 && names.indexOf("Starter page") >= 0,
+    "…the clock and a whole page (" + names.join(", ") + ")",
+  );
+  ok(win.N.ext.list()[0].version !== "1.0.0", "a stale copy is updated on sight (v" + win.N.ext.list()[0].version + ")");
+  ok(!!doc.querySelector('[data-slot="nav"] .pc-chip'), "the period clock draws its chip in the nav");
+  ok(win.__ticks > 0, "…and it ticks once a second, not once every fifteen");
+
+  /* install the page starter from its card: a whole page, no JavaScript */
+  const pageCard = cards.find((c) => c.querySelector("b").textContent === "Starter page");
+  pageCard.querySelector(".sc-acts .btn").click();
+  await wait(150);
+  const go = Array.from(doc.querySelectorAll(".modal button")).find((b) => /install/i.test(b.textContent));
+  ok(!!go, "installing asks first");
+  if (go) go.click();
+  await wait(250);
+  ok(win.N.ext.pages().length >= 2, "both starters add a page (" + win.N.ext.pages().length + ")");
+  ok(
+    !Array.from(doc.querySelectorAll(".toast")).some((t) => /is in your nav/.test(t.textContent)),
+    "nothing on the page greets you about the nav on every visit",
+  );
+  const reg = win.localStorage.getItem("null:ext");
+  dom.window.close();
+
+  /* the player has no nav bar, so the chip needs the strip the player keeps
+     for exactly this */
+  const pl = load("player.html", "/", (w) => {
+    countTicks(w);
+    if (reg) w.localStorage.setItem("null:ext", reg);
+  });
+  await wait(700);
+  ok(pl.errors.length === 0, "the player loads clean (" + pl.errors.slice(0, 2).join(" | ") + ")");
+  const chip = pl.dom.window.document.querySelector(".player-widgets .pc-chip");
+  ok(!!chip, "the period clock reaches the player");
+  ok(pl.dom.window.__ticks > 0, "…and keeps ticking there");
+  pl.dom.window.close();
 }
 
 /* ---------- served from a subfolder ----------
