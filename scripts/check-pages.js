@@ -650,23 +650,29 @@ console.log("\nstarters and the site clock");
 }
 
 /* ---------- the particle network ----------
-   Constellation is a canvas layer now: theme.js draws the dots and the
+   The front door's backdrop is a canvas: theme.js draws the dots and the
    hairlines between them, which is the effect people mean by a particle
-   network. The live layer animates, a thumbnail draws one frame, and a set
-   somebody saved back when this was a node/link pair has to come back as the
-   real thing instead of as nothing. */
+   network. It belongs to the home page now instead of being a free particle
+   set, it draws one frame in a thumbnail rather than fifty loops, and a set
+   somebody saved back when this was a node/link pair still has to come back
+   as the real thing. */
 console.log("\nthe particle network");
 {
-  const { dom, errors } = load("settings.html", "/");
+  const { dom, errors } = load("index.html", "/");
   const win = dom.window;
   const doc = win.document;
   await wait(500);
 
-  win.N.theme.setParticles("constellation");
-  await wait(80);
-  ok(!!doc.querySelector(".part-fx .pt-net"), "constellation mounts a canvas layer");
-  ok(doc.querySelectorAll(".part-fx b").length === 0, "…with no DOM nodes pretending to be a network");
-  ok(!!doc.querySelector("#partGrid .part-thumb .pt-net"), "…and the shelf preview draws the same thing");
+  ok(!!doc.querySelector(".door-net .pt-net"), "the front door mounts the particle network");
+  ok(doc.querySelectorAll(".door-net b").length === 0, "…with no DOM nodes pretending to be a network");
+  ok(!win.N.theme.particleFor("constellation"), "…and it is not a particle set to pick any more");
+  ok(errors.length === 0, "no script errors (" + errors.slice(0, 2).join(" | ") + ")");
+  win.close();
+}
+{
+  const { dom, errors } = load("settings.html", "/");
+  const win = dom.window;
+  await wait(400);
 
   win.N.econ.grant("fx", "editor");
   win.N.theme.craftWrite({
@@ -677,6 +683,47 @@ console.log("\nthe particle network");
     !!saved && saved.parts.length === 1 && saved.parts[0].k === "net",
     "a set saved as node + link becomes one network",
   );
+  ok(
+    !!saved && !!win.N.theme.partThumb(saved).querySelector(".pt-net"),
+    "…and its preview draws the same canvas",
+  );
+  ok(errors.length === 0, "no script errors (" + errors.slice(0, 2).join(" | ") + ")");
+  win.close();
+}
+
+/* ---------- the nav model ----------
+   Four doors fit the rail; every other page is behind the More button, which
+   is what keeps the rail short without hiding the site. */
+console.log("\nthe nav model");
+{
+  const { dom, errors } = load("index.html", "/");
+  const win = dom.window;
+  const doc = win.document;
+  await wait(400);
+
+  ok(win.N.router.PRIMARY.length === 4, "the rail carries four doors");
+  const btn = doc.querySelector(".more-nav .nav-link");
+  ok(!!btn, "…and a More button");
+  if (btn) btn.click();
+  await wait(60);
+  const rows = Array.from(doc.querySelectorAll(".more-nav .more-menu a.mi")).map((a) => a.getAttribute("href"));
+  const want = win.N.router.MORE.reduce((n, g) => n + g.links.length, 0);
+  ok(rows.length === want && want >= 10, "the panel lists every other page (" + rows.length + ")");
+  ok(rows.every((h) => h && h.charAt(0) === "/"), "…with real links");
+  ok(!!doc.querySelector(".more-nav .more-menu .em-all"), "…and the extensions menu rides along");
+
+  /* The rail writes the same pages out under the More row, and shows them
+     only while it is open (extra.css owns that half). The list is text, so
+     the extension popups stay in the flyout alone. */
+  const rest = doc.querySelector(".nav-links .rail-rest");
+  ok(!!rest, "…and the rail writes the rest of the site out under it");
+  const restRows = rest ? Array.from(rest.querySelectorAll("a.rr")) : [];
+  ok(restRows.length === want + 1, "…one row per page, Extensions included (" + restRows.length + ")");
+  ok(
+    restRows.every((a) => (a.getAttribute("href") || "").charAt(0) === "/"),
+    "…with real links",
+  );
+  ok(!doc.querySelector(".rail-rest .mi"), "…and no second copy of the extension menu");
   ok(errors.length === 0, "no script errors (" + errors.slice(0, 2).join(" | ") + ")");
   win.close();
 }

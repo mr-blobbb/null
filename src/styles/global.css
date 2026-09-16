@@ -833,6 +833,7 @@ label.lbl {
   padding: 12px 12px 5px;
 }
 .more-menu a.mi {
+  position: relative; /* so an unread dot pins to the row, not to the panel */
   display: flex;
   align-items: center;
   gap: 10px;

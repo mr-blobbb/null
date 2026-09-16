@@ -273,16 +273,10 @@
         { k: "flare", n: 8 },
       ],
     },
-    {
-      id: "constellation",
-      name: "Constellation",
-      free: true,
-      price: 0,
-      mono: true,
-      desc: "A drifting particle network: plain dots stitched together by a hairline wherever two pass close by.",
-      tags: ["Free", "Network", "Lines"],
-      parts: [{ k: "net", n: 78 }],
-    },
+    /* Constellation used to sit here as a free pick. It is the front door's
+       own backdrop now (home.js, via theme.js's netLayer), so there is
+       nothing left to choose: the home page always has it and no other page
+       needs a second copy of the same canvas. */
   ];
 
   var PARTICLES = [

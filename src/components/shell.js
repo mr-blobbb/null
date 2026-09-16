@@ -6,6 +6,15 @@
   var N = (window.N = window.N || {});
   var d = N.dom;
 
+  /* the narrowest window the side rail is drawn in. extra.css agrees: its
+     rail block is a min-width query on the same number, and Settings says so
+     out loud when a visitor picks the rail in a window too small for it. */
+  var RAIL_MIN = 420;
+
+  function railMode() {
+    return document.documentElement.dataset.nav === "side" && window.innerWidth >= RAIL_MIN;
+  }
+
   /* NULL mark = the Material "block" glyph: a circle with a slash. */
   function logoMark() {
     return d.h("span", { class: "brand-mark", "aria-hidden": "true" }, [
@@ -39,44 +48,77 @@
     });
   }
 
-  /* ---------- the extensions button ----------
-     Everything else in the nav is a link. This one is a menu first and a page
-     second: the popups you have installed are one click from any page, and
-     "Manage extensions" at the bottom of the menu is the manager itself.
-     What goes in the menu comes from ext.js, so the menu and the manager can
-     never disagree about what is installed. */
-  function extNav() {
-    var wrap = d.h("div", { class: "ext-nav" });
+  /* ---------- the More button ----------
+     The rail holds four doors; everything else on the site is behind this one
+     button, so the four can sit far apart instead of becoming a wall of
+     icons. The panel is measured onto the button rather than hung off CSS:
+     the nav is a top bar on some screens and a left rail on others, and a
+     rail has no room below the button (it used to fly out near the top of the
+     window, nowhere near what was clicked). In the rail it opens beside the
+     button, in the bar it drops underneath.
+
+     What is inside comes from the router's More list, and the installed
+     extension popups are listed under the same heading: the menu the old
+     extensions button owned is one click away, just one click further out. */
+  function moreNav() {
+    var wrap = d.h("div", { class: "more-wrap more-nav" });
     var btn = d.h(
       "button",
       {
         type: "button",
-        class: "nav-link" + (N.router.isActive("/extensions") ? " on" : ""),
-        title: "Extensions",
-        "aria-label": "Extensions",
+        class: "nav-link" + (N.router.inMore("/extensions") ? " on" : ""),
+        title: "All pages",
+        "aria-label": "All pages",
         "aria-expanded": "false",
-        "data-ic": "extensions",
+        "data-ic": "more",
       },
-      [d.icon("puzzle"), d.h("span", { class: "nl-txt" }, "Extensions")],
+      [d.icon("list"), d.h("span", { class: "nl-txt" }, "More")],
     );
-    var menu = d.h("div", { class: "ext-menu" });
+    var menu = d.h("div", { class: "more-menu elev" });
 
-    /* The panel is measured onto the button instead of hung off CSS: the nav
-       is a top bar on some screens and a left rail on others, and a rail has
-       no room below the button for an absolute panel (it used to fly out near
-       the top of the window, nowhere near what was clicked). Anchored here,
-       it always opens 8px under the button, aligned to its outer edge. */
+    /* rebuilt on every open: an extension can be installed, run or disabled
+       while the page is up */
+    function fill() {
+      menu.textContent = "";
+      N.router.MORE.forEach(function (g) {
+        menu.appendChild(d.h("div", { class: "mg" }, g.name));
+        g.links.forEach(function (l) {
+          menu.appendChild(
+            d.h("a", { class: "mi" + (N.router.isActive(l.url) ? " on" : ""), href: N.url(l.url) }, [
+              d.icon(l.icon),
+              d.h("span", null, l.t),
+            ]),
+          );
+        });
+      });
+      menu.appendChild(d.h("div", { class: "mg" }, "Extensions"));
+      var extHost = d.h("div", { class: "em-list" });
+      menu.appendChild(extHost);
+      if (N.ext) N.ext.menu(extHost, close);
+    }
+
     function place() {
       var r = btn.getBoundingClientRect();
       var gap = 8;
-      var w = menu.offsetWidth || 290;
-      var left = r.left;
-      if (left + w > window.innerWidth - 12) left = Math.max(12, r.right - w);
+      var w = menu.offsetWidth || 300;
+      var h = menu.offsetHeight || 320;
+      var left;
+      var top;
+      if (railMode()) {
+        left = r.right + gap;
+        top = Math.min(r.top, window.innerHeight - 12 - h);
+      } else {
+        left = r.left;
+        if (left + w > window.innerWidth - 12) left = Math.max(12, r.right - w);
+        top = r.bottom + gap;
+      }
+      left = Math.min(Math.max(12, left), Math.max(12, window.innerWidth - w - 12));
+      top = Math.max(12, top);
       menu.style.position = "fixed";
-      menu.style.top = Math.round(r.bottom + gap) + "px";
       menu.style.left = Math.round(left) + "px";
+      menu.style.top = Math.round(top) + "px";
       menu.style.right = "auto";
-      menu.style.maxHeight = Math.max(180, window.innerHeight - r.bottom - gap - 16) + "px";
+      menu.style.maxHeight = Math.max(200, window.innerHeight - top - 16) + "px";
     }
 
     function close() {
@@ -84,16 +126,14 @@
       btn.setAttribute("aria-expanded", "false");
     }
     function open() {
-      if (!N.ext) return;
-      N.ext.menu(menu, close);
+      fill();
+      /* the unread / something-to-claim dots live on link hrefs, and the panel
+         was just rebuilt: put them back before it is measured */
+      paintAnnDots();
+      paintShopDot();
       place();
       wrap.classList.add("open");
       btn.setAttribute("aria-expanded", "true");
-    }
-    function paint() {
-      if (!wrap.classList.contains("open") || !N.ext) return;
-      N.ext.menu(menu, close);
-      place();
     }
 
     btn.addEventListener("click", function (e) {
@@ -110,11 +150,41 @@
     window.addEventListener("resize", function () {
       if (wrap.classList.contains("open")) place();
     });
-    if (N.bus && N.bus.on) N.bus.on("ext", paint);
 
     wrap.appendChild(btn);
     wrap.appendChild(menu);
     return wrap;
+  }
+
+  /* ---------- the rest of the site, listed while the rail is open ---------
+     Four doors sit in the rail; everything else is written out here, under
+     the More row, as a small two-column list. It is hidden the whole time
+     the rail is shut (extra.css only reveals it while the rail is hovered or
+     holds the keyboard), so the collapsed rail is the four doors and nothing
+     else, and an open one shows a visitor where the rest of the site went.
+
+     Only the router's pages are listed: the installed extension popups stay
+     in the More flyout, which is also the path on a touch screen, where the
+     rail can never be hovered open. */
+  function railRest() {
+    var box = d.h("div", { class: "rail-rest" });
+    var groups = N.router.MORE.concat([{ name: "More", links: [N.router.LINKS.extensions] }]);
+    groups.forEach(function (g) {
+      box.appendChild(d.h("div", { class: "rg" }, g.name));
+      g.links.forEach(function (l) {
+        box.appendChild(
+          d.h(
+            "a",
+            {
+              class: "rr" + (N.router.isActive(l.url) ? " on" : ""),
+              href: N.url(l.url),
+            },
+            l.t,
+          ),
+        );
+      });
+    });
+    return box;
   }
 
   /* ---------- topbar ---------- */
@@ -126,11 +196,6 @@
     /* primary links: icon-only, no Home (the brand mark is home) */
     var links = d.h("nav", { class: "nav-links" });
     N.router.PRIMARY.forEach(function (l) {
-      /* one item opens a menu rather than a page: see extNav() */
-      if (l.menu === "ext") {
-        links.appendChild(extNav());
-        return;
-      }
       /* the name rides along in the markup: the side rail shows it when it
          opens, the top bar just lets it sit there clipped */
       var a = d.h("a", {
@@ -143,6 +208,10 @@
       if (l.id === "announcements") a.appendChild(annDotEl());
       links.appendChild(a);
     });
+    /* the rest of the site, one button further out: see moreNav(). The rail
+       writes them out under that button as well; see railRest(). */
+    links.appendChild(moreNav());
+    links.appendChild(railRest());
     bar.appendChild(links);
 
     /* the mount point extensions get for their own nav chrome (see ext.js's

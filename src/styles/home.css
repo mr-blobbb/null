@@ -8,6 +8,30 @@ body[data-page="home"] {
   background: var(--bg);
 }
 
+/* ---------- the network ----------
+   One canvas behind the whole front door: small dots drifting, joined by a
+   hairline wherever two come close (theme.js draws it). Behind everything, so
+   the -2 puts it under the ambient particle layer a Shop set owns. */
+.door-net {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  overflow: hidden;
+  pointer-events: none;
+  /* the ink the canvas reads, and the only colour on the page: gray dots on
+     black, ink dots on paper */
+  --pt-1: #8b8b93;
+  --pt-2: #6f6f77;
+  --pt-3: #a8a8b0;
+  --pt-4: #6f6f77;
+}
+html[data-theme="light"] .door-net {
+  --pt-1: #6a6a72;
+  --pt-2: #8a8a92;
+  --pt-3: #55555d;
+  --pt-4: #8a8a92;
+}
+
 .home-main {
   min-height: 100dvh;
   display: grid;

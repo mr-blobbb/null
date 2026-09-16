@@ -10,50 +10,71 @@
 (function () {
   var N = (window.N = window.N || {});
 
-  /* top nav: icon-only destinations. Home is the NULL brand mark itself,
-     so it is not a separate link. The mobile drawer shows all of these. */
+  /* Every destination once, by key. The rail, the More panel and the drawer
+     are all built from this table, so a new page is one line here and it turns
+     up in all three. */
+  var LINKS = {
+    games: { id: "games", t: "Games", url: "/games/", icon: "game" },
+    apps: { id: "apps", t: "Apps", url: "/apps/", icon: "grid" },
+    proxies: { id: "proxies", t: "Proxies", url: "/proxies/", icon: "proxy" },
+    announcements: { id: "announcements", t: "Announcements", url: "/announcements", icon: "ann" },
+    schedule: { id: "schedule", t: "Schedule", url: "/schedule", icon: "sched" },
+    shop: { id: "shop", t: "Shop", url: "/shop", icon: "store" },
+    extensions: { id: "extensions", t: "Extensions", url: "/extensions", icon: "puzzle" },
+    labs: { id: "labs", t: "Labs", url: "/labs", icon: "beaker" },
+    backups: { id: "backups", t: "Backups", url: "/backups", icon: "backups" },
+    settings: { id: "settings", t: "Settings", url: "/settings", icon: "settings" },
+    about: { id: "about", t: "About", url: "/about", icon: "info" },
+    district: { id: "district", t: "District", url: "/district", icon: "school" },
+    license: { id: "license", t: "License", url: "/license", icon: "scale" },
+    privacy: { id: "privacy", t: "Privacy", url: "/privacy", icon: "lock" },
+    terms: { id: "terms", t: "Terms", url: "/terms", icon: "file" },
+    cookies: { id: "cookies", t: "Cookies", url: "/cookies", icon: "cookie" },
+  };
+
+  /* The rail: four doors and nothing else, so they can sit far apart and the
+     row is never a wall of icons. Home is the NULL brand mark. */
   var PRIMARY = [
-    { id: "games", t: "Games", url: "/games/", icon: "game" },
-    { id: "apps", t: "Apps", url: "/apps/", icon: "grid" },
-    { id: "proxies", t: "Proxies", url: "/proxies/", icon: "proxy" },
-    { id: "schedule", t: "Schedule", url: "/schedule", icon: "sched" },
-    { id: "announcements", t: "Announcements", url: "/announcements", icon: "ann" },
-    { id: "shop", t: "Shop", url: "/shop", icon: "store" },
-    { id: "backups", t: "Backups", url: "/backups", icon: "backups" },
-    /* the only nav item that opens a menu instead of a page: it lists what is
-       installed so an extension popup is one click from anywhere. The page
-       behind it is the same manager, linked at the bottom of that menu. */
-    { id: "extensions", t: "Extensions", url: "/extensions", icon: "puzzle", menu: "ext" },
-    { id: "labs", t: "Labs", url: "/labs", icon: "beaker" },
-    { id: "settings", t: "Settings", url: "/settings", icon: "settings" },
+    LINKS.games,
+    LINKS.apps,
+    LINKS.announcements,
+    LINKS.settings,
   ];
 
-  /* grouped view used by the mobile drawer */
+  /* Everything else, grouped for the More panel and for the mobile drawer.
+     The Extensions page is added to that panel by shell.js, because the
+     installed popups are listed under the same heading. */
+  var MORE = [
+    {
+      name: "Browse",
+      links: [LINKS.proxies, LINKS.schedule, LINKS.shop, LINKS.labs, LINKS.backups],
+    },
+    {
+      name: "Info",
+      links: [LINKS.about, LINKS.district, LINKS.license, LINKS.privacy, LINKS.terms, LINKS.cookies],
+    },
+  ];
+
+  /* grouped view used by the mobile drawer, which has room for the lot */
   var GROUPS = [
+    { name: "Library", links: [LINKS.games, LINKS.apps, LINKS.proxies] },
     {
-      name: "Library",
+      name: "Site",
       links: [
-        { t: "Games", url: "/games/", icon: "game" },
-        { t: "Apps", url: "/apps/", icon: "grid" },
-        { t: "Proxies", url: "/proxies/", icon: "proxy" },
+        LINKS.announcements,
+        LINKS.schedule,
+        LINKS.shop,
+        LINKS.extensions,
+        LINKS.labs,
+        LINKS.backups,
+        LINKS.settings,
       ],
     },
-    {
-      name: "More",
-      links: [
-        { t: "Announcements", url: "/announcements", icon: "ann" },
-        { t: "Schedule", url: "/schedule", icon: "sched" },
-        { t: "Shop", url: "/shop", icon: "store" },
-        { t: "Backups", url: "/backups", icon: "backups" },
-        { t: "Extensions", url: "/extensions", icon: "puzzle" },
-        { t: "Labs", url: "/labs", icon: "beaker" },
-        { t: "Settings", url: "/settings", icon: "settings" },
-      ],
-    },
+    { name: "Info", links: MORE[1].links },
   ];
 
-  /* About / District / License / Privacy / Terms / Cookies live only in the
-     footer bottom links: they are not menu destinations. */
+  /* About / District / License / Privacy / Terms / Cookies are also in the
+     footer bottom links: they stay one click away from any page. */
   var FOOT = [
     {
       name: "Explore",
@@ -101,14 +122,27 @@
     return dir === target || dir === target + ".html";
   }
 
+  /* is any page in the More panel the one on screen? the More button lights
+     up off this, so a visitor on /proxies can still see where they are. */
+  function inMore(url) {
+    return MORE.some(function (g) {
+      return g.links.some(function (l) {
+        return isActive(l.url);
+      });
+    });
+  }
+
   N.router = {
+    LINKS: LINKS,
     PRIMARY: PRIMARY,
+    MORE: MORE,
     GROUPS: GROUPS,
     FOOT: FOOT,
     isActive: isActive,
+    inMore: inMore,
     all: function () {
       return PRIMARY.concat(
-        GROUPS.reduce(function (a, g) {
+        MORE.reduce(function (a, g) {
           return a.concat(g.links);
         }, []),
       );

@@ -588,7 +588,9 @@
     }
 
     var themeSec = section("themes", "Theme packs", "pen", "a palette *and* a live backdrop", lockedCount("theme", N.econ.THEMES));
-    var themeGrid = d.h("div", { class: "shop-grid" });
+    /* the two preview shelves are compact pills, not billboard cards: see the
+       .packs rules in shop.css */
+    var themeGrid = d.h("div", { class: "shop-grid packs" });
     N.econ.THEMES.forEach(function (t) {
       themeGrid.appendChild(themeCard(t));
     });
@@ -596,14 +598,14 @@
     body.appendChild(themeSec);
 
     var partSec = section("particles", "Background particles", "sparkle", "ambient motion on every page", lockedCount("particle", N.econ.PARTICLES));
-    var partGrid = d.h("div", { class: "shop-grid" });
+    var partGrid = d.h("div", { class: "shop-grid packs" });
     N.econ.PARTICLES.forEach(function (p) {
       partGrid.appendChild(partCard(p));
     });
     partSec.appendChild(partGrid);
     partSec.appendChild(
       d.h("p", { class: "eco-note" }, [
-        "Motes, Haze, Twinkle and Constellation are free in Settings. These ones are the loud stuff.",
+        "Motes, Haze and Twinkle are free in Settings, and the home page always has its own drifting network. These ones are the loud stuff.",
       ]),
     );
     body.appendChild(partSec);

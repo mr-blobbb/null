@@ -1,6 +1,7 @@
 /* NULL · shop.css
-   Shop-page chrome only: the pinned balance bar, the shelf tabs, and the
-   "you can afford this" marks. The cards themselves live in extra.css. */
+   Shop-page chrome only: the pinned balance bar, the shelf tabs, the "you can
+   afford this" marks, and the round look this page wears (everywhere else NULL
+   is squared off). The cards themselves are built in extra.css. */
 
 /* ---------- pinned balance ----------
    The coin count rides along as you scroll the shelves, so the price on a
@@ -80,4 +81,181 @@
   .shop-card.afford::after {
     animation: none;
   }
+}
+
+/* ============================================================
+   round shop
+   Everywhere else NULL is flat and squared off. The shop is the one
+   page that is deliberately soft: pills, circles and round cards, so a
+   shelf of unlocks reads as a shelf of objects rather than a grid of
+   boxes.
+   ============================================================ */
+.chip,
+.chip-btn,
+.btn,
+.btn-icon,
+.next-chip {
+  border-radius: 999px;
+}
+.eco-bar {
+  border-radius: 999px;
+  padding: 12px 20px;
+}
+.shop-card,
+.shop-thumb {
+  border-radius: 22px;
+}
+.shop-thumb {
+  border-radius: 22px 22px 0 0;
+}
+.shop-row,
+.pg-row {
+  border-radius: 999px;
+}
+.shop-row-ic,
+.pg-ic {
+  border-radius: 50%;
+}
+/* the section badges are circles here too: scoped to the shop so it outranks
+   ext.css, which owns the squared-off version every other page uses */
+body[data-page="shop"] .sec-head .set-ic {
+  border-radius: 50%;
+}
+.pack-strip i {
+  border-radius: 999px;
+}
+
+/* ---------- the compact shelves ----------
+   Themes and particle sets used to be 16:9 billboard cards, which made a
+   shelf of twelve a wall of posters. Each one is a slim pill now: a small
+   round live preview, the name, one line of description, the action. */
+/* the second selector is the layout-density rule in extra.css, which sizes
+   every shop grid from one --tile token and would otherwise squeeze these */
+.packs,
+html[data-density] .shop-grid.packs {
+  grid-template-columns: repeat(auto-fill, minmax(min(272px, 100%), 1fr));
+  gap: 7px;
+}
+.packs .shop-card {
+  flex-direction: row;
+  align-items: center;
+  gap: 11px;
+  padding: 6px 12px 6px 6px;
+  border-radius: 999px;
+  /* the pill is rounder than the circle inside it: without this the
+     preview's corners would be clipped by the card's own curve */
+  overflow: visible;
+}
+/* nothing in a pill lifts: the hover answer is the border, as everywhere */
+.packs .shop-card:hover {
+  transform: none;
+}
+.packs .pack-thumb,
+.packs .part-thumb {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  aspect-ratio: auto;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  overflow: hidden;
+}
+/* a lock sits in the middle of the round preview, where there is room */
+.packs .pack-lock,
+.packs .part-lock {
+  inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
+}
+.packs .pack-lock svg {
+  width: 15px;
+  height: 15px;
+}
+.packs .pack-strip {
+  display: none;
+}
+.packs .shop-info {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+}
+.packs .shop-info h3 {
+  margin: 0 0 2px;
+  font-size: 13.5px;
+  letter-spacing: -0.005em;
+}
+.packs .shop-info p {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.4;
+  /* one line: the pill keeps its shape whatever the copy says */
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+/* tags are the one thing that has to go: they are what made the card tall */
+.packs .shop-info .chips-row {
+  display: none;
+}
+.packs .shop-foot {
+  flex: none;
+  padding: 0;
+  gap: 6px;
+}
+.packs .shop-foot .chip {
+  padding: 4px 10px;
+  font-size: 11.5px;
+}
+.packs .shop-foot .btn-sm {
+  height: 28px;
+  padding: 0 12px;
+  font-size: 12px;
+}
+@media (max-width: 460px) {
+  .packs .shop-info p {
+    display: none;
+  }
+}
+
+/* ---------- the rest of the page, rounded off ----------
+   The soft shape belongs to the whole shop, not just the two preview
+   shelves: the shelf strip is one pill that slides sideways, and the tiles
+   are round-cornered cards rather than sharp boxes. */
+.shop-tabs {
+  width: max-content;
+  max-width: 100%;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  gap: 3px;
+}
+.shop-tabs .chip-btn {
+  height: 27px;
+  padding: 0 12px;
+}
+.shop-grid {
+  gap: 10px;
+}
+.shop-grid .shop-card {
+  border-radius: 20px;
+}
+.shop-grid .shop-thumb {
+  border-radius: 20px 20px 0 0;
+}
+
+/* ---------- the editor, rounded to match ----------
+   The one part of the shop that is all controls: its tab strip and fields
+   wear the same curve as the shelves they sit between. */
+.ed-tabs {
+  border-radius: 999px;
+}
+.ed-tabs button {
+  border-radius: 999px;
+}
+body[data-page="shop"] .field,
+body[data-page="shop"] .select-field {
+  border-radius: 999px;
+}
+body[data-page="shop"] textarea {
+  border-radius: 18px;
 }

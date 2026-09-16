@@ -456,7 +456,9 @@
     netStops = [];
   }
 
-  function netCanvas(part, colors, mono, animate) {
+  /* `keep` leaves the loop out of the shared stopper: the front door's own
+     layer is not something applying a particle set should ever switch off. */
+  function netCanvas(part, colors, mono, animate, keep) {
     var el = document.createElement("canvas");
     el.className = "pt-net";
     el.setAttribute("aria-hidden", "true");
@@ -464,8 +466,11 @@
     if (!ctx) return el;
 
     /* every pair is checked each frame, so the count has a ceiling no matter
-       what the editor's slider says */
-    var count = Math.max(8, Math.min(140, Math.round(part.n || 60)));
+       what the editor's slider says. `base` is what a full screen of this
+       kind should carry; size() turns it into a count for the box it is
+       actually drawn in. */
+    var base = Math.max(8, Math.min(140, Math.round(part.n || 60)));
+    var count = base;
     var link = 148;
     var dots = [];
     var w = 0;
@@ -481,9 +486,11 @@
       el.width = Math.round(w * dpr);
       el.height = Math.round(h * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      /* reach from the density, not a fixed number: the same 78 dots on a
-         phone would otherwise be a solid mesh and on a 4K screen a few
-         lonely pairs */
+      /* a share of the box, not a flat number: the same set on a 4K panel
+         would be a mesh and on a phone a lonely pair, and the count has to
+         land between those two whatever the window is */
+      count = Math.max(14, Math.min(150, Math.round(base * Math.max(0.3, (w * h) / 1400000))));
+      /* reach from the density, not a fixed number */
       link = Math.max(80, Math.min(180, Math.sqrt((w * h) / count) * 1.05));
     }
 
@@ -504,12 +511,15 @@
       var ink = inks();
       dots = [];
       for (var i = 0; i < count; i++) {
+        /* a heading plus a slow turn, rather than one fixed vector: the dots
+           wander instead of sliding along the same straight line forever */
         dots.push({
           x: Math.random() * w,
           y: Math.random() * h,
-          vx: (Math.random() - 0.5) * 0.24,
-          vy: (Math.random() - 0.5) * 0.24,
-          r: 1 + Math.random() * 1.5,
+          a: Math.random() * Math.PI * 2,
+          va: (Math.random() < 0.5 ? -1 : 1) * (0.0016 + Math.random() * 0.0052),
+          sp: 0.12 + Math.random() * 0.34,
+          r: 1.1 + Math.random() * 1.5,
           ink: ink[i % ink.length],
         });
       }
@@ -517,8 +527,9 @@
 
     function move(step) {
       dots.forEach(function (d) {
-        d.x += d.vx * step;
-        d.y += d.vy * step;
+        d.a += d.va * step;
+        d.x += Math.cos(d.a) * d.sp * step;
+        d.y += Math.sin(d.a) * d.sp * step;
         /* wrap a little outside the frame, so a line never pops mid-screen */
         if (d.x < -20) d.x = w + 20;
         if (d.x > w + 20) d.x = -20;
@@ -539,7 +550,7 @@
           var dy = a.y - b.y;
           var d2 = dx * dx + dy * dy;
           if (d2 > link * link) continue;
-          ctx.globalAlpha = 0.22 * (1 - Math.sqrt(d2) / link);
+          ctx.globalAlpha = 0.32 * (1 - Math.sqrt(d2) / link);
           ctx.strokeStyle = a.ink;
           ctx.beginPath();
           ctx.moveTo(a.x, a.y);
@@ -549,12 +560,14 @@
       }
       dots.forEach(function (d) {
         ctx.fillStyle = d.ink;
-        ctx.globalAlpha = 0.8;
+        ctx.globalAlpha = 0.9;
         ctx.beginPath();
         ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
         ctx.fill();
         /* one hairline ring each: the glassy note, and it keeps a dot
-           readable over a busy backdrop */
+           readable over a busy backdrop. A plain layer (the front door) is
+           just the dot. */
+        if (part.plain) return;
         ctx.globalAlpha = 0.3;
         ctx.beginPath();
         ctx.arc(d.x, d.y, d.r + 2, 0, Math.PI * 2);
@@ -594,12 +607,23 @@
         draw();
       };
       raf = window.requestAnimationFrame(tick);
-      netStops.push(function () {
-        if (raf) window.cancelAnimationFrame(raf);
-        window.removeEventListener("resize", fit);
-      });
+      if (!keep) {
+        netStops.push(function () {
+          if (raf) window.cancelAnimationFrame(raf);
+          window.removeEventListener("resize", fit);
+        });
+      }
     }
     return el;
+  }
+
+  /* ---------- the front door's network ----------
+     home.js mounts this: the same canvas a set built from a "net" part gets,
+     with no set behind it, so the home page has drifting dots joined by
+     hairlines the moment it loads. Its ink comes from CSS (.door-net in
+     home.css), which is what keeps it gray in dark mode and ink in light. */
+  function netLayer(count, animate) {
+    return netCanvas({ k: "net", n: count || 76, plain: true }, null, true, animate !== false, true);
   }
 
   function partArt(p, cls, opts) {
@@ -1112,6 +1136,8 @@
     allParticles: allParticles,
     particleFor: particleFor,
     setParticles: setParticles,
+    /* the front door's own particle network (see netLayer) */
+    netLayer: netLayer,
     /* rebuild particles after perf / season / reduced-motion changes */
     refreshParts: function () {
       applyPart(particleFor(curPart));

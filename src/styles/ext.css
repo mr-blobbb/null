@@ -12,9 +12,10 @@
    the few shared pieces the retextures restyle. */
 
 /* ============================================================
-   two more nav icons, same one-shot hover idea as the rest:
+   three more nav icons, same one-shot hover idea as the rest:
    the puzzle piece drops into place, the flask gives a little
-   swirl. transform only, once per hover.
+   swirl, the More list shuffles its lines. transform only,
+   once per hover.
    ============================================================ */
 @keyframes ic-fit {
   0% {
@@ -39,52 +40,35 @@
     transform: rotate(9deg) translateY(0);
   }
 }
+@keyframes ic-lines {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  35% {
+    transform: translateY(-2px) scaleY(1.06);
+  }
+  70% {
+    transform: translateY(1px) scaleY(0.96);
+  }
+}
 .nav-link[data-ic="extensions"]:hover .msr {
   animation: ic-fit 0.6s ease;
 }
 .nav-link[data-ic="labs"]:hover .msr {
   animation: ic-brew 0.7s ease;
 }
+.nav-link[data-ic="more"]:hover .msr {
+  animation: ic-lines 0.55s ease;
+}
 
 /* ============================================================
-   the extensions menu (the one nav item that opens a panel)
+   the More panel
+   The nav's own menu (shell.js's moreNav): the pages left over from
+   the rail, plus the installed extensions. Placement comes from the
+   same measured place() the extensions menu used, so it lands beside
+   the rail and under the bar with no per-layout CSS.
    ============================================================ */
-.ext-nav {
-  position: relative;
-  display: flex;
-}
-.ext-nav .nav-link {
-  background: none;
-  border: 0;
-  font: inherit;
-  cursor: pointer;
-}
-/* placement (position/top/left) comes from shell.js's place(): it measures
-   the button, so the panel lands beside it in the top bar and in the rail
-   alike. Everything here is looks only. */
-.ext-menu {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 210;
-  width: 290px;
-  max-height: min(70vh, 460px);
-  overflow-y: auto;
-  padding: 6px;
-  border-radius: var(--r-md);
-  border: 1px solid var(--line-2);
-  background: var(--bg-2);
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(-6px) scale(0.98);
-  transform-origin: top left;
-  transition: opacity 0.16s var(--ease), transform 0.16s var(--ease), visibility 0.16s;
-}
-.ext-nav.open .ext-menu {
-  opacity: 1;
-  visibility: visible;
-  transform: none;
-}
 .em-none {
   margin: 6px 8px 10px;
   font-size: 12.5px;
