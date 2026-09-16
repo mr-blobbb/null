@@ -111,6 +111,38 @@
     { tag: "soon", name: "More retextures", desc: "Whatever wins the vote." },
   ];
 
+  /* ---------- the state strip ----------
+     One row of answers at the top: how much of the lab is running, which
+     retexture is worn, how many extensions are installed. The page used to
+     open straight into a wall of toggles. */
+  function paintState() {
+    var host = d.qs("#labsState");
+    if (!host) return;
+    var on = labsOn();
+    var ret = RETEXTURES.filter(function (r) {
+      return r.id === (N.prefs.get("retexture") || "off");
+    })[0];
+    var inst = N.ext ? N.ext.list().length : 0;
+    var tiles = [
+      { k: "experiments", v: on.length + " of " + EXPERIMENTS.length, t: on.length ? "running now" : "all off" },
+      { k: "retexture", v: ret ? ret.name : "Default", t: ret && ret.id !== "off" ? "worn right now" : "the stock look" },
+      { k: "extensions", v: String(inst), t: inst ? "installed here" : "none installed" },
+      { k: "theme generator", v: "Shop", t: "a tab in the editor" },
+    ];
+    host.textContent = "";
+    var strip = d.h("div", { class: "lab-hero" });
+    tiles.forEach(function (t) {
+      strip.appendChild(
+        d.h("div", { class: "lab-stat glass" }, [
+          d.h("i", null, t.k),
+          d.h("b", null, t.v),
+          d.h("span", null, t.t),
+        ]),
+      );
+    });
+    host.appendChild(strip);
+  }
+
   /* ---------- experiments ---------- */
   function labsOn() {
     var raw = N.prefs.get(LANGS);
@@ -159,6 +191,7 @@
       );
     });
     host.appendChild(rows);
+    paintState();
     host.appendChild(
       d.h("p", { class: "ext-note" }, "Experiments are CSS-only: they restyle what is already on the page and never touch a game, your saved data or the catalog. Turning one off is instant."),
     );
@@ -198,6 +231,7 @@
       grid.appendChild(card);
     });
     host.appendChild(grid);
+    paintState();
   }
 
   /* ---------- the generator, which moved ----------
@@ -325,6 +359,7 @@
     ]),
   );
 
+  paintState();
   paintExperiments();
   paintRetextures();
   paintGen();

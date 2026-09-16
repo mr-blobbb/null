@@ -10,6 +10,9 @@
   var d = N.dom;
 
   var FOLD_KEY = "null:setFolds";
+  /* the narrowest window the side rail is drawn in (extra.css agrees: its
+     rail block is a min-width query on the same number) */
+  var RAIL_MIN = 420;
   var inited = false;
   var filterQ = "";
   var accentDot = null;
@@ -890,6 +893,15 @@
         if (!b) return;
         N.theme.setNavLayout(b.dataset.val);
         paintNavLayout();
+        /* a rail needs a window with room beside it. Say so, rather than
+           leaving a chosen setting looking like it did nothing. */
+        if (b.dataset.val === "side" && window.innerWidth < RAIL_MIN) {
+          d.toast(
+            "Side rail is on. It appears in a window " + RAIL_MIN + "px wide or more: this one is " + window.innerWidth + "px, so the top bar stays.",
+            { icon: "warn", hold: 6000 },
+          );
+          return;
+        }
         d.toast("Navigation: " + b.textContent);
       });
     }

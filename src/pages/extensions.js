@@ -1,9 +1,10 @@
 /* NULL · extensions.js
    The extensions manager.
 
-   Four blocks: what you have installed, the pages your extensions added,
-   the two ways in (.nullext and a Chrome folder), and the manual: two
-   starters to download and a walk through everything an extension can draw.
+   Five blocks: the two starters NULL ships (install them, or download the
+   file), what you have installed, the pages your extensions added, the two
+   ways in (.nullext and a Chrome folder), and the manual: a walk through
+   everything an extension can draw.
    Every list is rebuilt from N.ext.list(), so the page, the nav menu and
    /root can never drift apart. */
 (function () {
@@ -11,6 +12,7 @@
   var d = N.dom;
 
   var host = d.qs("#extBody");
+  var startHost = d.qs("#extStart");
   var pageHost = d.qs("#extPages");
   var installHost = d.qs("#extInstall");
   var docHost = d.qs("#extDocs");
@@ -46,18 +48,140 @@
   var shippedCache = null;
   function shipped() {
     if (!shippedCache) {
-      shippedCache = [starter(), starterPage()].map(function (text) {
-        return N.ext.parse(text, "starter.nullext");
+      shippedCache = [
+        { text: starter(), file: "period-clock.nullext" },
+        { text: starterPage(), file: "starter-page.nullext" },
+      ].map(function (s) {
+        s.entry = N.ext.parse(s.text, s.file);
+        return s;
       });
     }
     return shippedCache;
   }
+
+  /* a fresh, unclaimed copy of a starter: parsing again matters, because
+     installing an entry writes an id onto it */
+  function copyOf(s) {
+    var e = N.ext.parse(s.text, s.file);
+    e.starter = true;
+    return e;
+  }
+
+  /* which shipped starter is this installed extension an older copy of? */
   function updateFor(e) {
-    if (e.kind === "chrome") return null;
+    if (e.kind !== "native") return null;
     return (
       shipped().filter(function (s) {
-        return s.name === e.name && newer(s.version, e.version);
+        return s.entry.name === e.name && newer(s.entry.version, e.version);
       })[0] || null
+    );
+  }
+
+  /* Is this installed extension still one of the copies NULL handed out,
+     rather than something somebody wrote? A starter carries the flag once it
+     has been installed from here; a copy that predates the flag is recognised
+     by the shape it was written in. An edited starter keeps whatever version
+     its author gave it, so it is never silently overwritten: the Update
+     button in the Starters block is there for it. */
+  var STARTER_NAMES = /^(period clock|starter page)$/i;
+  function ours(e) {
+    if (e.starter) return true;
+    if (e.kind !== "native" || !e.manifest || e.manifest.nullExt !== 1) return false;
+    if (!STARTER_NAMES.test(e.name)) return false;
+    /* a copy somebody put their own name on is theirs, not ours */
+    return !e.author || e.author === "you";
+  }
+
+  /* Bring stale starter copies up to date on the spot. This is how a fix to
+     the period clock reaches a copy somebody installed months ago without
+     them finding the file again. Returns what changed, for one toast. */
+  function autoUpgrade() {
+    var done = [];
+    shipped().forEach(function (s) {
+      N.ext.list().forEach(function (e) {
+        if (e.name !== s.entry.name || !ours(e)) return;
+        if (!newer(s.entry.version, e.version)) return;
+        var up = copyOf(s);
+        up.id = e.id;
+        up.enabled = e.enabled;
+        N.ext.install(up);
+        markGreeted(e.id);
+        done.push(up.name + " v" + up.version);
+      });
+    });
+    return done;
+  }
+
+  /* ---------- the two starters, front and centre ----------
+     These are the copies NULL hands out, so they get the top of the page
+     rather than a corner of the manual: one real widget that reads the school
+     schedule, and one whole page built from HTML and CSS alone. Install them
+     here, download the file to take apart, or watch a stale copy get its
+     update. */
+  function starterCard(s) {
+    var sh = s.entry;
+    var have =
+      N.ext.list().filter(function (e) {
+        return e.name === sh.name && e.kind === "native";
+      })[0] || null;
+    var fresh = have && newer(sh.version, have.version);
+
+    var card = d.h("article", { class: "start-card glass" + (fresh ? " fresh" : "") });
+    card.appendChild(
+      d.h("div", { class: "sc-top" }, [
+        d.h("span", { class: "sc-ic" }, [d.icon(sh.icon)]),
+        d.h("div", { class: "sc-txt" }, [
+          d.h("b", null, sh.name),
+          d.h("span", { class: "sc-meta" }, [
+            d.h("i", { class: "sc-badge " + (fresh ? "up" : have ? "on" : "new") }, fresh ? "update ready" : have ? "installed" : "not installed"),
+            "v" + sh.version,
+          ]),
+        ]),
+      ]),
+    );
+    card.appendChild(d.h("p", { class: "sc-desc" }, sh.desc));
+    card.appendChild(
+      d.h(
+        "ul",
+        { class: "sc-points" },
+        (sh.pages || [])
+          .map(function (p) {
+            return p.title;
+          })
+          .concat(sh.html ? ["its own window"] : [])
+          .map(function (t) {
+            return d.h("li", null, t);
+          }),
+      ),
+    );
+
+    var acts = d.h("div", { class: "sc-acts" });
+    acts.appendChild(
+      btn(fresh ? "Update to v" + sh.version : have ? "Install again" : "Install it", "download", "btn-primary", function () {
+        take(copyOf(s), have ? have.id : null);
+      }),
+    );
+    acts.appendChild(
+      btn("Download .nullext", "file", "btn-outline", function () {
+        download(s.text, s.file);
+        d.toast("Saved " + s.file, { icon: "download" });
+      }),
+    );
+    card.appendChild(acts);
+    return card;
+  }
+
+  function paintStarters() {
+    if (!startHost) return;
+    startHost.textContent = "";
+    startHost.appendChild(d.secHead("download", "Starter extensions", "two complete ones, ready to install or download"));
+    var grid = d.h("div", { class: "start-grid" });
+    shipped().forEach(function (s) {
+      grid.appendChild(starterCard(s));
+    });
+    startHost.appendChild(grid);
+    startHost.appendChild(
+      d.h("p", { class: "ext-note" }, "Both are ordinary .nullext files: install them from here, or download one, open it in any text editor and change it. Installing the same file again replaces the copy you have."),
     );
   }
 
@@ -96,8 +220,8 @@
       var fresh = updateFor(e);
       if (fresh) {
         acts.appendChild(
-          btn("Update to v" + fresh.version, "download", "btn-primary", function () {
-            take(fresh, e.id);
+          btn("Update to v" + fresh.entry.version, "download", "btn-primary", function () {
+            take(copyOf(fresh), e.id);
           }),
         );
       }
@@ -177,6 +301,7 @@
 
   function paint() {
     var all = N.ext.list();
+    paintStarters();
     host.textContent = "";
     host.appendChild(
       d.secHead("puzzle", all.length ? "Installed (" + all.length + ")" : "Installed", "everything you have added to NULL"),
@@ -438,7 +563,7 @@
       {
         nullExt: 1,
         name: "Period clock",
-        version: "1.2.0",
+        version: "1.3.0",
         author: "you",
         desc: "Shows the period you are in and the time left, in the nav bar, in the player and in its own window. Ticks every second.",
         icon: "clock",
@@ -490,16 +615,22 @@
           "   it lean, and one thrown error stops the whole extension */",
           "function now() {",
           "  var S = N.schedule;",
-          "  if (!S) return { title: 'no schedule here', sub: '' };",
-          "  var t = S.todayInfo();",
-          "  if (!t || !t.type) return { title: 'no school today', sub: (t && t.dayName) || '' };",
-          "  var lv = S.live(S.blocksFor(t.type), new Date());",
-          "  if (!lv.block) return { title: 'after school', sub: '' };",
-          "  var secs = Math.max(0, lv.passing ? lv.secToNext : lv.secLeft);",
-          "  return {",
-          "    title: (lv.passing ? 'passing' : lv.block.name) + ' · ' + Math.floor(secs / 60) + ':' + ('0' + (secs % 60)).slice(-2),",
-          "    sub: lv.next ? 'next: ' + lv.next.name + ' at ' + lv.next.start : 'last period of the day',",
-          "  };",
+          "  if (!S || !S.todayInfo || !S.blocksFor || !S.live) return { title: 'no schedule here', sub: '' };",
+          "  /* one try/catch around the whole read: a page without the schedule,",
+          "     or a schedule being edited, must never stop the clock */",
+          "  try {",
+          "    var t = S.todayInfo();",
+          "    if (!t || !t.type) return { title: 'no school today', sub: (t && t.dayName) || '' };",
+          "    var lv = S.live(S.blocksFor(t.type), new Date());",
+          "    if (!lv.block) return { title: 'after school', sub: '' };",
+          "    var secs = Math.max(0, lv.passing ? lv.secToNext : lv.secLeft);",
+          "    return {",
+          "      title: (lv.passing ? 'passing' : lv.block.name) + ' · ' + Math.floor(secs / 60) + ':' + ('0' + (secs % 60)).slice(-2),",
+          "      sub: lv.next ? 'next: ' + lv.next.name + ' at ' + lv.next.start : 'last period of the day',",
+          "    };",
+          "  } catch (e) {",
+          "    return { title: 'schedule unavailable', sub: '' };",
+          "  }",
           "}",
           "",
           "function paint() {",
@@ -514,8 +645,10 @@
           "/* the window is HTML in the manifest, so it only exists while it is",
           "   open: popup:open hands you the element to fill */",
           "ctx.hook('popup:open', paint);",
+          "/* the ticker is armed before the first paint, so one bad first read",
+          "   cannot cost the clock its next second. Once a second, always. */",
+          "setInterval(paint, 1000);",
           "paint();",
-          "setInterval(paint, 1000); /* once a second: the countdown is live */",
           "",
           "/* a page of your own. It opens as a full page, with its own address",
           "   (#page=...) and a Back button, from the Pages section above. */",
@@ -530,8 +663,8 @@
           "      var n = now();",
           "      if (out) out.textContent = n.title + (n.sub ? ' · ' + n.sub : '');",
           "    }",
-          "    tick();",
           "    setInterval(tick, 1000);",
+          "    tick();",
           "  },",
           "});",
           "",
@@ -540,10 +673,11 @@
           "  ctx.log('coins now', info.total);",
           "});",
           "",
-          "/* say hello once, not on every page load: ctx.store keeps a note */",
+          "/* A note in the extension's own storage, said once in the console: a",
+          "   toast here would fire on every page load, forever. */",
           "if (!ctx.store.get('greeted')) {",
           "  ctx.store.set('greeted', 1);",
-          "  ctx.toast(ctx.name + ' is in your nav');",
+          "  ctx.log(ctx.name + ' is in your nav');",
           "}",
         ].join("\n"),
       },
@@ -557,7 +691,7 @@
       {
         nullExt: 1,
         name: "Starter page",
-        version: "1.0.0",
+        version: "1.1.0",
         author: "you",
         desc: "Adds one whole page to NULL: a hero, a stat row and a card grid, drawn by its own CSS.",
         icon: "file",
@@ -970,7 +1104,16 @@
     docHost.appendChild(help);
   }
 
-  /* ---------- boot ---------- */
+  /* ---------- boot ----------
+     A stale copy of a starter is brought up to date before the page is drawn,
+     so the card below already says "installed" with no version to chase. The
+     starters get fixed; a copy somebody edited is left where it is. */
+  var upgraded = autoUpgrade();
+  if (upgraded.length) {
+    setTimeout(function () {
+      d.toast("Updated " + upgraded.join(", "), { icon: "download", hold: 5200 });
+    }, 900);
+  }
   paint();
   installer();
   docs();
