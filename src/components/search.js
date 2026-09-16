@@ -246,6 +246,7 @@
     var idx = buildIndex();
     var sel = 0;
     var rows = [];
+    if (N.ext) N.ext.emit("search:open", { index: idx.length });
 
     var input = d.h("input", {
       type: "text",
@@ -271,6 +272,7 @@
       results.textContent = "";
       clear();
       var hits = search(q, idx);
+      if (N.ext) N.ext.emit("search:query", { q: q, n: hits.length });
       if (!q) {
         /* suggestions when empty */
         results.appendChild(d.h("div", { class: "sr-group" }, "Jump to"));

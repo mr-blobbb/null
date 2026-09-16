@@ -108,19 +108,29 @@
         "The balance rides along as you scroll the shelves.",
     },
     {
+      page: "about",
+      target: ".ab-hero",
+      icon: "info",
+      kick: "9 · what this actually is",
+      title: "About NULL",
+      body:
+        "One page with the whole story: what is in the library, where the coins come from, what happens to what you save, and how to put your own games in here.\n" +
+        "The paperwork at the bottom (privacy, terms, license) is written by a person too.",
+    },
+    {
       page: "settings",
-      target: "#look",
+      target: ".theme-tgl",
       icon: "pen",
-      kick: "9 · make it yours",
+      kick: "10 · make it yours",
       title: "Make NULL yours",
       body:
-        "Accent colors, glow borders, dark and light, seasonal themes, tab disguises and the panic key. Everything saves to this device as you change it.\n" +
-        "This is the last stop. Everything you just saw is one page over.",
+        "Dark or light is this one switch. Two rows down you get accent colours, glow borders, seasonal themes, tab disguises and a panic key.\n" +
+        "Everything saves to this device as you change it, and **Finish the tour** drops you back on the home page.",
       next: "Finish the tour",
     },
   ];
 
-  var PAGES = { home: "/", games: "/games/", shop: "/shop", settings: "/settings" };
+  var PAGES = { home: "/", games: "/games/", shop: "/shop", about: "/about", settings: "/settings" };
 
   var idx = 0;
   var open = false;
@@ -191,6 +201,9 @@
     var last = i === STEPS.length - 1;
     box.className = "tour-box" + (s.mid ? " mid" : "");
     box.textContent = "";
+    /* the intro card has nothing to point at, so instead of a spotlight the
+       whole page behind it is blurred out (tour.css) */
+    if (dim) dim.classList.toggle("mid", !!s.mid);
 
     var dots = d.h("div", { class: "tour-dots" });
     STEPS.forEach(function (_, n) {
@@ -316,11 +329,14 @@
     } else if (r.right + gap + bw < vw) {
       side = "right";
       left = r.right + gap;
-      top = Math.min(r.top, vh - bh - 14);
+      /* ride the vertical middle of what is actually visible of the target,
+         not just its top edge: on a tall card the old rule parked the box up
+         near the header and left the arrow pointing at nothing in particular */
+      top = r.top + Math.min(r.height, vh * 0.55) / 2 - bh / 2;
     } else {
       side = "left";
       left = r.left - gap - bw;
-      top = Math.min(r.top, vh - bh - 14);
+      top = r.top + Math.min(r.height, vh * 0.55) / 2 - bh / 2;
     }
     left = Math.max(14, Math.min(vw - bw - 14, left));
     top = Math.max(14, Math.min(vh - bh - 14, top));
@@ -329,17 +345,22 @@
     box.style.top = top + "px";
     box.style.left = left + "px";
 
-    /* the arrow rides to whichever edge the target is on */
+    /* the arrow rides to whichever edge the target is on, and never down into
+       the footer: on a short box the old clamp ran right up to bh - 34 and
+       landed on top of the buttons, which is exactly where "Finish the tour"
+       sits. Reserve the footer, then keep the arrow above it. */
     var arrow = box.querySelector(".tour-arrow");
     if (!arrow) {
       arrow = d.h("span", { class: "tour-arrow", "aria-hidden": "true" });
       box.appendChild(arrow);
     }
+    var foot = box.querySelector(".tour-foot");
+    var reserved = (foot ? foot.offsetHeight + 14 : 46) + 20;
     if (side === "below" || side === "above") {
       arrow.style.left = Math.max(16, Math.min(bw - 34, r.left + r.width / 2 - left - 8)) + "px";
       arrow.style.top = "";
     } else {
-      arrow.style.top = Math.max(16, Math.min(bh - 34, r.top + r.height / 2 - top - 8)) + "px";
+      arrow.style.top = Math.max(16, Math.min(bh - reserved, r.top + r.height / 2 - top - 8)) + "px";
       arrow.style.left = "";
     }
   }
@@ -398,13 +419,27 @@
   function finish(skipped) {
     N.flags.set(DONE);
     if (!skipped) N.flags.set("customize"); /* the tour already covered it */
+    if (N.ext) N.ext.emit("tour:done", { skipped: !!skipped });
     clear();
     teardown();
     if (!skipped && N.fx && N.fx.confetti) N.fx.confetti();
-    setTimeout(function () {
-      prompts();
-      if (skipped) nudge();
-    }, skipped ? 200 : 1200);
+    /* running the tour to the end puts you back where it started: home. A
+       skip leaves you on the page you bailed out of, so that path keeps the
+       old behaviour (ask about the popups, nudge about Settings). Navigating
+       home is safe: start() shows the permission ask again there, because the
+       done flag is already set. */
+    var goHome = !skipped && page() !== "home";
+    setTimeout(
+      function () {
+        if (goHome) {
+          location.href = N.url("/");
+          return;
+        }
+        prompts();
+        if (skipped) nudge();
+      },
+      skipped ? 200 : 1200,
+    );
   }
 
   function skip() {

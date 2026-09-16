@@ -403,6 +403,9 @@
     addCoins(n);
     save();
     N.bus.emit("eco");
+    /* extensions hear about it too (ext.js). Guarded: the economy runs before
+       the extension runtime exists on some pages */
+    if (N.ext) N.ext.emit("coins:earn", { n: n, total: data.coins });
     return data.coins;
   }
 
@@ -441,6 +444,10 @@
       data.next += COIN_EVERY;
     }
     save();
+    if (N.ext) {
+      if (xp) N.ext.emit("xp:gain", { n: xp, xp: data.xp, level: data.next });
+      if (coins) N.ext.emit("coins:earn", { n: coins, total: data.coins, from: "play" });
+    }
     return { xp: xp, coins: coins };
   }
 
@@ -692,6 +699,10 @@
     if (data.coins < price) return { ok: false, reason: "not enough coins" };
     data.coins -= price;
     data.buys += 1;
+    if (N.ext) {
+      N.ext.emit("coins:spend", { n: price, total: data.coins, type: type, id: id });
+      N.ext.emit("unlock", { type: type, id: id });
+    }
     if (type === "boost") {
       data.boostUntil = Date.now() + BOOST_MS;
     } else {
@@ -743,6 +754,7 @@
       if (list.indexOf(id) < 0) list.push(id);
     }
     save();
+    if (N.ext) N.ext.emit("unlock", { type: type, id: id });
     return { ok: true };
   }
 

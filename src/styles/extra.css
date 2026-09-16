@@ -1423,35 +1423,49 @@ html[data-perf] .set-fold {
   height: 0;
   opacity: 0;
 }
+/* One switch, two glyphs, and a thumb that lands *under* each glyph.
+   The geometry is spelled out rather than left to flexbox: the icons are
+   absolutely placed at 16px centres (1px border + 8px + half a 16px box), and
+   the thumb is a 24px circle whose centre sits on the same 17px and 47px, so
+   it cannot drift off the icon it is under. Travel is 47 - 17 = 30px. */
 .tt-track {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 66px;
-  height: 34px;
-  padding: 0 7px;
+  display: block;
+  width: 64px;
+  height: 32px;
   border-radius: 999px;
   border: 1px solid var(--line-2);
   background: var(--glass-bg-2);
   transition: background 0.2s, border-color 0.2s;
 }
 .tt-ic {
+  position: absolute;
+  top: 50%;
   display: grid;
   place-items: center;
-  z-index: 1;
+  width: 16px;
+  height: 16px;
+  transform: translateY(-50%);
+  z-index: 1; /* the glyph stays legible on top of the thumb */
   color: var(--text-2);
   transition: color 0.2s;
 }
+.tt-a {
+  left: 8px;
+}
+.tt-b {
+  right: 8px;
+}
 .tt-ic .msr {
   font-size: 15px;
+  line-height: 1;
 }
 .tt-thumb {
   position: absolute;
   top: 3px;
-  left: 3px;
-  width: 27px;
-  height: 27px;
+  left: 4px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   background: linear-gradient(160deg, #2e2f36, #14151a);
   border: 1px solid var(--line-2);
@@ -1459,7 +1473,14 @@ html[data-perf] .set-fold {
   transition: transform 0.24s cubic-bezier(0.3, 0.8, 0.3, 1);
 }
 .theme-tgl input:checked + .tt-track .tt-thumb {
-  transform: translateX(31px);
+  transform: translateX(30px);
+}
+/* Light mode puts the thumb under the sun, and the sun is drawn in the
+   accent colour: dark ink on a dark thumb is invisible. The puck has to
+   invert with the page for the glyph to sit on it and stay readable. */
+html[data-theme="light"] .tt-thumb {
+  background: linear-gradient(160deg, #ffffff, #dcdee4);
+  box-shadow: 0 3px 10px rgba(20, 20, 24, 0.22);
 }
 .theme-tgl input:checked + .tt-track {
   background: color-mix(in srgb, var(--ac-1) 16%, transparent);

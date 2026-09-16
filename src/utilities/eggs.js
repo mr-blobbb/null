@@ -36,6 +36,7 @@
     el.style.top = Math.round(pad + Math.random() * roomY) + "px";
     el.style.setProperty("--rot", (Math.random() * 7 - 3.5).toFixed(2) + "deg");
     document.body.appendChild(el);
+    if (N.ext) N.ext.emit("egg:pop", { text: String(text) });
     setTimeout(
       function () {
         el.classList.add("out");

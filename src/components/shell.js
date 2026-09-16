@@ -39,6 +39,60 @@
     });
   }
 
+  /* ---------- the extensions button ----------
+     Everything else in the nav is a link. This one is a menu first and a page
+     second: the popups you have installed are one click from any page, and
+     "Manage extensions" at the bottom of the menu is the manager itself.
+     What goes in the menu comes from ext.js, so the menu and the manager can
+     never disagree about what is installed. */
+  function extNav() {
+    var wrap = d.h("div", { class: "ext-nav" });
+    var btn = d.h(
+      "button",
+      {
+        type: "button",
+        class: "nav-link" + (N.router.isActive("/extensions") ? " on" : ""),
+        title: "Extensions",
+        "aria-label": "Extensions",
+        "aria-expanded": "false",
+        "data-ic": "extensions",
+      },
+      [d.icon("puzzle")],
+    );
+    var menu = d.h("div", { class: "ext-menu glass" });
+
+    function close() {
+      wrap.classList.remove("open");
+      btn.setAttribute("aria-expanded", "false");
+    }
+    function open() {
+      if (!N.ext) return;
+      N.ext.menu(menu, close);
+      wrap.classList.add("open");
+      btn.setAttribute("aria-expanded", "true");
+    }
+    function paint() {
+      if (wrap.classList.contains("open") && N.ext) N.ext.menu(menu, close);
+    }
+
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      if (wrap.classList.contains("open")) close();
+      else open();
+    });
+    document.addEventListener("click", function (e) {
+      if (wrap.classList.contains("open") && !wrap.contains(e.target)) close();
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") close();
+    });
+    if (N.bus && N.bus.on) N.bus.on("ext", paint);
+
+    wrap.appendChild(btn);
+    wrap.appendChild(menu);
+    return wrap;
+  }
+
   /* ---------- topbar ---------- */
   function topbar() {
     var bar = d.h("div", { class: "topbar" });
@@ -48,6 +102,11 @@
     /* primary links: icon-only, no Home (the brand mark is home) */
     var links = d.h("nav", { class: "nav-links" });
     N.router.PRIMARY.forEach(function (l) {
+      /* one item opens a menu rather than a page: see extNav() */
+      if (l.menu === "ext") {
+        links.appendChild(extNav());
+        return;
+      }
       var a = d.h("a", {
         class: "nav-link" + (N.router.isActive(l.url) ? " on" : ""),
         href: N.url(l.url),

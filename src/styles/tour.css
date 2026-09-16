@@ -14,6 +14,21 @@
 .tour-dim.on {
   opacity: 1;
 }
+/* The intro card has nothing to point at, so the whole page behind it is
+   blurred instead of spotlighted: the card reads as floating on fog. The
+   layer never takes clicks, so the page underneath still works. Ultra-perf
+   and performance mode drop the blur for free (perf.css). */
+.tour-dim.mid {
+  background: rgba(8, 8, 10, 0.42);
+  -webkit-backdrop-filter: blur(26px) saturate(0.8);
+  backdrop-filter: blur(26px) saturate(0.8);
+}
+.tour-dim.mid .tour-hole {
+  display: none;
+}
+html[data-theme="light"] .tour-dim.mid {
+  background: rgba(244, 244, 246, 0.5);
+}
 /* the hole: one huge box-shadow does the dimming, so the page shows through
    the middle and the edges stay rounded like the thing underneath */
 .tour-hole {

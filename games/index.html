@@ -14,6 +14,8 @@
   <link rel="stylesheet" href="../src/styles/extra.css">
   <link rel="stylesheet" href="../src/styles/particles.css">
   <link rel="stylesheet" href="../src/styles/perf.css">
+  <!-- extensions, labs, /root and the Labs retextures: site-wide on purpose -->
+  <link rel="stylesheet" href="../src/styles/ext.css">
   <link rel="stylesheet" href="../src/styles/tour.css">
   <link rel="stylesheet" href="../src/styles/dev.css">
   <script>
@@ -24,6 +26,10 @@
         document.documentElement.dataset.theme = t;
         if (p.perf) document.documentElement.dataset.perf = p.perf === "ultra" ? "ultra" : "1";
         if (p.glow && p.glow !== "off") document.documentElement.dataset.glow = p.glow;
+        /* a retexture redesigns every page, so it has to land before the
+           first paint, exactly like the theme */
+        if (p.retexture && p.retexture !== "off") document.documentElement.dataset.retexture = p.retexture;
+        if (p.labs) document.documentElement.dataset.labs = p.labs;
       } catch (e) {}
     })();
   </script>
@@ -123,6 +129,8 @@
   <script src="../src/components/schedule.js"></script>
   <script src="../src/components/cards.js"></script>
   <script src="../src/components/search.js"></script>
+  <!-- the extensions runtime, ahead of shell.js: the nav asks it for its menu -->
+  <script src="../src/utilities/ext.js"></script>
   <script src="../src/components/shell.js"></script>
   <script src="../src/components/devconsole.js"></script>
   <script src="../src/components/tour.js"></script>

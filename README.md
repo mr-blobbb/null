@@ -205,6 +205,60 @@ still opens. They live under `null:devseed` and are merged back on every page
 load, so the seeded build survives a reload or a page change until you press
 **Clear placeholders**.
 
+## Extensions (the puzzle button)
+
+`src/utilities/ext.js` is the runtime, and the puzzle button in the nav is its
+front door. Two kinds of extension live in one registry, and the difference
+between them is the whole design:
+
+| kind | what it is | what it can touch |
+| --- | --- | --- |
+| **.nullext** | a NULL-native file: a JSON manifest with an optional `css` and `js` block, or a bare `.js` file that becomes the code | **everything.** It runs in the page's own realm with `N` in scope: the economy, coins, XP, quests, achievements, storage keys, recents, favorites, theme packs, particles, seasons, the player, search, hidden pages, the dev console, marathon mode, the screensaver, modals, FX. No sandbox, on purpose |
+| Chrome import | a manifest.json plus its popup files, picked as a folder | only its own popup, **sandboxed**: an iframe with an opaque origin, its local css/js inlined, and a `chrome.*` shim that bridges `storage.local`/`sync` and `sendMessage` back through postMessage. No background script, no tabs, no content scripts, no host permissions |
+
+The manager is `/extensions` (also in the nav menu, which lists what you have
+installed so a popup is one click away). Storage: `null:ext` is the registry,
+`null:extdata:<id>` is each extension's own bag, and `ctx.prefs` keys are
+namespaced per extension so the normal backup/export picks them up.
+
+Extensions can register views (`ctx.page`), listen to hooks (`ctx.hook`), and
+add nav entries. The hooks core code emits are listed on the manager page and
+define in `EVENTS` in `ext.js`; the same events are echoed onto `N.bus` as
+`ext:<name>`.
+
+**Read the file before you install it.** A .nullext is a script with the same
+reach as any other script on the page, and nothing reviews it. That is the
+trade the feature is built on.
+
+## Labs (the flask button)
+
+`/labs` is the half-finished shelf:
+
+- **Experiments.** CSS-only looks toggled through `html[data-labs]` (`tilt`,
+  `vignette`, `dense`, `gridlines`), applied site-wide from `src/styles/ext.css`.
+- **Retextures.** Whole-site redesigns under `html[data-retexture]`: Terminal,
+  Print and Brutal. Each one moves tokens and shapes only, so every page
+  follows and the black-and-white identity survives.
+- **Theme generator.** `src/utilities/procgen.js` rolls a complete theme set
+  (palette, tint, backdrop chosen by hue, drifting parts, particle set) from a
+  seed, and writes it into `null:craft`: a generated theme is a crafted theme,
+  so it previews, applies, edits and deletes through the editor's own code.
+  Accent colours are forced light-on-dark or dark-on-light, which is what
+  keeps a random hue readable.
+- **Prototype UI** and the **vote links** (a list at the top of `labs.js`:
+  swap those URLs for your own forms whenever you have them).
+
+## /root
+
+A hidden page with no link from anywhere: a live map of the running site, not a
+written-down doc. Systems off `N`, the nav/footer/hidden/extension pages, the
+economy, the look, the storage keys with their sizes, whatever extensions are
+installed, and the hook list. It reads it all off the live objects, so anything
+an extension adds shows up in it too. The dev console's **surfaces** card opens
+it, along with `/extensions` and `/labs`.
+
+---
+
 ## Releases
 
 `releases/null-{regular,mini,lite}.html` are self-contained single-file builds.
@@ -305,6 +359,8 @@ so the site can be previewed, rebuilt and checked while working on it:
 | `scripts/build-releases.js` | regenerates the three single-file builds |
 | `scripts/check-pages.js` | loads every real page in jsdom and asserts on what it renders |
 | `scripts/check-releases.js` | drives the built releases and reports errors |
+| `src/utilities/ext.js` | the extension runtime (registry, .nullext runner, popup host, hooks) |
+| `src/utilities/procgen.js` | the procedural theme generator used by Labs |
 | `scripts/check-links.js` | verifies every internal path resolves to a file |
 | `scripts/release-shell.js` + `release.css` | the app inside the releases |
 | `tsconfig.json` | a JS-only stub (`allowJs`, `checkJs: false`) so `bun run check` parses the site's JavaScript and catches syntax errors |
@@ -385,6 +441,13 @@ this folder as they are, and NULL never calls out to anything.
   cloak.
 - Installable PWA with an offline shell, and a Service Worker that keeps the
   shell usable without a network.
+- **Extensions**: `.nullext` files with full access to NULL, plus imported
+  Chrome popup extensions that stay sandboxed, managed at `/extensions` and
+  launched from the puzzle button in the nav.
+- **Labs**: experimental looks, whole-site **retextures**, a procedural
+  **theme generator** and the place to vote on what gets promoted.
+- **`/root`**: a hidden, live map of every system, page, season, theme, storage
+  key and installed extension.
 - Single-file releases: NULL Mini / Lite / Regular.
 
 ---

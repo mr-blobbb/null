@@ -20,6 +20,11 @@
     { id: "announcements", t: "Announcements", url: "/announcements", icon: "ann" },
     { id: "shop", t: "Shop", url: "/shop", icon: "store" },
     { id: "backups", t: "Backups", url: "/backups", icon: "backups" },
+    /* the only nav item that opens a menu instead of a page: it lists what is
+       installed so an extension popup is one click from anywhere. The page
+       behind it is the same manager, linked at the bottom of that menu. */
+    { id: "extensions", t: "Extensions", url: "/extensions", icon: "puzzle", menu: "ext" },
+    { id: "labs", t: "Labs", url: "/labs", icon: "beaker" },
     { id: "settings", t: "Settings", url: "/settings", icon: "settings" },
   ];
 
@@ -40,6 +45,8 @@
         { t: "Schedule", url: "/schedule", icon: "sched" },
         { t: "Shop", url: "/shop", icon: "store" },
         { t: "Backups", url: "/backups", icon: "backups" },
+        { t: "Extensions", url: "/extensions", icon: "puzzle" },
+        { t: "Labs", url: "/labs", icon: "beaker" },
         { t: "Settings", url: "/settings", icon: "settings" },
       ],
     },

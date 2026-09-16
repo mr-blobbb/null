@@ -16,8 +16,8 @@
    leaving every page unstyled.
 
    Bump CACHE/RUNTIME when the core file list changes so old caches are dropped. */
-const CACHE = "null-v12";
-const RUNTIME = "null-runtime-v12";
+const CACHE = "null-v13";
+const RUNTIME = "null-runtime-v13";
 
 /* Site paths, resolved against this script's own address: the cache then holds
    the real URLs whether NULL is at a domain root or under a project path. */
@@ -42,6 +42,9 @@ const CORE = [
   "announcements.html",
   "shop.html",
   "backups.html",
+  "extensions.html",
+  "labs.html",
+  "root.html",
   "games/",
   "apps/",
   "proxies/",
@@ -60,6 +63,7 @@ const CORE = [
   "src/styles/legal.css",
   "src/styles/about.css",
   "src/styles/tour.css",
+  "src/styles/ext.css",
   "src/utilities/store.js",
   "src/utilities/dom.js",
   "src/utilities/modal.js",
@@ -78,6 +82,8 @@ const CORE = [
   "src/components/shell.js",
   "src/components/devconsole.js",
   "src/components/tour.js",
+  "src/utilities/ext.js",
+  "src/utilities/procgen.js",
   "src/pages/home.js",
   "src/pages/library.js",
   "src/pages/player.js",
@@ -87,6 +93,9 @@ const CORE = [
   "src/pages/shop.js",
   "src/pages/legal.js",
   "src/pages/about.js",
+  "src/pages/extensions.js",
+  "src/pages/labs.js",
+  "src/pages/root.js",
 ].map(at);
 
 /* ---------- cache hygiene ----------

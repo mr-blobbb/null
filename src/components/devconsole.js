@@ -694,6 +694,21 @@
         }),
         b("Reload", "refresh", function () { location.reload(); }),
       ] },
+      /* the newer surfaces: the manager, the lab and the hidden map */
+      { name: "surfaces", icon: "puzzle", items: [
+        b("Extensions", "puzzle", function () {
+          ok("opening the extensions manager");
+          location.href = N.url("/extensions");
+        }),
+        b("Labs", "beaker", function () {
+          ok("opening labs");
+          location.href = N.url("/labs");
+        }),
+        b("Root map", "code", function () {
+          ok("opening /root: nothing links there on purpose");
+          location.href = N.url("/root");
+        }),
+      ] },
       /* the hidden pages: nothing on the site links them, so this card is how
          you get there without typing the address */
       { name: "eggs", icon: "eye", items: [

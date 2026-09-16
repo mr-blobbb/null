@@ -347,6 +347,7 @@
     for (var k in vars) root.style.setProperty(k, vars[k]);
     root.dataset.pack = p.art || p.id;
     buildPack(p);
+    if (N.ext) N.ext.emit("theme:apply", { kind: "pack", id: p.id });
   }
 
   /* ---------- ambient particles ----------
@@ -486,6 +487,7 @@
     var p = particleFor(id);
     curPart = p ? p.id : null;
     applyPart(partOwned(p) ? p : null);
+    if (N.ext) N.ext.emit("theme:apply", { kind: "particles", id: curPart || "none" });
   }
 
   /* ---------- custom accent ----------

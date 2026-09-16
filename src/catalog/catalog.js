@@ -110,6 +110,7 @@
       });
       return;
     }
+    if (N.ext) N.ext.emit("player:open", { kind: kind, id: id });
     location.href = playerUrl(kind, id);
   }
 

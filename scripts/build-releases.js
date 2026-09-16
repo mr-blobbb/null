@@ -47,6 +47,8 @@ const MODULES = [
   "src/components/cards.js",
   "src/components/search.js",
   "src/components/daily.js",
+  "src/utilities/procgen.js",
+  "src/utilities/ext.js",
   "src/components/shell.js",
 ];
 

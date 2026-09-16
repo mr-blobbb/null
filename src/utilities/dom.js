@@ -123,6 +123,7 @@
     eye: "\ue417", // visibility
     pause: "\ue034", // pause
     help: "\ue887", // help
+    puzzle: "\ue87b", // extension
   };
 
   function icon(name, cls) {

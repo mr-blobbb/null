@@ -916,7 +916,7 @@ label.lbl {
   font-size: 17px;
   color: var(--ac-1);
 }
-.page-head .eyebrow .msr {
+.eyebrow .msr {
   font-size: 15px;
 }
 .set-card .set-title .msr {
@@ -1030,7 +1030,13 @@ label.lbl {
   75% { transform: scale(1.06, 0.95); }
 }
 @keyframes ic-spin {
-  to { transform: rotate(180deg); }
+  /* a whole turn, not half of one. A 180deg turn ends facing the wrong way
+     and then jumps back to 0 the moment the animation stops (no forwards
+     fill): that jump is the sloppy snap. A full spin lands exactly where it
+     started, so there is nothing to snap back from. */
+  0% { transform: rotate(0deg) scale(1); }
+  55% { transform: rotate(205deg) scale(1.09); }
+  100% { transform: rotate(360deg) scale(1); }
 }
 @keyframes ic-bounce {
   0%, 100% { transform: translateY(0); }
@@ -1080,7 +1086,7 @@ label.lbl {
 }
 .nav-link[data-ic="games"]:hover .msr { animation: ic-tilt 0.55s ease; }
 .nav-link[data-ic="apps"]:hover .msr { animation: ic-squish 0.5s ease; }
-.nav-link[data-ic="proxies"]:hover .msr { animation: ic-spin 0.45s ease-in-out; }
+.nav-link[data-ic="proxies"]:hover .msr { animation: ic-spin 0.8s cubic-bezier(0.4, 0, 0.25, 1); }
 .nav-link[data-ic="schedule"]:hover .msr { animation: ic-bounce 0.55s ease; }
 .nav-link[data-ic="announcements"]:hover .msr { animation: ic-nudge 0.4s ease; }
 .nav-link[data-ic="shop"]:hover .msr { animation: ic-shake 0.5s ease; }

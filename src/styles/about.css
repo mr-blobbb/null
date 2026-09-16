@@ -7,6 +7,28 @@
   max-width: 1080px;
 }
 
+/* The hero wears an eyebrow, but the shared label styles hang off .page-head,
+   which this hero is not inside. Without a copy here the info glyph fell back
+   to the bare 20px icon size and sat there looking like a rendering mistake
+   next to 11.5px caps. Same numbers as the page heads, on purpose. */
+.ab-hero .eyebrow {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  margin-bottom: 10px;
+}
+.ab-hero .eyebrow .msr {
+  font-size: 15px;
+  line-height: 1;
+}
+
 /* ---------- hero ---------- */
 .ab-hero {
   position: relative;

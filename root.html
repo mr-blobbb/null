@@ -2,21 +2,20 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="color-scheme" content="dark light">
-  <meta name="theme-color" content="#0a0a0b">
-  <title>Schedule · NULL</title>
-  <meta name="description" content="The NULL school schedule: regular days, Homeroom/WIN days, live countdown and editable period names.">
+  <meta name="theme-color" content="#09090b">
+  <meta name="robots" content="noindex">
+  <title>root · NULL</title>
+  <meta name="description" content="Not linked from anywhere: a live map of everything NULL is made of.">
   <link rel="icon" id="favicon" href="public/favicon.svg" type="image/svg+xml">
   <link rel="manifest" href="public/manifest.webmanifest">
   <link rel="apple-touch-icon" href="public/icon-192.png">
   <link rel="stylesheet" href="src/styles/global.css">
   <link rel="stylesheet" href="src/styles/extra.css">
-  <link rel="stylesheet" href="src/styles/particles.css">
   <link rel="stylesheet" href="src/styles/perf.css">
-  <!-- extensions, labs, /root and the Labs retextures: site-wide on purpose -->
-  <link rel="stylesheet" href="src/styles/ext.css">
   <link rel="stylesheet" href="src/styles/dev.css">
+  <link rel="stylesheet" href="src/styles/ext.css">
   <script>
     (function () {
       try {
@@ -25,47 +24,38 @@
         document.documentElement.dataset.theme = t;
         if (p.perf) document.documentElement.dataset.perf = p.perf === "ultra" ? "ultra" : "1";
         if (p.glow && p.glow !== "off") document.documentElement.dataset.glow = p.glow;
-        /* a retexture redesigns every page, so it has to land before the
-           first paint, exactly like the theme */
         if (p.retexture && p.retexture !== "off") document.documentElement.dataset.retexture = p.retexture;
         if (p.labs) document.documentElement.dataset.labs = p.labs;
       } catch (e) {}
     })();
   </script>
 </head>
-<body data-page="schedule">
+<body data-page="root">
   <a class="skip-link" href="#main">Skip to content</a>
   <div class="glow-bg" aria-hidden="true"></div>
   <header data-mount="nav"></header>
 
-  <main id="main" class="page page-narrow">
+  <main id="main" class="page root-wrap">
     <div class="page-head">
-      <span class="eyebrow"><span data-icon="sched"></span>schedule</span>
-      <h1>School schedule</h1>
+      <span class="eyebrow"><span data-icon="code"></span>root · nothing links here</span>
+      <h1>/root</h1>
       <p>
-        Mondays and Fridays are regular bell days, Tuesdays and Thursdays are WIN/Homeroom, and Wednesdays are late arrival, so that you can sleep in! Press the edit button to change your lunch period, and your class names!
+        Every system NULL is made of, read live from the running site: the
+        modules, the pages, the hidden ones, the seasons, the themes, the
+        storage keys, whatever extensions are installed, and the hooks they
+        can listen to. Nothing on the site links this page. You typed the
+        address, or the dev console sent you.
       </p>
     </div>
 
-    <div class="toolbar" style="margin-top:0">
-      <div id="schedChips" class="sched-days" role="tablist"></div>
-      <span style="margin-left:auto"></span>
-      <div id="editBar"></div>
-    </div>
-
-    <div class="panel" style="padding:20px">
-      <div id="todayCard" class="today-card"></div>
-      <div id="liveBox" class="live-box"></div>
-      <div id="editPanel" class="edit-panel" style="display:none"></div>
-      <div id="schedGridBox"></div>
-      <div id="schedNote" class="sched-note"></div>
-    </div>
+    <div class="root-bar" id="rootBar"></div>
+    <div id="rootBody"></div>
   </main>
 
   <footer data-mount="foot"></footer>
   <noscript>
     <nav class="ns-nav">
-      <a href="./">Home</a><a href="games/">Games</a><a href="apps/">Apps</a><a href="proxies/">Proxies</a><a href="schedule">Schedule</a><a href="settings">Settings</a>
+      <a href="./">Home</a><a href="games/">Games</a><a href="apps/">Apps</a><a href="extensions">Extensions</a><a href="labs">Labs</a>
     </nav>
   </noscript>
 
@@ -74,6 +64,7 @@
   <script src="src/utilities/dom.js"></script>
   <script src="src/utilities/modal.js"></script>
   <script src="src/utilities/theme.js"></script>
+  <script src="src/utilities/procgen.js"></script>
   <script src="src/components/seasons.js"></script>
   <script src="src/utilities/scroll.js"></script>
   <script src="src/routing/router.js"></script>
@@ -84,10 +75,10 @@
   <script src="src/components/schedule.js"></script>
   <script src="src/components/cards.js"></script>
   <script src="src/components/search.js"></script>
-  <!-- the extensions runtime, ahead of shell.js: the nav asks it for its menu -->
+  <script src="src/components/daily.js"></script>
   <script src="src/utilities/ext.js"></script>
   <script src="src/components/shell.js"></script>
   <script src="src/components/devconsole.js"></script>
-  <script src="src/pages/schedule.js"></script>
+  <script src="src/pages/root.js"></script>
 </body>
 </html>
