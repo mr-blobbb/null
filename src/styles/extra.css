@@ -667,16 +667,26 @@ body.lb .toolbar {
   transition: background 0.2s, box-shadow 0.2s, padding 0.2s;
 }
 body.lb .toolbar.stuck {
-  /* pinned flush under the nav: no top margin or radius, so the bar reads
-     as attached to the topbar instead of floating below it. Padding still
-     adds up to the un-stuck margins (22 / 18), so nothing below shifts. */
-  padding: 14px 14px 12px;
-  margin: 0 -14px 6px;
+  /* pinned flush under the nav and full-bleed: the bar stretches across the
+     whole viewport so it reads as part of the topbar, not a floating strip.
+     The -22px eats the page's own padding; on the small-screen 14px padding
+     the media query below trims it back. Padding still adds up to the
+     un-stuck margins (22 / 18), so nothing below shifts. */
+  padding: 14px max(14px, var(--pad-x)) 12px;
+  margin: 0 calc(-1 * var(--pad-x)) 6px;
+  width: calc(100% + 2 * var(--pad-x));
   border-radius: 0;
   background: color-mix(in srgb, var(--bg) 82%, transparent);
   backdrop-filter: blur(16px) saturate(140%);
   -webkit-backdrop-filter: blur(16px) saturate(140%);
   box-shadow: 0 14px 28px -22px rgba(0, 0, 0, 0.95), 0 1px 0 var(--line);
+}
+@media (max-width: 620px) {
+  body.lb .toolbar.stuck {
+    margin-left: -14px;
+    margin-right: -14px;
+    width: calc(100% + 28px);
+  }
 }
 html[data-perf] body.lb .toolbar.stuck {
   backdrop-filter: none;
