@@ -18,7 +18,6 @@ import {
   Globe,
   Loader,
   Lock,
-  RefreshCw,
   ShieldAlert,
   TriangleAlert,
 } from "lucide-react";
@@ -28,7 +27,7 @@ import { destinationFor, ENGINES, type EngineId, type PageId } from "../lib/nav"
 import { prefs } from "../lib/themes";
 import { useStore } from "../lib/store";
 import { proxied, start } from "../lib/browser";
-import { go, openTab } from "../lib/tabs";
+import { activeTab, go, openTab, useTabs } from "../lib/tabs";
 
 /** `back` is where the escape hatch leads: a site typed into the address bar
  *  came from the proxy shelf, the movies page came from the front door. */
@@ -42,12 +41,13 @@ export function Proxies({ url, back = "proxies" }: { url?: string; back?: PageId
    the fullscreen browser
    ============================================================ */
 function Browser({ url, relay, back }: { url: string; relay: string; back: PageId }) {
-  const engine = useStore(prefs).searchEngine;
   const [state, setState] = useState<"booting" | "ok" | "failed">("booting");
   const [reason, setReason] = useState("");
-  const [now, setNow] = useState(url);
-  const [draft, setDraft] = useState(url);
-  const [nonce, setNonce] = useState(0);
+  /* The tab is the page: its address is this site's real one, the toolbar
+     above reloads it (the tab's nonce), and back and forward walk its own
+     history. Nothing down here repeats any of that. */
+  const tabs = useTabs();
+  const nonce = activeTab(tabs).nonce;
 
   useEffect(() => {
     let alive = true;
@@ -64,12 +64,6 @@ function Browser({ url, relay, back }: { url: string; relay: string; back: PageI
     };
   }, [relay]);
 
-  useEffect(() => {
-    setNow(url);
-    setDraft(url);
-    setNonce((n) => n + 1);
-  }, [url]);
-
   /* escape gets you out of the browser and back onto NULL */
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -79,68 +73,20 @@ function Browser({ url, relay, back }: { url: string; relay: string; back: PageI
     return () => window.removeEventListener("keydown", onKey);
   }, [back]);
 
-  const src = state === "ok" ? proxied(now) : null;
+  const src = state === "ok" ? proxied(url) : null;
 
   const host = useMemo(() => {
     try {
-      return new URL(now).hostname.replace(/^www\./, "");
+      return new URL(url).hostname.replace(/^www\./, "");
     } catch {
-      return now;
+      return url;
     }
-  }, [now]);
+  }, [url]);
 
   const leave = () => go({ page: back });
 
   return (
     <div className="bw">
-      <div className="bw-bar">
-        <button className="bar-btn" onClick={leave} title="Back to null" aria-label="Back to null">
-          <ArrowLeft />
-        </button>
-        <span className="bw-lock" title={now.startsWith("https://") ? "Secure" : "Not secure"}>
-          {now.startsWith("https://") ? <Lock /> : <ShieldAlert />}
-        </span>
-        <input
-          className="bw-addr"
-          value={draft}
-          spellCheck={false}
-          aria-label="Address"
-          onChange={(e) => setDraft(e.target.value)}
-          onFocus={(e) => e.currentTarget.select()}
-          onKeyDown={(e) => {
-            if (e.key !== "Enter") return;
-            const to = destinationFor(draft, engine);
-            if (!to) return;
-            if ("page" in to) {
-              go({ page: to.page });
-              return;
-            }
-            setNow(to.url);
-            setNonce((n) => n + 1);
-            e.currentTarget.blur();
-          }}
-        />
-        <button
-          className="bar-btn"
-          aria-label="Reload"
-          title="Reload"
-          onClick={() => setNonce((n) => n + 1)}
-        >
-          <RefreshCw />
-        </button>
-        <button
-          className="bar-btn"
-          aria-label="Open in a real tab"
-          title="Open in a real tab"
-          onClick={() => window.open(now, "_blank", "noopener")}
-        >
-          <ExternalLink />
-        </button>
-        <span className="bw-host" title={now}>
-          {host}
-        </span>
-      </div>
-
       {state === "booting" && (
         <div className="bw-note">
           <Loader className="px-spin" />
@@ -162,7 +108,7 @@ function Browser({ url, relay, back }: { url: string; relay: string; back: PageI
             in Settings, or open the site in a real tab.
           </p>
           <div className="bw-note-actions">
-            <button className="btn btn--fill" onClick={() => window.open(now, "_blank", "noopener")}>
+            <button className="btn btn--fill" onClick={() => window.open(url, "_blank", "noopener")}>
               <ExternalLink /> Open {host}
             </button>
             <button className="btn" onClick={leave}>
@@ -173,14 +119,24 @@ function Browser({ url, relay, back }: { url: string; relay: string; back: PageI
       )}
 
       {src && (
-        <iframe
-          key={nonce}
-          className="bw-frame"
-          src={src}
-          title={host}
-          referrerPolicy="no-referrer"
-          allow="clipboard-read; clipboard-write; fullscreen; gamepad; autoplay"
-        />
+        <>
+          <button
+            className="bw-open"
+            title={`Open ${host} in a real tab`}
+            aria-label="Open in a real tab"
+            onClick={() => window.open(url, "_blank", "noopener")}
+          >
+            <ExternalLink />
+          </button>
+          <iframe
+            key={`${nonce}-${url}`}
+            className="bw-frame"
+            src={src}
+            title={host}
+            referrerPolicy="no-referrer"
+            allow="clipboard-read; clipboard-write; fullscreen; gamepad; autoplay"
+          />
+        </>
       )}
     </div>
   );

@@ -3,11 +3,17 @@
    is the player card, the library strip and the account list.
 
    The account is local: a handle, a salted hash, and the card. Nothing is
-   sent anywhere, which is why there is no email field and no reset flow. */
+   sent anywhere, which is why there is no email field and no reset flow.
 
-import { useMemo, useRef, useState } from "react";
+   The profile effects are not painted behind this card any more: a wide
+   looping clip was being squashed into a strip and tinted until nothing of
+   it survived. They belong to the share card, which is the size they were
+   made for (src/components/ShareCard.tsx). */
+
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowRight,
+  BadgeCheck,
   Camera,
   Check,
   Clock,
@@ -15,11 +21,11 @@ import {
   CloudUpload,
   Coins,
   Gamepad2,
-  Image as ImageIcon,
   LogOut,
   Crown,
   Lock,
   Palette,
+  Share2,
   Pencil,
   RotateCcw,
   Star,
@@ -47,7 +53,9 @@ import {
   verifyPassword,
   type NameStyle,
 } from "../lib/account";
-import { AvatarArt, EffectArt } from "../lib/art";
+import { AvatarArt } from "../lib/art";
+import { remember } from "../lib/members";
+import { ShareCard } from "../components/ShareCard";
 import { itemOf, useEcon } from "../lib/econ";
 import { isOwner, OWNER_TAG } from "../lib/owner";
 import { entries } from "../lib/catalog";
@@ -174,14 +182,19 @@ function SignedIn() {
   const [draft, setDraft] = useState({ name: me.name, bio: me.bio });
   const [bioOpen, setBioOpen] = useState(false);
   const [bannerOpen, setBannerOpen] = useState(false);
-  const [shot, setShot] = useState<string | null>(null);
+  const [shareOpen, setShareOpen] = useState(false);
 
   const tag = itemOf(eco.equipped.tag);
   const avatar = eco.equipped.avatar;
-  const effect = eco.equipped.effect;
   /* the owner wears their own tag, on top of whatever they picked up in the
      shop — the two sit side by side rather than replacing each other */
   const owner = isOwner(me.user);
+
+  /* Being on this page is what puts you on the members list, and every edit
+     here updates that card — the page itself says it only knows browsers. */
+  useEffect(() => {
+    remember(me, eco);
+  }, [me, eco]);
 
   const startEdit = () => {
     setDraft({ name: me.name, bio: me.bio });
@@ -205,8 +218,6 @@ function SignedIn() {
   return (
     <div className="page">
       <section className="card pf-card">
-        {effect && <EffectArt id={effect} />}
-
         <div className="pf-banner" style={{ background: me.banner }}>
           <button className="btn btn--sm pf-banner-edit" onClick={() => setBannerOpen(true)}>
             <Palette /> Edit banner
@@ -237,19 +248,24 @@ function SignedIn() {
           </div>
 
           <div className="pf-txt">
-            <h1 className="pf-name" style={nameStyleCss(me.nameStyle)}>
-              {editing ? (
-                <input
-                  className="pf-name-in"
-                  value={draft.name}
-                  onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-                  aria-label="Display name"
-                  autoFocus
-                />
-              ) : (
-                me.name
-              )}
-            </h1>
+            {/* the badge sits beside the name, not inside it: the name can be
+                a gradient cut out of its own text, which would eat the icon */}
+            <div className="pf-name-row">
+              <h1 className="pf-name" style={nameStyleCss(me.nameStyle)}>
+                {editing ? (
+                  <input
+                    className="pf-name-in"
+                    value={draft.name}
+                    onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+                    aria-label="Display name"
+                    autoFocus
+                  />
+                ) : (
+                  me.name
+                )}
+              </h1>
+              {owner && !editing && <BadgeCheck className="pf-verified" aria-label="Owner" />}
+            </div>
             <span className="pf-handle">@{me.user}</span>
 
             {(owner || tag) && (
@@ -373,14 +389,11 @@ function SignedIn() {
       <Sheet open={bannerOpen} onClose={() => setBannerOpen(false)} title="Banner" width={560}>
         <BannerEditor />
       </Sheet>
-      <button
-        className="pf-shot"
-        onClick={() => setShot("Your card is yours. Sharing comes later.")}
-        title="Share card"
-      >
-        <ImageIcon />
+      <button className="pf-shot" onClick={() => setShareOpen(true)} title="Share card">
+        <Share2 />
       </button>
-      {shot && <div className="toast">{shot}</div>}
+
+      <ShareCard open={shareOpen} onClose={() => setShareOpen(false)} />
     </div>
   );
 }

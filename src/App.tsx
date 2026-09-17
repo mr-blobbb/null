@@ -15,8 +15,10 @@ import { SettingsSheet } from "./components/SettingsSheet";
 import { NotFound } from "./pages/NotFound";
 import { Home } from "./pages/Home";
 import { Library } from "./pages/Library";
+import { Movies } from "./pages/Movies";
 import { Proxies } from "./pages/Proxies";
 import { Shop } from "./pages/Shop";
+import { Members } from "./pages/Members";
 import { Profile } from "./pages/Profile";
 import { Changelog } from "./pages/Changelog";
 import { Extensions } from "./pages/Extensions";
@@ -25,7 +27,6 @@ import { Player } from "./pages/Player";
 import { applyPalette, applyPerf, prefs, usePalette } from "./lib/themes";
 import { useStore } from "./lib/store";
 import { IDLE_MS, tick, useEcon } from "./lib/econ";
-import { PAGES } from "./lib/nav";
 import { activeTab, go, openTab, targetFromHash, useTabs } from "./lib/tabs";
 import { useExt } from "./lib/extensions";
 
@@ -142,11 +143,13 @@ export function App() {
       case "apps":
         return <Library kind="app" />;
       case "movies":
-        return <Proxies url={PAGES.movies.loads} back="home" />;
+        return <Movies />;
       case "proxies":
         return <Proxies url={t.arg?.url} />;
       case "shop":
         return <Shop onOpenSettings={() => setSettingsOpen(true)} />;
+      case "users":
+        return <Members />;
       case "profile":
         return <Profile />;
       case "changelog":

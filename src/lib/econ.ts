@@ -111,6 +111,25 @@ export const SHOP: ShopItem[] = [
     price: 1600,
     was: 1880,
   },
+  /* the two that are real footage: a light that runs round the rim, and
+     violet fire that climbs the face. Both screen onto the picture, so the
+     black they were shot on never shows. */
+  {
+    id: "chroma",
+    shelf: "avatar",
+    name: "Chroma",
+    desc: "A soft light that circles your picture and never stops.",
+    price: 1380,
+    was: 1620,
+  },
+  {
+    id: "ember",
+    shelf: "avatar",
+    name: "Ember",
+    desc: "Violet fire, climbing the edge of your face.",
+    price: 1540,
+    was: 1780,
+  },
 
   /* profile effects: whole-card backgrounds, looping and silent */
   {

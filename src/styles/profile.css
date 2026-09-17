@@ -92,11 +92,26 @@
   padding: 0 0 16px;
   background: var(--bg-2);
 }
-/* an equipped profile effect is a background: everything the card says
-   stays on top of it, and on top of its tint */
-.pf-card > :not(.fx) {
-  position: relative;
-  z-index: 1;
+/* a name with a badge beside it. The badge is a sibling, not a child: a name
+   may be a gradient cut out of its own text, which would swallow the icon */
+.pf-name-row,
+.share-name-row,
+.mb-name-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+/* the verified mark: a solid accent blob with the check cut out of it in the
+   page colour, so it reads as a badge rather than an outline */
+.pf-verified {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  fill: var(--ac-1);
+  color: var(--bg);
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--ac-1) 55%, transparent));
 }
 .pf-banner {
   position: relative;
@@ -140,6 +155,8 @@
   background: var(--bg-3);
   color: var(--faint);
   overflow: visible;
+  /* a clip decoration screens onto the face, and only onto the face */
+  isolation: isolate;
 }
 .pf-pic img {
   width: 100%;
@@ -234,6 +251,9 @@
   min-height: 44px;
   padding: 12px 13px;
   text-align: left;
+  /* a bio is typed, not one line: whatever returns the writer hit stand */
+  white-space: pre-wrap;
+  word-break: break-word;
   border: var(--bw) solid var(--line);
   border-radius: var(--r-2);
   background: var(--bg-3);
@@ -502,6 +522,339 @@ input[type="color"] {
 .pf-shot svg {
   width: 15px;
   height: 15px;
+}
+
+/* ============================================================
+   members — everyone this browser has seen sign in
+   ============================================================ */
+.mb-empty {
+  margin-top: 6px;
+  color: var(--dim);
+}
+.mb-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(268px, 1fr));
+  gap: 14px;
+}
+.mb-card {
+  position: relative;
+  overflow: hidden;
+  text-align: left;
+  border: var(--bw) solid var(--line);
+  border-radius: var(--r-3);
+  background: var(--bg-2);
+  transition: border-color 0.16s var(--ease), background 0.16s var(--ease);
+}
+.mb-card:hover {
+  border-color: var(--line-2);
+  background: var(--bg-3);
+}
+/* the owner's card is edged a little brighter, and nothing else is */
+.mb-card.is-owner {
+  border-color: color-mix(in srgb, var(--ac-1) 45%, var(--line-2));
+}
+.mb-banner {
+  display: block;
+  height: 78px;
+  background-size: cover;
+  background-position: center;
+  border-bottom: var(--bw) solid var(--line);
+}
+.mb-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  padding: 0 16px 16px;
+}
+.mb-pic {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 62px;
+  margin-top: -24px;
+  border-radius: 50%;
+  border: var(--bw) solid var(--line-2);
+  background: var(--bg-3);
+  color: var(--faint);
+  overflow: visible;
+  isolation: isolate;
+}
+.mb-pic img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+.mb-pic > svg {
+  width: 26px;
+  height: 26px;
+}
+.mb-txt {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  padding-top: 12px;
+}
+.mb-name {
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+}
+.mb-handle {
+  font-size: 11.5px;
+  color: var(--faint);
+}
+.mb-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 3px;
+}
+.mb-born {
+  font-size: 11px;
+  color: var(--faint);
+  font-family: var(--mono);
+}
+
+/* the whole card, opened */
+.mb-full-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--r-3);
+  isolation: isolate;
+}
+.mb-full-banner {
+  display: block;
+  height: 130px;
+  background-size: cover;
+  background-position: center;
+}
+.mb-full-pic {
+  position: absolute;
+  left: 18px;
+  bottom: -26px;
+  display: grid;
+  place-items: center;
+  width: 78px;
+  height: 78px;
+  border-radius: 50%;
+  border: var(--bw) solid var(--line-2);
+  background: var(--bg-3);
+  color: var(--faint);
+  overflow: visible;
+  isolation: isolate;
+}
+.mb-full-pic img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+.mb-full-pic > svg {
+  width: 30px;
+  height: 30px;
+}
+.mb-full-name {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.mb-name-row--lg {
+  margin-top: 34px;
+}
+.mb-full .mb-handle {
+  display: block;
+  margin-top: 3px;
+}
+.mb-full .mb-tags {
+  margin-top: 9px;
+}
+.mb-full-bio {
+  margin-top: 14px;
+  color: var(--dim);
+  font-size: 13px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.mb-full-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: var(--bw) solid var(--line);
+}
+.mb-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  color: var(--dim);
+  font-family: var(--mono);
+}
+.mb-stat svg {
+  width: 12px;
+  height: 12px;
+  color: var(--faint);
+}
+.mb-note {
+  margin-top: 14px;
+}
+
+/* ============================================================
+   the share card
+   ============================================================ */
+.share {
+  position: relative;
+  overflow: hidden;
+  margin-top: 14px;
+  padding: 22px 22px 18px;
+  border: var(--bw) solid var(--line-2);
+  border-radius: var(--r-4);
+  background: var(--bg-2);
+  isolation: isolate;
+}
+/* the art layer: banner first, the equipped effect over it, both full bleed.
+   No squashing and no heavy tint — only the bottom is settled for the words. */
+.share-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+}
+.share-banner {
+  position: absolute;
+  inset: 0;
+  display: block;
+  background-size: cover;
+  background-position: center;
+}
+/* the words layer. Named one by one rather than `:not(.share-bg)` so the
+   address in the corner keeps its own absolute position. */
+.share-mark,
+.share-id,
+.share-bio,
+.share-foot {
+  position: relative;
+  z-index: 1;
+}
+.share-mark {
+  display: block;
+  font-family: var(--rounded);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.055em;
+  color: var(--text);
+  text-shadow: 0 2px 18px color-mix(in srgb, var(--bg) 70%, transparent);
+}
+.share-addr {
+  position: absolute;
+  top: 24px;
+  right: 22px;
+  z-index: 1;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--dim);
+}
+.share-id {
+  display: flex;
+  align-items: flex-end;
+  gap: 15px;
+  margin-top: 96px;
+}
+.share-pic {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  border: 2px solid var(--text);
+  background: var(--bg-3);
+  color: var(--faint);
+  overflow: visible;
+  isolation: isolate;
+}
+.share-pic img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+.share-pic > svg {
+  width: 32px;
+  height: 32px;
+}
+.share-txt {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding-bottom: 4px;
+}
+.share-name {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+.share-handle {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--dim);
+}
+.share-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 7px;
+}
+.share-bio {
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-width: 62ch;
+}
+.share-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+  padding-top: 13px;
+  border-top: var(--bw) solid color-mix(in srgb, var(--line-2) 80%, transparent);
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--dim);
+}
+.share-foot span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.share-foot svg {
+  width: 12px;
+  height: 12px;
+}
+.share-dot {
+  color: var(--faint);
+}
+.share-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+.share-note {
+  margin-top: 8px;
+  text-align: right;
 }
 
 @media (max-width: 620px) {

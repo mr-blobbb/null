@@ -1,66 +1,42 @@
 /* ============================================================
    NULL · browser.css
-   The fullscreen browser. When an address is open, nothing of
-   NULL is on screen but a glass strip: the far site gets the
-   entire window and an escape route.
+   The proxied window. It fills the page area rather than the
+   whole window: the tab bar and the toolbar above are the only
+   chrome, and the address they show is the site's real one, so
+   there is no second bar down here duplicating them.
    ============================================================ */
 
 .bw {
-  position: fixed;
+  position: absolute;
   inset: 0;
-  z-index: 60;
   display: flex;
   flex-direction: column;
   background: var(--bg);
 }
 
-.bw-bar {
-  flex: none;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 6px 9px;
-  border-bottom: var(--bw) solid var(--glass-line);
+/* the one control that is not on the toolbar above */
+.bw-open {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: var(--bw) solid var(--glass-line);
+  border-radius: var(--r-1);
   background: var(--glass);
   backdrop-filter: blur(var(--blur)) saturate(140%);
   -webkit-backdrop-filter: blur(var(--blur)) saturate(140%);
+  color: var(--dim);
 }
-
-.bw-lock {
-  display: grid;
-  place-items: center;
-  color: var(--faint);
-  flex: none;
+.bw-open:hover {
+  color: var(--text);
 }
-.bw-lock svg {
+.bw-open svg {
   width: 14px;
   height: 14px;
-}
-
-.bw-addr {
-  flex: 1 1 auto;
-  min-width: 0;
-  height: 30px;
-  padding: 0 12px;
-  border: var(--bw) solid var(--line);
-  border-radius: 99px;
-  background: color-mix(in srgb, var(--bg) 55%, transparent);
-  font-size: 12.5px;
-  outline: none;
-  transition: border-color 0.14s var(--ease);
-}
-.bw-addr:focus {
-  border-color: var(--line-2);
-}
-
-.bw-host {
-  flex: none;
-  max-width: 20ch;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 11px;
-  color: var(--faint);
 }
 
 .bw-frame {
@@ -111,8 +87,56 @@
   max-width: 62ch;
 }
 
-@media (max-width: 560px) {
-  .bw-host {
+/* ---------- null://m — the movies frame ----------
+   A plain iframe, because aether.cx is a single address NULL means to reach
+   directly rather than through a relay. It fills the page area and the tab
+   bar above carries the address, so the only thing down here is a note for
+   the case where the site refuses to be framed. */
+.mov {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  background: #000;
+}
+.mov-frame {
+  flex: 1 1 auto;
+  width: 100%;
+  border: 0;
+  background: #000;
+}
+.mov-chip {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px 6px 12px;
+  border: var(--bw) solid var(--glass-line);
+  border-radius: 99px;
+  background: var(--glass);
+  backdrop-filter: blur(var(--blur)) saturate(140%);
+  -webkit-backdrop-filter: blur(var(--blur)) saturate(140%);
+  color: var(--dim);
+  font-size: 11.5px;
+}
+.mov-chip > svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+.mov-chip b {
+  color: var(--text);
+  font-weight: 600;
+}
+.mov-sep {
+  color: var(--faint);
+}
+.mov-chip span:last-of-type {
+  color: var(--faint);
+}
+@media (max-width: 760px) {
+  .mov-chip span {
     display: none;
   }
 }

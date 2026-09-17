@@ -17,6 +17,7 @@ import {
   ShoppingBag,
   SlidersHorizontal,
   UserRound,
+  Users,
   type LucideIcon,
 } from "lucide-react";
 
@@ -31,6 +32,7 @@ export type PageId =
   | "changelog"
   | "extensions"
   | "settings"
+  | "users"
   | "player";
 
 export type Page = {
@@ -133,6 +135,15 @@ export const PAGES: Record<PageId, Page> = {
     blurb: "Add-ons that draw inside NULL, in any page you are on.",
     keywords: "extension addon plugin widget popup",
   },
+  users: {
+    id: "users",
+    name: "Members",
+    address: "null://u",
+    route: "/users",
+    icon: Users,
+    blurb: "Everybody who has signed in here, owner first.",
+    keywords: "members users people profiles community accounts who joined",
+  },
   settings: {
     id: "settings",
     name: "Settings",
@@ -153,10 +164,13 @@ export const PAGES: Record<PageId, Page> = {
   },
 };
 
-/** Five doors at the top of the rail, four at the bottom, and a deliberate
- *  empty gap between them. The gap is the point: the rail is a spine. */
+/** Five doors at the top of the rail, five at the bottom, and a deliberate
+ *  empty gap between them. The gap is the point: the rail is a spine.
+ *
+ *  The bottom group is read upward from the last door, so the two that are
+ *  about people sit together: members just above the profile. */
 export const RAIL_TOP: PageId[] = ["home", "games", "apps", "movies", "shop"];
-export const RAIL_BOTTOM: PageId[] = ["profile", "changelog", "extensions", "settings"];
+export const RAIL_BOTTOM: PageId[] = ["users", "profile", "changelog", "extensions", "settings"];
 
 /** Everything the All Apps sheet lists, in reading order. */
 export const ALL_PAGES: PageId[] = [
@@ -166,6 +180,7 @@ export const ALL_PAGES: PageId[] = [
   "movies",
   "proxies",
   "shop",
+  "users",
   "profile",
   "changelog",
   "extensions",

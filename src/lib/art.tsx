@@ -1,11 +1,12 @@
 /* NULL · art.tsx
-   The artwork the shop sells. Each piece is drawn rather than downloaded:
+   The artwork the shop sells. Most pieces are drawn rather than downloaded:
    an animated SVG that takes its colours from the palette, so a decoration
-   looks right in Forest and in Light without a second asset.
+   looks right in Forest and in Light without a second asset. A few are real
+   clips from public/decor, which is the only reason a <video> appears here.
 
-   Every piece loops forever and is silent by construction: there is no
-   <video>, no <audio> and no file to fetch, only CSS keyframes, so a
-   decoration can never come with sound attached.
+   Every piece loops forever and is silent by construction: the clips are
+   muted and carry no audio track of their own, and nothing else is a file at
+   all, only CSS keyframes.
 
    The class names here are animated in src/styles/shop.css. */
 
@@ -35,8 +36,23 @@ function Svg({
    Drawn over the picture, inside its round frame. The frame is a little
    wider than the picture (`inset: -13%` in the stylesheet) so rings and
    orbiting things read as a halo around the face instead of a lid on it. */
+/* The two decorations that are real clips rather than drawings, in
+   public/decor (see its README for where they came from). */
+const FACE_CLIP: Record<string, string> = {
+  chroma: "avatar-chroma.mp4",
+  ember: "avatar-ember.mp4",
+};
+
 export function AvatarArt({ id }: { id: string | null | undefined }) {
   if (!id) return null;
+  const clip = FACE_CLIP[id];
+  if (clip) {
+    return (
+      <span className="art art--clip">
+        <FaceVideo file={clip} />
+      </span>
+    );
+  }
   switch (id) {
     case "orbit":
       return (
@@ -318,6 +334,30 @@ function CardVideo({ file }: { file: string }) {
       loop
       playsInline
       preload="metadata"
+      disablePictureInPicture
+      onError={() => setFailed(true)}
+      aria-hidden="true"
+      tabIndex={-1}
+    />
+  );
+}
+
+/* A clip used as a face overlay. These clips are effects on a black field, so
+   the stylesheet screens them over the picture: black disappears, the glow
+   stays. `object-fit: cover` in a round, clipped box is what makes one sit
+   centred on the face at any size — the shop tile and the profile alike. */
+function FaceVideo({ file }: { file: string }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return null;
+  return (
+    <video
+      className="art-video"
+      src={decor(file)}
+      autoPlay
+      muted
+      loop
+      playsInline
+      preload="auto"
       disablePictureInPicture
       onError={() => setFailed(true)}
       aria-hidden="true"
