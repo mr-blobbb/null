@@ -22,6 +22,10 @@ export type Recent = { kind: "game" | "app"; id: string; at: number };
 export type Account = {
   /** the handle without the @, or null when signed out */
   user: string | null;
+  /** The handle this browser holds, signed in or not. `user` is the lock;
+   *  this is the account behind it, so signing out does not make the profile
+   *  unreachable. */
+  handle: string;
   name: string;
   bio: string;
   /** any CSS background value: a colour, a gradient or an image url */
@@ -66,6 +70,7 @@ export const NAME_FONTS: { id: string; name: string; css: string }[] = [
 
 const EMPTY: Account = {
   user: null,
+  handle: "",
   name: "",
   bio: "",
   banner: BANNER_DEFAULT,
@@ -89,8 +94,23 @@ const EMPTY: Account = {
 
 export const account = createStore<Account>("account", EMPTY);
 
+/* A browser that has been here since before `handle` existed still has the
+   profile on it, so the handle is taken from the fields that did exist. A
+   player who had renamed themselves and then signed out may be guessed at
+   wrongly, which is the best a machine that never stored the handle can do. */
+const stored = account.get();
+if (!stored.handle && stored.pass) {
+  account.set({ handle: stored.user || stored.name });
+}
+
 export function useAccount(): Account {
   return useStore(account);
+}
+
+/** The handle this browser holds, whether or not it is signed in right now. */
+export function heldHandle(): string {
+  const s = account.get();
+  return s.handle || s.user || "";
 }
 
 /* ---------- passwords ----------
@@ -125,10 +145,29 @@ export function signUp(user: string, pass: string, confirm: string): { ok: boole
   if (isOwner(user)) return { ok: false, error: "That name is taken." };
   if (pass.length < 4) return { ok: false, error: "Passwords need 4 characters." };
   if (pass !== confirm) return { ok: false, error: "Those passwords do not match." };
+  /* Signing up for the account this browser already holds is signing back in.
+     The profile stays exactly as it was: a returning player should not lose
+     the name, bio and banner they set just because they came through the
+     other form. */
+  const held = heldHandle();
+  if (held && account.get().pass && held.toLowerCase() === user.toLowerCase()) {
+    return signIn(user, pass);
+  }
+  /* A browser holds one account. Starting a second one on top of it would
+     throw the first profile away, so it is refused by name rather than done
+     quietly. */
+  if (held && account.get().pass) {
+    return {
+      ok: false,
+      error: `This browser already holds @${held}. Sign in as @${held}, or delete that account first.`,
+    };
+  }
+
   const salt = Math.random().toString(36).slice(2, 10);
   const now = Date.now();
   account.set({
     user,
+    handle: user,
     name: user,
     pass: `${salt}$${digest(salt, pass)}`,
     joined: now,
@@ -150,6 +189,7 @@ export function signIn(user: string, pass: string): { ok: boolean; error?: strin
     const salt = Math.random().toString(36).slice(2, 10);
     account.set({
       user: OWNER,
+      handle: OWNER,
       name: mine && s.name ? s.name : OWNER,
       pass: `${salt}$${digest(salt, pass)}`,
       joined: mine && s.joined ? s.joined : now,
@@ -158,12 +198,17 @@ export function signIn(user: string, pass: string): { ok: boolean; error?: strin
     return { ok: true };
   }
   if (isOwner(user)) return { ok: false, error: "That password is not it." };
-  if (!s.user) return { ok: false, error: "There is no account on this browser yet." };
-  if (s.user.toLowerCase() !== user.toLowerCase()) return { ok: false, error: "No account called that here." };
+  const held = heldHandle();
+  if (!held) return { ok: false, error: "There is no account on this browser yet." };
+  if (held.toLowerCase() !== user.toLowerCase()) {
+    return { ok: false, error: "No account called that here." };
+  }
   const [salt, hash] = s.pass.split("$");
   if (digest(salt, pass) !== hash) return { ok: false, error: "That password is not it." };
-  /* signing in clears the lock without touching the profile */
-  account.set({ user: s.user });
+  /* Signing in clears the lock and nothing else. The name, bio, banner and
+     picture are exactly where they were left, because signing out never
+     touched them. */
+  account.set({ user: held, handle: held });
   return { ok: true };
 }
 
@@ -171,11 +216,14 @@ export function hasAccount(): boolean {
   return !!account.get().user;
 }
 
+/** Lock the account; keep everything in it. The name a player set, their bio,
+ *  banner, picture, favourites and coins all stay on the machine, and signing
+ *  back in puts them back where they were rather than back at the start. */
 export function signOut() {
   account.set({ user: null });
 }
 
-/** Delete: wipes the profile but leaves the handle reserved on this browser. */
+/** Delete: the profile and the handle both go, which frees the name again. */
 export function deleteAccount() {
   account.set({ ...EMPTY, joined: Date.now() });
 }
@@ -202,7 +250,7 @@ export function changeUser(user: string): { ok: boolean; error?: string } {
     const days = Math.ceil((wait - since) / (24 * 60 * 60 * 1000));
     return { ok: false, error: `You can change this again in ${days} day${days === 1 ? "" : "s"}.` };
   }
-  account.set({ user, lastUserChange: Date.now() });
+  account.set({ user, handle: user, lastUserChange: Date.now() });
   return { ok: true };
 }
 

@@ -22,6 +22,7 @@
 import { v } from "convex/values";
 
 import { mutation, query, type MutationCtx } from "./_generated/server";
+import type { Doc } from "./_generated/dataModel";
 import { screen } from "./filter";
 
 /** The room that exists whether or not anybody made one. */
@@ -138,46 +139,57 @@ export const recent = query({
   args: { thread: v.optional(v.string()) },
   handler: async (ctx, args) => {
     const slug = args.thread || GENERAL;
+    let rows: Doc<"messages">[];
     if (slug === GENERAL) {
       /* general covers the rows written before threads existed too */
-      const rows = await ctx.db.query("messages").withIndex("by_at").order("desc").take(110);
-      return rows
-        .filter((m) => !m.thread || m.thread === GENERAL)
-        .slice(0, 80)
-        .reverse()
-        .map(draw);
+      const all = await ctx.db.query("messages").withIndex("by_at").order("desc").take(110);
+      rows = all.filter((m) => !m.thread || m.thread === GENERAL).slice(0, 80);
+    } else {
+      rows = await ctx.db
+        .query("messages")
+        .withIndex("by_thread_at", (q) => q.eq("thread", slug))
+        .order("desc")
+        .take(80);
     }
-    const rows = await ctx.db
-      .query("messages")
-      .withIndex("by_thread_at", (q) => q.eq("thread", slug))
-      .order("desc")
-      .take(80);
-    return rows.reverse().map(draw);
+
+    /* A name is not nailed to the wall. A message stores who said it and the
+       name they were using at the time, and the directory is asked for the
+       name they use now — one lookup per distinct author — so renaming
+       yourself renames everything you have ever said here. Anyone the
+       directory does not know (the bot, an account that is gone) keeps the
+       name the message was written with, because there is nothing better to
+       show and a blank is worse than an old name. */
+    const authors = [...new Set(rows.map((m) => m.user.trim().toLowerCase()))].slice(0, 60);
+    const known = new Map(
+      await Promise.all(
+        authors.map(async (u) => {
+          const row = u
+            ? await ctx.db.query("members").withIndex("by_user", (q) => q.eq("user", u)).first()
+            : null;
+          return [u, row] as const;
+        }),
+      ),
+    );
+
+    return rows.reverse().map((m) => draw(m, known.get(m.user.trim().toLowerCase()) ?? null));
   },
 });
 
-function draw(m: {
-  _id: string;
-  user: string;
-  name: string;
-  body: string;
-  at: number;
-  owner: boolean;
-  tag: string | null;
-  tags?: string[];
-  machine: string;
-  bot?: boolean;
-}) {
+/** One message, as a reader sees it. `member` is the author's row in the
+ *  directory when there is one, and it is what the name and the tags come
+ *  from: the current ones, not the ones the message was written with. */
+function draw(m: Doc<"messages">, member: Doc<"members"> | null = null) {
   return {
     id: m._id,
     user: m.user,
-    name: m.name,
+    name: member && member.name.trim() ? member.name : m.name,
     body: m.body,
     at: m.at,
-    owner: m.owner,
-    /* one tag was all a message could wear once, so a row without the list
-       still says something */
-    tags: m.tags ?? (m.tag ? [m.tag] : []),
+    owner: m.owner || member?.owner === true,
+    /* a row written before tags came in twos holds one under `tag` */
+    tags: member
+      ? (member.tags ?? (member.tag ? [member.tag] : []))
+      : (m.tags ?? (m.tag ? [m.tag] : [])),
     machine: m.machine,
     bot: m.bot === true,
   };
