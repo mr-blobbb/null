@@ -34,8 +34,22 @@ export type ShopItem = {
   ink?: string;
   /** a small symbol before the name, for tags that want one */
   glyph?: string;
-  /** a special finish for a tag, styled in shop.css */
-  art?: "glow" | "stripe" | "split" | "mono" | "cursed";
+  /** a finish for a tag, styled in shop.css. The first six move: the rest
+   *  are the same idea standing still. */
+  art?:
+    | "glow"
+    | "haunt"
+    | "stripe"
+    | "split"
+    | "mono"
+    | "cursed"
+    | "jitter"
+    | "doze"
+    | "bob"
+    | "sway"
+    | "drip"
+    | "cursor"
+    | "beat";
 };
 
 export const SHELVES: { id: Shelf; name: string; note: string }[] = [
@@ -49,7 +63,11 @@ export const SHELVES: { id: Shelf; name: string; note: string }[] = [
     name: "Profile effects",
     note: "A looping background for your whole card, behind everything it says.",
   },
-  { id: "tag", name: "Name tags", note: "A chip that sits next to your name." },
+  {
+    id: "tag",
+    name: "Name tags",
+    note: "A chip that sits next to your name. Some of them move.",
+  },
 ];
 
 export const SHOP: ShopItem[] = [
@@ -255,6 +273,7 @@ export const SHOP: ShopItem[] = [
     price: 940,
     was: 1120,
     color: "#ffe066",
+    art: "beat",
   },
   {
     id: "tnpc",
@@ -264,6 +283,7 @@ export const SHOP: ShopItem[] = [
     price: 720,
     was: 860,
     color: "#a9a9b2",
+    art: "cursor",
   },
   {
     id: "tsigma",
@@ -292,6 +312,7 @@ export const SHOP: ShopItem[] = [
     price: 880,
     was: 1060,
     color: "#f0a6c8",
+    art: "sway",
   },
   {
     id: "thaunted",
@@ -302,7 +323,7 @@ export const SHOP: ShopItem[] = [
     was: 1480,
     color: "#2b2b34",
     ink: "#e9e9f0",
-    art: "glow",
+    art: "haunt",
   },
   {
     id: "tglitch",
@@ -341,6 +362,7 @@ export const SHOP: ShopItem[] = [
     price: 780,
     was: 940,
     color: "#b6bede",
+    art: "doze",
   },
   {
     id: "tcooked",
@@ -350,6 +372,7 @@ export const SHOP: ShopItem[] = [
     price: 1060,
     was: 1260,
     color: "#ff7a45",
+    art: "jitter",
   },
   {
     id: "tunemployed",
@@ -359,6 +382,7 @@ export const SHOP: ShopItem[] = [
     price: 700,
     was: 840,
     color: "#cfd6c4",
+    art: "bob",
   },
   {
     id: "tceo",
@@ -386,6 +410,7 @@ export const SHOP: ShopItem[] = [
     price: 980,
     was: 1160,
     color: "#79c9d6",
+    art: "drip",
   },
   /* the one that is genuinely wrong to wear: sold at full price, and the
      only piece whose finish moves on its own */

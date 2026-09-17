@@ -826,27 +826,293 @@
   margin-right: 4px;
 }
 
-/* The finishes a tag can be born with. Each is one small thing laid over the
-   fill — a light, an edge, a stray frame — never a redesign of it, so a chip
-   still reads as a chip next to anyone else's. */
+/* ---------- the finishes ----------
+   Each is one small thing laid over the fill — a light, an edge, a crawl of
+   stripes — never a redesign of it, so a chip still reads as a chip next to
+   anyone else's. About half of them move.
+
+   Every moving finish declares its resting state as a plain declaration *and*
+   the animation on top, and every keyframe ends where it began. That is what
+   makes the reduce-motion and performance switches — which kill `animation`
+   outright — leave a chip sitting still rather than a chip that is blank,
+   spotless or, in the drip's case, holding a stray bead. */
+
+/* glow: light bleeding off the chip, breathing in and out */
 .tagchip--glow {
-  box-shadow: 0 0 14px -3px var(--tag);
+  box-shadow: 0 0 13px -3px var(--tag);
+  animation: tag-breathe 3.6s ease-in-out infinite;
 }
+@keyframes tag-breathe {
+  0%,
+  100% {
+    box-shadow: 0 0 10px -4px var(--tag);
+  }
+  50% {
+    box-shadow: 0 0 19px -2px var(--tag);
+  }
+}
+
+/* haunt: the same light, slower, and every so often it is simply not there */
+.tagchip--haunt {
+  box-shadow: 0 0 13px -4px var(--tag);
+  animation: tag-haunt 5.4s ease-in-out infinite;
+}
+@keyframes tag-haunt {
+  0%,
+  100% {
+    box-shadow: 0 0 12px -4px var(--tag);
+    opacity: 1;
+  }
+  38% {
+    box-shadow: 0 0 20px -2px var(--tag);
+    opacity: 0.94;
+  }
+  62% {
+    box-shadow: 0 0 8px -5px var(--tag);
+    opacity: 1;
+  }
+  68% {
+    opacity: 0.84;
+  }
+  74% {
+    opacity: 1;
+  }
+}
+
+/* stripe: hazard tape, crawling */
 .tagchip--stripe {
   background-image: repeating-linear-gradient(
     115deg,
     transparent 0 6px,
     rgba(11, 11, 13, 0.22) 6px 11px
   );
+  animation: tag-crawl 1.5s linear infinite;
 }
+@keyframes tag-crawl {
+  /* 11px is the stripe's period along the gradient axis, and the axis is
+     tilted 115deg — so a horizontal step of 11 / sin(115deg) lands the
+     pattern exactly where it started and the loop has no seam in it */
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 12.14px 0;
+  }
+}
+
+/* split: the name drawn twice, a step off, and the step keeps slipping */
 .tagchip--split {
   text-shadow:
     -1px 0 rgba(255, 93, 93, 0.65),
     1px 0 rgba(92, 225, 196, 0.65);
+  animation: tag-slip 2.4s steps(1, end) infinite;
 }
+@keyframes tag-slip {
+  0%,
+  100% {
+    text-shadow:
+      -1px 0 rgba(255, 93, 93, 0.65),
+      1px 0 rgba(92, 225, 196, 0.65);
+  }
+  35% {
+    text-shadow:
+      -3px 0 rgba(255, 93, 93, 0.75),
+      2px 0 rgba(92, 225, 196, 0.7);
+  }
+  55% {
+    text-shadow:
+      -1px 1px rgba(255, 93, 93, 0.6),
+      2px -1px rgba(92, 225, 196, 0.75);
+  }
+  70% {
+    text-shadow:
+      2px 0 rgba(255, 93, 93, 0.7),
+      -2px 0 rgba(92, 225, 196, 0.7);
+  }
+}
+
+/* mono: a monospaced name on a screen that has not quite warmed up */
 .tagchip--mono {
   font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
   letter-spacing: 0.14em;
+  animation: tag-flicker 4.6s steps(1, end) infinite;
+}
+@keyframes tag-flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  12% {
+    opacity: 0.82;
+  }
+  13% {
+    opacity: 1;
+  }
+  47% {
+    opacity: 0.88;
+  }
+  48% {
+    opacity: 1;
+  }
+  83% {
+    opacity: 0.8;
+  }
+  84% {
+    opacity: 1;
+  }
+}
+
+/* jitter: something overheating under the label */
+.tagchip--jitter {
+  animation: tag-jitter 0.9s steps(1, end) infinite;
+}
+@keyframes tag-jitter {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  20% {
+    transform: translate(-1px, 1px) rotate(-0.6deg);
+  }
+  40% {
+    transform: translate(1px, 0) rotate(0.5deg);
+  }
+  60% {
+    transform: translate(0, -1px) rotate(-0.3deg);
+  }
+  80% {
+    transform: translate(1px, 1px) rotate(0.4deg);
+  }
+}
+
+/* doze: falling asleep halfway through being read */
+.tagchip--doze {
+  animation: tag-doze 6s ease-in-out infinite;
+}
+@keyframes tag-doze {
+  0%,
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 0.68;
+    transform: translateY(1px);
+  }
+}
+
+/* bob: idling, with nothing in particular to do */
+.tagchip--bob {
+  animation: tag-bob 3.2s ease-in-out infinite;
+}
+@keyframes tag-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+/* sway: absolutely convinced */
+.tagchip--sway {
+  animation: tag-sway 3.8s ease-in-out infinite;
+}
+@keyframes tag-sway {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  30% {
+    transform: rotate(-1.6deg);
+  }
+  70% {
+    transform: rotate(1.6deg);
+  }
+}
+
+/* beat: a double pulse, the kind that only shows up in the last second */
+.tagchip--beat {
+  animation: tag-beat 2.6s ease-out infinite;
+}
+@keyframes tag-beat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  8% {
+    transform: scale(1.07);
+  }
+  16% {
+    transform: scale(1);
+  }
+  24% {
+    transform: scale(1.05);
+  }
+  32% {
+    transform: scale(1);
+  }
+}
+
+/* drip: one slow bead off the bottom edge, and then nothing */
+.tagchip--drip {
+  position: relative;
+}
+.tagchip--drip::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 1px;
+  flex: none;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--tag);
+  filter: brightness(0.55);
+  opacity: 0;
+  animation: tag-drip 3.4s ease-in infinite;
+}
+@keyframes tag-drip {
+  0%,
+  55% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+  65% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(9px);
+  }
+}
+
+/* cursor: the blank line an NPC is waiting behind */
+.tagchip--cursor {
+  padding-right: 6px;
+}
+.tagchip--cursor::after {
+  content: "";
+  flex: none;
+  width: 5px;
+  height: 9px;
+  margin-left: 4px;
+  background: currentColor;
+  animation: tag-blink 1.1s steps(1, end) infinite;
+}
+@keyframes tag-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  99% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 /* cursed: the one finish that moves. Two clipped copies of the name sit over
