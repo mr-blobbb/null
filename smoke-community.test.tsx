@@ -33,9 +33,13 @@ const HUMAN = {
   at: Date.now() - 30_000,
   owner: true,
   tags: ["tstar", "tcursed"],
+  avatar: "chroma",
   machine: "abc",
   bot: false,
 };
+
+/* what the room asks the directory for: the faces of the people in it */
+const PICS = [{ user: "mrblob", pfp: "data:image/png;base64,iVBORw0KGgo=", avatar: "chroma" }];
 
 const ROOMS = [
   { slug: "general", name: "general", topic: "everything at once", at: 0, general: true },
@@ -46,8 +50,10 @@ const ROOMS = [
    too: anything with a `thread` argument is messages, everything else is the
    thread list */
 mock.module("convex/react", () => ({
-  useQuery: (_q: unknown, args?: Record<string, unknown>) =>
-    args && "thread" in args ? [BOT, HUMAN] : ROOMS,
+  useQuery: (_q: unknown, args?: Record<string, unknown>) => {
+    if (args && "users" in args) return PICS;
+    return args && "thread" in args ? [BOT, HUMAN] : ROOMS;
+  },
   useMutation: () => async () => null,
   useAction: () => async () => ({ ok: true, text: "hi" }),
   useConvex: () => ({ mutation: async () => "high-scores" }),
@@ -80,6 +86,9 @@ ok("signed out, the owner tools stay away", !chatOut.includes("ch-tools"));
 ok("the bot line is marked as the bot", chatOut.includes("is-bot") && chatOut.includes("say-badge"));
 ok("the bot's markup became real tags", chatOut.includes("<b>mr blob</b>") && chatOut.includes("<br/>"));
 ok("the owner badge and shop tag both render", chatOut.includes("tagchip--owner") && chatOut.includes("tagchip"));
+ok("the author's picture is in the room", chatOut.includes('<img src="data:image/png;base64,iVBORw0KGgo='));
+ok("and the decoration they wear is drawn over it", chatOut.includes("art art--clip"));
+ok("only the person with a picture gets one", (chatOut.match(/<img /g) ?? []).length === 1);
 ok("the room header is there", chatOut.includes("ch-hash") && chatOut.includes("everything at once"));
 
 /* ---------- the rooms, as the owner ---------- */

@@ -52,6 +52,29 @@ export const list = query({
 
 /** Write (or refresh) one card. Keyed by handle, case-insensitively, so
  *  "@MrBlob" and "@mrblob" are one member rather than two. */
+/** The pictures, for the handles a page is actually drawing. A card carries a
+ *  profile picture as a data URL, so a room that pulled every member's would be
+ *  moving megabytes per message; instead the room asks for the few people in
+ *  it, once each, and gets told again if one of them changes their face. */
+export const pictures = query({
+  args: { users: v.array(v.string()) },
+  handler: async (ctx, { users }) => {
+    const out: { user: string; pfp: string | null; avatar: string | null }[] = [];
+    const seen = new Set<string>();
+    for (const asked of users.slice(0, 60)) {
+      const key = asked.trim().toLowerCase();
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      const row = await ctx.db
+        .query("members")
+        .withIndex("by_user", (q) => q.eq("user", key))
+        .first();
+      if (row) out.push({ user: key, pfp: row.pfp, avatar: row.avatar });
+    }
+    return out;
+  },
+});
+
 export const put = mutation({
   args: {
     user: v.string(),

@@ -36,8 +36,8 @@ import { Guard } from "../components/Guard";
 import { cloud, cloudOn, machine } from "../lib/cloud";
 import { useAccount } from "../lib/account";
 import { isOwner, OWNER_TAG } from "../lib/owner";
-import { itemsOf } from "../lib/econ";
-import { TagChip } from "../lib/art";
+import { itemsOf, useEcon } from "../lib/econ";
+import { AvatarArt, TagChip } from "../lib/art";
 import { screen } from "../lib/filter";
 import { Rich } from "../lib/rich";
 import { go } from "../lib/tabs";
@@ -51,6 +51,8 @@ type Row = {
   owner: boolean;
   /** the tags the author was wearing when they said it */
   tags: string[];
+  /** the decoration they wear around their picture */
+  avatar: string | null;
   machine: string;
   bot: boolean;
 };
@@ -203,6 +205,26 @@ function Feed({ slug }: { slug: string }) {
   const posts = useQuery(api.chat.recent, { thread: slug }) as Row[] | undefined;
   const send = useMutation(api.chat.send);
   const me = useAccount();
+  const eco = useEcon();
+
+  /* Who is in the room, and what their faces look like. The feed carries the
+     names and the decorations; the pictures are a data URL each, so they are
+     asked for once for the handful of people actually on screen rather than
+     stapled to every message. */
+  const authors = useMemo(
+    () => [...new Set((posts ?? []).map((m) => m.user.trim().toLowerCase()))].filter(Boolean).sort(),
+    [posts],
+  );
+  const pics = useQuery(api.members.pictures, { users: authors });
+  const faces = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const p of pics ?? []) {
+      if (p && typeof p.user === "string" && p.pfp) map.set(p.user.trim().toLowerCase(), p.pfp);
+    }
+    return map;
+  }, [pics]);
+
+  const handle = (me.user ?? "").replace(/^@/, "").toLowerCase();
 
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
@@ -279,9 +301,24 @@ function Feed({ slug }: { slug: string }) {
             #{slug} is empty. Say the first thing, or type <code>$help</code>.
           </p>
         )}
-        {posts?.map((m, i) => (
-          <Line key={m.id} m={m} mine={m.machine === machine} prev={posts[i - 1]} />
-        ))}
+        {posts?.map((m, i) => {
+          const who = m.user.trim().toLowerCase();
+          const mine = m.machine === machine;
+          /* your own picture and decoration come off this browser, so they
+             show the moment you set them instead of waiting for the directory
+             to catch up */
+          const own = who === handle;
+          return (
+            <Line
+              key={m.id}
+              m={m}
+              mine={mine}
+              prev={posts[i - 1]}
+              pic={faces.get(who) ?? (own ? me.pfp : null)}
+              avatar={m.avatar ?? (own ? eco.equipped.avatar : null)}
+            />
+          );
+        })}
       </div>
 
       <div className="ch-box">
@@ -347,7 +384,21 @@ function tagIds(): string[] {
  *  conversation groups, far enough that a gap shows. */
 const GROUP_MS = 5 * 60 * 1000;
 
-function Line({ m, mine, prev }: { m: Row; mine: boolean; prev?: Row }) {
+function Line({
+  m,
+  mine,
+  prev,
+  pic,
+  avatar,
+}: {
+  m: Row;
+  mine: boolean;
+  prev?: Row;
+  /** the author's picture, or null for someone who has not set one */
+  pic: string | null;
+  /** the decoration they wear around it */
+  avatar: string | null;
+}) {
   const tags = itemsOf(m.tags);
   const time = new Date(m.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   const owner = m.owner || isOwner(m.user);
@@ -360,7 +411,18 @@ function Line({ m, mine, prev }: { m: Row; mine: boolean; prev?: Row }) {
       }`}
     >
       <span className="say-pic" aria-hidden="true">
-        {m.bot ? <Bot /> : (m.name || "?").slice(0, 1).toUpperCase()}
+        {/* a run of lines from one person draws the face once, at the top of
+            the run: the rest is the same face, and a decoration can be a
+            looping clip that is not worth decoding eight times over */}
+        {!same &&
+          (m.bot ? (
+            <Bot />
+          ) : (
+            <>
+              {pic ? <img src={pic} alt="" /> : (m.name || "?").slice(0, 1).toUpperCase()}
+              <AvatarArt id={avatar} />
+            </>
+          ))}
       </span>
 
       <div className="say-main">

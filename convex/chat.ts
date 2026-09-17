@@ -186,6 +186,9 @@ function draw(m: Doc<"messages">, member: Doc<"members"> | null = null) {
     body: m.body,
     at: m.at,
     owner: m.owner || member?.owner === true,
+    /* the decoration is an id, so it costs nothing to carry here; the picture
+       itself is a data URL and is asked for separately, by handle */
+    avatar: member ? member.avatar : null,
     /* a row written before tags came in twos holds one under `tag` */
     tags: member
       ? (member.tags ?? (member.tag ? [member.tag] : []))
