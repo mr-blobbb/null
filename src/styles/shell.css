@@ -25,20 +25,6 @@
   border-right: var(--bw) solid var(--line);
   z-index: 40;
 }
-.rail-mark {
-  width: 30px;
-  height: 30px;
-  display: grid;
-  place-items: center;
-  border-radius: var(--r-1);
-  background: var(--text);
-  color: var(--bg);
-  font-weight: 800;
-  font-size: 15px;
-  letter-spacing: -0.04em;
-  margin-bottom: 8px;
-  flex: none;
-}
 .rail-rule {
   width: 22px;
   border-top: var(--bw) solid var(--line);

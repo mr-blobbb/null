@@ -1,0 +1,149 @@
+/* ============================================================
+   NULL · refine.css
+   The quiet pass. Everything here is either a size that was
+   written into a component's own file (so it could not be
+   changed from tokens.css) or the glass the popups are cut
+   from. Tokens still own the shape scale and the hairlines.
+   ============================================================ */
+
+/* ---------- type: one step down everywhere ---------- */
+.hm-word {
+  letter-spacing: -0.075em;
+  font-weight: 700;
+}
+.hm-line {
+  font-size: 12.5px;
+}
+
+.lb-title,
+.cl-title,
+.pf-account-h,
+.pf-auth-h {
+  font-size: clamp(19px, 2.4vw, 25px);
+  letter-spacing: -0.022em;
+}
+
+.set-h {
+  font-size: 12.5px;
+}
+.set-note,
+.pf-row-sub,
+.form-row > span {
+  font-size: 11.5px;
+}
+
+.shop-name {
+  font-size: 12.5px;
+}
+.shop-desc {
+  font-size: 11.5px;
+  min-height: 30px;
+}
+.shop-price {
+  font-size: 12px;
+}
+
+.cl-head {
+  font-size: 13.5px;
+}
+.cl-note,
+.cl-change {
+  font-size: 12px;
+}
+
+.ex-card-top b {
+  font-size: 12.5px;
+}
+.ex-desc {
+  font-size: 11.5px;
+  min-height: 32px;
+}
+
+.tile-name {
+  font-size: 11.5px;
+}
+.lb-count,
+.px-card-body em {
+  font-size: 11px;
+}
+
+.pf-name {
+  font-size: 21px;
+}
+.pf-handle,
+.pf-chip {
+  font-size: 11.5px;
+}
+
+.tab-name {
+  font-size: 11.5px;
+}
+.bar-addr input,
+.addr input {
+  font-size: 12.5px;
+}
+
+/* ---------- icons: one size, centred, never clipped ---------- */
+.rail-btn svg {
+  width: var(--ico);
+  height: var(--ico);
+}
+.rail-btn,
+.bar-btn,
+.tab-new,
+.tab-x {
+  display: grid;
+  place-items: center;
+}
+.bar-btn svg {
+  width: 15px;
+  height: 15px;
+}
+.tab svg {
+  width: 13px;
+  height: 13px;
+}
+.tab-x svg {
+  width: 12px;
+  height: 12px;
+}
+.tune button svg {
+  width: 13px;
+  height: 13px;
+}
+.ql-btn svg {
+  width: 19px;
+  height: 19px;
+}
+
+/* ---------- glass: the popups are cut from it ---------- */
+.sheet {
+  background: var(--glass);
+  border-color: var(--glass-line);
+  backdrop-filter: blur(var(--blur)) saturate(145%);
+  -webkit-backdrop-filter: blur(var(--blur)) saturate(145%);
+  box-shadow: 0 30px 70px -40px #000;
+}
+.sheet-head {
+  background: color-mix(in srgb, var(--bg-3) 34%, transparent);
+}
+.veil {
+  background: color-mix(in srgb, var(--bg) 46%, transparent);
+  backdrop-filter: blur(14px) saturate(120%);
+  -webkit-backdrop-filter: blur(14px) saturate(120%);
+}
+.extmenu,
+.set-nav,
+.tip::after {
+  background: var(--glass);
+  border-color: var(--glass-line);
+  backdrop-filter: blur(var(--blur)) saturate(140%);
+  -webkit-backdrop-filter: blur(var(--blur)) saturate(140%);
+}
+.strip-card,
+.px-card,
+.shop-card,
+.tile,
+.card {
+  background: color-mix(in srgb, var(--bg-2) 82%, transparent);
+}

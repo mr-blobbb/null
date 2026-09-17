@@ -7,6 +7,9 @@ import "./styles/pages.css";
 import "./styles/shop.css";
 import "./styles/profile.css";
 import "./styles/settings.css";
+import "./styles/browser.css";
+/* imported last: the quiet pass, which overrides a few wrote-in sizes */
+import "./styles/refine.css";
 
 import { App } from "./App";
 

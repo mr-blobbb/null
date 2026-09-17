@@ -12,6 +12,10 @@
   --font: "Adwaita Sans", "SF Compact Text", Inter, -apple-system, "Segoe UI",
     system-ui, sans-serif;
   --mono: "Space Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  /* the wordmark's face: the roundest thing that ships with a machine, then
+     Nunito for everyone else. Only the homepage h1 uses this. */
+  --rounded: ui-rounded, "SF Pro Rounded", "Hiragino Maru Gothic ProN", "Nunito",
+    "Quicksand", var(--font);
 
   /* the display faces, only ever used for a profile's own name */
   --font-bungee: "Bungee", var(--font);
@@ -23,17 +27,25 @@
   --font-press: "Press Start 2P", var(--font);
   --font-space: "Space Mono", var(--mono);
 
-  --r-1: 6px;
-  --r-2: 10px;
-  --r-3: 14px;
-  --r-4: 18px;
-  --r-5: 24px;
+  /* soft corners, thin edges: the whole site is one hairline and a rounding */
+  --r-1: 7px;
+  --r-2: 12px;
+  --r-3: 16px;
+  --r-4: 21px;
+  --r-5: 28px;
 
-  --rail: 56px;
-  --chrome: 44px;
+  --rail: 54px;
+  --chrome: 42px;
 
-  --bw: 2px;
+  --bw: 1px;
   --ease: cubic-bezier(0.32, 0.72, 0.24, 1);
+
+  /* the glass the popups are cut from, and the size every icon is drawn at */
+  --glass: color-mix(in srgb, var(--bg-2) 58%, transparent);
+  --glass-2: color-mix(in srgb, var(--bg-3) 46%, transparent);
+  --glass-line: color-mix(in srgb, var(--line-2) 72%, transparent);
+  --blur: 28px;
+  --ico: 17px;
 }
 
 /* ---------- palettes ----------

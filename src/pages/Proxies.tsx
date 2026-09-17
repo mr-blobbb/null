@@ -1,18 +1,19 @@
 /* NULL · Proxies.tsx
-   Two things in one page: the shelf of ready-made sites, and the window that
-   loads an address inside NULL.
+   Two things in one page: the shelf of ready-made sites, and the fullscreen
+   browser that loads an address.
 
-   The chain the window is built for is
+   The browser is not an iframe pointed at the target — a page cannot fetch
+   another origin, and most sites refuse to be framed. It is the Ultraviolet
+   chain described in src/lib/browser.ts: the address is rewritten inside a
+   service worker, carried over a Wisp relay, and the result fills the window.
+   Nothing of NULL's own chrome stays on screen while it is open.
 
-     NULL ──> Scramjet / Ultraviolet ──> Wisp relay ──> the site
+   Until a relay answers, the browser says so in words and offers the site in
+   a real tab, which is the honest fallback rather than a blank frame. */
 
-   The relay address and the engine are real settings, stored with the rest
-   of the preferences. Until a relay is reachable the window says so in
-   words and offers the site in a real tab, which is the honest fallback
-   rather than a blank frame. */
-
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
+  ArrowLeft,
   ExternalLink,
   Globe,
   Loader,
@@ -23,14 +24,180 @@ import {
 } from "lucide-react";
 
 import { entries } from "../lib/catalog";
+import { destinationFor, ENGINES, type EngineId } from "../lib/nav";
 import { prefs } from "../lib/themes";
 import { useStore } from "../lib/store";
-import { pushRecent } from "../lib/account";
+import { proxied, start } from "../lib/browser";
 import { go } from "../lib/tabs";
 
 export function Proxies({ url }: { url?: string }) {
   const p = useStore(prefs);
+  if (url) return <Browser url={url} relay={p.relay} />;
+  return <Shelf relay={p.relay} />;
+}
+
+/* ============================================================
+   the fullscreen browser
+   ============================================================ */
+function Browser({ url, relay }: { url: string; relay: string }) {
+  const engine = useStore(prefs).searchEngine;
+  const [state, setState] = useState<"booting" | "ok" | "failed">("booting");
+  const [reason, setReason] = useState("");
+  const [now, setNow] = useState(url);
+  const [draft, setDraft] = useState(url);
+  const [nonce, setNonce] = useState(0);
+
+  useEffect(() => {
+    let alive = true;
+    setState("booting");
+    setReason("");
+    start(relay).then((b) => {
+      if (!alive) return;
+      setState(b.ok ? "ok" : "failed");
+      if (!b.reason) return;
+      setReason(b.reason);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [relay]);
+
+  useEffect(() => {
+    setNow(url);
+    setDraft(url);
+    setNonce((n) => n + 1);
+  }, [url]);
+
+  /* escape gets you out of the browser and back onto NULL */
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") go({ page: "proxies" });
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  const src = state === "ok" ? proxied(now) : null;
+
+  const host = useMemo(() => {
+    try {
+      return new URL(now).hostname.replace(/^www\./, "");
+    } catch {
+      return now;
+    }
+  }, [now]);
+
+  const leave = () => go({ page: "proxies" });
+
+  return (
+    <div className="bw">
+      <div className="bw-bar">
+        <button className="bar-btn" onClick={leave} title="Back to null" aria-label="Back to null">
+          <ArrowLeft />
+        </button>
+        <span className="bw-lock" title={now.startsWith("https://") ? "Secure" : "Not secure"}>
+          {now.startsWith("https://") ? <Lock /> : <ShieldAlert />}
+        </span>
+        <input
+          className="bw-addr"
+          value={draft}
+          spellCheck={false}
+          aria-label="Address"
+          onChange={(e) => setDraft(e.target.value)}
+          onFocus={(e) => e.currentTarget.select()}
+          onKeyDown={(e) => {
+            if (e.key !== "Enter") return;
+            const to = destinationFor(draft, engine);
+            if (!to) return;
+            if ("page" in to) {
+              go({ page: to.page });
+              return;
+            }
+            setNow(to.url);
+            setNonce((n) => n + 1);
+            e.currentTarget.blur();
+          }}
+        />
+        <button
+          className="bar-btn"
+          aria-label="Reload"
+          title="Reload"
+          onClick={() => setNonce((n) => n + 1)}
+        >
+          <RefreshCw />
+        </button>
+        <button
+          className="bar-btn"
+          aria-label="Open in a real tab"
+          title="Open in a real tab"
+          onClick={() => window.open(now, "_blank", "noopener")}
+        >
+          <ExternalLink />
+        </button>
+        <span className="bw-host" title={now}>
+          {host}
+        </span>
+      </div>
+
+      {state === "booting" && (
+        <div className="bw-note">
+          <Loader className="px-spin" />
+          <h3>Starting the browser…</h3>
+          <p className="faint">
+            Handing {host} to Ultraviolet, which fetches it through{" "}
+            <span className="mono">{relay}</span>.
+          </p>
+        </div>
+      )}
+
+      {state === "failed" && (
+        <div className="bw-note">
+          <ShieldAlert />
+          <h3>{host} did not come through</h3>
+          <p>{reason}</p>
+          <p className="faint">
+            A relay is a WebSocket server, so it cannot live on a static host. Set one you run
+            in Settings, or open the site in a real tab.
+          </p>
+          <div className="bw-note-actions">
+            <button className="btn btn--fill" onClick={() => window.open(now, "_blank", "noopener")}>
+              <ExternalLink /> Open {host}
+            </button>
+            <button className="btn" onClick={leave}>
+              <ArrowLeft /> Back to null
+            </button>
+          </div>
+        </div>
+      )}
+
+      {src && (
+        <iframe
+          key={nonce}
+          className="bw-frame"
+          src={src}
+          title={host}
+          referrerPolicy="no-referrer"
+          allow="clipboard-read; clipboard-write; fullscreen; gamepad; autoplay"
+        />
+      )}
+    </div>
+  );
+}
+
+/* ============================================================
+   the shelf
+   ============================================================ */
+function Shelf({ relay }: { relay: string }) {
+  const p = useStore(prefs);
   const list = entries("proxy");
+  const [draft, setDraft] = useState("");
+
+  const open = (raw: string) => {
+    const to = destinationFor(raw, p.searchEngine);
+    if (!to) return;
+    if ("page" in to) go({ page: to.page });
+    else go({ page: "proxies", arg: { url: to.url } });
+  };
 
   return (
     <div className="page page--wide">
@@ -39,17 +206,31 @@ export function Proxies({ url }: { url?: string }) {
         <span className="lb-count tiny faint">{list.length} ready to open</span>
       </div>
 
-      <ProxyWindow url={url} relay={p.relay} engine={p.engine} />
+      <form
+        className="hm-search px-open"
+        role="search"
+        onSubmit={(e) => {
+          e.preventDefault();
+          open(draft);
+        }}
+      >
+        <Globe />
+        <input
+          value={draft}
+          spellCheck={false}
+          autoComplete="off"
+          placeholder="Type an address, or search the web"
+          aria-label="Address or search"
+          onChange={(e) => setDraft(e.target.value)}
+        />
+      </form>
 
       <div className="lb-grid">
         {list.map((e) => (
           <button
             key={e.id}
             className="px-card"
-            onClick={() => {
-              pushRecent("app", e.id);
-              go({ page: "proxies", arg: { url: e.url ?? "" } });
-            }}
+            onClick={() => go({ page: "proxies", arg: { url: e.url ?? "" } })}
           >
             <span className="px-card-icon">
               <Globe />
@@ -67,11 +248,11 @@ export function Proxies({ url }: { url?: string }) {
       </div>
 
       <div className="card card--pad px-settings">
-        <h3 className="set-h">The relay</h3>
+        <h3 className="set-h">The browser</h3>
         <p className="set-note">
-          A web page cannot be fetched from another origin in a browser, which is the whole
-          reason this window exists. The address below is the Wisp relay the window hands
-          requests to; point it at your own server if you run one.
+          Every address opens fullscreen through Ultraviolet, which fetches it over the relay
+          below. A relay is a WebSocket server, so it cannot be hosted on a static page: point
+          this at one you run, or use the public one it ships with.
         </p>
         <div className="px-fields">
           <label className="form-row">
@@ -84,140 +265,25 @@ export function Proxies({ url }: { url?: string }) {
             />
           </label>
           <label className="form-row">
-            <span>Engine</span>
+            <span>Search engine</span>
             <select
               className="fld"
-              value={p.engine}
-              onChange={(e) => prefs.set({ engine: e.target.value as "scramjet" | "ultraviolet" })}
+              value={p.searchEngine}
+              onChange={(e) => prefs.set({ searchEngine: e.target.value as EngineId })}
             >
-              <option value="scramjet">Scramjet</option>
-              <option value="ultraviolet">Ultraviolet</option>
+              {ENGINES.map((e) => (
+                <option key={e.id} value={e.id}>
+                  {e.name}
+                </option>
+              ))}
             </select>
           </label>
         </div>
+        <p className="tiny faint px-note">
+          Brave is the default. What you type in an address box becomes a page, an address, or a
+          search on this engine — in that order.
+        </p>
       </div>
-    </div>
-  );
-}
-
-function ProxyWindow({ url, relay, engine }: { url?: string; relay: string; engine: string }) {
-  const [target, setTarget] = useState(url ?? "");
-  const [draft, setDraft] = useState(url ?? "");
-  const [state, setState] = useState<"idle" | "loading" | "ok" | "blocked">(url ? "loading" : "idle");
-  const timer = useRef<number | null>(null);
-
-  useEffect(() => {
-    setTarget(url ?? "");
-    setDraft(url ?? "");
-    setState(url ? "loading" : "idle");
-  }, [url]);
-
-  useEffect(() => {
-    if (!target) return;
-    if (timer.current) window.clearTimeout(timer.current);
-    /* A framed site that refuses to be framed fires no event we can trust,
-       so the window waits and then says so. Sites that do load never see
-       this, because the timeout is cleared when the frame reports in. */
-    timer.current = window.setTimeout(() => setState((s) => (s === "loading" ? "blocked" : s)), 7000);
-    return () => {
-      if (timer.current) window.clearTimeout(timer.current);
-    };
-  }, [target]);
-
-  const host = useMemo(() => {
-    try {
-      return new URL(target).hostname;
-    } catch {
-      return "";
-    }
-  }, [target]);
-
-  return (
-    <div className="px-window card">
-      <div className="px-bar">
-        {state === "blocked" ? <ShieldAlert className="px-lock" /> : <Lock className="px-lock is-safe" />}
-        <input
-          value={draft}
-          spellCheck={false}
-          placeholder="Type an address, e.g. example.com"
-          aria-label="Address"
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key !== "Enter") return;
-            const next = draft.trim();
-            if (!next) return;
-            const full = /^https?:\/\//i.test(next) ? next : `https://${next}`;
-            setTarget(full);
-            setState("loading");
-          }}
-        />
-        <button
-          className="bar-btn"
-          aria-label="Reload"
-          onClick={() => {
-            if (!target) return;
-            setState("loading");
-            setTarget("");
-            window.setTimeout(() => setTarget(url ?? draft), 30);
-          }}
-        >
-          <RefreshCw />
-        </button>
-        <button
-          className="bar-btn"
-          aria-label="Open in a real tab"
-          title="Open in a real tab"
-          onClick={() => target && window.open(target, "_blank", "noopener")}
-        >
-          <ExternalLink />
-        </button>
-      </div>
-
-      {state === "idle" && (
-        <div className="px-body px-body--note">
-          <Globe />
-          <h3>Nothing loaded yet</h3>
-          <p>
-            Type an address above. The page is handed to <b>{engine === "scramjet" ? "Scramjet" : "Ultraviolet"}</b>,
-            which fetches it through <span className="mono">{relay}</span> and rewrites it on the
-            way in so its links and requests stay in this frame.
-          </p>
-        </div>
-      )}
-
-      {state === "loading" && (
-        <div className="px-body px-body--note">
-          <Loader className="px-spin" />
-          <h3>Loading {host || "the page"}…</h3>
-          <p className="faint">Waiting on the relay.</p>
-        </div>
-      )}
-
-      {state === "blocked" && (
-        <div className="px-body px-body--note">
-          <ShieldAlert />
-          <h3>{host || "That site"} did not come through</h3>
-          <p>
-            Either it refuses to be framed, or the relay at{" "}
-            <span className="mono">{relay}</span> is not answering. Set a relay you run, or
-            open the site in a real tab.
-          </p>
-          <button className="btn" onClick={() => target && window.open(target, "_blank", "noopener")}>
-            <ExternalLink /> Open {host || "it"} in a tab
-          </button>
-        </div>
-      )}
-
-      {target && state !== "blocked" && state !== "idle" && (
-        <iframe
-          className="px-frame"
-          src={target}
-          title={host || "Proxied site"}
-          onLoad={() => setState("ok")}
-          referrerPolicy="no-referrer"
-          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
-        />
-      )}
     </div>
   );
 }

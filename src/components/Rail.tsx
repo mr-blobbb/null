@@ -1,13 +1,14 @@
 /* NULL · Rail.tsx
-   The spine. Fixed 56px, nine doors, never expands: names arrive in a
+   The spine. Fixed width, nine doors, never expands: names arrive in a
    tooltip on hover, which keeps the width honest on a laptop. The doors are
-   split five and four around a deliberate empty gap.
+   split five and four around a deliberate empty gap. No logo up here — the
+   wordmark on the front door is the only mark the site has.
 
    The active door's icon goes white and an ultra thin line appears flush
    against the window edge beside it. */
 
 import { PAGES, RAIL_BOTTOM, RAIL_TOP, type PageId } from "../lib/nav";
-import { activeTab, go, openTab, useTabs } from "../lib/tabs";
+import { activeTab, go, useTabs } from "../lib/tabs";
 
 export function Rail({ onSettings, openSheetCount }: { onSettings: () => void; openSheetCount: number }) {
   const { tabs, active } = useTabs();
@@ -26,15 +27,6 @@ export function Rail({ onSettings, openSheetCount }: { onSettings: () => void; o
 
   return (
     <nav className="rail" aria-label="Primary">
-      <button
-        className="rail-mark"
-        onClick={() => openTab({ page: "home" })}
-        title="null"
-        aria-label="null"
-      >
-        n
-      </button>
-
       {RAIL_TOP.map((id) => (
         <Door key={id} id={id} on={here === id} onClick={() => click(id)} />
       ))}

@@ -162,6 +162,37 @@ export function pageOf(id: PageId): Page {
   return PAGES[id];
 }
 
+/* ---------- the address bar ----------
+   One box does both jobs, like a browser's: an internal null:// page, a typed
+   address, or words to search for. Brave is what the site ships with. */
+export type EngineId = "brave" | "duckduckgo" | "google";
+
+export const ENGINES: { id: EngineId; name: string; url: (q: string) => string }[] = [
+  { id: "brave", name: "Brave", url: (q) => `https://search.brave.com/search?q=${encodeURIComponent(q)}` },
+  { id: "duckduckgo", name: "DuckDuckGo", url: (q) => `https://duckduckgo.com/?q=${encodeURIComponent(q)}` },
+  { id: "google", name: "Google", url: (q) => `https://www.google.com/search?q=${encodeURIComponent(q)}` },
+];
+
+export function searchUrl(q: string, engine: EngineId = "brave"): string {
+  const hit = ENGINES.find((e) => e.id === engine) ?? ENGINES[0];
+  return hit.url(q);
+}
+
+/** What the address box does with what you typed. A page, an address, or a
+ *  search — never nothing, which is what the old popup search got wrong. */
+export function destinationFor(
+  raw: string,
+  engine: EngineId = "brave",
+): { page: PageId } | { url: string } | null {
+  const s = raw.trim();
+  if (!s) return null;
+  const parsed = parseAddress(s);
+  if (parsed) return parsed;
+  /* words, or a single word that could not be a host: search the web */
+  if (/\s/.test(s) || !/\.[a-z]{2,}/i.test(s)) return { url: searchUrl(s, engine) };
+  return null;
+}
+
 /** Turn a typed or pasted address into a destination.
  *  `null://g`, `g`, `/games`, `null://games` all mean the games page. */
 export function parseAddress(raw: string): { page: PageId } | { url: string } | null {

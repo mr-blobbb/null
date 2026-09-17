@@ -12,7 +12,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Chrome } from "./components/Chrome";
 import { Rail } from "./components/Rail";
 import { SettingsSheet } from "./components/SettingsSheet";
-import { CommandPalette } from "./components/CommandPalette";
 import { NotFound } from "./pages/NotFound";
 import { Home } from "./pages/Home";
 import { Library } from "./pages/Library";
@@ -38,7 +37,6 @@ export function App() {
   const tab = activeTab(state);
 
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [paletteOpen, setPaletteOpen] = useState(false);
   const [ms, setMs] = useState(0);
   const [milestone, setMilestone] = useState<string | null>(null);
 
@@ -125,24 +123,6 @@ export function App() {
     return () => window.removeEventListener("hashchange", apply);
   }, []);
 
-  /* ⌘K / ctrl-K opens the site search, and the home page's own search box
-     asks for it by name when what you typed is not an address */
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        setPaletteOpen(true);
-      }
-    };
-    const onAsk = () => setPaletteOpen(true);
-    window.addEventListener("keydown", onKey);
-    window.addEventListener("null:search", onAsk);
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      window.removeEventListener("null:search", onAsk);
-    };
-  }, []);
-
   /* Settings is a sheet, not a page: a tab that somehow ends up on it shows
      the home screen with the sheet over it */
   useEffect(() => {
@@ -213,7 +193,6 @@ export function App() {
       )}
 
       <SettingsSheet open={settingsOpen} onClose={() => setSettingsOpen(false)} />
-      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
     </div>
   );
 }

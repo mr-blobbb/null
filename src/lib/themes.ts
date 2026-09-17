@@ -8,6 +8,7 @@
    the wordmark green and Mono leaves it white. */
 
 import { createStore, useStore } from "./store";
+import type { EngineId } from "./nav";
 
 export type PaletteId =
   | "null"
@@ -68,9 +69,10 @@ export type Prefs = {
   /** "1" is the light performance mode, "ultra" also stops all animation */
   perf: "" | "1" | "ultra";
   reduceMotion: boolean;
-  /** the relay the proxy window talks to */
+  /** the relay the fullscreen browser fetches through */
   relay: string;
-  engine: "scramjet" | "ultraviolet";
+  /** what the address box searches with when what you typed is not an address */
+  searchEngine: EngineId;
   showMeta: boolean;
 };
 
@@ -88,7 +90,7 @@ export const prefs = createStore<Prefs>("prefs", {
   perf: "",
   reduceMotion: false,
   relay: "wss://wisp.mercurywork.shop/",
-  engine: "scramjet",
+  searchEngine: "brave",
   showMeta: true,
 });
 

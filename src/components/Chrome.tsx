@@ -24,7 +24,9 @@ import {
   X,
 } from "lucide-react";
 
-import { PAGES, parseAddress, type PageId } from "../lib/nav";
+import { destinationFor, PAGES, type PageId } from "../lib/nav";
+import { useStore } from "../lib/store";
+import { prefs } from "../lib/themes";
 import {
   activeTab,
   closeTab,
@@ -44,6 +46,7 @@ export function Chrome({ onSettings }: { onSettings: () => void }) {
   const state = useTabs();
   const tab = activeTab(state);
   const { title, address, secure } = describe(tab.now);
+  const engine = useStore(prefs).searchEngine;
 
   const [draft, setDraft] = useState(address);
   const [focused, setFocused] = useState(false);
@@ -66,8 +69,10 @@ export function Chrome({ onSettings }: { onSettings: () => void }) {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  /* the one rule: a null:// page goes there, an address opens in the browser,
+     and anything else is a search. Nothing is ever ignored. */
   function commit() {
-    const parsed = parseAddress(draft);
+    const parsed = destinationFor(draft, engine);
     if (!parsed) return;
     inputRef.current?.blur();
     if ("page" in parsed) {

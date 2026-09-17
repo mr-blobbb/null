@@ -22,10 +22,10 @@ import {
 import type { LucideIcon } from "lucide-react";
 
 import { createStore, useStore } from "../lib/store";
-import { PAGES, parseAddress, SHEET_PAGES, type PageId } from "../lib/nav";
+import { destinationFor, PAGES, parseAddress, SHEET_PAGES, type PageId } from "../lib/nav";
 import { go } from "../lib/tabs";
 import { Sheet } from "../components/Sheet";
-import { usePalette } from "../lib/themes";
+import { prefs, usePalette } from "../lib/themes";
 
 /* ---------- the lines ----------
    Every one of these has the same chance. There is no rare message, which
@@ -183,23 +183,22 @@ const CARDS: Card[] = [
 
 export function Home() {
   const palette = usePalette();
+  const engine = useStore(prefs).searchEngine;
   const [line] = useState(() => LINES[Math.floor(Math.random() * LINES.length)]);
   const [q, setQ] = useState("");
   const [appsOpen, setAppsOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const list = useStore(links).list;
 
+  /* The box is the browser's address bar, not a search popup: a null:// page
+     goes there, an address opens in the fullscreen browser, and anything else
+     is a web search. Typing always goes somewhere. */
   const runSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    const parsed = parseAddress(q);
-    if (!parsed) {
-      /* not an address and not a page: hand it to the site search instead of
-         doing nothing at all */
-      window.dispatchEvent(new CustomEvent("null:search"));
-      return;
-    }
-    if ("page" in parsed) go({ page: parsed.page });
-    else go({ page: "proxies", arg: { url: parsed.url } });
+    const to = destinationFor(q, engine);
+    if (!to) return;
+    if ("page" in to) go({ page: to.page });
+    else go({ page: "proxies", arg: { url: to.url } });
   };
 
   /* the strip is drawn twice so the loop has no seam */
@@ -210,6 +209,7 @@ export function Home() {
       <h1
         className="hm-word"
         style={{
+          fontFamily: "var(--rounded)",
           backgroundImage: `linear-gradient(180deg, color-mix(in srgb, var(--text) 72%, var(--bg)) 0%, var(--text) 46%, ${palette.ink} 100%)`,
           filter: `drop-shadow(0 0 42px color-mix(in srgb, ${palette.ink} 34%, transparent))`,
         }}
@@ -224,15 +224,14 @@ export function Home() {
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search for anything (on the site ofc)!"
-          aria-label="Search null"
+          placeholder="Search the web, or type an address"
+          aria-label="Search the web or enter an address"
           spellCheck={false}
+          autoComplete="off"
         />
       </form>
 
       <div className="hm-links">
-        <QuickLink icon={Grid3x3} label="All Apps" muted onClick={() => setAppsOpen(true)} fixed />
-        <QuickLink icon={Plus} label="Add" muted onClick={() => setAddOpen(true)} fixed />
         {list.map((s) => (
           <QuickLink
             key={s.id}
@@ -247,6 +246,9 @@ export function Home() {
             onRemove={() => links.set({ list: list.filter((x) => x.id !== s.id) })}
           />
         ))}
+        {/* the two fixed doors sit to the right of the editable ones */}
+        <QuickLink icon={Plus} label="Add" muted onClick={() => setAddOpen(true)} fixed />
+        <QuickLink icon={Grid3x3} label="All Apps" muted onClick={() => setAppsOpen(true)} fixed />
       </div>
 
       <div className="hm-strip">
