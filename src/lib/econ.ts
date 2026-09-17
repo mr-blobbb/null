@@ -262,8 +262,10 @@ export function itemOf(id: string | null | undefined): ShopItem | undefined {
   return SHOP.find((i) => i.id === id);
 }
 
-export function owns(id: string): boolean {
-  return econ.get().owned.includes(id);
+/** Does this browser own the item? `owner` is the account that owns the site,
+ *  which gets the whole shelf without paying for any of it. */
+export function owns(id: string, owner = false): boolean {
+  return owner || econ.get().owned.includes(id);
 }
 
 export function buy(id: string): { ok: boolean; reason?: string } {
@@ -361,11 +363,11 @@ export function mintCoinsGift(): { ok: boolean; code?: string; reason?: string }
   return { ok: true, code };
 }
 
-export function mintItemGift(id: string): { ok: boolean; code?: string; reason?: string } {
+export function mintItemGift(id: string, owner = false): { ok: boolean; code?: string; reason?: string } {
   const item = itemOf(id);
   if (!item) return { ok: false, reason: "That item is not on the shelf." };
   const s = econ.get();
-  if (!s.owned.includes(id)) return { ok: false, reason: "Buy it before you give it away." };
+  if (!owner && !s.owned.includes(id)) return { ok: false, reason: "Buy it before you give it away." };
   const code = makeCode();
   econ.set({
     gifts: [...s.gifts, { code, gives: id, amount: 0, at: Date.now(), used: false }],

@@ -296,12 +296,13 @@
   overflow-x: auto;
   padding-bottom: 6px;
 }
-.pf-wearing {
-  margin-top: 16px;
+/* the tags under the handle: the owner's, and whatever the shop sold them */
+.pf-tags {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  color: var(--dim);
+  gap: 7px;
+  margin-top: 8px;
 }
 
 /* ---------- account ---------- */

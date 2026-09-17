@@ -64,16 +64,26 @@ type Shortcut = { id: string; label: string; path: string };
 const DEFAULT_LINKS: Shortcut[] = [
   { id: "games", label: "Games", path: "null://g" },
   { id: "apps", label: "Apps", path: "null://a" },
-  { id: "proxies", label: "Proxies", path: "null://p" },
+  { id: "movies", label: "Movies", path: "null://m" },
   { id: "extensions", label: "Extensions", path: "null://ext" },
   { id: "shop", label: "Shop", path: "null://shop" },
 ];
 
 const links = createStore<{ list: Shortcut[] }>("links", { list: DEFAULT_LINKS });
 
+/* Proxies left the row: an address belongs in the address bar, not in a
+   shortcut. A list saved before that still holds the entry, so drop it on
+   the way in rather than showing a door the rail no longer has. */
+(function tidyLinks() {
+  const list = links.get().list ?? [];
+  const keep = list.filter((s) => s && !/^null:\/\/p\/?$/i.test(s.path ?? ""));
+  if (keep.length !== list.length) links.set({ list: keep.length ? keep : DEFAULT_LINKS });
+})();
+
 const ICON_FOR: Record<string, LucideIcon> = {
   games: Gamepad2,
   apps: Link2,
+  movies: PAGES.movies.icon,
   proxies: Globe,
   shop: ShoppingBag,
   extensions: Puzzle,

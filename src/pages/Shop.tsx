@@ -23,6 +23,7 @@ import {
   buy,
   mintCoinsGift,
   mintItemGift,
+  owns,
   redeem,
   SHOP,
   SHELVES,
@@ -30,6 +31,7 @@ import {
   useEcon,
   type ShopItem,
 } from "../lib/econ";
+import { isOwner } from "../lib/owner";
 import { Sheet } from "../components/Sheet";
 import { useAccount } from "../lib/account";
 
@@ -38,6 +40,8 @@ const SHELF_ICON = { avatar: Sparkles, effect: Star, tag: Tag } as const;
 export function Shop({ onOpenSettings }: { onOpenSettings: () => void }) {
   const me = useEcon();
   const account = useAccount();
+  /* the account that owns the site takes the whole shelf, on the house */
+  const owner = isOwner(account.user);
   const [gift, setGift] = useState<{ code: string; what: string } | null>(null);
   const [note, setNote] = useState<string | null>(null);
 
@@ -81,6 +85,8 @@ export function Shop({ onOpenSettings }: { onOpenSettings: () => void }) {
         {Math.max(0, 15 - Math.floor((me.seconds % 900) / 60))} min · {me.plays} launches so far
       </p>
 
+      {owner && <p className="sh-owner tiny">Owner · everything on the shelf is already yours.</p>}
+
       {SHELVES.map((shelf) => {
         const Icon = SHELF_ICON[shelf.id];
         const items = SHOP.filter((i) => i.shelf === shelf.id);
@@ -96,7 +102,7 @@ export function Shop({ onOpenSettings }: { onOpenSettings: () => void }) {
                 <Card
                   key={item.id}
                   item={item}
-                  owned={me.owned.includes(item.id)}
+                  owned={owns(item.id, owner)}
                   on={me.equipped[shelf.id] === item.id}
                   coins={me.coins}
                   onBuy={() => {
@@ -106,7 +112,8 @@ export function Shop({ onOpenSettings }: { onOpenSettings: () => void }) {
                   }}
                   onEquip={() => toggleEquip(shelf.id, item.id)}
                   onGift={() => {
-                    const r = mintItemGift(item.id);
+                    const r = mintItemGift(item.id, owner);
+
                     if (!r.ok) return say(r.reason ?? "Could not make a code.");
                     setGift({ code: r.code as string, what: item.name });
                   }}
@@ -193,6 +200,8 @@ function Card({
         <s>{item.was.toLocaleString()}</s>
       </div>
       <div className="shop-actions">
+        {/* an unlocked item may be passed on, which is how the owner can
+            hand out something nobody paid for */}
         <button className="btn btn--sm btn--icon" onClick={onGift} disabled={!owned} title="Gift this">
           <Gift />
         </button>

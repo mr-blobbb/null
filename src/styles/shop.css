@@ -51,6 +51,13 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* the owner's line: they never see a price they have to pay */
+.sh-owner {
+  margin-top: 7px;
+  color: var(--text);
+  letter-spacing: 0.02em;
+}
+
 .sh-shelf {
   margin-top: 34px;
 }
@@ -722,6 +729,51 @@
   font-size: 10.5px;
   font-weight: 700;
   letter-spacing: 0.08em;
+}
+
+/* The owner's tag. Nothing on the shelf is built like this: the edge is a
+   gradient of the palette's own ink, the fill is the page surface, and a
+   sheen crosses it on a loop. No shop item can produce any of that. */
+.tagchip--owner {
+  position: relative;
+  gap: 5px;
+  padding: 0 10px;
+  height: 21px;
+  color: var(--text);
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--bg-3), var(--bg-3)) padding-box,
+    linear-gradient(100deg, var(--text), var(--ac-1) 38%, var(--text) 62%, var(--ac-1)) border-box;
+  box-shadow: 0 0 16px -4px color-mix(in srgb, var(--ac-1) 70%, transparent);
+  overflow: hidden;
+  isolation: isolate;
+}
+.tagchip--owner svg {
+  width: 11px;
+  height: 11px;
+}
+.tagchip--owner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 32%,
+    color-mix(in srgb, var(--text) 42%, transparent) 50%,
+    transparent 68%
+  );
+  transform: translateX(-130%);
+  animation: tag-sheen 4.2s var(--ease) infinite;
+  pointer-events: none;
+}
+@keyframes tag-sheen {
+  0%,
+  58% {
+    transform: translateX(-130%);
+  }
+  100% {
+    transform: translateX(130%);
+  }
 }
 
 /* ---------- avatar decorations, layer by layer ----------

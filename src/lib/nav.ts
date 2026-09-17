@@ -6,6 +6,7 @@
    deleted. */
 
 import {
+  Clapperboard,
   Gamepad2,
   Globe,
   House,
@@ -23,6 +24,7 @@ export type PageId =
   | "home"
   | "games"
   | "apps"
+  | "movies"
   | "proxies"
   | "shop"
   | "profile"
@@ -41,6 +43,8 @@ export type Page = {
   blurb: string;
   /** matches the query in the command palette as well as the title */
   keywords: string;
+  /** an address this page opens through the proxy window, if it is one */
+  loads?: string;
 };
 
 export const PAGES: Record<PageId, Page> = {
@@ -71,6 +75,19 @@ export const PAGES: Record<PageId, Page> = {
     blurb: "Tools that run in a tab, laid out exactly like the games.",
     keywords: "app tool utility library",
   },
+  movies: {
+    id: "movies",
+    name: "Movies",
+    address: "null://m",
+    route: "/movies",
+    icon: Clapperboard,
+    blurb: "aether.cx, opened inside NULL like any other address.",
+    keywords: "movies film watch aether stream cinema",
+    loads: "https://aether.cx",
+  },
+  /* No longer a door of its own: an address is typed in the bar and opens as
+     a tab. The page stays for the fullscreen browser and the ready-made
+     links, it is just not advertised in the rail. */
   proxies: {
     id: "proxies",
     name: "Proxies",
@@ -138,7 +155,7 @@ export const PAGES: Record<PageId, Page> = {
 
 /** Five doors at the top of the rail, four at the bottom, and a deliberate
  *  empty gap between them. The gap is the point: the rail is a spine. */
-export const RAIL_TOP: PageId[] = ["home", "games", "apps", "proxies", "shop"];
+export const RAIL_TOP: PageId[] = ["home", "games", "apps", "movies", "shop"];
 export const RAIL_BOTTOM: PageId[] = ["profile", "changelog", "extensions", "settings"];
 
 /** Everything the All Apps sheet lists, in reading order. */
@@ -146,6 +163,7 @@ export const ALL_PAGES: PageId[] = [
   "home",
   "games",
   "apps",
+  "movies",
   "proxies",
   "shop",
   "profile",

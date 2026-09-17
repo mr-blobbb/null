@@ -17,6 +17,7 @@ import {
   Gamepad2,
   Image as ImageIcon,
   LogOut,
+  Crown,
   Lock,
   Palette,
   Pencil,
@@ -48,6 +49,7 @@ import {
 } from "../lib/account";
 import { AvatarArt, EffectArt } from "../lib/art";
 import { itemOf, useEcon } from "../lib/econ";
+import { isOwner, OWNER_TAG } from "../lib/owner";
 import { entries } from "../lib/catalog";
 import { openTab } from "../lib/tabs";
 import { Sheet } from "../components/Sheet";
@@ -177,6 +179,9 @@ function SignedIn() {
   const tag = itemOf(eco.equipped.tag);
   const avatar = eco.equipped.avatar;
   const effect = eco.equipped.effect;
+  /* the owner wears their own tag, on top of whatever they picked up in the
+     shop — the two sit side by side rather than replacing each other */
+  const owner = isOwner(me.user);
 
   const startEdit = () => {
     setDraft({ name: me.name, bio: me.bio });
@@ -246,6 +251,22 @@ function SignedIn() {
               )}
             </h1>
             <span className="pf-handle">@{me.user}</span>
+
+            {(owner || tag) && (
+              <div className="pf-tags">
+                {owner && (
+                  <span className="tagchip tagchip--owner" title={OWNER_TAG.note}>
+                    <Crown />
+                    {OWNER_TAG.name}
+                  </span>
+                )}
+                {tag && (
+                  <span className="tagchip" style={{ background: tag.color, color: "#0b0b0d" }}>
+                    {tag.name}
+                  </span>
+                )}
+              </div>
+            )}
 
             <div className="pf-meta">
               <span className="pf-chip">
@@ -345,12 +366,6 @@ function SignedIn() {
             </button>
           ))}
         </div>
-      )}
-
-      {tag && (
-        <p className="pf-wearing tiny">
-          Wearing <span className="tagchip" style={{ background: tag.color, color: "#0b0b0d" }}>{tag.name}</span>
-        </p>
       )}
 
       <AccountCard />

@@ -25,6 +25,7 @@ import { Player } from "./pages/Player";
 import { applyPalette, applyPerf, prefs, usePalette } from "./lib/themes";
 import { useStore } from "./lib/store";
 import { IDLE_MS, tick, useEcon } from "./lib/econ";
+import { PAGES } from "./lib/nav";
 import { activeTab, go, openTab, targetFromHash, useTabs } from "./lib/tabs";
 import { useExt } from "./lib/extensions";
 
@@ -140,6 +141,8 @@ export function App() {
         return <Library kind="game" />;
       case "apps":
         return <Library kind="app" />;
+      case "movies":
+        return <Proxies url={PAGES.movies.loads} back="home" />;
       case "proxies":
         return <Proxies url={t.arg?.url} />;
       case "shop":

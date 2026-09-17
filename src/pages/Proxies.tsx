@@ -24,22 +24,24 @@ import {
 } from "lucide-react";
 
 import { entries } from "../lib/catalog";
-import { destinationFor, ENGINES, type EngineId } from "../lib/nav";
+import { destinationFor, ENGINES, type EngineId, type PageId } from "../lib/nav";
 import { prefs } from "../lib/themes";
 import { useStore } from "../lib/store";
 import { proxied, start } from "../lib/browser";
-import { go } from "../lib/tabs";
+import { go, openTab } from "../lib/tabs";
 
-export function Proxies({ url }: { url?: string }) {
+/** `back` is where the escape hatch leads: a site typed into the address bar
+ *  came from the proxy shelf, the movies page came from the front door. */
+export function Proxies({ url, back = "proxies" }: { url?: string; back?: PageId }) {
   const p = useStore(prefs);
-  if (url) return <Browser url={url} relay={p.relay} />;
+  if (url) return <Browser url={url} relay={p.relay} back={back} />;
   return <Shelf relay={p.relay} />;
 }
 
 /* ============================================================
    the fullscreen browser
    ============================================================ */
-function Browser({ url, relay }: { url: string; relay: string }) {
+function Browser({ url, relay, back }: { url: string; relay: string; back: PageId }) {
   const engine = useStore(prefs).searchEngine;
   const [state, setState] = useState<"booting" | "ok" | "failed">("booting");
   const [reason, setReason] = useState("");
@@ -71,11 +73,11 @@ function Browser({ url, relay }: { url: string; relay: string }) {
   /* escape gets you out of the browser and back onto NULL */
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") go({ page: "proxies" });
+      if (e.key === "Escape") go({ page: back });
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [back]);
 
   const src = state === "ok" ? proxied(now) : null;
 
@@ -87,7 +89,7 @@ function Browser({ url, relay }: { url: string; relay: string }) {
     }
   }, [now]);
 
-  const leave = () => go({ page: "proxies" });
+  const leave = () => go({ page: back });
 
   return (
     <div className="bw">
@@ -230,7 +232,7 @@ function Shelf({ relay }: { relay: string }) {
           <button
             key={e.id}
             className="px-card"
-            onClick={() => go({ page: "proxies", arg: { url: e.url ?? "" } })}
+            onClick={() => openTab({ page: "proxies", arg: { url: e.url ?? "" } })}
           >
             <span className="px-card-icon">
               <Globe />

@@ -24,7 +24,7 @@ import {
   X,
 } from "lucide-react";
 
-import { destinationFor, PAGES, type PageId } from "../lib/nav";
+import { destinationFor, PAGES } from "../lib/nav";
 import { useStore } from "../lib/store";
 import { prefs } from "../lib/themes";
 import {
@@ -285,5 +285,3 @@ function Tune() {
     </div>
   );
 }
-
-export const CHROME_PAGES: PageId[] = ["home", "games", "apps", "proxies", "shop"];

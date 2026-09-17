@@ -33,6 +33,7 @@ src/lib/
   catalog.ts          the library: games, apps, proxies
   econ.ts             coins, the shop, gift codes
   account.ts          the local account and profile card
+  owner.ts            the one handle that owns the site: scrambled, reserved
   extensions.ts       the add-on registry
   art.tsx             the animated artwork the shop sells
 src/components/
@@ -70,6 +71,16 @@ whole rule is `tick()` in `econ.ts`.
 **The account is local.** A handle, a salted digest of the password, and the
 card. There is no server, so there is no reset flow and no email field.
 Deleting the account asks for the password and then wipes the browser copy.
+One handle is reserved for the person who owns NULL: `owner.ts` holds it
+scrambled and the password only as a digest, signing up or renaming to it is
+refused, and signing in with it takes the whole shop shelf for free plus the
+OWNER tag, which is not on the shelf at all. It is an obfuscated check, not a
+secure one — there is no server here to authenticate against.
+
+**An address opens in a tab.** There is no separate proxies page in the rail:
+type a site into the address bar and it opens as a tab through Ultraviolet and
+the Wisp relay. `null://p` still reaches the ready-made list, and the Movies
+door (`null://m`) is the same window pointed at `aether.cx`.
 
 **Settings is a sheet.** It opens over whatever page you are on, which is why
 there is no `/settings` view: a tab that lands on it shows the home screen

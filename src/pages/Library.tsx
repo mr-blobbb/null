@@ -122,8 +122,7 @@ export function Library({ kind }: { kind: Kind }) {
             </p>
           ) : (
             <p>
-              Nothing in {word.title} yet. Drop a folder into <code>{word.title.toLowerCase()}/</code>{" "}
-              and add it to <code>src/lib/catalog.ts</code>.
+              oops, we lost hold of the {word.many}. but we're already working on this!
             </p>
           )}
         </div>

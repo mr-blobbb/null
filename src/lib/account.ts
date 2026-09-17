@@ -4,6 +4,7 @@
    no email field and no reset flow to get wrong. */
 
 import { createStore, useStore } from "./store";
+import { OWNER, isOwner, ownerCred } from "./owner";
 
 export type NameMode = "solid" | "gradient";
 
@@ -120,6 +121,8 @@ export function checkUser(user: string): string | null {
 export function signUp(user: string, pass: string, confirm: string): { ok: boolean; error?: string } {
   const bad = checkUser(user);
   if (bad) return { ok: false, error: bad };
+  /* the owner's name is taken, and that is the end of it */
+  if (isOwner(user)) return { ok: false, error: "That name is taken." };
   if (pass.length < 4) return { ok: false, error: "Passwords need 4 characters." };
   if (pass !== confirm) return { ok: false, error: "Those passwords do not match." };
   const salt = Math.random().toString(36).slice(2, 10);
@@ -139,6 +142,22 @@ export function signUp(user: string, pass: string, confirm: string): { ok: boole
 
 export function signIn(user: string, pass: string): { ok: boolean; error?: string } {
   const s = account.get();
+  /* The owner's name and password open on any browser, first time and every
+     time, and no other password ever opens this name. */
+  if (ownerCred(user, pass)) {
+    const mine = isOwner(s.user);
+    const now = Date.now();
+    const salt = Math.random().toString(36).slice(2, 10);
+    account.set({
+      user: OWNER,
+      name: mine && s.name ? s.name : OWNER,
+      pass: `${salt}$${digest(salt, pass)}`,
+      joined: mine && s.joined ? s.joined : now,
+      lastUserChange: mine && s.lastUserChange ? s.lastUserChange : now,
+    });
+    return { ok: true };
+  }
+  if (isOwner(user)) return { ok: false, error: "That password is not it." };
   if (!s.user) return { ok: false, error: "There is no account on this browser yet." };
   if (s.user.toLowerCase() !== user.toLowerCase()) return { ok: false, error: "No account called that here." };
   const [salt, hash] = s.pass.split("$");
@@ -176,6 +195,7 @@ export function changeUser(user: string): { ok: boolean; error?: string } {
   const bad = checkUser(user);
   if (bad) return { ok: false, error: bad };
   const s = account.get();
+  if (isOwner(user) && !isOwner(s.user)) return { ok: false, error: "That name is taken." };
   const wait = 14 * 24 * 60 * 60 * 1000;
   const since = Date.now() - s.lastUserChange;
   if (s.lastUserChange && since < wait) {
