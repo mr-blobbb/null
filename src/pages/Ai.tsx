@@ -1,12 +1,13 @@
 /* NULL · Ai.tsx
-   The assistant.
+   The assistant: a general chatbot, not a manual for the site.
 
    Two different things on this site get called a bot, and they are different
    on purpose. Null Bot — in the chat rooms — is a lookup table: it answers
    $playerdata and $rich from data NULL already has, and it can never be
    wrong. This page is a model, and a model can be wrong, which is why it
    lives behind its own door instead of in the room where people are comparing
-   scores.
+   scores. Ask it for code, for dinner, for an explanation of something — the
+   site is only ever a question away, it is not the subject.
 
    The conversation is kept in this browser, like everything else, so closing
    the tab does not throw it away. The server road is asked first, because
@@ -32,12 +33,13 @@ type Said = { ready: boolean; provider: string | null };
    tabs is a conversation nobody has */
 const ai = createStore<{ lines: Line[] }>("ai", { lines: [] });
 
+/* Openers that show what this thing is for. Deliberately not about NULL. */
 const IDEAS = [
-  "what is null?",
-  "where do the coins come from?",
-  "which page has movies?",
-  "how do i add my own game?",
-  "what can $ commands do?",
+  "explain the monty hall problem",
+  "write a haiku about mondays",
+  "what should i cook with rice and eggs?",
+  "help me word a text asking for an extension",
+  "why is my css not applying?",
 ];
 
 export function Ai() {
@@ -188,10 +190,10 @@ npx convex env set OPENAI_API_KEY <your key>`}
               <span className="ai-hello-pic">
                 <Bot />
               </span>
-              <h2>Ask me about null</h2>
+              <h2>Ask me anything</h2>
               <p className="faint">
-                What the pages do, where the coins come from, how the browser works. Short
-                answers, and it says when it does not know.
+                Not a guide to this site — just a chatbot. Code, homework, writing, dinner,
+                whatever. It can be wrong, and it says so when it does not know.
               </p>
               <div className="ai-ideas">
                 {IDEAS.map((idea) => (
@@ -236,7 +238,7 @@ npx convex env set OPENAI_API_KEY <your key>`}
             className="ch-input"
             rows={1}
             value={draft}
-            placeholder={ready ? "Ask about null…" : "Waiting for a key on the deployment"}
+            placeholder={ready ? "Ask anything…" : "Waiting for a key on the deployment"}
             disabled={!ready}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => {

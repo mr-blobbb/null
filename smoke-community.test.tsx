@@ -102,7 +102,8 @@ account.set({ user: null });
 /* ---------- the assistant ---------- */
 const ai = renderToStaticMarkup(<Ai /> as never);
 ok("the assistant draws a window", ai.includes("ai-window") && ai.includes("ai-feed"));
-ok("the assistant offers ideas", ai.includes("ai-idea") && ai.includes("what is null?"));
+ok("the assistant offers ideas", ai.includes("ai-idea") && ai.includes("write a haiku about mondays"));
+ok("the assistant is a chatbot, not a site guide", ai.includes("Ask me anything") && !ai.includes("Ask me about null"));
 ok("the assistant has a box", ai.includes("ai-box") && ai.includes("ch-send"));
 ok("with no key known yet, the box waits", ai.includes("Waiting for a key"));
 ok("and it says it is checking", ai.includes("checking…"));
