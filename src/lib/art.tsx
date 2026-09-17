@@ -197,59 +197,95 @@ export function AvatarArt({ id }: { id: string | null | undefined }) {
 
    Each one ends with a tint layer held at a fixed weight, which is what
    keeps the text over it readable no matter how busy the motion gets. */
+/* one honeycomb cell, as the six points of a pointy-top hexagon */
+function hexPoints(cx: number, cy: number, r: number): string {
+  return Array.from({ length: 6 }, (_, i) => {
+    const a = (Math.PI / 180) * (60 * i - 30);
+    return `${(cx + r * Math.cos(a)).toFixed(2)},${(cy + r * Math.sin(a)).toFixed(2)}`;
+  }).join(" ");
+}
+
+/* the honeycomb the wall is built from: four rows, offset row by row */
+const CELLS = (() => {
+  const r = 9;
+  const out: { x: number; y: number }[] = [];
+  for (let row = 0; row < 4; row++) {
+    for (let col = 0; col < 7; col++) {
+      out.push({
+        x: 6 + col * r * 1.74 + (row % 2 ? r * 0.87 : 0),
+        y: 6 + row * r * 1.5,
+      });
+    }
+  }
+  return out;
+})();
+
 const EFFECTS: Record<string, () => React.ReactNode> = {
-  doves: () =>
-    [0, 1, 2].map((i) => (
-      <svg key={i} viewBox="0 0 40 20" className={`fx-dove d${i}`} aria-hidden="true">
-        <path d="M2 14 Q10 2 20 10 Q30 2 38 14" fill="none" strokeWidth="2" strokeLinecap="round" />
-      </svg>
+  /* rain, a roof, and a cat that has decided the roof is fine */
+  rainy: () => [
+    <i key="sky" className="fx-sky" />,
+    <i key="moon" className="fx-moon" />,
+    <i key="hill" className="fx-hill" />,
+    ...[0, 1, 2, 3].map((i) => <i key={`t${i}`} className={`fx-tree d${i}`} />),
+    <i key="roof" className="fx-roof" />,
+    <i key="cat" className="fx-cat" />,
+    ...Array.from({ length: 22 }, (_, i) => (
+      <i
+        key={`r${i}`}
+        className="fx-streak"
+        style={{ left: `${(i * 4.6) % 100}%`, animationDelay: `${(i % 8) * 0.16}s` }}
+      />
     )),
-
-  glitch: () =>
-    Array.from({ length: 7 }, (_, i) => <i key={i} className={`fx-bar d${i}`} />),
-
-  duckpond: () => [
-    ...[
-      [14, 12],
-      [46, 7],
-      [78, 15],
-    ].map(([x, y], i) => (
-      <i key={`l${i}`} className={`fx-lily d${i}`} style={{ left: `${x}%`, top: `${y}%` }} />
-    )),
-    <span key="b0" className="fx-beam b0" />,
-    <span key="b1" className="fx-beam b1" />,
-    <span key="b2" className="fx-beam b2" />,
+    <i key="water" className="fx-water" />,
   ],
 
-  rainfall: () =>
-    Array.from({ length: 26 }, (_, i) => (
+  /* block terrain, a sun, and one cloud on a very long journey */
+  blocks: () => [
+    <i key="sky" className="fx-sky" />,
+    <i key="sun" className="fx-blocksun" />,
+    <i key="c0" className="fx-cloudpuff d0" />,
+    <i key="c1" className="fx-cloudpuff d1" />,
+    ...[0, 1, 2, 3, 4, 5].map((i) => <i key={i} className={`fx-block b${i}`} />),
+    <i key="sweep" className="fx-sweep" />,
+  ],
+
+  /* a dark wall of hexagons, lighting up in turn */
+  hex: () => (
+    <svg className="fx-svg" viewBox="0 0 110 54" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      {CELLS.map((c, i) => (
+        <polygon
+          key={i}
+          className="fx-cell"
+          points={hexPoints(c.x, c.y, 9)}
+          style={{ animationDelay: `${(i % 7) * 0.42}s` }}
+        />
+      ))}
+    </svg>
+  ),
+
+  /* a ringed disk over a sky full of stars */
+  galaxy: () => [
+    ...Array.from({ length: 26 }, (_, i) => (
       <i
-        key={i}
-        className="fx-drop"
-        style={{ left: `${(i * 3.9) % 100}%`, animationDelay: `${(i % 7) * 0.23}s` }}
+        key={`s${i}`}
+        className="fx-star"
+        style={{
+          left: `${(i * 37) % 100}%`,
+          top: `${(i * 53) % 100}%`,
+          animationDelay: `${(i % 11) * 0.47}s`,
+        }}
       />
     )),
-
-  embers: () =>
-    Array.from({ length: 18 }, (_, i) => (
-      <i
-        key={i}
-        className="fx-ember"
-        style={{ left: `${(i * 5.6) % 100}%`, animationDelay: `${(i % 9) * 0.44}s` }}
-      />
-    )),
-
-  aurora: () => [0, 1, 2].map((i) => <i key={i} className={`fx-band d${i}`} />),
+    <i key="disk" className="fx-disk" />,
+  ],
 };
 
-/** The wrapper class each effect has always used, kept for the stylesheet. */
+/** The wrapper class each effect owns, so the stylesheet can find it. */
 const EFFECT_CLASS: Record<string, string> = {
-  doves: "fx-doves",
-  glitch: "fx-glitch",
-  duckpond: "fx-pond",
-  rainfall: "fx-rain",
-  embers: "fx-embers",
-  aurora: "fx-aurora",
+  rainy: "fx-rainy",
+  blocks: "fx-blocks",
+  hex: "fx-hex",
+  galaxy: "fx-galaxy",
 };
 
 export function EffectArt({ id }: { id: string | null | undefined }) {
