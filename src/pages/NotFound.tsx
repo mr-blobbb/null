@@ -1,21 +1,38 @@
 /* NULL · NotFound.tsx
    Shown when an address means nothing. The rail and the chrome stay put, so
-   the way out is always one click away. */
+   the way out is always one click away.
 
-import { Compass, Home } from "lucide-react";
+   It takes the address that missed and prints it. A 404 that only says
+   "not found" makes you wonder whether you typed it wrong; one that shows
+   `null://skdjf` back to you is answering the question you asked. */
+
+import { ArrowLeft, Compass, Home } from "lucide-react";
 
 import { SHEET_PAGES, PAGES } from "../lib/nav";
-import { go } from "../lib/tabs";
+import { go, goBack, useTabs } from "../lib/tabs";
 
-export function NotFound() {
+export function NotFound({ address }: { address?: string }) {
+  const { tabs, active } = useTabs();
+  const here = tabs.find((t) => t.id === active);
+  const canGoBack = !!here?.back.length;
+  const tried = address || "null://404";
+
   return (
     <div className="page nf">
       <h1 className="nf-code">404</h1>
-      <p className="nf-line">There is no page at that address.</p>
+      <p className="nf-at">
+        <span className="nf-at-label">no page at</span>
+        <code className="nf-at-url">{tried}</code>
+      </p>
       <p className="nf-sub muted">
         It was moved, or it never existed, or you typed it by hand at three in the morning.
       </p>
       <div className="nf-actions">
+        {canGoBack && (
+          <button className="btn" onClick={goBack}>
+            <ArrowLeft /> Go back
+          </button>
+        )}
         <button className="btn btn--fill" onClick={() => go({ page: "home" })}>
           <Home /> Go home
         </button>

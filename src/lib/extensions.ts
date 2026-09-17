@@ -26,9 +26,9 @@ export const EXTENSIONS: Extension[] = [
     name: "Clock",
     author: "null",
     version: "1.2.0",
-    desc: "The time, in the top bar, in every tab. Small, quiet, always there.",
-    surface: "nav",
-    access: ["read:time", "draw:nav"],
+    desc: "The time, floating in the corner. It used to sit in the toolbar; the music player wanted the room.",
+    surface: "overlay",
+    access: ["read:time", "draw:overlay"],
     builtin: true,
   },
   {
@@ -93,8 +93,10 @@ export function setOn(id: string, on: boolean) {
   extStore.set({ on: { ...extStore.get().on, [id]: on } });
 }
 
-/** Extensions that want to draw in the top bar, in the order they were made. */
-export function navExtensions(): Extension[] {
+/** Extensions that want to float over the page, in the order they were made.
+ *  Nothing draws in the toolbar any more: it belongs to the address bar and
+ *  the player, and a chip there was crowding both. */
+export function overlayExtensions(): Extension[] {
   const s = extStore.get();
-  return EXTENSIONS.filter((e) => e.surface === "nav" && s.installed.includes(e.id) && s.on[e.id]);
+  return EXTENSIONS.filter((e) => e.surface === "overlay" && s.installed.includes(e.id) && s.on[e.id]);
 }

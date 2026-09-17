@@ -55,7 +55,7 @@ import {
 } from "../lib/account";
 import { AvatarArt } from "../lib/art";
 import { NullFace } from "../lib/brand";
-import { remember } from "../lib/members";
+import { publish, unpublish } from "../lib/members";
 import { ShareCard } from "../components/ShareCard";
 import { itemOf, useEcon } from "../lib/econ";
 import { isOwner, OWNER_TAG } from "../lib/owner";
@@ -192,9 +192,10 @@ function SignedIn() {
   const owner = isOwner(me.user);
 
   /* Being on this page is what puts you on the members list, and every edit
-     here updates that card — the page itself says it only knows browsers. */
+     here updates that card — locally always, and on the server when there is
+     one, which is what makes the list a directory rather than a diary. */
   useEffect(() => {
-    remember(me, eco);
+    void publish(me, eco);
   }, [me, eco]);
 
   const startEdit = () => {
@@ -840,6 +841,7 @@ function DeleteCheck({ onDone }: { onDone: (msg: string) => void }) {
   const [pass, setPass] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const ok = useMemo(() => verifyPassword(pass), [pass]);
+  const user = useAccount().user;
   return (
     <div className="form">
       <p className="muted">
@@ -857,6 +859,9 @@ function DeleteCheck({ onDone }: { onDone: (msg: string) => void }) {
           disabled={!ok}
           onClick={() => {
             if (!ok) return setErr("That password is not it.");
+            /* off the local list, and off the server's, so a deleted account
+               does not linger in the directory */
+            if (user) void unpublish(user);
             deleteAccount();
             onDone("Account deleted.");
           }}

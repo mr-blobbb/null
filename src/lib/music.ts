@@ -13,6 +13,7 @@
    is wired with its key field: fill a key in Settings and that source is
    asked first, through the backend that can reach it. */
 
+import { cloudUrl } from "./cloud";
 import { createStore, useStore } from "./store";
 
 export type SourceId = "qobuz" | "soundcloud" | "ytmusic" | "keyless";
@@ -51,21 +52,21 @@ export const SOURCES: {
   {
     id: "qobuz",
     name: "Qobuz",
-    note: "Lossless catalogue. The default, and the one that wants a key.",
+    note: "Lossless catalogue. Ask for format 27 and it answers with FLAC; a plain app id only entitles you to previews, and the page says so when it gets one. The id can be typed here or set once as QOBUZ_APP_ID on the deployment.",
     keyLabel: "app id",
     placeholder: "your-qobuz-app-id",
   },
   {
     id: "soundcloud",
     name: "SoundCloud",
-    note: "Everything anyone has uploaded.",
+    note: "Everything anyone has uploaded, in full. It needs a client id — type it here or set SOUNDCLOUD_CLIENT_ID on the deployment.",
     keyLabel: "client id",
     placeholder: "your-soundcloud-client-id",
   },
   {
     id: "ytmusic",
     name: "YouTube Music",
-    note: "The whole catalogue, including the covers.",
+    note: "Search works with a key (here, or YOUTUBE_API_KEY on the deployment), but YouTube hands back no audio stream, so its rows play nowhere — the page says so rather than leaving a silent button.",
     keyLabel: "api key",
     placeholder: "your-youtube-data-api-key",
   },
@@ -175,22 +176,23 @@ export async function search(q: string, source: SourceId): Promise<Found> {
 
   if (NEEDS_SERVER.includes(source)) {
     const named = SOURCES.find((s) => s.id === source);
-    const key = music.get().keys[source];
-    if (!key) {
-      const tracks = await searchKeyless(term);
-      return {
-        tracks,
-        note: `${named?.name} needs its ${named?.keyLabel} before it can be asked. These are keyless results, and they play.`,
-      };
-    }
+    const key = music.get().keys[source] ?? "";
+    /* The server is asked either way: a key typed on this page is one way in,
+       but the deployment's own environment is the better one, and only the
+       action can read it. An empty key means "use whatever the deployment
+       has", not "do not ask". */
     try {
-      const tracks = await searchServer(source, term, key);
-      return { tracks, note: tracks.length ? null : `${named?.name} had nothing for that.` };
+      const found = await searchServer(source, term, key);
+      if (found.tracks.length || found.note === null) {
+        return { tracks: found.tracks, note: found.note ?? (found.tracks.length ? null : `${named?.name} had nothing for that.`) };
+      }
+      throw new Error(found.note);
     } catch (e) {
+      const why = (e as Error).message;
       const tracks = await searchKeyless(term);
       return {
         tracks,
-        note: `${named?.name} could not be reached (${(e as Error).message}). Showing keyless results, which play.`,
+        note: `${named?.name} could not be asked (${why}). These are keyless results, and they play.`,
       };
     }
   }
@@ -198,14 +200,20 @@ export async function search(q: string, source: SourceId): Promise<Found> {
   return { tracks: await searchKeyless(term), note: null };
 }
 
-/** A key has been filled in, so ask the source itself. A browser cannot make
- *  this call — the services send no CORS headers — so it goes to the backend,
- *  which is the whole reason the key lives there. */
-async function searchServer(source: SourceId, q: string, key: string): Promise<Track[]> {
+/** Ask the source itself, through the action that can reach it. A browser
+ *  cannot make these calls — the catalogues send no CORS headers — which is
+ *  the whole reason there is a server. `convex/music.ts` does the work and
+ *  returns the tracks plus, when something is only half-possible (a preview
+ *  instead of a full track, or a catalogue with no stream to hand back), a
+ *  sentence saying which. */
+async function searchServer(
+  source: SourceId,
+  q: string,
+  key: string,
+): Promise<{ tracks: Track[]; note: string | null }> {
   const url = serverUrl();
   if (!url) throw new Error("no backend is configured for this build");
-  /* Convex's own HTTP API: an action runs where the network is, which is the
-     only place a service without CORS headers can be reached from. */
+  /* Convex's own HTTP API: an action runs where the network is. */
   const res = await fetch(`${url.replace(/\/$/, "")}/api/action`, {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -213,19 +221,18 @@ async function searchServer(source: SourceId, q: string, key: string): Promise<T
   });
   if (!res.ok) throw new Error(`the backend answered ${res.status}`);
   const body = (await res.json()) as {
-    value?: { tracks?: Track[] };
+    value?: { tracks?: Track[]; note?: string | null };
     errorMessage?: string;
   };
   if (body.errorMessage) throw new Error(body.errorMessage);
-  return body.value?.tracks ?? [];
+  return { tracks: body.value?.tracks ?? [], note: body.value?.note ?? null };
 }
 
-/** Where the backend is, if this build has one. `VITE_CONVEX_URL` is what the
- *  Convex tooling writes into the environment; the other name is a fallback
- *  for a deployment wired by hand. */
+/** Where the backend is. `VITE_CONVEX_URL` is what the Convex tooling writes
+ *  into the environment; src/lib/cloud.ts holds the fallback so the music page
+ *  and the chat page never disagree about where the server is. */
 function serverUrl(): string | null {
-  const env = import.meta.env as Record<string, string | undefined>;
-  return env.VITE_CONVEX_URL ?? env.VITE_NULL_BACKEND ?? null;
+  return cloudUrl;
 }
 
 /* ============================================================

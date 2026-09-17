@@ -21,6 +21,7 @@ import { Sheet } from "./Sheet";
 import { DEFAULT_CUSTOM, PALETTES, prefs, usePalette, type PaletteId } from "../lib/themes";
 import { allKeys, removeKey, useStore } from "../lib/store";
 import { CLOAKS, pick, SMART_ID } from "../lib/cloak";
+import { replayTour } from "./Tour";
 import { econ, resetEcon } from "../lib/econ";
 import { account } from "../lib/account";
 
@@ -123,6 +124,21 @@ export function SettingsSheet({ open, onClose }: { open: boolean; onClose: () =>
                 The rail on the left is the only navigation. It stays thin and never
                 opens, which is what keeps it out of the way.
               </p>
+              <label className="setrow">
+                <span>
+                  <b>The tour</b>
+                  <em>Watch the five-step introduction to the front door again.</em>
+                </span>
+                <button
+                  className="btn btn--sm"
+                  onClick={() => {
+                    replayTour();
+                    onClose();
+                  }}
+                >
+                  Play it
+                </button>
+              </label>
             </>
           )}
 

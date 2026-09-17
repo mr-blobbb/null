@@ -7,7 +7,9 @@
 
 import {
   Clapperboard,
+  Compass,
   Gamepad2,
+  MessageCircle,
   Music,
   Globe,
   House,
@@ -17,6 +19,7 @@ import {
   ScrollText,
   ShoppingBag,
   SlidersHorizontal,
+  Trophy,
   UserRound,
   Users,
   type LucideIcon,
@@ -26,6 +29,7 @@ export type PageId =
   | "home"
   | "games"
   | "apps"
+  | "chat"
   | "movies"
   | "music"
   | "proxies"
@@ -35,6 +39,8 @@ export type PageId =
   | "extensions"
   | "settings"
   | "users"
+  | "rich"
+  | "missing"
   | "player";
 
 export type Page = {
@@ -78,6 +84,15 @@ export const PAGES: Record<PageId, Page> = {
     icon: Link2,
     blurb: "Tools that run in a tab, laid out exactly like the games.",
     keywords: "app tool utility library",
+  },
+  chat: {
+    id: "chat",
+    name: "Chat",
+    address: "null://chat",
+    route: "/chat",
+    icon: MessageCircle,
+    blurb: "One room, every machine that has NULL open. Mind your language.",
+    keywords: "chat room talk message community people say hello",
   },
   movies: {
     id: "movies",
@@ -155,6 +170,28 @@ export const PAGES: Record<PageId, Page> = {
     blurb: "Everybody who has signed in here, owner first.",
     keywords: "members users people profiles community accounts who joined",
   },
+  rich: {
+    id: "rich",
+    name: "Richest",
+    address: "null://rich",
+    route: "/rich",
+    icon: Trophy,
+    blurb: "The five fattest coin purses on NULL, this month or any other.",
+    keywords: "richest leaderboard top coins rich ranking wealth board",
+  },
+  /* Not a door: the page an address with nothing behind it lands on. It is in
+     this table so the tab bar, the address bar and the router all agree on
+     what it is, and out of ALL_PAGES so nothing ever offers it as a
+     destination. */
+  missing: {
+    id: "missing",
+    name: "Not found",
+    address: "null://404",
+    route: "/404",
+    icon: Compass,
+    blurb: "There is nothing at that address.",
+    keywords: "404 not found missing nothing here error",
+  },
   settings: {
     id: "settings",
     name: "Settings",
@@ -180,18 +217,20 @@ export const PAGES: Record<PageId, Page> = {
  *
  *  The bottom group is read upward from the last door, so the two that are
  *  about people sit together: members just above the profile. */
-export const RAIL_TOP: PageId[] = ["home", "games", "apps", "movies", "music", "shop"];
-export const RAIL_BOTTOM: PageId[] = ["users", "profile", "changelog", "extensions", "settings"];
+export const RAIL_TOP: PageId[] = ["home", "games", "apps", "chat", "movies", "music", "shop"];
+export const RAIL_BOTTOM: PageId[] = ["rich", "users", "profile", "changelog", "extensions", "settings"];
 
 /** Everything the All Apps sheet lists, in reading order. */
 export const ALL_PAGES: PageId[] = [
   "home",
   "games",
   "apps",
+  "chat",
   "movies",
   "music",
   "proxies",
   "shop",
+  "rich",
   "users",
   "profile",
   "changelog",
@@ -223,12 +262,14 @@ export function searchUrl(q: string, engine: EngineId = "brave"): string {
   return hit.url(q);
 }
 
-/** What the address box does with what you typed. A page, an address, or a
- *  search — never nothing, which is what the old popup search got wrong. */
-export function destinationFor(
-  raw: string,
-  engine: EngineId = "brave",
-): { page: PageId } | { url: string } | null {
+/** Where something typed can go. `missing` is the third answer, and the one
+ *  the old code did not have: an address that means nothing used to fall
+ *  through to the homepage, which is exactly what a 404 is for. */
+export type Destination = { page: PageId } | { url: string } | { missing: string };
+
+/** What the address box does with what you typed. A page, an address, a place
+ *  that is not there, or a search — never nothing. */
+export function destinationFor(raw: string, engine: EngineId = "brave"): Destination | null {
   const s = raw.trim();
   if (!s) return null;
   const parsed = parseAddress(s);
@@ -239,23 +280,30 @@ export function destinationFor(
 }
 
 /** Turn a typed or pasted address into a destination.
- *  `null://g`, `g`, `/games`, `null://games` all mean the games page. */
-export function parseAddress(raw: string): { page: PageId } | { url: string } | null {
+ *  `null://g`, `g`, `/games`, `null://games` all mean the games page.
+ *
+ *  An address *inside* NULL that matches nothing is an address inside NULL:
+ *  it returns `missing` and shows the 404 with whatever was typed, rather than
+ *  being quietly reinterpreted as a web search or, worse, the front door. */
+export function parseAddress(raw: string): Destination | null {
   const s = raw.trim();
   if (!s) return null;
   if (/^null:\/\//i.test(s)) {
     const host = s.replace(/^null:\/\//i, "").replace(/^\/+/, "").replace(/\/+$/, "").toLowerCase();
+    if (host === "404") return { page: "missing" };
     const hit = ALL_PAGES.find(
       (id) =>
         id === host ||
         PAGES[id].address.replace("null://", "") === host ||
         PAGES[id].name.toLowerCase() === host,
     );
-    return hit ? { page: hit } : null;
+    return hit ? { page: hit } : { missing: `null://${host}` };
   }
   if (s.startsWith("/")) {
     const hit = ALL_PAGES.find((id) => PAGES[id].route === s.replace(/\/$/, "") || (s === "/" && id === "home"));
-    return hit ? { page: hit } : null;
+    if (hit) return { page: hit };
+    if (s === "/404") return { page: "missing" };
+    return { missing: s };
   }
   /* a bare word that is a page name still counts */
   const bare = s.toLowerCase();

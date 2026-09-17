@@ -9,12 +9,21 @@ no controls, so nothing in the shop can make a sound.
                 the card has words on it. On the share card the scrim is the
                 light one (.fx-clear), so the art is actually visible.
 
-  avatar-*.mp4  avatar decorations: a face overlay. Clipped to the circle at
-                inset 0 — the same size as the picture, centred, cropped not
-                stretched — and composited with mix-blend-mode: screen. Every
-                one of these was shot on black, so screening drops the field
-                and keeps the glow, which is what makes them read as an
-                overlay rather than a sticker.
+  avatar-*.mp4  avatar decorations: a face overlay. Fitted to the circle the
+                picture sits in, not to the picture: the layer is 6% wider
+                (inset: -6%) so the clip's own ring lands on the rim you can
+                see, and its middle is masked clear so the face always shows.
+                Composited with mix-blend-mode: screen, because every one of
+                these was shot on black and screening drops the field while
+                keeping the glow.
+
+                A third and fourth face clip only have to be dropped in here
+                and named in FACE_CLIP (src/lib/art.tsx) to appear on the
+                shelf: add the item to SHOP in src/lib/econ.ts with
+                `shelf: "avatar"`, and the shop, the profile and the share card
+                all pick it up. Pinterest's search and resource endpoints
+                answer 403 to anything but a signed-in browser, so a new clip
+                has to be saved by hand rather than fetched.
 
 Source
 ------

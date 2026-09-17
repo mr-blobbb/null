@@ -18,6 +18,8 @@ import { Library } from "./pages/Library";
 import { Proxies } from "./pages/Proxies";
 import { Shop } from "./pages/Shop";
 import { Members } from "./pages/Members";
+import { Richest } from "./pages/Richest";
+import { Chat } from "./pages/Chat";
 import { Music } from "./pages/Music";
 import { Profile } from "./pages/Profile";
 import { Changelog } from "./pages/Changelog";
@@ -28,9 +30,11 @@ import { applyPalette, applyPerf, prefs, usePalette } from "./lib/themes";
 import { applyCloak, cloakFor } from "./lib/cloak";
 import { useStore } from "./lib/store";
 import { IDLE_MS, tick, useEcon } from "./lib/econ";
+import { useAccount } from "./lib/account";
+import { publish } from "./lib/members";
 import { PAGES } from "./lib/nav";
 import { activeTab, go, openTab, targetFromHash, useTabs } from "./lib/tabs";
-import { useExt } from "./lib/extensions";
+import { overlayExtensions, useExt } from "./lib/extensions";
 
 const VERSION = "1.0.0";
 const BUILT = "20260917";
@@ -116,23 +120,14 @@ export function App() {
     startedAt.current = performance.now();
   }, [tab.id, tab.nonce]);
 
-  /* the hash a visitor arrived on. An unknown one goes to the 404 rather
-     than quietly showing the homepage, which is the whole point of having a
-     404 at all. */
-  const [lost, setLost] = useState(false);
-
+  /* the hash a visitor arrived on. An unknown one is now itself a target —
+     the 404 page carrying the address that missed — rather than a flag that
+     quietly showed the homepage at an address that does not exist. */
   useEffect(() => {
     let first = true;
     const apply = () => {
-      const raw = location.hash.replace(/^#/, "");
       const t = targetFromHash(location.hash);
-      /* An address that means nothing shows the 404. Landing on the homepage
-         anyway is the bug this page exists to stop. */
-      if (!t) {
-        if (raw) setLost(true);
-        return;
-      }
-      setLost(false);
+      if (!t) return;
       if (first) {
         first = false;
         if (t.page !== "home") {
@@ -158,8 +153,9 @@ export function App() {
 
   const body = useMemo(() => {
     const t = tab.now;
-    if (lost) return <NotFound />;
     switch (t.page) {
+      case "missing":
+        return <NotFound address={t.arg?.url} />;
       case "home":
       case "settings":
         return <Home />;
@@ -177,6 +173,10 @@ export function App() {
         return <Shop onOpenSettings={() => setSettingsOpen(true)} />;
       case "music":
         return <Music />;
+      case "chat":
+        return <Chat />;
+      case "rich":
+        return <Richest />;
       case "users":
         return <Members />;
       case "profile":
@@ -191,11 +191,28 @@ export function App() {
         return <NotFound />;
     }
     /* eslint-disable-next-line react-hooks/exhaustive-deps */
-  }, [tab.now, tab.nonce, lost]);
+  }, [tab.now, tab.nonce]);
 
-  const ext = useExt();
   const coins = useEcon().coins;
   const showMeta = useStore(prefs).showMeta;
+
+  /* Keep the member card on the server as fresh as the coins are, so the
+     leaderboard is not showing a number from last Tuesday. One write a
+     minute, and only while signed in. */
+  const me = useAccount();
+  const eco = useEcon();
+  const lastSent = useRef(0);
+  useEffect(() => {
+    if (!me.user) return;
+    const send = () => {
+      if (eco.coins === lastSent.current) return;
+      lastSent.current = eco.coins;
+      void publish(me, eco);
+    };
+    send();
+    const id = window.setInterval(send, 60_000);
+    return () => window.clearInterval(id);
+  }, [me, eco]);
 
   return (
     <div className="app">
@@ -204,7 +221,12 @@ export function App() {
         <Chrome onSettings={() => setSettingsOpen(true)} />
         <div className="view">
           <div className="dots" aria-hidden="true" />
-          <div key={`${tab.id}-${tab.nonce}`} className="page-host">
+          {/* the front door is the one page that fills the window instead of
+              scrolling in it, so the shell says so here */}
+          <div
+            key={`${tab.id}-${tab.nonce}`}
+            className={`page-host${tab.now.page === "home" ? " page-host--fit" : ""}`}
+          >
             {body}
           </div>
         </div>
@@ -221,13 +243,43 @@ export function App() {
 
       {milestone && <div className="toast">{milestone}</div>}
 
-      {ext.installed.includes("stats") && ext.on.stats && (
-        <div className="coinfloat" title="Coin meter (extension)">
-          {coins.toLocaleString()}
-        </div>
-      )}
+      <OverlayExts coins={coins} />
 
       <SettingsSheet open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+    </div>
+  );
+}
+
+/** The chips extensions float over the page. They are deliberately the only
+ *  place an add-on draws by itself — everything else an extension does, it
+ *  does inside a surface the page gave it. */
+function OverlayExts({ coins }: { coins: number }) {
+  const ext = useExt();
+  const [now, setNow] = useState(() => new Date());
+  const live = ext.installed.includes("clock") && ext.on.clock !== false;
+
+  useEffect(() => {
+    if (!live) return;
+    const id = window.setInterval(() => setNow(new Date()), 1000);
+    return () => window.clearInterval(id);
+  }, [live]);
+
+  const on = overlayExtensions();
+  if (!on.length) return null;
+
+  return (
+    <div className="floats">
+      {on.map((e) =>
+        e.id === "clock" ? (
+          <span className="coinfloat" key={e.id} title="Clock (extension)">
+            {now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+          </span>
+        ) : e.id === "stats" ? (
+          <span className="coinfloat" key={e.id} title="Coin meter (extension)">
+            {coins.toLocaleString()}
+          </span>
+        ) : null,
+      )}
     </div>
   );
 }

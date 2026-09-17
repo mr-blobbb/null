@@ -35,13 +35,14 @@ import {
   go,
   goBack,
   goFwd,
+  moveTab,
+  openDestination,
   openTab,
   pickTab,
   reload,
   useTabs,
 } from "../lib/tabs";
-import { navExtensions, useExt } from "../lib/extensions";
-import { useEcon } from "../lib/econ";
+import { useExt } from "../lib/extensions";
 import { step, toggle, useMusic } from "../lib/music";
 
 export function Chrome({ onSettings }: { onSettings: () => void }) {
@@ -53,6 +54,21 @@ export function Chrome({ onSettings }: { onSettings: () => void }) {
   const [draft, setDraft] = useState(address);
   const [focused, setFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  /* dragging a tab into a new slot, and the beat a tab spends shrinking out
+     of the row when it is closed */
+  const [drag, setDrag] = useState<string | null>(null);
+  const [over, setOver] = useState<string | null>(null);
+  const [shut, setShut] = useState<string | null>(null);
+
+  const shutTab = (id: string) => {
+    if (shut) return;
+    setShut(id);
+    window.setTimeout(() => {
+      closeTab(id);
+      setShut((s) => (s === id ? null : s));
+    }, 140);
+  };
 
   useEffect(() => {
     if (!focused) setDraft(address);
@@ -77,12 +93,8 @@ export function Chrome({ onSettings }: { onSettings: () => void }) {
     const parsed = destinationFor(draft, engine);
     if (!parsed) return;
     inputRef.current?.blur();
-    if ("page" in parsed) {
-      if (parsed.page === "settings") onSettings();
-      else go({ page: parsed.page });
-    } else {
-      go({ page: "proxies", arg: { url: parsed.url } });
-    }
+    if ("page" in parsed && parsed.page === "settings") onSettings();
+    else openDestination(parsed);
   }
 
   return (
@@ -95,12 +107,31 @@ export function Chrome({ onSettings }: { onSettings: () => void }) {
           return (
             <div
               key={t.id}
-              className={`tab${t.id === state.active ? " is-on" : ""}`}
+              className={`tab${t.id === state.active ? " is-on" : ""}${drag === t.id ? " is-drag" : ""}${
+                drag && over === t.id && drag !== t.id ? " is-over" : ""
+              }${shut === t.id ? " is-shut" : ""}`}
               role="tab"
               aria-selected={t.id === state.active}
+              draggable
               onClick={() => pickTab(t.id)}
               onAuxClick={(e) => {
-                if (e.button === 1) closeTab(t.id);
+                if (e.button === 1) shutTab(t.id);
+              }}
+              onDragStart={() => setDrag(t.id)}
+              onDragEnd={() => {
+                setDrag(null);
+                setOver(null);
+              }}
+              onDragOver={(e) => {
+                if (!drag || drag === t.id) return;
+                e.preventDefault();
+                setOver(t.id);
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                if (drag) moveTab(drag, t.id);
+                setDrag(null);
+                setOver(null);
               }}
             >
               <Icon />
@@ -110,7 +141,7 @@ export function Chrome({ onSettings }: { onSettings: () => void }) {
                 aria-label="Close tab"
                 onClick={(e) => {
                   e.stopPropagation();
-                  closeTab(t.id);
+                  shutTab(t.id);
                 }}
               >
                 <X />
@@ -164,42 +195,9 @@ export function Chrome({ onSettings }: { onSettings: () => void }) {
           />
         </div>
 
-        <NavBarExtras />
         <ExtButton onManage={onSettings} />
         <Tune />
       </div>
-    </>
-  );
-}
-
-function NavBarExtras() {
-  const ext = useExt();
-  const [now, setNow] = useState(() => new Date());
-  useEffect(() => {
-    const t = window.setInterval(() => setNow(new Date()), 1000);
-    return () => window.clearInterval(t);
-  }, []);
-  const coins = useEcon().coins;
-
-  const active = navExtensions();
-  if (!active.length) return null;
-
-  return (
-    <>
-      {active.map((e) => {
-        if (e.id === "clock") {
-          return (
-            <span className="extchip" key={e.id} title="Clock (extension)">
-              {now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-            </span>
-          );
-        }
-        return (
-          <span className="extchip" key={e.id} title={`${e.name} (extension)`}>
-            {e.id === "stats" ? coins : e.name}
-          </span>
-        );
-      })}
     </>
   );
 }

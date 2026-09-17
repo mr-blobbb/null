@@ -23,7 +23,9 @@
    worth more than a page that half works. */
 
 const WORKER = "/baremux/worker.js";
-const TRANSPORT = "/epoxy/epoxy-bundled.js";
+/* the transport class, not the wasm glue — see the note in public/epoxy/ and
+   the matching one in src/lib/browser.ts */
+const TRANSPORT = "/epoxy/transport.mjs";
 
 export type Read = { ok: true; html: string } | { ok: false; reason: string };
 
@@ -35,7 +37,9 @@ export async function read(url: string, relay: string): Promise<Read> {
     /* Re-pointing an already-running transport is cheap and keeps this module
        usable on its own, without the service worker ever being involved. */
     const connection = new BareMuxConnection(WORKER);
-    await connection.setTransport(TRANSPORT, [{ wisp: relay }]);
+    if ((await connection.getTransport()) !== TRANSPORT) {
+      await connection.setTransport(TRANSPORT, [{ wisp: relay }]);
+    }
 
     const client = new BareClient(WORKER);
     const res = await client.fetch(url, {

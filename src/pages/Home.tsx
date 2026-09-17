@@ -23,8 +23,9 @@ import type { LucideIcon } from "lucide-react";
 
 import { createStore, useStore } from "../lib/store";
 import { destinationFor, PAGES, parseAddress, SHEET_PAGES, type PageId } from "../lib/nav";
-import { go } from "../lib/tabs";
+import { go, openDestination } from "../lib/tabs";
 import { Sheet } from "../components/Sheet";
+import { Tour, tourSeen } from "../components/Tour";
 import { prefs, usePalette } from "../lib/themes";
 
 /* ---------- the lines ----------
@@ -198,6 +199,7 @@ export function Home() {
   const [q, setQ] = useState("");
   const [appsOpen, setAppsOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
+  const [due, setDue] = useState(tourSeen() === false);
   const list = useStore(links).list;
 
   /* The box is the browser's address bar, not a search popup: a null:// page
@@ -207,8 +209,7 @@ export function Home() {
     e.preventDefault();
     const to = destinationFor(q, engine);
     if (!to) return;
-    if ("page" in to) go({ page: to.page });
-    else go({ page: "proxies", arg: { url: to.url } });
+    openDestination(to);
   };
 
   /* the strip is drawn twice so the loop has no seam */
@@ -216,6 +217,9 @@ export function Home() {
 
   return (
     <div className="hm">
+      {/* the first-run tour: on the front door, once, and only ever here */}
+      {due && <Tour onDone={() => setDue(false)} />}
+
       <h1
         className="hm-word"
         style={{
@@ -250,8 +254,7 @@ export function Home() {
             onClick={() => {
               const parsed = parseAddress(s.path);
               if (!parsed) return;
-              if ("page" in parsed) go({ page: parsed.page });
-              else go({ page: "proxies", arg: { url: parsed.url } });
+              openDestination(parsed);
             }}
             onRemove={() => links.set({ list: list.filter((x) => x.id !== s.id) })}
           />

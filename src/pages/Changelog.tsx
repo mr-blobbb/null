@@ -11,6 +11,26 @@ type Release = { version: string; date: string; note: string; changes: Change[] 
 
 const RELEASES: Release[] = [
   {
+    version: "v1.1.0",
+    date: "September 17, 2026",
+    note: "The one with other people in it. NULL gets a server.",
+    changes: [
+      { kind: "add", text: "A chat room: one room, everyone in it, with a filter that knows about sh1t and leaves Scunthorpe alone." },
+      { kind: "add", text: "Members and the Richest board now read across machines, not just this browser." },
+      { kind: "add", text: "Music asks the catalogues through the server, so Qobuz and SoundCloud can answer at all. Keys can live on the deployment." },
+      { kind: "add", text: "Chrome extensions can be added from a .crx and run their popup in a sandbox. The ones that need the whole browser install dormant and say why." },
+      { kind: "add", text: "A five-step tour of the front door, once, replayable from Settings." },
+      { kind: "add", text: "Richest, behind a trophy: the top five purse-holders, by coins, which means by time." },
+      { kind: "tweak", text: "404s are real now: null://404 exists, and an address with nothing behind it says so instead of showing the front door." },
+      { kind: "tweak", text: "The epoxy transport was missing the class bare-mux needs. Every proxied page was throwing “is not a constructor” because of it." },
+      { kind: "tweak", text: "The clock moved out of the toolbar, which gave the address bar and the player their room back." },
+      { kind: "tweak", text: "Tabs are rounder, and they open, close and drag with a beat." },
+      { kind: "tweak", text: "Avatar decorations sit on the picture's rim instead of floating inside it." },
+      { kind: "tweak", text: "The front door does not scroll. Everything on it is sized to the window." },
+      { kind: "tweak", text: "New icon: a rounded pixel tile, drawn from one map for the favicon, the app icons and the default picture." },
+    ],
+  },
+  {
     version: "v1.0.0",
     date: "September 17, 2026",
     note: "Welcome to Null v1! This is the newest generation of Null, built to last.",

@@ -19,6 +19,7 @@ import {
   type Extension,
 } from "../lib/extensions";
 import { Sheet } from "../components/Sheet";
+import { WebStore } from "../components/WebStore";
 
 export function Extensions() {
   const me = useExt();
@@ -116,6 +117,8 @@ export function Extensions() {
       </div>
 
       {me.installed.includes("notes") && me.on.notes !== false && <Scratchpad />}
+
+      <WebStore />
 
       <Sheet open={!!open} onClose={() => setOpen(null)} title={open?.name} icon={<Puzzle />} width={520}>
         {open && (

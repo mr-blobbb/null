@@ -95,7 +95,11 @@ export async function transport(relay: string): Promise<Boot> {
   try {
     const { BareMuxConnection } = await import("@mercuryworkshop/bare-mux");
     const connection = new BareMuxConnection("/baremux/worker.js");
-    await connection.setTransport("/epoxy/epoxy-bundled.js", [{ wisp: relay }]);
+    /* `epoxy-bundled.js` is the wasm glue, not a transport: its default export
+       is an init function, so bare-mux's `new BareTransport(...)` threw
+       "is not a constructor" and every proxied page died on the relay road.
+       transport.mjs is the class that was missing. */
+    await connection.setTransport("/epoxy/transport.mjs", [{ wisp: relay }]);
     return { ok: true };
   } catch (e) {
     const seen = await ping(relay);

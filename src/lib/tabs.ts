@@ -7,7 +7,7 @@
    address becomes a tab; every other target is an internal null:// page. */
 
 import { createStore, useStore } from "./store";
-import { PAGES, type PageId } from "./nav";
+import { PAGES, type Destination, type PageId } from "./nav";
 
 export type Target = { page: PageId; arg?: Record<string, string> };
 
@@ -77,6 +77,11 @@ export function describe(t: Target): { title: string; address: string; secure: b
       secure: true,
     };
   }
+  /* A 404 keeps the address that missed, so the bar reads `null://skdjf`
+     rather than pretending you are somewhere real. */
+  if (t.page === "missing" && t.arg?.url) {
+    return { title: "Not found", address: t.arg.url, secure: true };
+  }
   const p = PAGES[t.page];
   return { title: p.name, address: p.address, secure: true };
 }
@@ -128,6 +133,19 @@ export function closeTab(id: string) {
   tabsStore.set({ tabs, active });
 }
 
+/** Drag a tab to a new slot. `before` is the tab it landed on: the moved tab
+ *  takes that tab's place, which is what the line under the pointer promised. */
+export function moveTab(id: string, before: string) {
+  const st = tabsStore.get();
+  const from = st.tabs.findIndex((t) => t.id === id);
+  const to = st.tabs.findIndex((t) => t.id === before);
+  if (from < 0 || to < 0 || from === to) return;
+  const tabs = [...st.tabs];
+  const [moved] = tabs.splice(from, 1);
+  tabs.splice(to, 0, moved);
+  tabsStore.set({ tabs });
+}
+
 export function pickTab(id: string) {
   tabsStore.set({ active: id });
   const t = activeTab();
@@ -170,6 +188,15 @@ export function setLoading(on: boolean) {
   });
 }
 
+/** Send a parsed destination to the right place: a page, a website in the
+ *  browser, or the 404 that names the address that missed. Every box on the
+ *  site that accepts an address ends up here, so the rule lives once. */
+export function openDestination(d: Destination) {
+  if ("page" in d) return go({ page: d.page });
+  if ("missing" in d) return go({ page: "missing", arg: { url: d.missing } });
+  return go({ page: "proxies", arg: { url: d.url } });
+}
+
 export function targetKey(t: Target): string {
   return `${t.page}:${t.arg?.url ?? t.arg?.id ?? ""}`;
 }
@@ -182,6 +209,10 @@ export function syncUrl(t: Target) {
   if (t.page === "proxies" && t.arg?.url) hash = `#/proxies?url=${encodeURIComponent(t.arg.url)}`;
   else if (t.page === "player" && t.arg?.id) {
     hash = `#/play?k=${encodeURIComponent(t.arg.kind ?? "game")}&id=${encodeURIComponent(t.arg.id)}`;
+  } else if (t.page === "missing" && t.arg?.url) {
+    /* a path stays the path it was — reloading it lands on the same 404. An
+       internal null:// address has no path of its own, so it is carried. */
+    hash = t.arg.url.startsWith("/") ? `#${t.arg.url}` : `#/404?at=${encodeURIComponent(t.arg.url)}`;
   }
   if (location.hash !== hash) {
     history.pushState(null, "", hash);
@@ -205,7 +236,14 @@ export function targetFromHash(hash: string): Target | null {
     };
   }
   const hit = (Object.keys(PAGES) as PageId[]).find((id) => PAGES[id].route === clean);
-  if (hit) return { page: hit };
+  if (hit && hit !== "missing") return { page: hit };
   if (clean === "/settings") return { page: "settings" };
-  return null;
+  if (clean === "/404") {
+    const at = params.get("at");
+    return { page: "missing", arg: at ? { url: at } : undefined };
+  }
+  /* A path that matches no page is a 404 that says which path it was. This is
+     the whole point of having one: anything added to the address used to show
+     the homepage at that address, which is a lie the site should not tell. */
+  return { page: "missing", arg: { url: clean } };
 }

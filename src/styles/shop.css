@@ -283,12 +283,15 @@
   z-index: 2;
 }
 
-/* A decoration that is a real clip: it covers the picture exactly, centred
-   and cropped to the circle rather than stretched. The clips are shot on
-   black, so `screen` drops the black and keeps the glow — nothing of the
-   recording's own background ever reaches the face. */
+/* A decoration that is a real clip.
+
+   It is fitted to the circle the picture sits in, not to the picture: the
+   layer is a little wider than the frame (inset: -6%), so the art's own ring
+   lands *on* the rim you can see rather than floating somewhere inside it.
+   The clips are shot on black, so `screen` drops the black and keeps the
+   glow, and nothing of the recording's background ever reaches the face. */
 .art--clip {
-  inset: 0;
+  inset: -6%;
   border-radius: 50%;
   overflow: hidden;
   z-index: 2;
@@ -301,21 +304,22 @@
   mix-blend-mode: screen;
   /* A face overlay must never cover the face. The clip keeps its own size and
      stays centred — cover, so nothing is squashed — and its middle is masked
-     out entirely, so the picture is what you see where a face goes and the
-     clip only ever draws the rim. Blending on top of that would still lighten
-     the middle, so the hole is generous: nothing at all until 48% out, easing
-     in to full at 80%, which is a ring's worth of the frame. */
-  opacity: 0.72;
+     clear, so the rim is all you see and the picture is what shows where a
+     face goes. `closest-side` makes the percentages mean the layer's own
+     radius, so the clear zone lands at the picture's edge and the art fills
+     the band from there out — a border sitting on the border. */
+  transform: scale(1.02);
+  opacity: 0.88;
   -webkit-mask-image: radial-gradient(
-    circle at 50% 50%,
-    transparent 48%,
-    rgba(0, 0, 0, 0.35) 64%,
+    circle closest-side at 50% 50%,
+    transparent 56%,
+    rgba(0, 0, 0, 0.4) 72%,
     #000 80%
   );
   mask-image: radial-gradient(
-    circle at 50% 50%,
-    transparent 48%,
-    rgba(0, 0, 0, 0.35) 64%,
+    circle closest-side at 50% 50%,
+    transparent 56%,
+    rgba(0, 0, 0, 0.4) 72%,
     #000 80%
   );
   pointer-events: none;

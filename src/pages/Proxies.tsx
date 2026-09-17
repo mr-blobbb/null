@@ -21,6 +21,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
+  Check,
   Globe,
   Loader,
   Lock,
@@ -36,7 +37,25 @@ import { prefs } from "../lib/themes";
 import { useStore } from "../lib/store";
 import { ping, proxied, restart, start } from "../lib/browser";
 import { prepare, read } from "../lib/relay";
-import { activeTab, go, openTab, useTabs } from "../lib/tabs";
+import { activeTab, go, openDestination, openTab, useTabs } from "../lib/tabs";
+
+/** The relays NULL knows about, and why those two and not twenty. Both
+ *  answered a Wisp handshake and served a real page through this exact
+ *  transport — a higher bar than appearing on somebody's list. A relay is the
+ *  one piece of this a static host cannot provide, so it is the piece most
+ *  likely to be the reason a page does not load. */
+const RELAYS = [
+  {
+    name: "mercurywork",
+    url: "wss://wisp.mercurywork.shop/",
+    note: "The one NULL ships with. Speaks Wisp v1.",
+  },
+  {
+    name: "anura",
+    url: "wss://anura.pro/",
+    note: "Answers both versions of Wisp.",
+  },
+];
 
 /** `back` is where the escape hatch leads: a site typed into the address bar
  *  came from the proxy shelf, the movies page came from the front door. */
@@ -257,8 +276,7 @@ function Shelf({ relay }: { relay: string }) {
   const open = (raw: string) => {
     const to = destinationFor(raw, p.searchEngine);
     if (!to) return;
-    if ("page" in to) go({ page: to.page });
-    else go({ page: "proxies", arg: { url: to.url } });
+    openDestination(to);
   };
 
   return (
@@ -329,6 +347,26 @@ function Shelf({ relay }: { relay: string }) {
               }}
             />
           </label>
+          <div className="px-relays">
+            {RELAYS.map((r) => (
+              <button
+                key={r.url}
+                className={`btn btn--sm${p.relay === r.url ? " btn--fill" : ""}`}
+                title={r.note}
+                onClick={() => {
+                  restart();
+                  prefs.set({ relay: r.url });
+                }}
+              >
+                {p.relay === r.url ? <Check /> : null}
+                {r.name}
+              </button>
+            ))}
+          </div>
+          <p className="tiny faint">
+            Two public relays, both checked from here: either serves Wisp. If pages stop
+            loading, the relay is usually why — the bar above names the one in use.
+          </p>
           <label className="form-row">
             <span>Search engine</span>
             <select

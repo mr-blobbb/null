@@ -1,27 +1,93 @@
 /* NULL · Members.tsx
-   Everyone who has joined NULL — as far as this browser can honestly know.
+   Everyone who has joined NULL.
 
-   There is no server and no account database, so the list is the accounts
-   that have actually signed in here, with the owner pinned on top. The page
-   says so rather than implying a directory it cannot have.
+   With a server this is a real directory: every machine that has ever signed
+   an account in writes its card here, and the list is all of them, live. With
+   no server it falls back to the accounts this browser has seen, and says so,
+   because a page that claims to know everyone and does not is worse than a
+   page that admits its limits.
 
-   A member is shown the same way the profile page shows you: their banner,
-   their picture with whatever they wear on it, their name in its own colour,
-   their tags and their bio. Clicking one opens the whole card. */
+   A member is shown the way the profile page shows you: their banner, their
+   picture with whatever they wear on it, their name in its own colour, their
+   tags and their bio. */
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useQuery } from "convex/react";
 import { BadgeCheck, Coins, Crown, Star, Trophy, UserRound } from "lucide-react";
 
+import { api } from "../../convex/_generated/api";
+import { Guard } from "../components/Guard";
 import { useMembers, type Member } from "../lib/members";
+import { cloudOn } from "../lib/cloud";
 import { isOwner, OWNER_TAG } from "../lib/owner";
-import { nameStyleCss } from "../lib/account";
+import { nameStyleCss, type NameStyle } from "../lib/account";
 import { itemOf } from "../lib/econ";
 import { AvatarArt, EffectArt } from "../lib/art";
 import { NullFace } from "../lib/brand";
 import { Sheet } from "../components/Sheet";
 
 export function Members() {
+  if (!cloudOn()) return <Local why="NULL has no server reachable from this build" />;
+  return (
+    <Guard what="the member list" fallback={<Local why="the server could not be reached just now" />}>
+      <Cloud />
+    </Guard>
+  );
+}
+
+/* ---------- the two sources ---------- */
+
+/** Live, from the deployment. */
+function Cloud() {
+  const rows = useQuery(api.members.list);
+  const local = useMembers();
+
+  const list = useMemo(() => {
+    if (!rows) return local;
+    const seen = new Set(rows.map((r) => r.user.toLowerCase()));
+    const remote: Member[] = rows.map((r) => ({
+      user: r.user,
+      name: r.name,
+      bio: r.bio,
+      banner: r.banner,
+      pfp: r.pfp,
+      joined: r.joined,
+      nameStyle: parseStyle(r.nameStyle),
+      wearing: r.wearing,
+      owner: r.owner || isOwner(r.user),
+      coins: r.coins,
+      seen: r.seen,
+    }));
+    /* The card on this machine is at least as fresh as the one on the server,
+       so it wins for accounts it already knows. */
+    const mine = local.filter((m) => !seen.has(m.user.toLowerCase()));
+    return [...remote, ...mine].sort((a, b) => {
+      if (a.owner !== b.owner) return a.owner ? -1 : 1;
+      return a.joined - b.joined;
+    });
+  }, [rows, local]);
+
+  return <Board list={list} live={rows !== undefined} />;
+}
+
+/** Only what this browser has seen. */
+function Local({ why }: { why: string }) {
   const list = useMembers();
+  return <Board list={list} live={false} why={why} />;
+}
+
+function parseStyle(raw: string): NameStyle {
+  try {
+    const v = JSON.parse(raw || "{}");
+    return typeof v === "object" && v ? (v as NameStyle) : ({} as NameStyle);
+  } catch {
+    return {} as NameStyle;
+  }
+}
+
+/* ---------- the board ---------- */
+
+function Board({ list, live, why }: { list: Member[]; live: boolean; why?: string }) {
   const [open, setOpen] = useState<Member | null>(null);
 
   return (
@@ -29,19 +95,20 @@ export function Members() {
       <div className="lb-top">
         <h1 className="lb-title">Members</h1>
         <span className="lb-count tiny faint">
-          {list.length} {list.length === 1 ? "account" : "accounts"} on this browser
+          {list.length} {list.length === 1 ? "account" : "accounts"}
+          {live ? " · live" : why ? ` · ${why}` : ""}
         </span>
       </div>
 
       <p className="lede">
-        NULL has no server, so there is no wider directory to show: this is every account
-        that has signed in on this browser, with the owner first. Sign in on the profile
-        page and your card appears here.
+        {live
+          ? "Every account that has signed in anywhere, newest card each. Sign in on the profile page and yours joins them."
+          : "This is every account that has signed in on this browser, with the owner first. With a server reachable this list becomes everybody's."}
       </p>
 
       {list.length === 0 ? (
         <div className="card card--pad mb-empty">
-          <p>Nobody yet. The first account to sign in here shows up on this page.</p>
+          <p>Nobody yet. The first account to sign in shows up on this page.</p>
         </div>
       ) : (
         <div className="mb-grid">
@@ -158,19 +225,15 @@ function Full({ m }: { m: Member }) {
       <div className="mb-full-foot">
         <Born joined={m.joined} />
         <span className="mb-stat">
-          <Trophy /> {m.wearing.effect ? m.wearing.effect : "no effect"}
+          <Coins /> {(m.coins ?? 0).toLocaleString()}
         </span>
         <span className="mb-stat">
           <Star /> {tag ? tag.name : "no tag"}
         </span>
         <span className="mb-stat">
-          <Coins /> {m.wearing.avatar ? m.wearing.avatar : "no decoration"}
+          <Trophy /> {m.wearing.effect ?? "no effect"}
         </span>
       </div>
-
-      <p className="tiny faint mb-note">
-        Last seen on this browser {new Date(m.seen).toLocaleString()}.
-      </p>
     </div>
   );
 }

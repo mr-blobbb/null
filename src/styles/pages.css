@@ -8,16 +8,25 @@
 /* ============================================================
    home
    ============================================================ */
+/* The front door does not scroll. Everything on it is sized against the
+   window — the wordmark by the smaller of width and height, the strip by
+   whatever is left — so a laptop and a projector both get the whole page
+   without a scrollbar appearing on the one screen that should not have one. */
 .hm {
-  min-height: 100%;
+  height: 100%;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 13vh 24px 40px;
+  justify-content: center;
+  gap: clamp(8px, 1.5vh, 20px);
+  padding: clamp(8px, 2.5vh, 26px) 24px clamp(6px, 1.8vh, 18px);
   text-align: center;
+  overflow: hidden;
 }
 .hm-word {
-  font-size: clamp(76px, 17vw, 190px);
+  flex: none;
+  font-size: clamp(52px, min(16vw, 20vh), 170px);
   line-height: 0.86;
   font-weight: 700;
   letter-spacing: -0.055em;
@@ -27,15 +36,17 @@
   user-select: none;
 }
 .hm-line {
-  margin-top: 14px;
+  flex: none;
+  margin: 2px 0 0;
   color: var(--dim);
-  font-size: 14px;
-  min-height: 21px;
+  font-size: 13.5px;
+  min-height: 20px;
 }
 .hm-search {
-  margin-top: 26px;
+  flex: none;
+  margin-top: clamp(4px, 1.4vh, 14px);
   width: min(560px, 100%);
-  height: 46px;
+  height: clamp(40px, 5.4vh, 48px);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -68,13 +79,35 @@
 }
 
 .hm-links {
-  margin-top: 40px;
+  flex: none;
+  margin-top: clamp(10px, 3vh, 34px);
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  gap: 20px;
+  gap: clamp(10px, 1.6vw, 20px);
   flex-wrap: wrap;
   max-width: 100%;
+}
+/* the circles step down with the window height so the row never wraps on a
+   short screen */
+@media (max-height: 820px) {
+  .hm-links {
+    gap: 12px;
+  }
+  .ql {
+    width: 64px;
+  }
+  .ql-btn {
+    width: 52px;
+    height: 52px;
+  }
+  .ql-btn svg {
+    width: 19px;
+    height: 19px;
+  }
+  .hm-strip {
+    display: none;
+  }
 }
 .ql {
   position: relative;
@@ -142,8 +175,10 @@
 /* the band of cards */
 .hm-strip {
   position: relative;
+  flex: 0 1 auto;
+  min-height: 0;
   width: 100vw;
-  margin-top: 60px;
+  margin-top: clamp(12px, 3vh, 44px);
   overflow: hidden;
   padding: 4px 0 8px;
   mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent);
@@ -337,11 +372,21 @@
     transform: translate(-50%, 8px);
   }
 }
-.coinfloat {
+/* the corner where overlay extensions live: a stack, bottom-right, above the
+   version readout so the two never sit on top of each other */
+.floats {
   position: fixed;
   right: 12px;
   bottom: 44px;
   z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  pointer-events: none;
+}
+.coinfloat {
+  pointer-events: auto;
   padding: 5px 11px;
   border-radius: 99px;
   border: var(--bw) solid var(--line-2);
@@ -711,6 +756,19 @@ kbd {
 .px-status.is-warn {
   color: var(--warn);
 }
+/* relay presets: a row of buttons under the field, so switching relays is one
+   click rather than remembering a URL */
+.px-relays {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.px-relays .btn svg {
+  width: 13px;
+  height: 13px;
+}
+
 .px-settings {
   margin-top: 22px;
 }

@@ -8,13 +8,25 @@
  * @module
  */
 
+import type * as chat from "../chat.js";
+import type * as filter from "../filter.js";
+import type * as members from "../members.js";
+import type * as music from "../music.js";
+import type * as store from "../store.js";
+
 import type {
   ApiFromModules,
   FilterApi,
   FunctionReference,
 } from "convex/server";
 
-declare const fullApi: ApiFromModules<{}>;
+declare const fullApi: ApiFromModules<{
+  chat: typeof chat;
+  filter: typeof filter;
+  members: typeof members;
+  music: typeof music;
+  store: typeof store;
+}>;
 
 /**
  * A utility for referencing Convex functions in your app's public API.
