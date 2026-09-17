@@ -240,7 +240,9 @@ export function App() {
         </div>
       </div>
 
-      {showMeta && (
+      {/* the page-time and build stamp belong to the front door only: every
+          other page is a real page and should not look like a debug overlay */}
+      {showMeta && tab.now.page === "home" && (
         <div className="meta">
           <div>Page: {ms} ms</div>
           <div>

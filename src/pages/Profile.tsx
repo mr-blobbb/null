@@ -53,7 +53,7 @@ import {
   verifyPassword,
   type NameStyle,
 } from "../lib/account";
-import { AvatarArt } from "../lib/art";
+import { AvatarArt, TagChip } from "../lib/art";
 import { NullFace } from "../lib/brand";
 import { publish, unpublish } from "../lib/members";
 import { ShareCard } from "../components/ShareCard";
@@ -278,11 +278,7 @@ function SignedIn() {
                     {OWNER_TAG.name}
                   </span>
                 )}
-                {tag && (
-                  <span className="tagchip" style={{ background: tag.color, color: "#0b0b0d" }}>
-                    {tag.name}
-                  </span>
-                )}
+                {tag && <TagChip item={tag} />}
               </div>
             )}
 

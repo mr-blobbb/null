@@ -108,7 +108,7 @@ export function SettingsSheet({ open, onClose }: { open: boolean; onClose: () =>
               <label className="setrow">
                 <span>
                   <b>Page timer readout</b>
-                  <em>The “Page: N ms” line in the bottom corner.</em>
+                  <em>The “Page: N ms” line in the corner of the home page.</em>
                 </span>
                 <input
                   type="checkbox"

@@ -18,7 +18,7 @@ export type CardInput = {
   banner: string;
   pfp: string | null;
   owner: boolean;
-  tag: { name: string; color?: string } | null;
+  tag: { name: string; color?: string; ink?: string; glyph?: string } | null;
   nameStyle: NameStyle;
   favorites: number;
   coins: number;
@@ -280,9 +280,12 @@ export async function paintCard(input: CardInput): Promise<HTMLCanvasElement> {
     }) + 10;
   }
   if (input.tag) {
-    pill(ctx, input.tag.name, cx, py + 94, {
+    /* the glyph is part of the tag, so it is painted too — the canvas has
+       none of the CSS finishes a chip can wear, but the symbol is text */
+    const label = input.tag.glyph ? `${input.tag.glyph} ${input.tag.name}` : input.tag.name;
+    pill(ctx, label, cx, py + 94, {
       fill: input.tag.color ?? k.ac1,
-      ink: "#0b0b0d",
+      ink: input.tag.ink ?? "#0b0b0d",
       font: "800 15px system-ui, sans-serif",
     });
   }

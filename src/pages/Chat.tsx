@@ -37,6 +37,7 @@ import { cloud, cloudOn, machine } from "../lib/cloud";
 import { useAccount } from "../lib/account";
 import { isOwner, OWNER_TAG } from "../lib/owner";
 import { itemOf } from "../lib/econ";
+import { TagChip } from "../lib/art";
 import { screen } from "../lib/filter";
 import { Rich } from "../lib/rich";
 import { go } from "../lib/tabs";
@@ -370,11 +371,7 @@ function Line({ m, mine, prev }: { m: Row; mine: boolean; prev?: Row }) {
             </span>
           )}
           {m.bot && <span className="say-badge">bot</span>}
-          {tag && (
-            <span className="tagchip" style={{ background: tag.color, color: "#0b0b0d" }}>
-              {tag.name}
-            </span>
-          )}
+          {tag && <TagChip item={tag} />}
           <span className="say-at">{time}</span>
         </span>
         <span className="say-body">

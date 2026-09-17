@@ -17,7 +17,7 @@ import { nameStyleCss, useAccount } from "../lib/account";
 import { itemOf, useEcon } from "../lib/econ";
 import { isOwner, OWNER_TAG } from "../lib/owner";
 import { cardPng } from "../lib/card";
-import { AvatarArt, EffectArt } from "../lib/art";
+import { AvatarArt, EffectArt, TagChip } from "../lib/art";
 import { NullFace } from "../lib/brand";
 import { Sheet } from "./Sheet";
 
@@ -48,7 +48,7 @@ export function ShareCard({ open, onClose }: { open: boolean; onClose: () => voi
         banner: me.banner,
         pfp: me.pfp,
         owner,
-        tag: tag ? { name: tag.name, color: tag.color } : null,
+        tag: tag ? { name: tag.name, color: tag.color, ink: tag.ink, glyph: tag.glyph } : null,
         nameStyle: me.nameStyle,
         favorites: me.favorites.length,
         coins: eco.coins,
@@ -111,11 +111,7 @@ export function ShareCard({ open, onClose }: { open: boolean; onClose: () => voi
                   {OWNER_TAG.name}
                 </span>
               )}
-              {tag && (
-                <span className="tagchip" style={{ background: tag.color, color: "#0b0b0d" }}>
-                  {tag.name}
-                </span>
-              )}
+              {tag && <TagChip item={tag} />}
             </div>
           </div>
         </div>

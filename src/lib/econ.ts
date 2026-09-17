@@ -29,6 +29,12 @@ export type ShopItem = {
   was: number;
   /** name tags carry their own colour */
   color?: string;
+  /** a tag with a dark fill writes its name in light ink instead */
+  ink?: string;
+  /** a small symbol before the name, for tags that want one */
+  glyph?: string;
+  /** a special finish for a tag, styled in shop.css */
+  art?: "glow" | "stripe" | "split" | "mono";
 };
 
 export const SHELVES: { id: Shelf; name: string; note: string }[] = [
@@ -228,6 +234,112 @@ export const SHOP: ShopItem[] = [
     price: 1040,
     was: 1240,
     color: "#ff8a5c",
+  },
+  {
+    id: "tgoat",
+    shelf: "tag",
+    name: "GOAT",
+    desc: "Greatest of all time",
+    price: 1600,
+    was: 1880,
+    color: "#f2c14e",
+    glyph: "★",
+    art: "glow",
+  },
+  {
+    id: "tclutch",
+    shelf: "tag",
+    name: "CLUTCH",
+    desc: "Down to the last second",
+    price: 940,
+    was: 1120,
+    color: "#ffe066",
+  },
+  {
+    id: "tnpc",
+    shelf: "tag",
+    name: "NPC",
+    desc: "Dialogue not included",
+    price: 720,
+    was: 860,
+    color: "#a9a9b2",
+  },
+  {
+    id: "tsigma",
+    shelf: "tag",
+    name: "SIGMA",
+    desc: "Self-employed",
+    price: 980,
+    was: 1160,
+    color: "#8fb8e8",
+  },
+  {
+    id: "tmenace",
+    shelf: "tag",
+    name: "MENACE",
+    desc: "A certified problem",
+    price: 1120,
+    was: 1340,
+    color: "#ff5d5d",
+    art: "stripe",
+  },
+  {
+    id: "tdelulu",
+    shelf: "tag",
+    name: "DELULU",
+    desc: "It is real to me",
+    price: 880,
+    was: 1060,
+    color: "#f0a6c8",
+  },
+  {
+    id: "thaunted",
+    shelf: "tag",
+    name: "HAUNTED",
+    desc: "Presence noted",
+    price: 1240,
+    was: 1480,
+    color: "#2b2b34",
+    ink: "#e9e9f0",
+    art: "glow",
+  },
+  {
+    id: "tglitch",
+    shelf: "tag",
+    name: "GLITCH",
+    desc: "Not a bug, a feature",
+    price: 1360,
+    was: 1580,
+    color: "#5ce1c4",
+    art: "split",
+  },
+  {
+    id: "tchef",
+    shelf: "tag",
+    name: "CHEF",
+    desc: "Let him cook",
+    price: 860,
+    was: 1020,
+    color: "#ffb86b",
+  },
+  {
+    id: "tpixel",
+    shelf: "tag",
+    name: "PIXEL",
+    desc: "Drawn by hand",
+    price: 900,
+    was: 1080,
+    color: "#9ae6a0",
+    art: "mono",
+  },
+  {
+    id: "tsleepy",
+    shelf: "tag",
+    name: "SLEEPY",
+    desc: "Five more minutes",
+    price: 780,
+    was: 940,
+    color: "#b6bede",
   },
 ];
 

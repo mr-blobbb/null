@@ -390,14 +390,27 @@ function Face() {
   );
 }
 
+/** One name tag, drawn once and worn everywhere: on the shelf card, the
+ *  profile, the share card, the member list and the chat. A tag's colour is
+ *  its own, so this is the only place that decides how a chip is painted. */
+export function TagChip({ item }: { item: ShopItem }) {
+  return (
+    <span
+      className={`tagchip${item.art ? ` tagchip--${item.art}` : ""}`}
+      /* --tag lets a finish (a glow, say) lean on the chip's own colour
+         instead of the ink that was chosen to sit on top of it */
+      style={{ background: item.color, color: item.ink ?? "#0b0b0d", "--tag": item.color } as CSSProperties}
+    >
+      {item.glyph && <b className="tag-glyph">{item.glyph}</b>}
+      {item.name}
+    </span>
+  );
+}
+
 /** The little preview drawn on a shop card. */
 export function PreviewArt({ item }: { item: ShopItem }) {
   if (item.shelf === "tag") {
-    return (
-      <span className="tagchip" style={{ background: item.color, color: "#0b0b0d" }}>
-        {item.name}
-      </span>
-    );
+    return <TagChip item={item} />;
   }
   if (item.shelf === "avatar") {
     return (

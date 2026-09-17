@@ -22,7 +22,7 @@ import { cloudOn } from "../lib/cloud";
 import { isOwner, OWNER_TAG } from "../lib/owner";
 import { nameStyleCss, type NameStyle } from "../lib/account";
 import { itemOf } from "../lib/econ";
-import { AvatarArt, EffectArt } from "../lib/art";
+import { AvatarArt, EffectArt, TagChip } from "../lib/art";
 import { NullFace } from "../lib/brand";
 import { Sheet } from "../components/Sheet";
 
@@ -144,11 +144,7 @@ function Tags({ m }: { m: Member }) {
           {OWNER_TAG.name}
         </span>
       )}
-      {tag && (
-        <span className="tagchip" style={{ background: tag.color, color: "#0b0b0d" }}>
-          {tag.name}
-        </span>
-      )}
+      {tag && <TagChip item={tag} />}
     </span>
   );
 }

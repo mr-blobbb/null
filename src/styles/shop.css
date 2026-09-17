@@ -819,6 +819,36 @@
   letter-spacing: 0.08em;
 }
 
+/* a symbol a tag carries before its name */
+.tag-glyph {
+  font-size: 9px;
+  line-height: 1;
+  margin-right: 4px;
+}
+
+/* The finishes a tag can be born with. Each is one small thing laid over the
+   fill — a light, an edge, a stray frame — never a redesign of it, so a chip
+   still reads as a chip next to anyone else's. */
+.tagchip--glow {
+  box-shadow: 0 0 14px -3px var(--tag);
+}
+.tagchip--stripe {
+  background-image: repeating-linear-gradient(
+    115deg,
+    transparent 0 6px,
+    rgba(11, 11, 13, 0.22) 6px 11px
+  );
+}
+.tagchip--split {
+  text-shadow:
+    -1px 0 rgba(255, 93, 93, 0.65),
+    1px 0 rgba(92, 225, 196, 0.65);
+}
+.tagchip--mono {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  letter-spacing: 0.14em;
+}
+
 /* The owner's tag. Nothing on the shelf is built like this: the edge is a
    gradient of the palette's own ink, the fill is the page surface, and a
    sheen crosses it on a loop. No shop item can produce any of that. */
