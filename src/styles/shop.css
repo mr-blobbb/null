@@ -382,7 +382,9 @@
   stroke: var(--dim);
 }
 
-/* ---------- profile effects ---------- */
+/* ---------- profile effects ----------
+   Card backgrounds. The layer fills whatever box it is given and clips to
+   it, so the same effect reads as a shop tile and as a full profile card. */
 .fx {
   position: absolute;
   inset: 0;
@@ -390,6 +392,33 @@
   overflow: hidden;
   border-radius: inherit;
   z-index: 0;
+}
+
+/* The readable layer, drawn last so it settles the motion underneath: a
+   vertical scrim in the card's own background colour, light at the top
+   where the art shows and heavier across the text. */
+.fx-tint {
+  position: absolute;
+  inset: 0;
+  display: block;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--bg) 42%, transparent) 0%,
+    color-mix(in srgb, var(--bg) 66%, transparent) 44%,
+    color-mix(in srgb, var(--bg) 84%, transparent) 100%
+  );
+}
+/* the loud ones get a heavier hand so the text never fights them */
+.fx-glitch .fx-tint {
+  background: color-mix(in srgb, var(--bg) 76%, transparent);
+}
+.fx-aurora .fx-tint {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--bg) 52%, transparent) 0%,
+    color-mix(in srgb, var(--bg) 72%, transparent) 46%,
+    color-mix(in srgb, var(--bg) 88%, transparent) 100%
+  );
 }
 .fx-dove {
   position: absolute;

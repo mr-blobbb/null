@@ -92,6 +92,12 @@
   padding: 0 0 16px;
   background: var(--bg-2);
 }
+/* an equipped profile effect is a background: everything the card says
+   stays on top of it, and on top of its tint */
+.pf-card > :not(.fx) {
+  position: relative;
+  z-index: 1;
+}
 .pf-banner {
   position: relative;
   height: 152px;

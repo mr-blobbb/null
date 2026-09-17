@@ -188,78 +188,79 @@ export function AvatarArt({ id }: { id: string | null | undefined }) {
 }
 
 /* ---------- profile effects ----------
-   A moving layer over the whole card, behind the text. */
+   Whole-card backgrounds, drawn behind everything the card says.
+
+   Every piece is positioned in percentages, so a background stretches to
+   the card and stays in proportion at any size, the same way `cover` crops
+   a photograph: nothing squashes, and the composition is the same on a
+   104px shop tile and on the full profile card.
+
+   Each one ends with a tint layer held at a fixed weight, which is what
+   keeps the text over it readable no matter how busy the motion gets. */
+const EFFECTS: Record<string, () => React.ReactNode> = {
+  doves: () =>
+    [0, 1, 2].map((i) => (
+      <svg key={i} viewBox="0 0 40 20" className={`fx-dove d${i}`} aria-hidden="true">
+        <path d="M2 14 Q10 2 20 10 Q30 2 38 14" fill="none" strokeWidth="2" strokeLinecap="round" />
+      </svg>
+    )),
+
+  glitch: () =>
+    Array.from({ length: 7 }, (_, i) => <i key={i} className={`fx-bar d${i}`} />),
+
+  duckpond: () => [
+    ...[
+      [14, 12],
+      [46, 7],
+      [78, 15],
+    ].map(([x, y], i) => (
+      <i key={`l${i}`} className={`fx-lily d${i}`} style={{ left: `${x}%`, top: `${y}%` }} />
+    )),
+    <span key="b0" className="fx-beam b0" />,
+    <span key="b1" className="fx-beam b1" />,
+    <span key="b2" className="fx-beam b2" />,
+  ],
+
+  rainfall: () =>
+    Array.from({ length: 26 }, (_, i) => (
+      <i
+        key={i}
+        className="fx-drop"
+        style={{ left: `${(i * 3.9) % 100}%`, animationDelay: `${(i % 7) * 0.23}s` }}
+      />
+    )),
+
+  embers: () =>
+    Array.from({ length: 18 }, (_, i) => (
+      <i
+        key={i}
+        className="fx-ember"
+        style={{ left: `${(i * 5.6) % 100}%`, animationDelay: `${(i % 9) * 0.44}s` }}
+      />
+    )),
+
+  aurora: () => [0, 1, 2].map((i) => <i key={i} className={`fx-band d${i}`} />),
+};
+
+/** The wrapper class each effect has always used, kept for the stylesheet. */
+const EFFECT_CLASS: Record<string, string> = {
+  doves: "fx-doves",
+  glitch: "fx-glitch",
+  duckpond: "fx-pond",
+  rainfall: "fx-rain",
+  embers: "fx-embers",
+  aurora: "fx-aurora",
+};
+
 export function EffectArt({ id }: { id: string | null | undefined }) {
-  if (!id) return null;
-  switch (id) {
-    case "doves":
-      return (
-        <span className="fx fx-doves">
-          {[0, 1, 2].map((i) => (
-            <svg key={i} viewBox="0 0 40 20" className={`fx-dove d${i}`} aria-hidden="true">
-              <path d="M2 14 Q10 2 20 10 Q30 2 38 14" fill="none" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-          ))}
-        </span>
-      );
-    case "glitch":
-      return (
-        <span className="fx fx-glitch">
-          {Array.from({ length: 7 }, (_, i) => (
-            <i key={i} className={`fx-bar d${i}`} />
-          ))}
-        </span>
-      );
-    case "duckpond":
-      return (
-        <span className="fx fx-pond">
-          {[
-            [14, 12],
-            [46, 7],
-            [78, 15],
-          ].map(([x, y], i) => (
-            <i key={i} className={`fx-lily d${i}`} style={{ left: `${x}%`, top: `${y}%` }} />
-          ))}
-          <span className="fx-beam b0" />
-          <span className="fx-beam b1" />
-          <span className="fx-beam b2" />
-        </span>
-      );
-    case "rainfall":
-      return (
-        <span className="fx fx-rain">
-          {Array.from({ length: 26 }, (_, i) => (
-            <i
-              key={i}
-              className="fx-drop"
-              style={{ left: `${(i * 3.9) % 100}%`, animationDelay: `${(i % 7) * 0.23}s` }}
-            />
-          ))}
-        </span>
-      );
-    case "embers":
-      return (
-        <span className="fx fx-embers">
-          {Array.from({ length: 18 }, (_, i) => (
-            <i
-              key={i}
-              className="fx-ember"
-              style={{ left: `${(i * 5.6) % 100}%`, animationDelay: `${(i % 9) * 0.44}s` }}
-            />
-          ))}
-        </span>
-      );
-    case "aurora":
-      return (
-        <span className="fx fx-aurora">
-          {[0, 1, 2].map((i) => (
-            <i key={i} className={`fx-band d${i}`} />
-          ))}
-        </span>
-      );
-    default:
-      return null;
-  }
+  const draw = id ? EFFECTS[id] : undefined;
+  if (!id || !draw) return null;
+  return (
+    <span className={`fx ${EFFECT_CLASS[id]}`}>
+      {draw()}
+      <i className="fx-tint" />
+    </span>
+  );
 }
 
 /** The round picture a decoration sits on: the player's own face when they
