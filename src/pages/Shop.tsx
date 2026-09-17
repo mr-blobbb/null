@@ -21,6 +21,7 @@ import {
 import { PreviewArt } from "../lib/art";
 import {
   buy,
+  MAX_TAGS,
   mintCoinsGift,
   mintItemGift,
   owns,
@@ -29,6 +30,7 @@ import {
   SHELVES,
   toggleEquip,
   useEcon,
+  wearing,
   type ShopItem,
 } from "../lib/econ";
 import { isOwner } from "../lib/owner";
@@ -95,7 +97,10 @@ export function Shop({ onOpenSettings }: { onOpenSettings: () => void }) {
             <header className="sh-shelf-head">
               <Icon />
               <h2>{shelf.name}</h2>
-              <span className="sh-shelf-note faint tiny">{shelf.note}</span>
+              <span className="sh-shelf-note faint tiny">
+                {shelf.note}
+                {shelf.id === "tag" && ` Wearing ${me.equipped.tags.length} of ${MAX_TAGS}.`}
+              </span>
             </header>
             <div className="sh-grid">
               {items.map((item) => (
@@ -103,7 +108,7 @@ export function Shop({ onOpenSettings }: { onOpenSettings: () => void }) {
                   key={item.id}
                   item={item}
                   owned={owns(item.id, owner)}
-                  on={me.equipped[shelf.id] === item.id}
+                  on={wearing(shelf.id, item.id)}
                   coins={me.coins}
                   onBuy={() => {
                     const r = buy(item.id);
@@ -197,7 +202,8 @@ function Card({
       <div className="shop-price">
         <Coins />
         <b>{item.price.toLocaleString()}</b>
-        <s>{item.was.toLocaleString()}</s>
+        {/* a piece sold at full price has nothing to cross out */}
+        {item.was !== undefined && <s>{item.was.toLocaleString()}</s>}
       </div>
       <div className="shop-actions">
         {/* an unlocked item may be passed on, which is how the owner can

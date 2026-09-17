@@ -47,7 +47,7 @@ function Cloud() {
       pfp: r.pfp,
       joined: r.joined,
       nameStyle: parseStyle(r.nameStyle),
-      wearing: r.wearing,
+      wearing: { avatar: r.wearing.avatar, effect: r.wearing.effect, tags: r.wearing.tags },
       owner: r.owner || isOwner(r.user),
       coins: r.coins,
       seen: r.seen,

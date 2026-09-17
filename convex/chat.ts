@@ -164,6 +164,7 @@ function draw(m: {
   at: number;
   owner: boolean;
   tag: string | null;
+  tags?: string[];
   machine: string;
   bot?: boolean;
 }) {
@@ -174,7 +175,9 @@ function draw(m: {
     body: m.body,
     at: m.at,
     owner: m.owner,
-    tag: m.tag,
+    /* one tag was all a message could wear once, so a row without the list
+       still says something */
+    tags: m.tags ?? (m.tag ? [m.tag] : []),
     machine: m.machine,
     bot: m.bot === true,
   };
@@ -186,7 +189,8 @@ export const send = mutation({
     name: v.string(),
     body: v.string(),
     owner: v.boolean(),
-    tag: v.union(v.string(), v.null()),
+    /** the author's tags, in the order they put them on */
+    tags: v.array(v.string()),
     machine: v.string(),
     thread: v.optional(v.string()),
   },
@@ -216,7 +220,8 @@ export const send = mutation({
       body: said.clean.trim(),
       at,
       owner: args.owner,
-      tag: args.tag,
+      tag: args.tags[0] ?? null,
+      tags: args.tags.slice(0, 2),
       machine: args.machine.slice(0, 40),
       thread: slug,
     });
@@ -240,6 +245,7 @@ export const send = mutation({
             at: at + 1,
             owner: false,
             tag: null,
+            tags: [],
             machine: "nullbot",
             thread: slug,
             bot: true,
@@ -347,10 +353,11 @@ async function botReply(ctx: Ctx, cmd: string, arg: string): Promise<string | nu
       return lines.join("\n");
     }
 
+    const wearsTag = (row.tags?.length ?? 0) > 0 || !!row.tag;
     const wearing = [
       row.avatar ? "a picture frame" : null,
       row.effect ? "a profile effect" : null,
-      row.tag ? "a name tag" : null,
+      wearsTag ? "a name tag" : null,
     ].filter(Boolean);
     return [
       `📊 **${row.name}** (@${row.user})`,

@@ -18,7 +18,8 @@ export type CardInput = {
   banner: string;
   pfp: string | null;
   owner: boolean;
-  tag: { name: string; color?: string; ink?: string; glyph?: string } | null;
+  /** the name tags worn, in the order they were put on */
+  tags: { name: string; color?: string; ink?: string; glyph?: string }[];
   nameStyle: NameStyle;
   favorites: number;
   coins: number;
@@ -279,15 +280,15 @@ export async function paintCard(input: CardInput): Promise<HTMLCanvasElement> {
       border: k.text,
     }) + 10;
   }
-  if (input.tag) {
+  for (const tag of input.tags) {
     /* the glyph is part of the tag, so it is painted too — the canvas has
        none of the CSS finishes a chip can wear, but the symbol is text */
-    const label = input.tag.glyph ? `${input.tag.glyph} ${input.tag.name}` : input.tag.name;
-    pill(ctx, label, cx, py + 94, {
-      fill: input.tag.color ?? k.ac1,
-      ink: input.tag.ink ?? "#0b0b0d",
+    const label = tag.glyph ? `${tag.glyph} ${tag.name}` : tag.name;
+    cx += pill(ctx, label, cx, py + 94, {
+      fill: tag.color ?? k.ac1,
+      ink: tag.ink ?? "#0b0b0d",
       font: "800 15px system-ui, sans-serif",
-    });
+    }) + 10;
   }
 
   /* the bio, line breaks and all. The baseline is set again here because the

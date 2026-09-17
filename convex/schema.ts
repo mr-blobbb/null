@@ -31,7 +31,10 @@ export default defineSchema({
     /** what they are wearing, so other machines can draw the card */
     avatar: v.union(v.string(), v.null()),
     effect: v.union(v.string(), v.null()),
+    /** the first tag ever worn here, kept so rows written before tags came
+     *  in twos still read — `tags` is the list that matters */
     tag: v.union(v.string(), v.null()),
+    tags: v.optional(v.array(v.string())),
     coins: v.number(),
     owner: v.boolean(),
     /** the last time any machine saw them */
@@ -54,8 +57,10 @@ export default defineSchema({
     body: v.string(),
     at: v.number(),
     owner: v.boolean(),
-    /** a message can wear the name tag its author is wearing */
+    /** a message wears the name tags its author was wearing, as a list; the
+     *  single `tag` is the same field as a string, for rows written first */
     tag: v.union(v.string(), v.null()),
+    tags: v.optional(v.array(v.string())),
     /** the browser that sent it, so a client can spot its own echoes */
     machine: v.string(),
     /** which room, absent on anything written before threads existed */

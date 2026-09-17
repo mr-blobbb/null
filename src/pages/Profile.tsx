@@ -57,7 +57,7 @@ import { AvatarArt, TagChip } from "../lib/art";
 import { NullFace } from "../lib/brand";
 import { publish, unpublish } from "../lib/members";
 import { ShareCard } from "../components/ShareCard";
-import { itemOf, useEcon } from "../lib/econ";
+import { itemsOf, useEcon } from "../lib/econ";
 import { isOwner, OWNER_TAG } from "../lib/owner";
 import { entries } from "../lib/catalog";
 import { openTab } from "../lib/tabs";
@@ -185,7 +185,7 @@ function SignedIn() {
   const [bannerOpen, setBannerOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
 
-  const tag = itemOf(eco.equipped.tag);
+  const tags = itemsOf(eco.equipped.tags);
   const avatar = eco.equipped.avatar;
   /* the owner wears their own tag, on top of whatever they picked up in the
      shop — the two sit side by side rather than replacing each other */
@@ -270,7 +270,7 @@ function SignedIn() {
             </div>
             <span className="pf-handle">@{me.user}</span>
 
-            {(owner || tag) && (
+            {(owner || tags.length > 0) && (
               <div className="pf-tags">
                 {owner && (
                   <span className="tagchip tagchip--owner" title={OWNER_TAG.note}>
@@ -278,7 +278,9 @@ function SignedIn() {
                     {OWNER_TAG.name}
                   </span>
                 )}
-                {tag && <TagChip item={tag} />}
+                {tags.map((t) => (
+                  <TagChip key={t.id} item={t} />
+                ))}
               </div>
             )}
 

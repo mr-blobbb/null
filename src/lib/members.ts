@@ -29,7 +29,7 @@ export type Member = {
   joined: number;
   nameStyle: NameStyle;
   /** what they were wearing the last time this browser looked */
-  wearing: { avatar: string | null; effect: string | null; tag: string | null };
+  wearing: { avatar: string | null; effect: string | null; tags: string[] };
   /** an id the rest of the site can render: the owner tag, or a shop tag */
   owner: boolean;
   coins: number;
@@ -73,7 +73,7 @@ function same(a: Member, b: Member): boolean {
     a.nameStyle === b.nameStyle &&
     a.wearing.avatar === b.wearing.avatar &&
     a.wearing.effect === b.wearing.effect &&
-    a.wearing.tag === b.wearing.tag
+    a.wearing.tags.join() === b.wearing.tags.join()
   );
 }
 
@@ -105,7 +105,7 @@ export async function publish(me: Account, eco: Econ) {
       nameStyle: JSON.stringify(card.nameStyle ?? {}),
       avatar: card.wearing.avatar,
       effect: card.wearing.effect,
-      tag: card.wearing.tag,
+      tags: card.wearing.tags,
       coins: card.coins,
       owner: card.owner,
     });

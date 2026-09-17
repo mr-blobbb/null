@@ -14,7 +14,7 @@ import { useRef, useState } from "react";
 import { BadgeCheck, Coins, Copy, Crown, Download, Trophy } from "lucide-react";
 
 import { nameStyleCss, useAccount } from "../lib/account";
-import { itemOf, useEcon } from "../lib/econ";
+import { itemsOf, useEcon } from "../lib/econ";
 import { isOwner, OWNER_TAG } from "../lib/owner";
 import { cardPng } from "../lib/card";
 import { AvatarArt, EffectArt, TagChip } from "../lib/art";
@@ -30,7 +30,7 @@ export function ShareCard({ open, onClose }: { open: boolean; onClose: () => voi
   const [busy, setBusy] = useState(false);
 
   const owner = isOwner(me.user);
-  const tag = itemOf(eco.equipped.tag);
+  const tags = itemsOf(eco.equipped.tags);
 
   const say = (msg: string) => {
     setNote(msg);
@@ -48,7 +48,7 @@ export function ShareCard({ open, onClose }: { open: boolean; onClose: () => voi
         banner: me.banner,
         pfp: me.pfp,
         owner,
-        tag: tag ? { name: tag.name, color: tag.color, ink: tag.ink, glyph: tag.glyph } : null,
+        tags: tags.map((t) => ({ name: t.name, color: t.color, ink: t.ink, glyph: t.glyph })),
         nameStyle: me.nameStyle,
         favorites: me.favorites.length,
         coins: eco.coins,
@@ -111,7 +111,9 @@ export function ShareCard({ open, onClose }: { open: boolean; onClose: () => voi
                   {OWNER_TAG.name}
                 </span>
               )}
-              {tag && <TagChip item={tag} />}
+              {tags.map((t) => (
+                <TagChip key={t.id} item={t} />
+              ))}
             </div>
           </div>
         </div>

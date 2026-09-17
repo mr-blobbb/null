@@ -37,7 +37,12 @@ export const list = query({
         pfp: r.pfp,
         joined: r.joined,
         nameStyle: r.nameStyle,
-        wearing: { avatar: r.avatar, effect: r.effect, tag: r.tag },
+        /* a row written before tags came in twos holds one under `tag` */
+        wearing: {
+          avatar: r.avatar,
+          effect: r.effect,
+          tags: r.tags ?? (r.tag ? [r.tag] : []),
+        },
         coins: r.coins,
         owner: r.owner,
         seen: r.seen,
@@ -58,7 +63,8 @@ export const put = mutation({
     nameStyle: v.string(),
     avatar: v.union(v.string(), v.null()),
     effect: v.union(v.string(), v.null()),
-    tag: v.union(v.string(), v.null()),
+    /** the worn tags, in the order they were put on */
+    tags: v.array(v.string()),
     coins: v.number(),
     owner: v.boolean(),
   },
@@ -67,6 +73,7 @@ export const put = mutation({
     if (!user) return null;
     let banner = args.banner;
     let pfp = args.pfp;
+    const tags = args.tags.slice(0, 2);
     if (banner.length + (pfp?.length ?? 0) > BUDGET) pfp = null;
     if (banner.length > BUDGET) banner = DEFAULT_BANNER;
 
@@ -80,7 +87,10 @@ export const put = mutation({
       nameStyle: args.nameStyle.slice(0, 800),
       avatar: args.avatar,
       effect: args.effect,
-      tag: args.tag,
+      /* `tag` is the first of the list: the field the chat bot and any older
+         reader already know how to read */
+      tag: tags[0] ?? null,
+      tags,
       coins: Math.max(0, Math.min(99_999_999, Math.round(args.coins))),
       owner: args.owner,
       seen: Date.now(),

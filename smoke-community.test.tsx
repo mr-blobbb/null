@@ -32,7 +32,7 @@ const HUMAN = {
   body: "morning",
   at: Date.now() - 30_000,
   owner: true,
-  tag: "tag.star",
+  tags: ["tstar", "tcursed"],
   machine: "abc",
   bot: false,
 };

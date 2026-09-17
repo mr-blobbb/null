@@ -21,7 +21,7 @@ import { useMembers, type Member } from "../lib/members";
 import { cloudOn } from "../lib/cloud";
 import { isOwner, OWNER_TAG } from "../lib/owner";
 import { nameStyleCss, type NameStyle } from "../lib/account";
-import { itemOf } from "../lib/econ";
+import { itemsOf } from "../lib/econ";
 import { AvatarArt, EffectArt, TagChip } from "../lib/art";
 import { NullFace } from "../lib/brand";
 import { Sheet } from "../components/Sheet";
@@ -53,7 +53,7 @@ function Cloud() {
       pfp: r.pfp,
       joined: r.joined,
       nameStyle: parseStyle(r.nameStyle),
-      wearing: r.wearing,
+      wearing: { avatar: r.wearing.avatar, effect: r.wearing.effect, tags: r.wearing.tags },
       owner: r.owner || isOwner(r.user),
       coins: r.coins,
       seen: r.seen,
@@ -134,8 +134,8 @@ function Board({ list, live, why }: { list: Member[]; live: boolean; why?: strin
 /** The tag chips a member wears: the owner's, which no shop item can buy, and
  *  whatever they picked up on the shelf. */
 function Tags({ m }: { m: Member }) {
-  const tag = itemOf(m.wearing.tag);
-  if (!m.owner && !tag) return null;
+  const tags = itemsOf(m.wearing.tags);
+  if (!m.owner && tags.length === 0) return null;
   return (
     <span className="mb-tags">
       {m.owner && (
@@ -144,7 +144,9 @@ function Tags({ m }: { m: Member }) {
           {OWNER_TAG.name}
         </span>
       )}
-      {tag && <TagChip item={tag} />}
+      {tags.map((t) => (
+        <TagChip key={t.id} item={t} />
+      ))}
     </span>
   );
 }
@@ -190,7 +192,7 @@ function Card({ m, onOpen }: { m: Member; onOpen: () => void }) {
 
 /** The whole card, as it reads on their own profile page. */
 function Full({ m }: { m: Member }) {
-  const tag = itemOf(m.wearing.tag);
+  const tags = itemsOf(m.wearing.tags);
   const owner = isOwner(m.user);
   return (
     <div className="mb-full">
@@ -224,7 +226,7 @@ function Full({ m }: { m: Member }) {
           <Coins /> {(m.coins ?? 0).toLocaleString()}
         </span>
         <span className="mb-stat">
-          <Star /> {tag ? tag.name : "no tag"}
+          <Star /> {tags.length ? tags.map((t) => t.name).join(" + ") : "no tag"}
         </span>
         <span className="mb-stat">
           <Trophy /> {m.wearing.effect ?? "no effect"}

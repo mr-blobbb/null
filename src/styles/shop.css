@@ -849,6 +849,93 @@
   letter-spacing: 0.14em;
 }
 
+/* cursed: the one finish that moves. Two clipped copies of the name sit over
+   the real one, a step out of register and a colour each, and jump to a
+   different slice of the name a few times a second over a crawl of static.
+   The reduce-motion switch takes all of it away, leaving the name on its
+   dark fill — which is still the loudest chip on the shelf at rest. */
+.tagchip--cursed {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(255, 255, 255, 0.06) 0 1px,
+    transparent 1px 3px
+  );
+}
+.tagchip--cursed::before,
+.tagchip--cursed::after {
+  content: attr(data-name);
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  font: inherit;
+  letter-spacing: inherit;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+.tagchip--cursed::before {
+  color: rgba(255, 77, 109, 0.9);
+  animation: tag-glitch-a 2.2s steps(1, end) infinite;
+}
+.tagchip--cursed::after {
+  color: rgba(77, 225, 255, 0.9);
+  animation: tag-glitch-b 3.1s steps(1, end) infinite;
+}
+@keyframes tag-glitch-a {
+  0%,
+  100% {
+    clip-path: inset(0 0 78% 0);
+    transform: translate(-3px, -1px);
+  }
+  18% {
+    clip-path: inset(44% 0 38% 0);
+    transform: translate(3px, 1px);
+  }
+  36% {
+    clip-path: inset(12% 0 66% 0);
+    transform: translate(-2px, 0);
+  }
+  54% {
+    clip-path: inset(62% 0 8% 0);
+    transform: translate(2px, 1px);
+  }
+  72% {
+    clip-path: inset(28% 0 52% 0);
+    transform: translate(-3px, 0);
+  }
+  90% {
+    clip-path: inset(70% 0 4% 0);
+    transform: translate(3px, -1px);
+  }
+}
+@keyframes tag-glitch-b {
+  0%,
+  100% {
+    clip-path: inset(58% 0 20% 0);
+    transform: translate(3px, 1px);
+  }
+  22% {
+    clip-path: inset(6% 0 74% 0);
+    transform: translate(-3px, 0);
+  }
+  48% {
+    clip-path: inset(36% 0 44% 0);
+    transform: translate(2px, -1px);
+  }
+  66% {
+    clip-path: inset(80% 0 2% 0);
+    transform: translate(-2px, 1px);
+  }
+  84% {
+    clip-path: inset(20% 0 60% 0);
+    transform: translate(3px, 0);
+  }
+}
+
 /* The owner's tag. Nothing on the shelf is built like this: the edge is a
    gradient of the palette's own ink, the fill is the page surface, and a
    sheen crosses it on a loop. No shop item can produce any of that. */

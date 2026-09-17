@@ -25,8 +25,9 @@ export type ShopItem = {
   name: string;
   desc: string;
   price: number;
-  /** the crossed-out price, so a number reads like a price, not a placeholder */
-  was: number;
+  /** the crossed-out price, so a number reads like a price, not a placeholder.
+   *  A piece sold at full price simply has none. */
+  was?: number;
   /** name tags carry their own colour */
   color?: string;
   /** a tag with a dark fill writes its name in light ink instead */
@@ -34,7 +35,7 @@ export type ShopItem = {
   /** a small symbol before the name, for tags that want one */
   glyph?: string;
   /** a special finish for a tag, styled in shop.css */
-  art?: "glow" | "stripe" | "split" | "mono";
+  art?: "glow" | "stripe" | "split" | "mono" | "cursed";
 };
 
 export const SHELVES: { id: Shelf; name: string; note: string }[] = [
@@ -341,6 +342,63 @@ export const SHOP: ShopItem[] = [
     was: 940,
     color: "#b6bede",
   },
+  {
+    id: "tcooked",
+    shelf: "tag",
+    name: "COOKED",
+    desc: "It is so over",
+    price: 1060,
+    was: 1260,
+    color: "#ff7a45",
+  },
+  {
+    id: "tunemployed",
+    shelf: "tag",
+    name: "UNEMPLOYED",
+    desc: "But working on it",
+    price: 700,
+    was: 840,
+    color: "#cfd6c4",
+  },
+  {
+    id: "tceo",
+    shelf: "tag",
+    name: "CEO",
+    desc: "Of absolutely nothing",
+    price: 1180,
+    was: 1380,
+    color: "#e8d8a8",
+  },
+  {
+    id: "tlocal",
+    shelf: "tag",
+    name: "LOCAL",
+    desc: "Gatekeeper, actually",
+    price: 760,
+    was: 900,
+    color: "#c6c6d0",
+  },
+  {
+    id: "tmoist",
+    shelf: "tag",
+    name: "MOIST",
+    desc: "Why would you buy this",
+    price: 980,
+    was: 1160,
+    color: "#79c9d6",
+  },
+  /* the one that is genuinely wrong to wear: sold at full price, and the
+     only piece whose finish moves on its own */
+  {
+    id: "tcursed",
+    shelf: "tag",
+    name: "CURSED",
+    desc: "Do not wear this",
+    price: 4200,
+    color: "#17171f",
+    ink: "#e8e8f0",
+    art: "cursed",
+  },
 ];
 
 export type Gift = {
@@ -352,12 +410,16 @@ export type Gift = {
   used: boolean;
 };
 
+/** How many name tags a player can wear at once. Two, because one tag is a
+ *  label and two is a look, and three is a pile. */
+export const MAX_TAGS = 2;
+
 export type Econ = {
   coins: number;
   earned: number;
   spent: number;
   owned: string[];
-  equipped: { avatar: string | null; effect: string | null; tag: string | null };
+  equipped: { avatar: string | null; effect: string | null; tags: string[] };
   /** seconds spent on the site, and of those, seconds in a game */
   seconds: number;
   playSeconds: number;
@@ -373,7 +435,7 @@ const EMPTY: Econ = {
   earned: 0,
   spent: 0,
   owned: [],
-  equipped: { avatar: null, effect: null, tag: null },
+  equipped: { avatar: null, effect: null, tags: [] },
   seconds: 0,
   playSeconds: 0,
   milestones: 0,
@@ -388,9 +450,35 @@ export function useEcon(): Econ {
   return useStore(econ);
 }
 
+/* The shelf once sold one tag, so an older browser holds `equipped.tag`
+   instead of `equipped.tags`. Bring that shape forward once, on the way in,
+   rather than leaving every page to defend against it. */
+function settle() {
+  const eq = econ.get().equipped as Partial<Econ["equipped"]> & { tag?: string | null };
+  if (Array.isArray(eq.tags)) return;
+  econ.set({
+    equipped: {
+      avatar: eq.avatar ?? null,
+      effect: eq.effect ?? null,
+      tags: typeof eq.tag === "string" ? [eq.tag] : [],
+    },
+  });
+}
+settle();
+
 export function itemOf(id: string | null | undefined): ShopItem | undefined {
   if (!id) return undefined;
   return SHOP.find((i) => i.id === id);
+}
+
+/** A worn list, in order, skipping anything the shelf no longer sells. A
+ *  missing list is an empty one, because a page holding a row from before
+ *  tags came in twos should draw nothing, not fall over. */
+export function itemsOf(ids: string[] | null | undefined): ShopItem[] {
+  if (!ids) return [];
+  return ids
+    .map((id) => SHOP.find((i) => i.id === id))
+    .filter((i): i is ShopItem => i !== undefined);
 }
 
 /** Does this browser own the item? `owner` is the account that owns the site,
@@ -415,11 +503,29 @@ export function buy(id: string): { ok: boolean; reason?: string } {
 
 export function equip(shelf: Shelf, id: string | null) {
   const s = econ.get();
+  if (shelf === "tag") {
+    econ.set({ equipped: { ...s.equipped, tags: id ? [id] : [] } });
+    return;
+  }
   econ.set({ equipped: { ...s.equipped, [shelf]: id } });
 }
 
+/** Is this piece on right now? */
+export function wearing(shelf: Shelf, id: string): boolean {
+  const eq = econ.get().equipped;
+  return shelf === "tag" ? eq.tags.includes(id) : eq[shelf] === id;
+}
+
+/** Put a piece on, or take it off. Tags are two at a time: a third tap drops
+ *  the one that has been on the longest, so the shelf never refuses a click. */
 export function toggleEquip(shelf: Shelf, id: string) {
   const s = econ.get();
+  if (shelf === "tag") {
+    const worn = s.equipped.tags;
+    const tags = worn.includes(id) ? worn.filter((t) => t !== id) : [...worn, id].slice(-MAX_TAGS);
+    econ.set({ equipped: { ...s.equipped, tags } });
+    return;
+  }
   const next = s.equipped[shelf] === id ? null : id;
   econ.set({ equipped: { ...s.equipped, [shelf]: next } });
 }

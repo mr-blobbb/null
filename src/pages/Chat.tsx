@@ -36,7 +36,7 @@ import { Guard } from "../components/Guard";
 import { cloud, cloudOn, machine } from "../lib/cloud";
 import { useAccount } from "../lib/account";
 import { isOwner, OWNER_TAG } from "../lib/owner";
-import { itemOf } from "../lib/econ";
+import { itemsOf } from "../lib/econ";
 import { TagChip } from "../lib/art";
 import { screen } from "../lib/filter";
 import { Rich } from "../lib/rich";
@@ -49,7 +49,8 @@ type Row = {
   body: string;
   at: number;
   owner: boolean;
-  tag: string | null;
+  /** the tags the author was wearing when they said it */
+  tags: string[];
   machine: string;
   bot: boolean;
 };
@@ -250,7 +251,7 @@ function Feed({ slug }: { slug: string }) {
         name: me.name || (me.user as string),
         body: text,
         owner: isOwner(me.user),
-        tag: tagId(),
+        tags: tagIds(),
         machine,
         thread: slug,
       });
@@ -328,14 +329,16 @@ function Feed({ slug }: { slug: string }) {
   );
 }
 
-function tagId(): string | null {
+function tagIds(): string[] {
   try {
     const raw = localStorage.getItem("null:econ");
-    if (!raw) return null;
+    if (!raw) return [];
     const eq = JSON.parse(raw)?.equipped;
-    return typeof eq?.tag === "string" ? eq.tag : null;
+    if (Array.isArray(eq?.tags)) return eq.tags.filter((t: unknown) => typeof t === "string");
+    /* a browser that has not opened the shop since the shelf changed */
+    return typeof eq?.tag === "string" ? [eq.tag] : [];
   } catch {
-    return null;
+    return [];
   }
 }
 
@@ -345,7 +348,7 @@ function tagId(): string | null {
 const GROUP_MS = 5 * 60 * 1000;
 
 function Line({ m, mine, prev }: { m: Row; mine: boolean; prev?: Row }) {
-  const tag = itemOf(m.tag);
+  const tags = itemsOf(m.tags);
   const time = new Date(m.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   const owner = m.owner || isOwner(m.user);
   const same = !!prev && prev.user === m.user && prev.bot === m.bot && m.at - prev.at < GROUP_MS;
@@ -371,7 +374,9 @@ function Line({ m, mine, prev }: { m: Row; mine: boolean; prev?: Row }) {
             </span>
           )}
           {m.bot && <span className="say-badge">bot</span>}
-          {tag && <TagChip item={tag} />}
+          {tags.map((t) => (
+            <TagChip key={t.id} item={t} />
+          ))}
           <span className="say-at">{time}</span>
         </span>
         <span className="say-body">

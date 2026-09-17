@@ -397,9 +397,14 @@ export function TagChip({ item }: { item: ShopItem }) {
   return (
     <span
       className={`tagchip${item.art ? ` tagchip--${item.art}` : ""}`}
-      /* --tag lets a finish (a glow, say) lean on the chip's own colour
-         instead of the ink that was chosen to sit on top of it */
-      style={{ background: item.color, color: item.ink ?? "#0b0b0d", "--tag": item.color } as CSSProperties}
+      /* the colour goes on as background-color, not the `background`
+         shorthand: a shorthand here would reset background-image and wipe
+         out the finishes that draw one (the stripes, the static). --tag
+         lets a finish lean on the chip's own colour rather than the ink
+         chosen to sit on top of it. */
+      style={{ backgroundColor: item.color, color: item.ink ?? "#0b0b0d", "--tag": item.color } as CSSProperties}
+      /* the one finish that redraws the name needs the name to redraw it */
+      data-name={item.art === "cursed" ? item.name : undefined}
     >
       {item.glyph && <b className="tag-glyph">{item.glyph}</b>}
       {item.name}
