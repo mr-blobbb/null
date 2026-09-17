@@ -374,7 +374,9 @@
   font-weight: 620;
   /* the picture is a circle and a decoration is drawn around it, so this has
      to be the thing they are positioned against — and isolated, because a
-     face clip screens onto what it covers */}
+     face clip screens onto what it covers. Both declarations have to stay
+     inside this rule: without `position`, a decoration's absolute layer
+     attaches to the page instead and stretches across it. */
   position: relative;
   isolation: isolate;
 }

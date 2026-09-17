@@ -123,6 +123,39 @@ ok("a stray asterisk stays literal", parse("5 * 3").every((p) => p.kind === "tex
 const rich = renderToStaticMarkup(<Rich body={"**a** and `b`"} /> as never);
 ok("Rich renders both", rich.includes("<b>a</b>") && rich.includes("<code>b</code>"));
 
+/* ---------- the stylesheets ----------
+   A declaration that sits outside any rule is a typo that does nothing at all,
+   and it is invisible: braces still balance and the file still parses. This is
+   exactly how a decoration's absolute layer got attached to the page instead
+   of the avatar — a comment ended with its terminator followed by a closing
+   brace, which shut the rule early, so the `position: relative` it needed was
+   dropped. So: strip the comments, walk the braces, and insist every
+   declaration is inside something. */
+const fs = await import("node:fs");
+const strays: string[] = [];
+for (const name of fs.readdirSync("src/styles").filter((f) => f.endsWith(".css"))) {
+  /* comments blanked, newlines kept, so line numbers stay honest */
+  const css = fs
+    .readFileSync(`src/styles/${name}`, "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, (c) => c.replace(/[^\n]/g, " "));
+  let depth = 0;
+  css.split("\n").forEach((line, i) => {
+    if (depth === 0 && /^\s*[a-z-]+\s*:[^;]*;/.test(line)) strays.push(`${name}:${i + 1} ${line.trim()}`);
+    for (const ch of line) {
+      if (ch === "{") depth += 1;
+      else if (ch === "}") depth = Math.max(0, depth - 1);
+    }
+  });
+}
+ok("every stylesheet declares inside a rule", strays.length === 0);
+if (strays.length) console.log(strays.join("\n"));
+
+const community = fs.readFileSync("src/styles/community.css", "utf8");
+ok(
+  "the chat avatar is what a decoration is positioned against",
+  /\.say-pic \{[\s\S]*?position: relative;/m.test(community) && /\.say-pic \{[\s\S]*?isolation: isolate;/m.test(community),
+);
+
 /* ---------- the rail and the relay list ---------- */
 ok("the assistant sits below Apps in the rail", RAIL_TOP.indexOf("ai") === RAIL_TOP.indexOf("apps") + 1);
 ok("the assistant is listed in All Apps", ALL_PAGES.includes("ai") && !!PAGES.ai);
