@@ -9,7 +9,7 @@
 
    The class names here are animated in src/styles/shop.css. */
 
-import type { CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import { UserRound } from "lucide-react";
 
 import { useAccount } from "./account";
@@ -288,12 +288,52 @@ const EFFECT_CLASS: Record<string, string> = {
   galaxy: "fx-galaxy",
 };
 
+/** The real clip behind each background, in public/decor (see its README for
+ *  where they came from). The drawing above is what shows if one is missing. */
+const EFFECT_VIDEO: Record<string, string> = {
+  rainy: "card-rainy.mp4",
+  blocks: "card-voxel.mp4",
+  hex: "card-hex.mp4",
+  galaxy: "card-galaxy.mp4",
+};
+
+/** public/ is served from the site root and every route is a hash on the same
+ *  document, so a relative path lands on the file in dev and on any host. */
+function decor(file: string): string {
+  return `decor/${file}`;
+}
+
+/* A clip used as a background: muted, looping, and never a sound. The `poster`
+   is deliberately absent so the drawing underneath shows until the first
+   frame is decoded, and stays if the file cannot be played at all. */
+function CardVideo({ file }: { file: string }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return null;
+  return (
+    <video
+      className="fx-video"
+      src={decor(file)}
+      autoPlay
+      muted
+      loop
+      playsInline
+      preload="metadata"
+      disablePictureInPicture
+      onError={() => setFailed(true)}
+      aria-hidden="true"
+      tabIndex={-1}
+    />
+  );
+}
+
 export function EffectArt({ id }: { id: string | null | undefined }) {
   const draw = id ? EFFECTS[id] : undefined;
+  const clip = id ? EFFECT_VIDEO[id] : undefined;
   if (!id || !draw) return null;
   return (
     <span className={`fx ${EFFECT_CLASS[id]}`}>
       {draw()}
+      {clip && <CardVideo file={clip} />}
       <i className="fx-tint" />
     </span>
   );

@@ -423,11 +423,22 @@
 }
 /* ============================================================
    the four backgrounds
-   Rainy Window, Voxel Valley, Honeycomb, Galaxy. Each is a small scene
-   in plain boxes and shapes, positioned in percentages so it crops to its
-   card instead of squashing: the same drawing is a shop tile and a
-   profile card. Nothing loads, so nothing can make a sound.
+   Rainy Window, Voxel Valley, Honeycomb, Galaxy. Each is a clip from
+   public/decor, muted and looping, cropped to whatever box it is given so
+   it is the same size on a shop tile and on a profile card. Underneath
+   each clip is a drawn stand-in that holds the frame before it loads and
+   takes over if the file is ever missing.
    ============================================================ */
+.fx-video {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+  pointer-events: none;
+}
 
 /* ---- 1 · rainy window: a pixel night under a roof ---- */
 .fx-sky {
@@ -879,4 +890,14 @@
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
   }
+  /* a looping clip is the one thing that switch certainly means */
+  .fx-video {
+    display: none;
+  }
+}
+/* the performance switches drop the moving picture as well as the drawing */
+[data-perf="1"] .fx-video,
+[data-perf="ultra"] .fx-video,
+[data-motion="off"] .fx-video {
+  display: none;
 }
