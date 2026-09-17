@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as ai from "../ai.js";
 import type * as chat from "../chat.js";
 import type * as filter from "../filter.js";
 import type * as members from "../members.js";
@@ -21,6 +22,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  ai: typeof ai;
   chat: typeof chat;
   filter: typeof filter;
   members: typeof members;

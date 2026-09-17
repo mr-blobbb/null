@@ -107,7 +107,11 @@
   width: 12px;
   height: 12px;
 }
-.tune button svg {
+.tune button:not(.tune-now) svg {
+  width: 13px;
+  height: 13px;
+}
+.tune-now svg {
   width: 13px;
   height: 13px;
 }

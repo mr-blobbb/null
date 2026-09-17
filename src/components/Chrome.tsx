@@ -265,14 +265,27 @@ function EX_NAME(id: string): string {
 }
 
 /* The mini player. It is the music page's engine, just smaller — the same
-   play, step and pause — and its name is a door to that page. */
+   play, step and pause — and its name is a door to that page.
+
+   The chip at the left is whatever the track came with: the cover the
+   catalogue handed back, or a bare note when nothing is playing. The title is
+   on one line and gets every pixel the toolbar can spare, because a title
+   that wraps out of its own pill is not a title. */
 function Tune() {
   const m = useMusic();
+  const title = m.now ? `${m.now.title} — ${m.now.artist}` : "Not Playing";
+
   return (
     <div className="tune" aria-label="Music player">
-      <button className="tune-now" onClick={() => go({ page: "music" })} title="Open the music page">
-        <Music />
-        <span>{m.now ? `${m.now.title} — ${m.now.artist}` : "Not Playing"}</span>
+      <button
+        className="tune-now"
+        onClick={() => go({ page: "music" })}
+        title={m.now ? `${title} — open the music page` : "Nothing playing — open the music page"}
+      >
+        <span className={`tune-art${m.now?.art ? " has-art" : ""}`}>
+          {m.now?.art ? <img src={m.now.art} alt="" /> : <Music />}
+        </span>
+        <span className="tune-name">{title}</span>
       </button>
       <button aria-label="Previous track" title="Previous" onClick={() => step(-1)} disabled={!m.queue.length}>
         <SkipBack />

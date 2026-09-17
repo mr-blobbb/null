@@ -19,6 +19,7 @@ import { Proxies } from "./pages/Proxies";
 import { Shop } from "./pages/Shop";
 import { Members } from "./pages/Members";
 import { Richest } from "./pages/Richest";
+import { Ai } from "./pages/Ai";
 import { Chat } from "./pages/Chat";
 import { Music } from "./pages/Music";
 import { Profile } from "./pages/Profile";
@@ -173,6 +174,8 @@ export function App() {
         return <Shop onOpenSettings={() => setSettingsOpen(true)} />;
       case "music":
         return <Music />;
+      case "ai":
+        return <Ai />;
       case "chat":
         return <Chat />;
       case "rich":
@@ -221,11 +224,16 @@ export function App() {
         <Chrome onSettings={() => setSettingsOpen(true)} />
         <div className="view">
           <div className="dots" aria-hidden="true" />
-          {/* the front door is the one page that fills the window instead of
-              scrolling in it, so the shell says so here */}
+          {/* Three pages own the whole window rather than scrolling inside
+              it: the front door, the chat rooms and the assistant. The shell
+              says so once, here, instead of every page guessing its height. */}
           <div
             key={`${tab.id}-${tab.nonce}`}
-            className={`page-host${tab.now.page === "home" ? " page-host--fit" : ""}`}
+            className={`page-host${
+              tab.now.page === "home" || tab.now.page === "chat" || tab.now.page === "ai"
+                ? " page-host--fit"
+                : ""
+            }`}
           >
             {body}
           </div>

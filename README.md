@@ -92,9 +92,32 @@ with the sheet over the top.
 (`src/lib/browser.ts`) renders inside the page area, under the same tab bar
 and toolbar as everything else: the address above is the site's real one, the
 reload button above reloads it, and back and forward walk its own history, so
-nothing repeats that furniture down here. `null://m` is the exception —
-aether.cx, framed directly, because it is one address worth reaching without
-a relay.
+nothing repeats that furniture down here. `null://m` is the same window
+pointed at `aether.cx`, which refuses to be framed — so it is read through the
+relay and drawn as a sandboxed copy instead, which is a road that never asks
+the far site for permission.
+
+**Relays come and go, so there is a list.** `src/lib/browser.ts` holds the
+relays NULL knows about and tries each in turn: a bare handshake first, then
+the transport, and the first one that answers carries the page. The address in
+Settings is tried first and the rest are the fallback, so one public relay
+going quiet costs a handshake instead of a dead window. A relay is a WebSocket
+server and cannot live on a static host, which is the one thing about this
+site a visitor may have to supply themselves — add your own on the shelf page.
+
+**Music plays whole songs.** Audius is the default source and the reason the
+player is not a sample player: its API sends `access-control-allow-origin: *`,
+it needs no key, and its stream endpoint redirects to the real file. Qobuz,
+SoundCloud and YouTube Music send no CORS headers, so those go through the
+Convex action with a key — Qobuz without a subscriber token still returns
+previews, and the page says so rather than pretending. Apple's index is kept
+last as a fallback, thirty seconds a track.
+
+**Two things are called a bot, on purpose.** Null Bot lives in the chat rooms
+and answers `$help`, `$playerdata`, `$rich`, `$roll` and friends from data
+NULL already has, so it cannot be wrong. `null://ai` is a real model behind a
+key on the deployment (`npx convex env set GROQ_API_KEY …`), and it says when
+it does not know.
 
 **Effects left the profile card.** A wide looping clip painted behind the
 profile was being squashed into a strip and tinted until nothing of it

@@ -220,12 +220,22 @@ export function Home() {
       {/* the first-run tour: on the front door, once, and only ever here */}
       {due && <Tour onDone={() => setDue(false)} />}
 
+      {/* The wordmark is the only lit thing on the page, so it is lit
+          properly: three stacked shadows — a tight rim, a mid bloom and a
+          wide haze — because one shadow reads as a sticker and three read
+          as light. The ink comes from the palette, so Forest glows green and
+          NULL glows white without a second rule for either. */}
       <h1
         className="hm-word"
         style={{
           fontFamily: "var(--rounded)",
-          backgroundImage: `linear-gradient(180deg, color-mix(in srgb, var(--text) 72%, var(--bg)) 0%, var(--text) 46%, ${palette.ink} 100%)`,
-          filter: `drop-shadow(0 0 42px color-mix(in srgb, ${palette.ink} 34%, transparent))`,
+          backgroundImage: `linear-gradient(180deg, color-mix(in srgb, var(--text) 58%, var(--bg)) 0%, var(--text) 42%, ${palette.ink} 100%)`,
+          filter: [
+            `drop-shadow(0 0 2px color-mix(in srgb, ${palette.ink} 70%, transparent))`,
+            `drop-shadow(0 0 16px color-mix(in srgb, ${palette.ink} 62%, transparent))`,
+            `drop-shadow(0 0 46px color-mix(in srgb, ${palette.ink} 50%, transparent))`,
+            `drop-shadow(0 0 110px color-mix(in srgb, ${palette.ink} 40%, transparent))`,
+          ].join(" "),
         }}
       >
         null

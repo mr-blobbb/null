@@ -1,19 +1,23 @@
 /* NULL · Tour.tsx
    The first five minutes.
 
-   A spotlight, not a slideshow: the card stays put in the middle of the screen
-   and the page underneath is the slideshow, one part lit up at a time. That
-   is the only kind of tour that teaches where things are rather than telling
-   you about them.
+   A short card in the middle of the screen, five steps long, shown once. It
+   used to spotlight parts of the page through a hole punched in the backdrop;
+   that read as a lot of moving parts for very little teaching, and the card
+   sitting on top of a see-through backdrop was worse to look at than the page
+   underneath. So: no spotlight, no holes, and the card is the same opaque
+   surface every other popup on NULL uses.
 
-   It runs once. `null:tour` remembers that it has been seen, and the Settings
-   sheet can ask for it again — a tour you cannot replay is a tour you skip. */
+   It runs once. The store's name is versioned, so a tour that has been
+   rewritten is offered once more rather than hidden from everyone who saw the
+   old one; the Settings sheet can ask for it again — a tour you cannot replay
+   is a tour you skip. */
 
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { createStore, useStore } from "../lib/store";
 
-const tour = createStore<{ done: boolean }>("tour", { done: false });
+const tour = createStore<{ done: boolean }>("tour-v2", { done: false });
 
 /** Read by Settings, so the tour can be watched again on purpose. */
 export function tourSeen(): boolean {
@@ -24,76 +28,35 @@ export function replayTour() {
   tour.set({ done: false });
 }
 
-type Step = {
-  /** what gets lit up. A selector rather than a ref: these live in other
-   *  people's components, and a tour should not need props threaded into
-   *  every corner of the site to find them. */
-  sel: string;
-  title: string;
-  body: string;
-  /** a hole a little wider than the element, for things that need air */
-  pad?: number;
-};
+type Step = { title: string; body: string };
 
 const STEPS: Step[] = [
   {
-    sel: ".hm-word",
     title: "this is null",
-    body: "A hub for games, apps and anything the web will let you open. Everything lives inside this one window — the rail is the spine on the left, and nothing ever leaves it.",
-    pad: 18,
+    body: "A hub for games, apps and anything the web will let you open. Everything happens inside this one window — nothing ever navigates you away from it.",
   },
   {
-    sel: ".hm-search",
-    title: "one box, three jobs",
-    body: "Type words and it searches the web. Type an address and it opens the site in here. Type null://g and it goes to the games. It is the same box as the one up in the toolbar.",
-    pad: 10,
+    title: "the box up top does three jobs",
+    body: "Type words and it searches the web. Type an address and it loads the site in here. Type null://g and it goes to the games. It is the same box on the front door.",
   },
   {
-    sel: ".hm-links",
-    title: "your shortcuts",
-    body: "These are yours to keep: hover one and a bin appears, or press Add for anything you like. All Apps is the back door to every page at once.",
-    pad: 14,
+    title: "the rail on the left",
+    body: "Every page is a door down the left edge: games, apps, chat, movies, music, the shop. Hover one and its name appears. The ones you spend the most time in sit at the top.",
   },
   {
-    sel: ".rail",
-    title: "the rail",
-    body: "Seven doors down the left, five up from the bottom. Chat and Movies open other places; Shop spends the coins you earn just by being here.",
-    pad: 8,
+    title: "coins are just time",
+    body: "Nothing here costs money. Stay on a game or an app and coins tick up on their own; the shop spends them on decorations, profile effects and name tags.",
   },
   {
-    sel: ".bar",
-    title: "the toolbar",
-    body: "Back, forward, reload, the address, and the player on the right. Tabs sit above it — drag them about, middle-click to close.",
-    pad: 8,
+    title: "and then there is the rest",
+    body: "Tabs work like a browser's — drag them, middle-click to close. Settings holds the themes, the tab cloak and your data. Press Escape any time to shut this card.",
   },
 ];
 
-type Box = { x: number; y: number; w: number; h: number } | null;
-
 export function Tour({ onDone }: { onDone: () => void }) {
   const [i, setI] = useState(0);
-  const [box, setBox] = useState<Box>(null);
   const step = STEPS[i];
-
-  /* Measure the element this step is about, and keep measuring while the
-     window moves under it. Elements that are not on screen simply get no
-     hole, and the step becomes a plain card. */
-  useLayoutEffect(() => {
-    const measure = () => {
-      const el = document.querySelector(step.sel);
-      if (!el) return setBox(null);
-      const r = el.getBoundingClientRect();
-      const pad = step.pad ?? 10;
-      setBox({ x: r.left - pad, y: r.top - pad, w: r.width + pad * 2, h: r.height + pad * 2 });
-    };
-    measure();
-    window.addEventListener("resize", measure);
-    window.addEventListener("scroll", measure, true);
-    return () => {
-      window.removeEventListener("resize", measure);
-      window.removeEventListener("scroll", measure, true);
-    };
-  }, [step]);
+  const last = i === STEPS.length - 1;
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -111,23 +74,13 @@ export function Tour({ onDone }: { onDone: () => void }) {
   }
 
   function next() {
-    if (i + 1 >= STEPS.length) finish();
+    if (last) finish();
     else setI(i + 1);
   }
 
-  const last = i === STEPS.length - 1;
-
   return (
     <div className="tour" role="dialog" aria-modal="true" aria-label="A short tour of NULL">
-      {box ? (
-        <span
-          className="tour-hole"
-          style={{ left: box.x, top: box.y, width: box.w, height: box.h }}
-          aria-hidden="true"
-        />
-      ) : (
-        <span className="tour-dim" aria-hidden="true" />
-      )}
+      <span className="tour-dim" aria-hidden="true" />
 
       <div className="tour-card">
         <span className="tour-kicker">

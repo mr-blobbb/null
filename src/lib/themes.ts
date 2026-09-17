@@ -93,12 +93,21 @@ export const prefs = createStore<Prefs>("prefs", {
   custom: DEFAULT_CUSTOM,
   perf: "",
   reduceMotion: false,
-  relay: "wss://wisp.mercurywork.shop/",
+  relay: "wss://anura.pro/",
   searchEngine: "brave",
   showMeta: true,
   cloak: "off",
   panicKey: "`",
 });
+
+/* The relay that used to be the default has gone quiet. Anybody who never
+   touched the setting is still pointing at it, and now that the browser walks
+   the relay list it would still work — but it would spend six seconds
+   discovering a dead socket every time. Only that exact value is moved, so a
+   relay somebody chose on purpose stays chosen. */
+(function migrateRelay() {
+  if (prefs.get().relay === "wss://wisp.mercurywork.shop/") prefs.set({ relay: "wss://anura.pro/" });
+})();
 
 export function paletteOf(id: PaletteId): Palette {
   return PALETTES.find((p) => p.id === id) ?? PALETTES[0];

@@ -35,27 +35,9 @@ import { entries } from "../lib/catalog";
 import { destinationFor, ENGINES, type EngineId, type PageId } from "../lib/nav";
 import { prefs } from "../lib/themes";
 import { useStore } from "../lib/store";
-import { ping, proxied, restart, start } from "../lib/browser";
+import { ping, proxied, RELAYS, restart, start } from "../lib/browser";
 import { prepare, read } from "../lib/relay";
 import { activeTab, go, openDestination, openTab, useTabs } from "../lib/tabs";
-
-/** The relays NULL knows about, and why those two and not twenty. Both
- *  answered a Wisp handshake and served a real page through this exact
- *  transport — a higher bar than appearing on somebody's list. A relay is the
- *  one piece of this a static host cannot provide, so it is the piece most
- *  likely to be the reason a page does not load. */
-const RELAYS = [
-  {
-    name: "mercurywork",
-    url: "wss://wisp.mercurywork.shop/",
-    note: "The one NULL ships with. Speaks Wisp v1.",
-  },
-  {
-    name: "anura",
-    url: "wss://anura.pro/",
-    note: "Answers both versions of Wisp.",
-  },
-];
 
 /** `back` is where the escape hatch leads: a site typed into the address bar
  *  came from the proxy shelf, the movies page came from the front door. */
@@ -73,6 +55,9 @@ type Mode = "booting" | "uv" | "reader" | "failed";
 function Browser({ url, relay, back }: { url: string; relay: string; back: PageId }) {
   const [mode, setMode] = useState<Mode>("booting");
   const [reason, setReason] = useState("");
+  /* whichever relay actually carried this page — not necessarily the one the
+     setting names, because the walk in browser.ts may have moved on */
+  const [served, setServed] = useState(relay);
   /* the page the relay read, ready to draw */
   const [sheet, setSheet] = useState("");
   /* did the rewritten window ever draw? if it has not in a dozen seconds, the
@@ -101,6 +86,7 @@ function Browser({ url, relay, back }: { url: string; relay: string; back: PageI
       setReason(got.reason);
       return false;
     }
+    setServed(got.relay);
     setSheet(prepare(got.html, url));
     setMode("reader");
     return true;
@@ -111,14 +97,18 @@ function Browser({ url, relay, back }: { url: string; relay: string; back: PageI
     setMode("booting");
     setReason("");
     setSheet("");
+    setServed(relay);
     setDrew(false);
     (async () => {
       const b = await start(relay);
       if (!alive) return;
       if (b.ok) {
+        if (b.relay) setServed(b.relay);
         setMode("uv");
         return;
       }
+      /* remember why, so a reader failure does not hide it */
+      setReason(b.reason ?? "");
       const got = await viaRelay();
       if (!alive) return;
       if (!got) setMode("failed");
@@ -191,7 +181,7 @@ function Browser({ url, relay, back }: { url: string; relay: string; back: PageI
 
       {mode === "reader" && (
         <>
-          <span className="bw-mode" title="Read through the relay, drawn in a sandboxed frame">
+          <span className="bw-mode" title={`Fetched by ${served} for a sandboxed copy`}>
             <Radio /> relay copy
           </span>
           <iframe
@@ -211,9 +201,10 @@ function Browser({ url, relay, back }: { url: string; relay: string; back: PageI
           <h3>{host} did not come through</h3>
           <p>{reason}</p>
           <p className="faint">
-            The relay in use is <span className="mono">{relay}</span> — a WebSocket server, the
-            one piece of this that a static host cannot supply. Point NULL at one you run, on
-            the shelf page, and this window comes up.
+            A relay is a WebSocket server, the one piece of this a static host cannot supply, so
+            NULL keeps a list of them and tries each in turn. Every one of them was quiet just
+            now — either they are having a day, or this network is blocking WebSockets. The list
+            is on the shelf page if you have one of your own to add.
           </p>
           <div className="bw-note-actions">
             <button
@@ -336,7 +327,7 @@ function Shelf({ relay }: { relay: string }) {
         </p>
         <div className="px-fields">
           <label className="form-row">
-            <span>Wisp relay</span>
+            <span>Wisp relay (tried first)</span>
             <input
               className="fld"
               value={p.relay}
@@ -364,8 +355,10 @@ function Shelf({ relay }: { relay: string }) {
             ))}
           </div>
           <p className="tiny faint">
-            Two public relays, both checked from here: either serves Wisp. If pages stop
-            loading, the relay is usually why — the bar above names the one in use.
+            Whichever you pick is tried first; the others are tried after it, in this order, so
+            one public relay going quiet does not take the browser with it. If a page still
+            will not load, it is usually this list — and a relay of your own goes in the box
+            above.
           </p>
           <label className="form-row">
             <span>Search engine</span>

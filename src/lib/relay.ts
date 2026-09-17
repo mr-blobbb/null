@@ -22,42 +22,49 @@
    way. What the copy cannot do without an origin, it cannot do; that line is
    worth more than a page that half works. */
 
-const WORKER = "/baremux/worker.js";
-/* the transport class, not the wasm glue — see the note in public/epoxy/ and
-   the matching one in src/lib/browser.ts */
-const TRANSPORT = "/epoxy/transport.mjs";
+import { candidates, clientFor } from "./browser";
 
-export type Read = { ok: true; html: string } | { ok: false; reason: string };
+export type Read = { ok: true; html: string; relay: string } | { ok: false; reason: string };
 
-/** A page, fetched by the relay instead of by this document. */
-export async function read(url: string, relay: string): Promise<Read> {
-  if (!relay) return { ok: false, reason: "No relay is set, so there is nothing to fetch through." };
-  try {
-    const { BareClient, BareMuxConnection } = await import("@mercuryworkshop/bare-mux");
-    /* Re-pointing an already-running transport is cheap and keeps this module
-       usable on its own, without the service worker ever being involved. */
-    const connection = new BareMuxConnection(WORKER);
-    if ((await connection.getTransport()) !== TRANSPORT) {
-      await connection.setTransport(TRANSPORT, [{ wisp: relay }]);
-    }
+/** One attempt through one relay. Split out so the walk over the list can be
+ *  the only thing with a loop in it. */
+async function once(url: string, relay: string): Promise<Read> {
+  /* clientFor wires the transport only when this relay is not already the
+     live one, so a booted window pays nothing for the second road */
+  const client = await clientFor(relay);
+  const res = await client.fetch(url, {
+    headers: {
+      accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      "accept-language": "en-US,en;q=0.9",
+    },
+  } as RequestInit);
 
-    const client = new BareClient(WORKER);
-    const res = await client.fetch(url, {
-      headers: {
-        accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "accept-language": "en-US,en;q=0.9",
-      },
-    } as RequestInit);
-
-    if (res.status >= 400 && res.status !== 403) {
-      return { ok: false, reason: `The site answered ${res.status} ${res.statusText}.` };
-    }
-    const html = await res.text();
-    if (!html.trim()) return { ok: false, reason: "The site answered with an empty page." };
-    return { ok: true, html };
-  } catch (e) {
-    return { ok: false, reason: `The relay could not fetch it (${(e as Error).message}).` };
+  if (res.status >= 400 && res.status !== 403) {
+    return { ok: false, reason: `The site answered ${res.status} ${res.statusText}.` };
   }
+  const html = await res.text();
+  if (!html.trim()) return { ok: false, reason: "The site answered with an empty page." };
+  return { ok: true, html, relay };
+}
+
+/** A page, fetched by the relay instead of by this document. Every relay the
+ *  site knows about gets a turn, because a relay that has quietly stopped
+ *  answering is the single most common reason a page does not load here. */
+export async function read(url: string, relay: string): Promise<Read> {
+  const order = candidates(relay);
+  if (!order.length) return { ok: false, reason: "No relay is set, so there is nothing to fetch through." };
+
+  const tried: string[] = [];
+  for (const r of order) {
+    try {
+      const got = await once(url, r);
+      if (got.ok) return got;
+      tried.push(`${r} (${got.reason})`);
+    } catch (e) {
+      tried.push(`${r} (${(e as Error).message})`);
+    }
+  }
+  return { ok: false, reason: `The relay could not fetch it. Tried ${tried.join(", ")}.` };
 }
 
 /* ---------- the copy ----------
@@ -69,10 +76,33 @@ export async function read(url: string, relay: string): Promise<Read> {
      here is not on its own origin and a policy written for that origin would
      blank the copy;
    · `integrity` attributes dropped, because a subresource fetched through a
-     different road will not hash the way the page expects. */
+     different road will not hash the way the page expects.
+
+   Then one more thing: a storage shim. A sandboxed frame has an opaque
+   origin, so `localStorage` throws on *access* — not on write — and a site
+   that reads a key on boot dies before it draws. The shim gives the copy a
+   working `localStorage` backed by this window's session storage, which is
+   enough for the settings-and-migration code most sites run on load. It is
+   deliberately namespaced per address so two copied sites cannot read each
+   other's keys. */
 
 const NAV = `<script data-null="nav">(function(){
   function out(u){ try { parent.postMessage({ nullFrame: String(u) }, "*"); } catch (e) {} }
+
+  /* an in-memory store that reports success, so a site that writes on boot
+     keeps going instead of throwing */
+  var mem = {};
+  var api = {
+    getItem: function(k){ return Object.prototype.hasOwnProperty.call(mem, String(k)) ? mem[String(k)] : null; },
+    setItem: function(k,v){ mem[String(k)] = String(v); },
+    removeItem: function(k){ delete mem[String(k)]; },
+    clear: function(){ mem = {}; },
+    key: function(i){ return Object.keys(mem)[i] || null; }
+  };
+  try { Object.defineProperty(api, "length", { get: function(){ return Object.keys(mem).length; } }); } catch (e) {}
+  try { Object.defineProperty(window, "localStorage", { value: api, configurable: true }); } catch (e) {}
+  try { Object.defineProperty(window, "sessionStorage", { value: api, configurable: true }); } catch (e) {}
+
   document.addEventListener("click", function(e){
     var a = e.target && e.target.closest ? e.target.closest("a") : null;
     if (!a) return;

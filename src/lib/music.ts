@@ -4,19 +4,27 @@
    NULL does not load the shops. It asks them for tracks and plays the stream
    they hand back, which is why nothing here embeds a site.
 
-   One honest note about the sources. A browser can only call a service that
-   sends CORS headers, and the three named ones do not: SoundCloud's API
-   answers 401 to a browser, Qobuz's catalogue wants an app id and still sends
-   no allow-origin, and YouTube Music has no unauthenticated API at all. So the
-   keyless catalogue below is what plays out of the box — it is a real
-   catalogue with real audio, not a mock — and each of the three named sources
-   is wired with its key field: fill a key in Settings and that source is
-   asked first, through the backend that can reach it. */
+   The source that matters is Audius, and it is the default for one reason:
+   it is the only catalogue here that answers a browser directly AND hands
+   back the whole track. Its API sends `access-control-allow-origin: *`, it
+   needs no key of any kind, and its stream endpoint 302s to the real file —
+   which an <audio> element is allowed to follow cross-origin without CORS,
+   because media is not a fetch. That is the difference between a player and
+   a sample player.
 
-import { cloudUrl } from "./cloud";
+   The other three are wired to the backend instead. A browser can only call
+   a service that sends CORS headers, and none of them do: SoundCloud's API
+   answers 401 to a browser, Qobuz wants an app id and still sends no
+   allow-origin, and YouTube Music has no unauthenticated API at all. Fill in
+   a key and the Convex action asks on your behalf. Qobuz without a
+   subscriber token still only hands back previews, which the page admits.
+   Apple's index is the last resort: real audio, thirty seconds each. */
+
+import { cloud } from "./cloud";
+import { api } from "../../convex/_generated/api";
 import { createStore, useStore } from "./store";
 
-export type SourceId = "qobuz" | "soundcloud" | "ytmusic" | "keyless";
+export type SourceId = "audius" | "qobuz" | "soundcloud" | "ytmusic" | "keyless";
 
 export type Track = {
   /** source:id, which is what a playlist stores */
@@ -50,9 +58,16 @@ export const SOURCES: {
   placeholder: string;
 }[] = [
   {
+    id: "audius",
+    name: "Audius",
+    note: "Full tracks, no key, no server — the catalogue NULL plays out of the box. Every row here is the whole song.",
+    keyLabel: null,
+    placeholder: "",
+  },
+  {
     id: "qobuz",
     name: "Qobuz",
-    note: "Lossless catalogue. Ask for format 27 and it answers with FLAC; a plain app id only entitles you to previews, and the page says so when it gets one. The id can be typed here or set once as QOBUZ_APP_ID on the deployment.",
+    note: "Lossless catalogue. Ask for format 27 and it answers with FLAC when the key is a subscriber's; a plain app id is only entitled to previews, and the page says so when it gets one. The id can be typed here or set once as QOBUZ_APP_ID on the deployment.",
     keyLabel: "app id",
     placeholder: "your-qobuz-app-id",
   },
@@ -72,8 +87,8 @@ export const SOURCES: {
   },
   {
     id: "keyless",
-    name: "Keyless catalogue",
-    note: "No key needed. Real tracks, thirty seconds each, plays right now.",
+    name: "Apple previews",
+    note: "No key needed, but Apple only gives thirty seconds of each track, so this one is a fallback rather than a source. Audius is where the full songs are.",
     keyLabel: null,
     placeholder: "",
   },
@@ -102,7 +117,7 @@ export type Music = {
 };
 
 const EMPTY: Music = {
-  source: "qobuz",
+  source: "audius",
   keys: {},
   favorites: [],
   playlists: [],
@@ -126,6 +141,15 @@ export function useMusic(): Music {
   return useStore(music);
 }
 
+/* Anyone who used NULL before Audius was here is still pointing at Qobuz with
+   no key, which is exactly the thirty-second previews they complained about.
+   Only that exact combination is moved, so a key someone typed or a source
+   they chose on purpose is left alone. */
+(function migrateSource() {
+  const s = music.get();
+  if (s.source === "qobuz" && !s.keys.qobuz) music.set({ source: "audius" });
+})();
+
 /* ============================================================
    the catalogue
    ============================================================ */
@@ -141,9 +165,68 @@ type ITunesTrack = {
   trackExplicitness?: string;
 };
 
-/** The keyless catalogue: Apple's public search index, which sends
+/* ---------- Audius ----------
+   Two nodes, because a discovery node is run by whoever feels like it. The
+   first is the long-standing public one; the second is the official proxy,
+   which is what the web player itself falls back to. */
+const NODES = ["https://discoveryprovider.audius.co", "https://api.audius.co"];
+/* Audius asks apps to identify themselves. It is not a key: it is a name, and
+   it is the whole of the registration. */
+const APP = "null-hub";
+
+type AudiusTrack = {
+  id?: string;
+  title?: string;
+  duration?: number;
+  genre?: string;
+  is_streamable?: boolean;
+  artwork?: Record<string, string> | null;
+  user?: { name?: string; handle?: string } | null;
+};
+
+/** Search, and build the stream URL for every row. The stream endpoint is a
+ *  redirect to the file itself, which is why the audio plays at full length
+ *  in an ordinary <audio> tag. */
+async function searchAudius(q: string): Promise<Track[]> {
+  let last = "";
+  for (const node of NODES) {
+    try {
+      const res = await fetch(
+        `${node}/v1/tracks/search?query=${encodeURIComponent(q)}&app_name=${APP}&limit=25`,
+      );
+      if (!res.ok) {
+        last = `the node at ${new URL(node).hostname} answered ${res.status}`;
+        continue;
+      }
+      const body = (await res.json()) as { data?: AudiusTrack[] };
+      const tracks = (body.data ?? [])
+        /* gated tracks come back unstreamable, and a silent row is worse than
+           no row */
+        .filter((t) => t.id && t.is_streamable !== false)
+        .map((t) => ({
+          key: `audius:${t.id}`,
+          id: String(t.id),
+          source: "audius" as const,
+          title: t.title || "Untitled",
+          artist: t.user?.name || t.user?.handle || "Unknown artist",
+          album: t.genre ?? "",
+          art: t.artwork?.["480x480"] ?? t.artwork?.["150x150"] ?? null,
+          audio: `${node}/v1/tracks/${t.id}/stream?app_name=${APP}`,
+          seconds: Math.round(t.duration ?? 0),
+          explicit: false,
+        }));
+      if (tracks.length) return tracks;
+      last = "that node had nothing for it";
+    } catch (e) {
+      last = (e as Error).message;
+    }
+  }
+  throw new Error(last || "no Audius node answered");
+}
+
+/** Apple's public search index, the fallback: it sends
  *  `access-control-allow-origin: *` and hands back a real 30-second stream
- *  per track. It is the only one of these a browser may call directly. */
+ *  per track. */
 async function searchKeyless(q: string): Promise<Track[]> {
   const url = `https://itunes.apple.com/search?media=music&entity=song&limit=25&term=${encodeURIComponent(q)}`;
   const res = await fetch(url);
@@ -173,6 +256,21 @@ export type Found = { tracks: Track[]; note: string | null };
 export async function search(q: string, source: SourceId): Promise<Found> {
   const term = q.trim();
   if (!term) return { tracks: [], note: null };
+
+  /* Audius first and directly: no server sits in this path, so it works on a
+     static deploy with no configuration at all. If it is somehow down, the
+     previews catalogue catches the fall. */
+  if (source === "audius") {
+    try {
+      return { tracks: await searchAudius(term), note: null };
+    } catch (e) {
+      const tracks = await searchKeyless(term);
+      return {
+        tracks,
+        note: `Audius could not be reached (${(e as Error).message}). These are Apple previews, so they stop at thirty seconds.`,
+      };
+    }
+  }
 
   if (NEEDS_SERVER.includes(source)) {
     const named = SOURCES.find((s) => s.id === source);
@@ -205,34 +303,24 @@ export async function search(q: string, source: SourceId): Promise<Found> {
  *  the whole reason there is a server. `convex/music.ts` does the work and
  *  returns the tracks plus, when something is only half-possible (a preview
  *  instead of a full track, or a catalogue with no stream to hand back), a
- *  sentence saying which. */
+ *  sentence saying which.
+ *
+ *  This used to POST to a made-up `/api/action` path, which 404s, so every
+ *  keyed source quietly fell through to Apple previews no matter what key was
+ *  set. The Convex client is the way to reach an action; there is no second
+ *  way and there never was. */
 async function searchServer(
   source: SourceId,
   q: string,
   key: string,
 ): Promise<{ tracks: Track[]; note: string | null }> {
-  const url = serverUrl();
-  if (!url) throw new Error("no backend is configured for this build");
-  /* Convex's own HTTP API: an action runs where the network is. */
-  const res = await fetch(`${url.replace(/\/$/, "")}/api/action`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ path: "music:search", args: { source, q, key }, format: "json" }),
-  });
-  if (!res.ok) throw new Error(`the backend answered ${res.status}`);
-  const body = (await res.json()) as {
-    value?: { tracks?: Track[]; note?: string | null };
-    errorMessage?: string;
+  const c = cloud();
+  if (!c) throw new Error("no backend is configured for this build");
+  const out = (await c.action(api.music.search, { source, q, key })) as {
+    tracks?: Track[];
+    note?: string | null;
   };
-  if (body.errorMessage) throw new Error(body.errorMessage);
-  return { tracks: body.value?.tracks ?? [], note: body.value?.note ?? null };
-}
-
-/** Where the backend is. `VITE_CONVEX_URL` is what the Convex tooling writes
- *  into the environment; src/lib/cloud.ts holds the fallback so the music page
- *  and the chat page never disagree about where the server is. */
-function serverUrl(): string | null {
-  return cloudUrl;
+  return { tracks: out.tracks ?? [], note: out.note ?? null };
 }
 
 /* ============================================================

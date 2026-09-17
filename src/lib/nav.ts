@@ -6,6 +6,7 @@
    deleted. */
 
 import {
+  Bot,
   Clapperboard,
   Compass,
   Gamepad2,
@@ -29,6 +30,7 @@ export type PageId =
   | "home"
   | "games"
   | "apps"
+  | "ai"
   | "chat"
   | "movies"
   | "music"
@@ -84,6 +86,15 @@ export const PAGES: Record<PageId, Page> = {
     icon: Link2,
     blurb: "Tools that run in a tab, laid out exactly like the games.",
     keywords: "app tool utility library",
+  },
+  ai: {
+    id: "ai",
+    name: "Assistant",
+    address: "null://ai",
+    route: "/ai",
+    icon: Bot,
+    blurb: "A model you can ask about the site. It runs on the deployment's key.",
+    keywords: "ai assistant bot chat gpt llm ask help chatbot",
   },
   chat: {
     id: "chat",
@@ -217,7 +228,7 @@ export const PAGES: Record<PageId, Page> = {
  *
  *  The bottom group is read upward from the last door, so the two that are
  *  about people sit together: members just above the profile. */
-export const RAIL_TOP: PageId[] = ["home", "games", "apps", "chat", "movies", "music", "shop"];
+export const RAIL_TOP: PageId[] = ["home", "games", "apps", "ai", "chat", "movies", "music", "shop"];
 export const RAIL_BOTTOM: PageId[] = ["rich", "users", "profile", "changelog", "extensions", "settings"];
 
 /** Everything the All Apps sheet lists, in reading order. */
@@ -225,6 +236,7 @@ export const ALL_PAGES: PageId[] = [
   "home",
   "games",
   "apps",
+  "ai",
   "chat",
   "movies",
   "music",
