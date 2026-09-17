@@ -62,7 +62,8 @@ export function Profile() {
    signed out
    ============================================================ */
 function SignIn() {
-  const [mode, setMode] = useState<"in" | "up">("up");
+  /* first visit lands on sign in, the way the spec asks: "Welcome back" */
+  const [mode, setMode] = useState<"in" | "up">("in");
   const [user, setUser] = useState("");
   const [pass, setPass] = useState("");
   const [confirm, setConfirm] = useState("");
