@@ -54,6 +54,7 @@ import {
   type NameStyle,
 } from "../lib/account";
 import { AvatarArt } from "../lib/art";
+import { NullFace } from "../lib/brand";
 import { remember } from "../lib/members";
 import { ShareCard } from "../components/ShareCard";
 import { itemOf, useEcon } from "../lib/econ";
@@ -227,7 +228,7 @@ function SignedIn() {
         <div className="pf-id">
           <div className="pf-pic-wrap">
             <span className="pf-pic">
-              {me.pfp ? <img src={me.pfp} alt="" /> : <UserRound />}
+              {me.pfp ? <img src={me.pfp} alt="" /> : <NullFace />}
               <AvatarArt id={avatar} />
             </span>
             <label className="pf-cam" title="Change picture">

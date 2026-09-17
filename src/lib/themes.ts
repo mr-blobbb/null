@@ -74,6 +74,10 @@ export type Prefs = {
   /** what the address box searches with when what you typed is not an address */
   searchEngine: EngineId;
   showMeta: boolean;
+  /** a tab cloak id, "smart", or "off" (src/lib/cloak.ts) */
+  cloak: string;
+  /** the key that hides the tab instantly: a single character, or "" for none */
+  panicKey: string;
 };
 
 export const DEFAULT_CUSTOM: CustomColors = {
@@ -92,6 +96,8 @@ export const prefs = createStore<Prefs>("prefs", {
   relay: "wss://wisp.mercurywork.shop/",
   searchEngine: "brave",
   showMeta: true,
+  cloak: "off",
+  panicKey: "`",
 });
 
 export function paletteOf(id: PaletteId): Palette {

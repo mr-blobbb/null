@@ -14,31 +14,6 @@
   background: var(--bg);
 }
 
-/* the one control that is not on the toolbar above */
-.bw-open {
-  position: absolute;
-  right: 12px;
-  top: 12px;
-  z-index: 2;
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  border: var(--bw) solid var(--glass-line);
-  border-radius: var(--r-1);
-  background: var(--glass);
-  backdrop-filter: blur(var(--blur)) saturate(140%);
-  -webkit-backdrop-filter: blur(var(--blur)) saturate(140%);
-  color: var(--dim);
-}
-.bw-open:hover {
-  color: var(--text);
-}
-.bw-open svg {
-  width: 14px;
-  height: 14px;
-}
-
 .bw-frame {
   flex: 1 1 auto;
   width: 100%;
@@ -77,6 +52,33 @@
   margin-top: 6px;
 }
 
+/* The reader's badge: it says which road the page came in on, in the corner
+   of the frame rather than over the page's own furniture. */
+.bw-mode {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px 3px 7px;
+  border: var(--bw) solid var(--glass-line);
+  border-radius: 99px;
+  background: var(--glass);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: var(--dim);
+  font-size: 10.5px;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+}
+.bw-mode svg {
+  width: 12px;
+  height: 12px;
+  color: var(--ok, var(--ac-1));
+}
+
 /* the shelf's own address box, the same box as the front door's */
 .px-open {
   max-width: 520px;
@@ -87,56 +89,20 @@
   max-width: 62ch;
 }
 
-/* ---------- null://m — the movies frame ----------
-   A plain iframe, because aether.cx is a single address NULL means to reach
-   directly rather than through a relay. It fills the page area and the tab
-   bar above carries the address, so the only thing down here is a note for
-   the case where the site refuses to be framed. */
-.mov {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  background: #000;
-}
-.mov-frame {
-  flex: 1 1 auto;
-  width: 100%;
-  border: 0;
-  background: #000;
-}
-.mov-chip {
-  position: absolute;
-  right: 12px;
-  bottom: 12px;
+/* the relay check on the shelf */
+.px-check {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 8px 6px 12px;
-  border: var(--bw) solid var(--glass-line);
-  border-radius: 99px;
-  background: var(--glass);
-  backdrop-filter: blur(var(--blur)) saturate(140%);
-  -webkit-backdrop-filter: blur(var(--blur)) saturate(140%);
-  color: var(--dim);
+  gap: 10px;
+  margin-top: 12px;
+}
+.px-check-say {
   font-size: 11.5px;
+  color: var(--dim);
 }
-.mov-chip > svg {
-  width: 14px;
-  height: 14px;
-  flex: none;
+.px-check-say.is-ok {
+  color: var(--ok);
 }
-.mov-chip b {
-  color: var(--text);
-  font-weight: 600;
-}
-.mov-sep {
-  color: var(--faint);
-}
-.mov-chip span:last-of-type {
-  color: var(--faint);
-}
-@media (max-width: 760px) {
-  .mov-chip span {
-    display: none;
-  }
+.px-check-say.is-bad {
+  color: var(--warn, var(--ac-1));
 }

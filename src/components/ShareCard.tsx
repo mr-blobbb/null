@@ -11,13 +11,14 @@
    back a PNG. Nothing is uploaded anywhere. */
 
 import { useRef, useState } from "react";
-import { BadgeCheck, Coins, Copy, Crown, Download, Trophy, UserRound } from "lucide-react";
+import { BadgeCheck, Coins, Copy, Crown, Download, Trophy } from "lucide-react";
 
 import { nameStyleCss, useAccount } from "../lib/account";
 import { itemOf, useEcon } from "../lib/econ";
 import { isOwner, OWNER_TAG } from "../lib/owner";
 import { cardPng } from "../lib/card";
 import { AvatarArt, EffectArt } from "../lib/art";
+import { NullFace } from "../lib/brand";
 import { Sheet } from "./Sheet";
 
 export function ShareCard({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -88,7 +89,7 @@ export function ShareCard({ open, onClose }: { open: boolean; onClose: () => voi
 
         <div className="share-id">
           <span className="share-pic">
-            {me.pfp ? <img src={me.pfp} alt="" /> : <UserRound />}
+            {me.pfp ? <img src={me.pfp} alt="" /> : <NullFace />}
             <AvatarArt id={eco.equipped.avatar} />
           </span>
 

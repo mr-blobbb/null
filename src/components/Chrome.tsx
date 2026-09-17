@@ -15,6 +15,7 @@ import {
   Lock,
   Music,
   Pause,
+  Play,
   Plus,
   Puzzle,
   RotateCw,
@@ -41,6 +42,7 @@ import {
 } from "../lib/tabs";
 import { navExtensions, useExt } from "../lib/extensions";
 import { useEcon } from "../lib/econ";
+import { step, toggle, useMusic } from "../lib/music";
 
 export function Chrome({ onSettings }: { onSettings: () => void }) {
   const state = useTabs();
@@ -264,22 +266,28 @@ function EX_NAME(id: string): string {
   return id === "clock" ? "Clock" : id === "notes" ? "Scratchpad" : "Coin meter";
 }
 
-/* Non-functional, as asked: the icons and the state are here so the music
-   page can be dropped in behind them later without moving anything. */
+/* The mini player. It is the music page's engine, just smaller — the same
+   play, step and pause — and its name is a door to that page. */
 function Tune() {
+  const m = useMusic();
   return (
     <div className="tune" aria-label="Music player">
-      <span className="tune-now">
+      <button className="tune-now" onClick={() => go({ page: "music" })} title="Open the music page">
         <Music />
-        <span>Not Playing</span>
-      </span>
-      <button aria-label="Previous track" title="Previous">
+        <span>{m.now ? `${m.now.title} — ${m.now.artist}` : "Not Playing"}</span>
+      </button>
+      <button aria-label="Previous track" title="Previous" onClick={() => step(-1)} disabled={!m.queue.length}>
         <SkipBack />
       </button>
-      <button aria-label="Play" title="Play">
-        <Pause />
+      <button
+        aria-label={m.playing ? "Pause" : "Play"}
+        title={m.playing ? "Pause" : "Play"}
+        onClick={toggle}
+        disabled={!m.now && !m.queue.length}
+      >
+        {m.playing ? <Pause /> : <Play />}
       </button>
-      <button aria-label="Next track" title="Next">
+      <button aria-label="Next track" title="Next" onClick={() => step(1)} disabled={!m.queue.length}>
         <SkipForward />
       </button>
     </div>

@@ -1,23 +1,31 @@
 /* NULL · Proxies.tsx
-   Two things in one page: the shelf of ready-made sites, and the fullscreen
-   browser that loads an address.
+   Two things in one page: the shelf of ready-made links, and the browser that
+   loads an address.
 
    The browser is not an iframe pointed at the target — a page cannot fetch
-   another origin, and most sites refuse to be framed. It is the Ultraviolet
-   chain described in src/lib/browser.ts: the address is rewritten inside a
-   service worker, carried over a Wisp relay, and the result fills the window.
-   Nothing of NULL's own chrome stays on screen while it is open.
+   another origin, and most sites refuse to be framed at all (aether.cx sends
+   `x-frame-options: DENY`). So there are two roads and both end inside NULL:
 
-   Until a relay answers, the browser says so in words and offers the site in
-   a real tab, which is the honest fallback rather than a blank frame. */
+     1 · the rewritten window. Ultraviolet rewrites every request in a service
+         worker, the result is carried over a Wisp relay, and it fills the
+         page area under the same tab bar and toolbar as everything else.
+     2 · the relay reader, in src/lib/relay.ts. If a service worker cannot be
+         registered, the page itself is fetched through the relay and drawn
+         here. The far site is copied rather than framed, so a site that
+         refuses framing never gets the chance to.
 
-import { useEffect, useMemo, useState } from "react";
+   The window starts on the first road and walks onto the second by itself
+   when the first does not come up or stops drawing. Both roads are inside
+   NULL; neither ever asks the visitor to go somewhere else. */
+
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
-  ExternalLink,
   Globe,
   Loader,
   Lock,
+  Radio,
+  RotateCw,
   ShieldAlert,
   TriangleAlert,
 } from "lucide-react";
@@ -26,7 +34,8 @@ import { entries } from "../lib/catalog";
 import { destinationFor, ENGINES, type EngineId, type PageId } from "../lib/nav";
 import { prefs } from "../lib/themes";
 import { useStore } from "../lib/store";
-import { proxied, start } from "../lib/browser";
+import { ping, proxied, restart, start } from "../lib/browser";
+import { prepare, read } from "../lib/relay";
 import { activeTab, go, openTab, useTabs } from "../lib/tabs";
 
 /** `back` is where the escape hatch leads: a site typed into the address bar
@@ -40,29 +49,90 @@ export function Proxies({ url, back = "proxies" }: { url?: string; back?: PageId
 /* ============================================================
    the fullscreen browser
    ============================================================ */
+type Mode = "booting" | "uv" | "reader" | "failed";
+
 function Browser({ url, relay, back }: { url: string; relay: string; back: PageId }) {
-  const [state, setState] = useState<"booting" | "ok" | "failed">("booting");
+  const [mode, setMode] = useState<Mode>("booting");
   const [reason, setReason] = useState("");
+  /* the page the relay read, ready to draw */
+  const [sheet, setSheet] = useState("");
+  /* did the rewritten window ever draw? if it has not in a dozen seconds, the
+     reader takes over rather than leaving a blank pane */
+  const [drew, setDrew] = useState(false);
+  /* bumping this re-runs everything, which is what Try again does */
+  const [attempt, setAttempt] = useState(0);
   /* The tab is the page: its address is this site's real one, the toolbar
      above reloads it (the tab's nonce), and back and forward walk its own
      history. Nothing down here repeats any of that. */
   const tabs = useTabs();
   const nonce = activeTab(tabs).nonce;
 
+  const host = useMemo(() => {
+    try {
+      return new URL(url).hostname.replace(/^www\./, "");
+    } catch {
+      return url;
+    }
+  }, [url]);
+
+  /* the second road: the relay reads the page and hands it over */
+  const viaRelay = useCallback(async (): Promise<boolean> => {
+    const got = await read(url, relay);
+    if (!got.ok) {
+      setReason(got.reason);
+      return false;
+    }
+    setSheet(prepare(got.html, url));
+    setMode("reader");
+    return true;
+  }, [url, relay]);
+
   useEffect(() => {
     let alive = true;
-    setState("booting");
+    setMode("booting");
     setReason("");
-    start(relay).then((b) => {
+    setSheet("");
+    setDrew(false);
+    (async () => {
+      const b = await start(relay);
       if (!alive) return;
-      setState(b.ok ? "ok" : "failed");
-      if (!b.reason) return;
-      setReason(b.reason);
-    });
+      if (b.ok) {
+        setMode("uv");
+        return;
+      }
+      const got = await viaRelay();
+      if (!alive) return;
+      if (!got) setMode("failed");
+    })();
     return () => {
       alive = false;
     };
-  }, [relay]);
+  }, [relay, attempt, url, nonce, viaRelay]);
+
+  /* a rewritten window that never paints is a failure like any other */
+  useEffect(() => {
+    if (mode !== "uv" || drew) return;
+    const timer = window.setTimeout(async () => {
+      const got = await viaRelay();
+      if (!got) {
+        setReason((r) => r || "The rewritten window never drew the page.");
+        setMode("failed");
+      }
+    }, 12000);
+    return () => window.clearTimeout(timer);
+  }, [mode, drew, viaRelay]);
+
+  /* a link inside the read page comes back here, and the window fetches it */
+  useEffect(() => {
+    if (mode !== "reader") return;
+    const onMsg = (e: MessageEvent) => {
+      const next = (e.data as { nullFrame?: string } | null)?.nullFrame;
+      if (typeof next !== "string" || !next) return;
+      go({ page: "proxies", arg: { url: next } });
+    };
+    window.addEventListener("message", onMsg);
+    return () => window.removeEventListener("message", onMsg);
+  }, [mode]);
 
   /* escape gets you out of the browser and back onto NULL */
   useEffect(() => {
@@ -73,70 +143,74 @@ function Browser({ url, relay, back }: { url: string; relay: string; back: PageI
     return () => window.removeEventListener("keydown", onKey);
   }, [back]);
 
-  const src = state === "ok" ? proxied(url) : null;
-
-  const host = useMemo(() => {
-    try {
-      return new URL(url).hostname.replace(/^www\./, "");
-    } catch {
-      return url;
-    }
-  }, [url]);
-
+  const src = mode === "uv" || mode === "booting" ? proxied(url) : null;
   const leave = () => go({ page: back });
 
   return (
     <div className="bw">
-      {state === "booting" && (
+      {mode === "booting" && (
         <div className="bw-note">
           <Loader className="px-spin" />
-          <h3>Starting the browser…</h3>
+          <h3>Opening {host}…</h3>
           <p className="faint">
-            Handing {host} to Ultraviolet, which fetches it through{" "}
-            <span className="mono">{relay}</span>.
+            Through the relay at <span className="mono">{relay}</span>.
           </p>
         </div>
       )}
 
-      {state === "failed" && (
+      {(mode === "uv" || mode === "booting") && src && (
+        <iframe
+          key={`${nonce}-${url}`}
+          className="bw-frame"
+          src={src}
+          title={host}
+          onLoad={() => setDrew(true)}
+          referrerPolicy="no-referrer"
+          allow="clipboard-read; clipboard-write; fullscreen; gamepad; autoplay"
+        />
+      )}
+
+      {mode === "reader" && (
+        <>
+          <span className="bw-mode" title="Read through the relay, drawn in a sandboxed frame">
+            <Radio /> relay copy
+          </span>
+          <iframe
+            key={`${nonce}-${url}-copy`}
+            className="bw-frame"
+            srcDoc={sheet}
+            title={host}
+            referrerPolicy="no-referrer"
+            sandbox="allow-scripts allow-forms allow-popups allow-modals"
+          />
+        </>
+      )}
+
+      {mode === "failed" && (
         <div className="bw-note">
           <ShieldAlert />
           <h3>{host} did not come through</h3>
           <p>{reason}</p>
           <p className="faint">
-            A relay is a WebSocket server, so it cannot live on a static host. Set one you run
-            in Settings, or open the site in a real tab.
+            The relay in use is <span className="mono">{relay}</span> — a WebSocket server, the
+            one piece of this that a static host cannot supply. Point NULL at one you run, on
+            the shelf page, and this window comes up.
           </p>
           <div className="bw-note-actions">
-            <button className="btn btn--fill" onClick={() => window.open(url, "_blank", "noopener")}>
-              <ExternalLink /> Open {host}
+            <button
+              className="btn btn--fill"
+              onClick={() => {
+                restart();
+                setAttempt((n) => n + 1);
+              }}
+            >
+              <RotateCw /> Try again
             </button>
             <button className="btn" onClick={leave}>
               <ArrowLeft /> Back to null
             </button>
           </div>
         </div>
-      )}
-
-      {src && (
-        <>
-          <button
-            className="bw-open"
-            title={`Open ${host} in a real tab`}
-            aria-label="Open in a real tab"
-            onClick={() => window.open(url, "_blank", "noopener")}
-          >
-            <ExternalLink />
-          </button>
-          <iframe
-            key={`${nonce}-${url}`}
-            className="bw-frame"
-            src={src}
-            title={host}
-            referrerPolicy="no-referrer"
-            allow="clipboard-read; clipboard-write; fullscreen; gamepad; autoplay"
-          />
-        </>
       )}
     </div>
   );
@@ -145,6 +219,36 @@ function Browser({ url, relay, back }: { url: string; relay: string; back: PageI
 /* ============================================================
    the shelf
    ============================================================ */
+/** One bare handshake, so a dead relay can be told apart from a broken
+ *  browser before anything else is suspected. */
+function RelayCheck({ relay }: { relay: string }) {
+  const [state, setState] = useState<"idle" | "busy" | "ok" | "bad">("idle");
+  const [says, setSays] = useState("");
+
+  return (
+    <div className="px-check">
+      <button
+        className="btn btn--sm"
+        disabled={state === "busy"}
+        onClick={async () => {
+          setState("busy");
+          setSays("knocking…");
+          const r = await ping(relay);
+          setState(r.ok ? "ok" : "bad");
+          setSays(r.ok ? `answered in ${r.ms} ms` : `nothing there — ${r.reason}`);
+        }}
+      >
+        <RotateCw /> Check the relay
+      </button>
+      {state !== "idle" && (
+        <span className={`px-check-say${state === "bad" ? " is-bad" : state === "ok" ? " is-ok" : ""}`}>
+          {says}
+        </span>
+      )}
+    </div>
+  );
+}
+
 function Shelf({ relay }: { relay: string }) {
   const p = useStore(prefs);
   const list = entries("proxy");
@@ -208,7 +312,7 @@ function Shelf({ relay }: { relay: string }) {
       <div className="card card--pad px-settings">
         <h3 className="set-h">The browser</h3>
         <p className="set-note">
-          Every address opens fullscreen through Ultraviolet, which fetches it over the relay
+          Every address opens inside NULL through Ultraviolet, which fetches it over the relay
           below. A relay is a WebSocket server, so it cannot be hosted on a static page: point
           this at one you run, or use the public one it ships with.
         </p>
@@ -219,7 +323,10 @@ function Shelf({ relay }: { relay: string }) {
               className="fld"
               value={p.relay}
               spellCheck={false}
-              onChange={(e) => prefs.set({ relay: e.target.value })}
+              onChange={(e) => {
+                restart();
+                prefs.set({ relay: e.target.value });
+              }}
             />
           </label>
           <label className="form-row">
@@ -237,6 +344,8 @@ function Shelf({ relay }: { relay: string }) {
             </select>
           </label>
         </div>
+        <RelayCheck relay={p.relay} />
+
         <p className="tiny faint px-note">
           Brave is the default. What you type in an address box becomes a page, an address, or a
           search on this engine — in that order.

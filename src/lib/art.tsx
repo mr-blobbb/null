@@ -11,9 +11,9 @@
    The class names here are animated in src/styles/shop.css. */
 
 import { useState, type CSSProperties } from "react";
-import { UserRound } from "lucide-react";
 
 import { useAccount } from "./account";
+import { NullFace } from "./brand";
 import type { ShopItem } from "./econ";
 
 const VB = "0 0 100 100";
@@ -380,12 +380,12 @@ export function EffectArt({ id }: { id: string | null | undefined }) {
 }
 
 /** The round picture a decoration sits on: the player's own face when they
- *  have one, a silhouette when they do not. */
+ *  have one, NULL's own face when they do not. */
 function Face() {
   const me = useAccount();
   return (
     <span className="avbox-face">
-      {me.pfp ? <img src={me.pfp} alt="" /> : <UserRound />}
+      {me.pfp ? <img src={me.pfp} alt="" /> : <NullFace />}
     </span>
   );
 }

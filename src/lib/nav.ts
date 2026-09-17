@@ -8,6 +8,7 @@
 import {
   Clapperboard,
   Gamepad2,
+  Music,
   Globe,
   House,
   Link2,
@@ -26,6 +27,7 @@ export type PageId =
   | "games"
   | "apps"
   | "movies"
+  | "music"
   | "proxies"
   | "shop"
   | "profile"
@@ -86,6 +88,15 @@ export const PAGES: Record<PageId, Page> = {
     blurb: "aether.cx, opened inside NULL like any other address.",
     keywords: "movies film watch aether stream cinema",
     loads: "https://aether.cx",
+  },
+  music: {
+    id: "music",
+    name: "Music",
+    address: "null://music",
+    route: "/music",
+    icon: Music,
+    blurb: "The player: search a catalogue, keep what you like, queue the rest.",
+    keywords: "music songs player playlist qobuz soundcloud youtube shuffle audio",
   },
   /* No longer a door of its own: an address is typed in the bar and opens as
      a tab. The page stays for the fullscreen browser and the ready-made
@@ -169,7 +180,7 @@ export const PAGES: Record<PageId, Page> = {
  *
  *  The bottom group is read upward from the last door, so the two that are
  *  about people sit together: members just above the profile. */
-export const RAIL_TOP: PageId[] = ["home", "games", "apps", "movies", "shop"];
+export const RAIL_TOP: PageId[] = ["home", "games", "apps", "movies", "music", "shop"];
 export const RAIL_BOTTOM: PageId[] = ["users", "profile", "changelog", "extensions", "settings"];
 
 /** Everything the All Apps sheet lists, in reading order. */
@@ -178,6 +189,7 @@ export const ALL_PAGES: PageId[] = [
   "games",
   "apps",
   "movies",
+  "music",
   "proxies",
   "shop",
   "users",

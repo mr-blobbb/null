@@ -26,7 +26,9 @@ type UvConfig = {
 
 export type Boot = { ok: boolean; reason?: string };
 
-let cfg: UvConfig | null = null;
+type Config = UvConfig & { handler?: string; client?: string; bundle?: string; config?: string; sw?: string };
+
+let cfg: Config | null = null;
 let boot: Promise<Boot> | null = null;
 let relayUsed = "";
 
@@ -50,6 +52,62 @@ export function proxied(url: string): string | null {
   }
 }
 
+/** Forget a failed boot so the next attempt starts from scratch. */
+export function restart() {
+  boot = null;
+  relayUsed = "";
+}
+
+/** Does the relay answer at all? A bare WebSocket handshake, no transport and
+ *  no worker: the quickest way to tell a dead relay from a broken browser. */
+export function ping(relay: string, limit = 6000): Promise<{ ok: boolean; ms?: number; reason?: string }> {
+  return new Promise((resolve) => {
+    if (!relay) {
+      resolve({ ok: false, reason: "no relay is set" });
+      return;
+    }
+    let done = false;
+    const finish = (r: { ok: boolean; ms?: number; reason?: string }) => {
+      if (done) return;
+      done = true;
+      window.clearTimeout(timer);
+      resolve(r);
+    };
+    const started = performance.now();
+    const timer = window.setTimeout(() => finish({ ok: false, reason: "nothing answered in six seconds" }), limit);
+    try {
+      const ws = new WebSocket(relay);
+      ws.onopen = () => {
+        ws.close();
+        finish({ ok: true, ms: Math.round(performance.now() - started) });
+      };
+      ws.onerror = () => finish({ ok: false, reason: "the connection was refused" });
+    } catch (e) {
+      finish({ ok: false, reason: (e as Error).message });
+    }
+  });
+}
+
+/** Point the transport at a relay. Both roads out of NULL — the rewritten
+ *  window and the relay reader in relay.ts — talk to the far site through
+ *  this one connection, so it is set up in one place. */
+export async function transport(relay: string): Promise<Boot> {
+  try {
+    const { BareMuxConnection } = await import("@mercuryworkshop/bare-mux");
+    const connection = new BareMuxConnection("/baremux/worker.js");
+    await connection.setTransport("/epoxy/epoxy-bundled.js", [{ wisp: relay }]);
+    return { ok: true };
+  } catch (e) {
+    const seen = await ping(relay);
+    return {
+      ok: false,
+      reason: seen.ok
+        ? `The relay at ${relay} answered, but the transport would not start (${(e as Error).message}).`
+        : `The relay at ${relay} did not answer (${seen.reason ?? (e as Error).message}).`,
+    };
+  }
+}
+
 /** Bring the worker and the relay up once. Safe to call from anywhere. */
 export function start(relay: string): Promise<Boot> {
   /* a new relay means a new transport, so only the first one is remembered */
@@ -62,22 +120,33 @@ export function start(relay: string): Promise<Boot> {
     if (!relay) {
       return { ok: false, reason: "No relay is set. Nothing can be fetched without one." };
     }
-    try {
-      if (!cfg) {
+
+    /* 1 · the rewriter itself, vendored in public/uv */
+    if (!cfg) {
+      try {
         await script("/uv/uv.bundle.js");
         await script("/uv/uv.config.js");
-        cfg = (self as unknown as { __uv$config?: UvConfig }).__uv$config ?? null;
+      } catch (e) {
+        return { ok: false, reason: `Ultraviolet is missing from public/uv (${(e as Error).message}).` };
       }
+      cfg = (self as unknown as { __uv$config?: Config }).__uv$config ?? null;
       if (!cfg) return { ok: false, reason: "Ultraviolet loaded but did not describe itself." };
-
-      await navigator.serviceWorker.register("/uv/uv.sw.js", { scope: "/uv/" });
-
-      const { BareMuxConnection } = await import("@mercuryworkshop/bare-mux");
-      const connection = new BareMuxConnection("/baremux/worker.js");
-      await connection.setTransport("/epoxy/epoxy-bundled.js", [{ wisp: relay }]);
-    } catch (e) {
-      return { ok: false, reason: `The relay at ${relay} did not answer (${(e as Error).message}).` };
     }
+
+    /* 2 · the service worker that rewrites every request in its scope */
+    try {
+      await navigator.serviceWorker.register("/uv/uv.sw.js", { scope: "/uv/" });
+    } catch (e) {
+      return {
+        ok: false,
+        reason: `The service worker would not register here (${(e as Error).message}).`,
+      };
+    }
+
+    /* 3 · the transport, which is what actually talks to the far site */
+    const wire = await transport(relay);
+    if (!wire.ok) return wire;
+
     return { ok: true };
   })();
   return boot;

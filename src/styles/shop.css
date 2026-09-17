@@ -191,6 +191,26 @@
   overflow: visible;
 }
 
+/* ---------- the face ----------
+   NULL's own mark, used wherever there is no picture of the player. It is an
+   image rather than a glyph, so it fills the round frame the way a photo
+   would instead of floating in the middle of it. */
+.nf {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+}
+.avbox-face .nf,
+.pf-pic .nf,
+.share-pic .nf,
+.mb-pic .nf,
+.mb-full-pic .nf {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
+
 /* a round picture with a decoration on top of it */
 .avbox {
   position: relative;
@@ -279,6 +299,25 @@
   object-fit: cover;
   object-position: center;
   mix-blend-mode: screen;
+  /* A face overlay must never cover the face. The clip keeps its own size and
+     stays centred — cover, so nothing is squashed — and its middle is masked
+     out entirely, so the picture is what you see where a face goes and the
+     clip only ever draws the rim. Blending on top of that would still lighten
+     the middle, so the hole is generous: nothing at all until 48% out, easing
+     in to full at 80%, which is a ring's worth of the frame. */
+  opacity: 0.72;
+  -webkit-mask-image: radial-gradient(
+    circle at 50% 50%,
+    transparent 48%,
+    rgba(0, 0, 0, 0.35) 64%,
+    #000 80%
+  );
+  mask-image: radial-gradient(
+    circle at 50% 50%,
+    transparent 48%,
+    rgba(0, 0, 0, 0.35) 64%,
+    #000 80%
+  );
   pointer-events: none;
 }
 /* the perf switches already hide the whole `.art` layer; reduce-motion is

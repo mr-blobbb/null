@@ -17,6 +17,7 @@ import { isOwner, OWNER_TAG } from "../lib/owner";
 import { nameStyleCss } from "../lib/account";
 import { itemOf } from "../lib/econ";
 import { AvatarArt, EffectArt } from "../lib/art";
+import { NullFace } from "../lib/brand";
 import { Sheet } from "../components/Sheet";
 
 export function Members() {
@@ -104,7 +105,7 @@ function Card({ m, onOpen }: { m: Member; onOpen: () => void }) {
       <span className="mb-banner" style={{ background: m.banner }} />
       <span className="mb-body">
         <span className="mb-pic">
-          {m.pfp ? <img src={m.pfp} alt="" /> : <UserRound />}
+          {m.pfp ? <img src={m.pfp} alt="" /> : <NullFace />}
           <AvatarArt id={m.wearing.avatar} />
         </span>
         <span className="mb-txt">
@@ -138,7 +139,7 @@ function Full({ m }: { m: Member }) {
         )}
         <span className="mb-full-banner" style={{ background: m.banner }} />
         <span className="mb-full-pic">
-          {m.pfp ? <img src={m.pfp} alt="" /> : <UserRound />}
+          {m.pfp ? <img src={m.pfp} alt="" /> : <NullFace />}
           <AvatarArt id={m.wearing.avatar} />
         </span>
       </div>

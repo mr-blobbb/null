@@ -8,6 +8,7 @@ import "./styles/shop.css";
 import "./styles/profile.css";
 import "./styles/settings.css";
 import "./styles/browser.css";
+import "./styles/music.css";
 /* imported last: the quiet pass, which overrides a few wrote-in sizes */
 import "./styles/refine.css";
 

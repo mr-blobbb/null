@@ -15,18 +15,20 @@ import { SettingsSheet } from "./components/SettingsSheet";
 import { NotFound } from "./pages/NotFound";
 import { Home } from "./pages/Home";
 import { Library } from "./pages/Library";
-import { Movies } from "./pages/Movies";
 import { Proxies } from "./pages/Proxies";
 import { Shop } from "./pages/Shop";
 import { Members } from "./pages/Members";
+import { Music } from "./pages/Music";
 import { Profile } from "./pages/Profile";
 import { Changelog } from "./pages/Changelog";
 import { Extensions } from "./pages/Extensions";
 import { Player } from "./pages/Player";
 
 import { applyPalette, applyPerf, prefs, usePalette } from "./lib/themes";
+import { applyCloak, cloakFor } from "./lib/cloak";
 import { useStore } from "./lib/store";
 import { IDLE_MS, tick, useEcon } from "./lib/econ";
+import { PAGES } from "./lib/nav";
 import { activeTab, go, openTab, targetFromHash, useTabs } from "./lib/tabs";
 import { useExt } from "./lib/extensions";
 
@@ -54,6 +56,29 @@ export function App() {
   useEffect(() => {
     applyPerf();
   }, [perf, reduceMotion]);
+
+  /* the tab cloak: what the tab strip calls this page, and the key that puts
+     the disguise on the moment you need it (src/lib/cloak.ts) */
+  const cloak = useStore(prefs).cloak;
+  const panicKey = useStore(prefs).panicKey;
+  const [panic, setPanic] = useState(false);
+
+  useEffect(() => {
+    applyCloak(cloakFor(cloak, panic));
+  }, [cloak, panic]);
+
+  useEffect(() => {
+    if (!panicKey) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== panicKey) return;
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+      e.preventDefault();
+      setPanic((v) => !v);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [panicKey]);
 
   /* the coin clock */
   useEffect(() => {
@@ -143,11 +168,15 @@ export function App() {
       case "apps":
         return <Library kind="app" />;
       case "movies":
-        return <Movies />;
+        /* aether.cx refuses to be framed (`x-frame-options: DENY`), so the
+           movies door is the rewritten window like any other address */
+        return <Proxies url={PAGES.movies.loads} back="home" />;
       case "proxies":
         return <Proxies url={t.arg?.url} />;
       case "shop":
         return <Shop onOpenSettings={() => setSettingsOpen(true)} />;
+      case "music":
+        return <Music />;
       case "users":
         return <Members />;
       case "profile":
