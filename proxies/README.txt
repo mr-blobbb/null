@@ -1,19 +1,31 @@
-HOW TO ADD A PROXY
-==================
+PROXIES
+=======
 
-Proxies are external links, not wrapped content. Create a folder inside
-proxies/, e.g. proxies/my-link/, containing a proxy.txt file:
+Two different things live under this name.
 
-  Link: https://example.com/
-  Description: What this site is.
-  Status: All Good
+The SHELF is a hand-written list in src/lib/catalog.ts of sites worth having
+one click away:
 
-Statuses are one of: All Good / Issue / Blocked.
-They are maintained BY HAND: nothing auto-verifies them.
+  {
+    id: "internet-archive",
+    name: "Internet Archive",
+    kind: "proxy",
+    url: "https://archive.org/",
+    labels: ["Archive", "Books"],
+    status: "All Good",          // or "Issue" / "Blocked"
+  }
 
-Then run:
+`status` is shown on the card and in the confirmation before a site opens.
+It is a person's judgement, not a live check.
 
-  bun run catalog
+The WINDOW is the address bar at the top of the Proxies page. Type a domain
+into it and the page loads inside NULL. The chain it is built for is
 
-The card opens the destination in a new tab (with a NULL redirect
-confirmation first). Proxies are never loaded inside the player.
+  NULL  ->  Scramjet / Ultraviolet  ->  Wisp relay  ->  the site
+
+A browser cannot fetch another origin, which is the entire reason the relay
+exists. The relay address and which engine to use are settings, stored with
+the rest of the preferences, on the page and in src/lib/themes.ts.
+
+Until a relay answers, the window says so in words and offers the site in a
+real tab, rather than showing a blank frame and calling it done.

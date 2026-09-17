@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "NULL: a plain black-and-white hub for games, apps, proxies and tools. Static HTML/CSS/JS: GitHub Pages serves these files as-is, and Node is only the build-time tooling (catalog scan, icon set, link and page checks).",
+  "description": "NULL: a flat, fast hub for games, apps, proxies and tools. React + TypeScript on Vite.",
   "homepage": "https://googleslides2026.github.io/",
   "repository": {
     "type": "git",
@@ -11,21 +11,21 @@
   },
   "scripts": {
     "dev": "vite",
+    "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "catalog": "node scripts/build-catalog.js",
-    "icons": "node scripts/build-icons.js",
-    "build": "node scripts/build-catalog.js && node scripts/build-icons.js",
-    "check:links": "node scripts/check-links.js",
-    "check:pages": "node scripts/check-pages.js",
     "check": "tsc -b"
   },
   "devDependencies": {
-    "jsdom": "^30.0.1",
-    "lucide-static": "^1.47.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
     "typescript": "^5.9.3",
     "vite": "^7.3.5"
   },
   "dependencies": {
-    "@vly-ai/integrations": "^0.6.13"
+    "@vly-ai/integrations": "^0.6.13",
+    "lucide-react": "^1.47.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
   }
 }

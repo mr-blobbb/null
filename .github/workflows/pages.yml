@@ -1,7 +1,5 @@
-# NULL publishes itself: the repository root *is* the site, so the job is
-# checkout -> upload the root -> deploy. No build step, which is the whole
-# point of keeping the site as plain HTML, CSS and JavaScript.
-name: Deploy NULL to GitHub Pages
+# NULL deploys from the Vite build: install, type-check, build, upload dist.
+name: Deploy NULL
 
 on:
   push:
@@ -18,20 +16,31 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+      - name: Install
+        run: bun install --frozen-lockfile
+      - name: Build
+        run: bun run build
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Upload the build
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "dist"
+
   deploy:
+    needs: build
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-      - name: Upload the site
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: "."
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4

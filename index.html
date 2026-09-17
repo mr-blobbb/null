@@ -1,90 +1,46 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="color-scheme" content="dark light">
-  <meta name="theme-color" content="#08080a">
-  <title>null</title>
-  <meta name="description" content="NULL: a flat, fast hub for games, apps, proxies and tools. Local-first, no accounts.">
-  <link rel="icon" id="favicon" href="public/favicon.svg" type="image/svg+xml">
-  <link rel="manifest" href="public/manifest.webmanifest">
-  <link rel="apple-touch-icon" href="public/icon-192.png">
-  <link rel="stylesheet" href="src/styles/global.css">
-  <link rel="stylesheet" href="src/styles/extra.css">
-  <link rel="stylesheet" href="src/styles/particles.css">
-  <link rel="stylesheet" href="src/styles/perf.css">
-  <link rel="stylesheet" href="src/styles/ext.css">
-  <link rel="stylesheet" href="src/styles/dev.css">
-  <link rel="stylesheet" href="src/styles/home.css">
-  <link rel="stylesheet" href="src/styles/v2.css">
-  <link rel="stylesheet" href="src/styles/v2b.css">
-  <link rel="stylesheet" href="src/styles/settings.css">
-  <script>
-    (function () {
-      try {
-        var p = JSON.parse(localStorage.getItem("null:prefs") || "{}");
-        var pal = p.palette || "null";
-        document.documentElement.dataset.palette = pal;
-        document.documentElement.dataset.theme = pal === "light" || pal === "peach" ? "light" : "dark";
-        if (p.perf) document.documentElement.dataset.perf = p.perf === "ultra" ? "ultra" : "1";
-        document.documentElement.dataset.nav = "side";
-        if (p.labs) document.documentElement.dataset.labs = p.labs;
-      } catch (e) {}
-    })();
-  </script>
-</head>
-<body data-page="home">
-  <a class="skip-link" href="#main">Skip to content</a>
-  <div class="dots" aria-hidden="true"></div>
-  <header data-mount="nav"></header>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="theme-color" content="#08080a" />
+    <title>null</title>
+    <meta
+      name="description"
+      content="NULL: a flat, fast hub for games, apps, proxies and tools. Local first, no accounts."
+    />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
 
-  <main id="main" class="hm">
-    <h1 class="hm-word">null</h1>
-    <p class="hm-line" id="hmLine" aria-live="polite"></p>
-
-    <form class="hm-search" id="homeSearch" role="search" aria-label="Search null">
-      <span data-i="search" data-i-size="19"></span>
-      <input id="searchInput" type="text" placeholder="Search for anything (on the site ofc)!" autocomplete="off" spellcheck="false" aria-label="Search null">
-    </form>
-
-    <!-- App / All Apps, then the shortcuts the visitor keeps. Filled in by
-         src/pages/home.js: the list is editable, the first two are not. -->
-    <div class="hm-links" id="hmLinks"></div>
-
-    <!-- one continuous band of cards, dissolving at both edges -->
-    <div class="hm-strip" id="hmStrip" aria-label="What people say"></div>
-  </main>
-
-  <div class="hm-meta" id="hmMeta"></div>
-
-  <noscript>
-    <nav class="ns-nav">
-      <a href="./">Home</a><a href="games/">Games</a><a href="apps/">Apps</a><a href="proxies/">Proxies</a><a href="shop">Shop</a><a href="settings">Settings</a>
-    </nav>
-  </noscript>
-
-  <script src="src/utilities/store.js"></script>
-  <script src="src/utilities/econ.js"></script>
-  <script src="src/utilities/icons.generated.js"></script>
-  <script src="src/utilities/dom.js"></script>
-  <script src="src/utilities/modal.js"></script>
-  <script src="src/utilities/theme.js"></script>
-  <script src="src/components/seasons.js"></script>
-  <script src="src/utilities/scroll.js"></script>
-  <script src="src/routing/router.js"></script>
-  <script src="src/catalog/generated-catalog.js?v=baa2c9775e"></script>
-  <script src="src/catalog/catalog.js"></script>
-  <script src="src/content/content.js"></script>
-  <script src="src/components/tabpresets.js"></script>
-  <script src="src/components/cards.js"></script>
-  <script src="src/components/search.js"></script>
-  <script src="src/components/daily.js"></script>
-  <script src="src/utilities/ext.js"></script>
-  <script src="src/components/tabs.js"></script>
-  <script src="src/components/settings-sheet.js"></script>
-  <script src="src/components/shell.js"></script>
-  <script src="src/components/devconsole.js"></script>
-  <script src="src/pages/home.js"></script>
-</body>
+    <!-- the display faces a profile can put its own name in. Loaded only for
+         that; nothing else on the site uses them. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Bungee&family=Caveat&family=Gochi+Hand&family=Pacifico&family=Playfair+Display:wght@700&family=Press+Start+2P&family=Silkscreen&family=Space+Mono&display=swap"
+    />
+    <script>
+      /* Paint the palette before React mounts so a dark theme never flashes
+         light. Mirrors src/lib/themes.ts: keep the two in step. */
+      (function () {
+        try {
+          var p = JSON.parse(localStorage.getItem("null:prefs") || "{}");
+          var id = p.palette || "null";
+          var root = document.documentElement;
+          root.dataset.palette = id;
+          var light = id === "light" || id === "peach";
+          root.dataset.mode = light ? "light" : "dark";
+          root.style.colorScheme = light ? "light" : "dark";
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>NULL needs JavaScript to run.</noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>

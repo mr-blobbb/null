@@ -1,26 +1,30 @@
 HOW TO ADD A GAME
 =================
 
-Create a folder inside games/, e.g. games/my-game/, containing:
+NULL is built now, not served as a folder tree, so a game is two things:
 
-  my-game.html      the game itself (fully standalone, no NULL files needed)
-  my-game.png       optional thumbnail (png/jpg/jpeg/webp/gif/svg all work)
-  Label.txt         optional tags, e.g.
-                    Label: Action Puzzle Singleplayer WebGL
-                    (each non-empty line becomes one label; prefixes optional)
-  Warning.txt       optional pre-launch notice, e.g.
-                    Title: Heads up
-                    Description: Keyboard needed. Arrow keys move, space jumps.
+  1. the files, anywhere the build can reach them (put them in games/my-game/)
+  2. one entry in src/lib/catalog.ts
 
-Then run:
+For example:
 
-  bun run catalog     (or: node scripts/build-catalog.js)
+  {
+    id: "my-game",
+    name: "My Game",
+    kind: "game",
+    file: "games/my-game/my-game.html",
+    thumb: "games/my-game/my-game.png",   // optional
+    labels: ["Action", "Puzzle", "Singleplayer"],
+  }
 
-The game appears automatically on /games: no JSON, no manual registry.
+`file` is what the player window loads. `thumb` is optional: without it the
+tile falls back to a plain square with a glyph on it. `labels` are the
+categories search matches against; they are never printed on a card.
 
-Notes
------
-- Folders without an HTML file are ignored (they don't show as broken cards),
-  so a half-finished folder can sit there until the game is ready.
-- Missing thumbnails automatically fall back to the NULL-style placeholder.
-- If a folder starts with "_" or "." it is skipped entirely.
+Ship the game as one self-contained HTML file where you can. If it needs its
+own assets, keep them beside it and make every path inside it relative, so
+the whole folder can be moved without breaking.
+
+A pre-launch warning, shown before anything starts, goes on the entry:
+
+  warning: { title: "Heads up", body: "Keyboard needed. Arrow keys move." }

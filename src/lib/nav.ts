@@ -1,0 +1,192 @@
+/* NULL · nav.ts
+   Every destination in one table: what it is called, the null:// address the
+   tab bar shows, where it lives, and which icon it wears. The rail, the tab
+   strip, the All Apps sheet and the command palette are all built from this,
+   so a page that exists is a line here and a page that does not is a line
+   deleted. */
+
+import {
+  Gamepad2,
+  Globe,
+  House,
+  Link2,
+  Play,
+  Puzzle,
+  ScrollText,
+  ShoppingBag,
+  SlidersHorizontal,
+  UserRound,
+  type LucideIcon,
+} from "lucide-react";
+
+export type PageId =
+  | "home"
+  | "games"
+  | "apps"
+  | "proxies"
+  | "shop"
+  | "profile"
+  | "changelog"
+  | "extensions"
+  | "settings"
+  | "player";
+
+export type Page = {
+  id: PageId;
+  name: string;
+  /** the internal address the tab shows */
+  address: string;
+  route: string;
+  icon: LucideIcon;
+  blurb: string;
+  /** matches the query in the command palette as well as the title */
+  keywords: string;
+};
+
+export const PAGES: Record<PageId, Page> = {
+  home: {
+    id: "home",
+    name: "Home",
+    address: "null://home",
+    route: "/",
+    icon: House,
+    blurb: "The front door: search everything and jump to a page.",
+    keywords: "home start welcome hub front door",
+  },
+  games: {
+    id: "games",
+    name: "Games",
+    address: "null://g",
+    route: "/games",
+    icon: Gamepad2,
+    blurb: "The library: one square each, searchable by name or category.",
+    keywords: "play game arcade fun library",
+  },
+  apps: {
+    id: "apps",
+    name: "Apps",
+    address: "null://a",
+    route: "/apps",
+    icon: Link2,
+    blurb: "Tools that run in a tab, laid out exactly like the games.",
+    keywords: "app tool utility library",
+  },
+  proxies: {
+    id: "proxies",
+    name: "Proxies",
+    address: "null://p",
+    route: "/proxies",
+    icon: Globe,
+    blurb: "Open any site inside NULL, or use the ready-made links.",
+    keywords: "proxy wisp relay unblock browse mirror web",
+  },
+  shop: {
+    id: "shop",
+    name: "Shop",
+    address: "null://shop",
+    route: "/shop",
+    icon: ShoppingBag,
+    blurb: "Spend playtime coins on decorations, effects and name tags.",
+    keywords: "shop coins buy cosmetics decorate gift",
+  },
+  profile: {
+    id: "profile",
+    name: "Profile",
+    address: "null://me",
+    route: "/profile",
+    icon: UserRound,
+    blurb: "Your card: banner, picture, name, bio and library.",
+    keywords: "profile account login sign in banner avatar bio me",
+  },
+  changelog: {
+    id: "changelog",
+    name: "Changelog",
+    address: "null://log",
+    route: "/changelog",
+    icon: ScrollText,
+    blurb: "Every release, newest first, with what was added and fixed.",
+    keywords: "changelog release notes news update version",
+  },
+  extensions: {
+    id: "extensions",
+    name: "Extensions",
+    address: "null://ext",
+    route: "/extensions",
+    icon: Puzzle,
+    blurb: "Add-ons that draw inside NULL, in any page you are on.",
+    keywords: "extension addon plugin widget popup",
+  },
+  settings: {
+    id: "settings",
+    name: "Settings",
+    address: "null://set",
+    route: "/settings",
+    icon: SlidersHorizontal,
+    blurb: "Themes, data and the paperwork, over whatever page you are on.",
+    keywords: "settings theme palette appearance data privacy terms",
+  },
+  player: {
+    id: "player",
+    name: "Player",
+    address: "null://play",
+    route: "/play",
+    icon: Play,
+    blurb: "The window a game or a proxied site opens in.",
+    keywords: "player play window frame",
+  },
+};
+
+/** Five doors at the top of the rail, four at the bottom, and a deliberate
+ *  empty gap between them. The gap is the point: the rail is a spine. */
+export const RAIL_TOP: PageId[] = ["home", "games", "apps", "proxies", "shop"];
+export const RAIL_BOTTOM: PageId[] = ["profile", "changelog", "extensions", "settings"];
+
+/** Everything the All Apps sheet lists, in reading order. */
+export const ALL_PAGES: PageId[] = [
+  "home",
+  "games",
+  "apps",
+  "proxies",
+  "shop",
+  "profile",
+  "changelog",
+  "extensions",
+  "settings",
+];
+
+/** The rail and the sheets never offer Settings as a page: it is a sheet that
+ *  opens over whatever is already there. */
+export const SHEET_PAGES: PageId[] = ALL_PAGES.filter((id) => id !== "settings");
+
+export function pageOf(id: PageId): Page {
+  return PAGES[id];
+}
+
+/** Turn a typed or pasted address into a destination.
+ *  `null://g`, `g`, `/games`, `null://games` all mean the games page. */
+export function parseAddress(raw: string): { page: PageId } | { url: string } | null {
+  const s = raw.trim();
+  if (!s) return null;
+  if (/^null:\/\//i.test(s)) {
+    const host = s.replace(/^null:\/\//i, "").replace(/^\/+/, "").replace(/\/+$/, "").toLowerCase();
+    const hit = ALL_PAGES.find(
+      (id) =>
+        id === host ||
+        PAGES[id].address.replace("null://", "") === host ||
+        PAGES[id].name.toLowerCase() === host,
+    );
+    return hit ? { page: hit } : null;
+  }
+  if (s.startsWith("/")) {
+    const hit = ALL_PAGES.find((id) => PAGES[id].route === s.replace(/\/$/, "") || (s === "/" && id === "home"));
+    return hit ? { page: hit } : null;
+  }
+  /* a bare word that is a page name still counts */
+  const bare = s.toLowerCase();
+  const named = ALL_PAGES.find((id) => PAGES[id].address.replace("null://", "") === bare);
+  if (named) return { page: named };
+  /* anything else is treated as a website, normalised to https */
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(s)) return { url: s };
+  if (/^[\w-]+(\.[\w-]+)+([/?#].*)?$/.test(s)) return { url: `https://${s}` };
+  return null;
+}

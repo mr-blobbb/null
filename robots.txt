@@ -1,10 +1,5 @@
-# NULL: a static hub, served straight from the repository by GitHub Pages.
-#
-# Crawlers only read /robots.txt at an origin's root, which is where NULL is
-# served from. The 404 page carries its own noindex tag as well, so it stays
-# out of results even if this file is never fetched.
+# NULL is a single-page app: every route is a hash on the same document, so
+# there is nothing here to keep out of an index. The library is the site.
 
 User-agent: *
 Allow: /
-
-Disallow: /404.html

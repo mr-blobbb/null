@@ -1,15 +1,19 @@
 HOW TO ADD AN APP
 =================
 
-Same format as games. Create apps/my-app/ with:
+Apps are the games page wearing a different word: same tile, same search,
+same player window. The only difference is the entry's `kind`, and that an
+app usually wants a smaller window.
 
-  my-app.html      the app (standalone HTML file)
-  my-app.png       optional icon/thumbnail
-  Label.txt        optional tags (one per line, "Label:" prefix optional)
-  Warning.txt      optional pre-launch notice
+Add one to src/lib/catalog.ts:
 
-Then run:
+  {
+    id: "notes",
+    name: "Notes",
+    kind: "app",
+    file: "apps/notes/notes.html",
+    labels: ["Writing", "Utilities"],
+  }
 
-  bun run catalog
-
-Apps open in the same NULL player shell as games.
+The file it points at is loaded in an iframe in the player, so keep it
+self-contained and relative: no absolute paths, no build step of its own.

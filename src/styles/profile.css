@@ -1,0 +1,516 @@
+/* ============================================================
+   NULL · profile.css
+   The sign-in card, the player card, the library strip and the
+   account list.
+   ============================================================ */
+
+/* ---------- signed out ---------- */
+.pf-gate {
+  display: flex;
+  justify-content: center;
+  padding-top: 11vh;
+}
+.pf-auth {
+  width: min(400px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.pf-auth-h {
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+.pf-auth-sub {
+  margin-top: -6px;
+  font-size: 13px;
+}
+.pf-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 44px;
+  padding: 0 13px;
+  border: var(--bw) solid var(--line);
+  border-radius: var(--r-2);
+  background: var(--bg-3);
+  transition: border-color 0.22s var(--ease), background 0.22s var(--ease);
+}
+.pf-field svg {
+  width: 16px;
+  height: 16px;
+  color: var(--faint);
+  flex: none;
+  transition: color 0.22s var(--ease);
+}
+.pf-field input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: none;
+  font-size: 13.5px;
+}
+.pf-field input::placeholder {
+  color: var(--faint);
+  transition: color 0.22s var(--ease);
+}
+.pf-field:focus-within {
+  border-color: var(--line-2);
+  background: var(--bg-2);
+}
+.pf-field:focus-within svg,
+.pf-field:focus-within input::placeholder {
+  color: var(--dim);
+}
+.pf-submit {
+  height: 42px;
+  margin-top: 4px;
+}
+.pf-swap {
+  font-size: 12.5px;
+  color: var(--dim);
+  text-align: center;
+}
+.pf-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  line-height: 1.5;
+}
+.pf-tip svg {
+  width: 13px;
+  height: 13px;
+  flex: none;
+  margin-top: 3px;
+}
+
+/* ---------- the card ---------- */
+.pf-card {
+  position: relative;
+  overflow: hidden;
+  padding: 0 0 16px;
+  background: var(--bg-2);
+}
+.pf-banner {
+  position: relative;
+  height: 152px;
+  background-size: cover;
+  background-position: center;
+  border-radius: var(--r-4) var(--r-4) var(--r-2) var(--r-2);
+  margin: 2px 2px 0;
+}
+.pf-banner-edit {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: color-mix(in srgb, var(--bg) 55%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-color: var(--line-2);
+}
+.pf-id {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  padding: 0 20px;
+  margin-top: -34px;
+  z-index: 1;
+}
+.pf-pic-wrap {
+  position: relative;
+  flex: none;
+}
+.pf-pic {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 96px;
+  border-radius: var(--r-4);
+  border: var(--bw) solid var(--line-2);
+  background: var(--bg-3);
+  color: var(--faint);
+  overflow: visible;
+}
+.pf-pic img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: calc(var(--r-4) - 2px);
+}
+.pf-pic > svg {
+  width: 38px;
+  height: 38px;
+}
+.pf-cam {
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-1);
+  border: var(--bw) solid var(--line-2);
+  background: var(--bg-3);
+  color: var(--dim);
+  cursor: pointer;
+}
+.pf-cam:hover {
+  color: var(--text);
+}
+.pf-cam svg {
+  width: 14px;
+  height: 14px;
+}
+.pf-txt {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding-top: 40px;
+}
+.pf-name {
+  font-size: 25px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+.pf-name-in {
+  width: 100%;
+  font: inherit;
+  background: none;
+  border: 0;
+  border-bottom: var(--bw) solid var(--line-2);
+  outline: none;
+  color: var(--text);
+}
+.pf-handle {
+  display: block;
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: var(--faint);
+}
+.pf-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.pf-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 22px;
+  padding: 0 9px;
+  border-radius: var(--r-1);
+  border: var(--bw) solid var(--line);
+  background: var(--bg-3);
+  font-size: 11px;
+  color: var(--dim);
+}
+.pf-chip svg {
+  width: 12px;
+  height: 12px;
+}
+.pf-id-actions {
+  display: flex;
+  gap: 7px;
+  padding-top: 40px;
+  flex: none;
+}
+.pf-bio {
+  padding: 14px 20px 0;
+}
+.pf-bio-box {
+  width: 100%;
+  min-height: 44px;
+  padding: 12px 13px;
+  text-align: left;
+  border: var(--bw) solid var(--line);
+  border-radius: var(--r-2);
+  background: var(--bg-3);
+  color: var(--dim);
+  font-size: 13px;
+  transition: border-color 0.16s var(--ease);
+}
+.pf-bio-box:hover {
+  border-color: var(--line-2);
+}
+.pf-bio-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* ---------- library strip ---------- */
+.pf-h {
+  margin: 28px 0 12px;
+  font-size: 15px;
+  font-weight: 600;
+}
+.pf-h--sub {
+  font-size: 13px;
+  color: var(--dim);
+  font-weight: 500;
+  margin: 22px 0 10px;
+}
+.pf-libgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+.pf-libcard {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px;
+}
+.pf-libcard svg {
+  width: 16px;
+  height: 16px;
+  color: var(--dim);
+}
+.pf-libcard b {
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 6px;
+}
+.pf-libcard span {
+  font-size: 19px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+.pf-recent {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+.pf-wearing {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--dim);
+}
+
+/* ---------- account ---------- */
+.pf-account {
+  margin-top: 30px;
+  padding: 4px 18px 10px;
+}
+.pf-account-h {
+  font-size: 15px;
+  font-weight: 600;
+  padding: 16px 0 6px;
+}
+.pf-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 15px 0;
+  border-top: var(--bw) solid var(--line);
+}
+.pf-row--stack {
+  border-top: var(--bw) solid var(--line);
+}
+.pf-row-txt {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.pf-row-txt b {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.pf-row-sub {
+  font-size: 12.5px;
+  color: var(--dim);
+}
+.pf-row--danger .pf-row-txt b {
+  color: var(--bad);
+}
+.pf-row-act {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.grad-prev {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--r-1);
+  border: var(--bw) solid var(--line);
+}
+input[type="color"] {
+  width: 34px;
+  height: 30px;
+  padding: 0;
+  border: var(--bw) solid var(--line);
+  border-radius: var(--r-1);
+  background: var(--bg-3);
+  cursor: pointer;
+}
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--dim);
+}
+.check input {
+  accent-color: var(--ac-1);
+}
+
+/* ---------- username style ---------- */
+.pf-style {
+  padding: 0 0 16px;
+  border-bottom: var(--bw) solid var(--line);
+}
+.pf-style-prev {
+  display: grid;
+  place-items: center;
+  min-height: 84px;
+  margin-bottom: 12px;
+  border: var(--bw) solid var(--line);
+  border-radius: var(--r-3);
+  background: var(--bg-3);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.pf-style-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.seg {
+  height: 30px;
+  padding: 0 12px;
+  border: var(--bw) solid var(--line);
+  border-radius: 99px;
+  background: var(--bg-2);
+  color: var(--dim);
+  font-size: 12.5px;
+}
+.seg.is-on {
+  background: var(--bg-4);
+  color: var(--text);
+  border-color: var(--line-2);
+}
+.pf-style-font .fld {
+  height: 34px;
+}
+.pf-style-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* ---------- banner editor ---------- */
+.banner-ed {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.pf-label {
+  font-size: 12.5px;
+  color: var(--dim);
+}
+.swatchgrid {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.swatch {
+  width: 38px;
+  height: 30px;
+  border-radius: var(--r-1);
+  border: var(--bw) solid var(--line);
+}
+.swatch.is-on {
+  border-color: var(--ac-1);
+}
+.banner-preview {
+  height: 110px;
+  border-radius: var(--r-3);
+  border: var(--bw) solid var(--line);
+  background-size: cover;
+  background-position: center;
+}
+.banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+.adjust-box {
+  height: 190px;
+  margin: 12px 0;
+  border-radius: var(--r-3);
+  border: var(--bw) solid var(--line);
+  background-repeat: no-repeat;
+  cursor: grab;
+}
+.adjust-slider {
+  width: 100%;
+  accent-color: var(--ac-1);
+}
+.adjust-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 12px;
+}
+.pf-shot {
+  position: fixed;
+  right: 14px;
+  bottom: 70px;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: var(--bw) solid var(--line);
+  background: var(--bg-2);
+  color: var(--dim);
+}
+.pf-shot:hover {
+  color: var(--text);
+  border-color: var(--line-2);
+}
+.pf-shot svg {
+  width: 15px;
+  height: 15px;
+}
+
+@media (max-width: 620px) {
+  .pf-id {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .pf-txt,
+  .pf-id-actions {
+    padding-top: 0;
+  }
+  .pf-banner {
+    height: 118px;
+  }
+  .pf-pic {
+    width: 78px;
+    height: 78px;
+  }
+}

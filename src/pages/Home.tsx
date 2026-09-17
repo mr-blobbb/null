@@ -1,0 +1,386 @@
+/* NULL · Home.tsx
+   The front door. A wordmark that takes the palette's ink, one line picked
+   at random on every visit, a search box, five circular shortcuts the
+   visitor can edit, and a band of cards drifting past underneath.
+
+   Nothing here moves except the cards, and they stop when you look at them. */
+
+import { useMemo, useState } from "react";
+import {
+  Gamepad2,
+  Globe,
+  Grid3x3,
+  Image as ImageIcon,
+  Link2,
+  Plus,
+  Puzzle,
+  Search,
+  ShoppingBag,
+  SlidersHorizontal,
+  Trash2,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+
+import { createStore, useStore } from "../lib/store";
+import { PAGES, parseAddress, SHEET_PAGES, type PageId } from "../lib/nav";
+import { go } from "../lib/tabs";
+import { Sheet } from "../components/Sheet";
+import { usePalette } from "../lib/themes";
+
+/* ---------- the lines ----------
+   Every one of these has the same chance. There is no rare message, which
+   is the point: a "0.01% chance" line that is as likely as the rest is a
+   better joke than one that never shows up. */
+const LINES = [
+  "you have a 0.01% chance of getting this message",
+  "well hello there",
+  "i switched to linux",
+  "woah",
+  "penguins !",
+  "made by mr blob",
+  "thanks to all our beta testers!",
+  "betrayal...",
+  "sggames isn’t the best game site, null is!",
+  "you’re pretty cool",
+  "why is this site down sm i swear",
+  "zzz",
+  "yummy",
+  "null on top fr",
+  "tech no night",
+  "also try [literally nothing all my other sites dont exist anymore]",
+  "taste the spaghetti code",
+  "that’s it for now",
+  "fatality",
+  "i worked very hard",
+  "splishy splash",
+  "made in...HTML?",
+  "and for you sir?",
+  "some things might take a bit to load, sorry :(",
+];
+
+/* ---------- the shortcuts ---------- */
+type Shortcut = { id: string; label: string; path: string };
+
+const DEFAULT_LINKS: Shortcut[] = [
+  { id: "games", label: "Games", path: "null://g" },
+  { id: "apps", label: "Apps", path: "null://a" },
+  { id: "proxies", label: "Proxies", path: "null://p" },
+  { id: "extensions", label: "Extensions", path: "null://ext" },
+  { id: "shop", label: "Shop", path: "null://shop" },
+];
+
+const links = createStore<{ list: Shortcut[] }>("links", { list: DEFAULT_LINKS });
+
+const ICON_FOR: Record<string, LucideIcon> = {
+  games: Gamepad2,
+  apps: Link2,
+  proxies: Globe,
+  shop: ShoppingBag,
+  extensions: Puzzle,
+  settings: SlidersHorizontal,
+  changelog: PAGES.changelog.icon,
+  profile: PAGES.profile.icon,
+  home: PAGES.home.icon,
+  play: Gamepad2,
+};
+
+function iconFor(path: string): LucideIcon {
+  const parsed = parseAddress(path);
+  if (parsed && "page" in parsed) return PAGES[parsed.page].icon;
+  return ICON_FOR[path.replace("null://", "")] ?? ImageIcon;
+}
+
+/* ---------- the strip ---------- */
+type Card = { avatar: string; name: string; role: string; text: string; lorem: string };
+
+const CARDS: Card[] = [
+  {
+    avatar: "example.com/a.png",
+    name: "mr blob",
+    role: "Owner of Null",
+    text: "Null is one of, if not the most modern games site. It has all the latest features, good speeds, smooth UI, and overall just works.",
+    lorem:
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore.",
+  },
+  {
+    avatar: "example.com/b.png",
+    name: "penguin",
+    role: "Beta tester",
+    text: "I opened it expecting another mirror site and ended up using it for a week straight. The shop coins just appear while you play.",
+    lorem: "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip.",
+  },
+  {
+    avatar: "example.com/c.png",
+    name: "anonymous",
+    role: "On linux",
+    text: "Runs in a browser, remembers my theme, and the rail does not get in the way. That is the whole review.",
+    lorem: "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore.",
+  },
+  {
+    avatar: "example.com/d.png",
+    name: "spaghetti",
+    role: "Code enjoyer",
+    text: "The changelog is longer than the site. I respect the honesty.",
+    lorem: "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia.",
+  },
+  {
+    avatar: "example.com/e.png",
+    name: "night owl",
+    role: "3am regular",
+    text: "Proxy window actually loads pages. I have not touched a bookmark since.",
+    lorem: "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium.",
+  },
+  {
+    avatar: "example.com/f.png",
+    name: "void",
+    role: "Theme collector",
+    text: "Sixteen palettes and a custom one. I have changed mine four times today.",
+    lorem: "Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit.",
+  },
+  {
+    avatar: "example.com/g.png",
+    name: "tester one",
+    role: "Found three bugs",
+    text: "Reported a bug on a Tuesday, it was fixed by Wednesday. Unreasonable.",
+    lorem: "Neque porro quisquam est qui dolorem ipsum quia dolor sit amet consectetur.",
+  },
+  {
+    avatar: "example.com/h.png",
+    name: "quiet kid",
+    role: "Lurker",
+    text: "I have nothing to say but I wanted a card in here.",
+    lorem: "Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam.",
+  },
+  {
+    avatar: "example.com/i.png",
+    name: "matcha",
+    role: "Green theme enthusiast",
+    text: "Forest turns the whole wordmark green. Small thing. Made me stay.",
+    lorem: "At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis.",
+  },
+  {
+    avatar: "example.com/j.png",
+    name: "404",
+    role: "Not found",
+    text: "There is no page here. There is a page for that, though.",
+    lorem: "Et harum quidem rerum facilis est et expedita distinctio nam libero tempore.",
+  },
+  {
+    avatar: "example.com/k.png",
+    name: "comet",
+    role: "Regular",
+    text: "Fast, plain, flat. It looks like a tool instead of a product page.",
+    lorem: "Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus.",
+  },
+  {
+    avatar: "example.com/l.png",
+    name: "you?",
+    role: "There is room",
+    text: "The strip loops forever. Stay a while and you will read the whole thing twice.",
+    lorem: "Omnis voluptas assumenda est, omnis dolor repellendus temporibus autem.",
+  },
+];
+
+export function Home() {
+  const palette = usePalette();
+  const [line] = useState(() => LINES[Math.floor(Math.random() * LINES.length)]);
+  const [q, setQ] = useState("");
+  const [appsOpen, setAppsOpen] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
+  const list = useStore(links).list;
+
+  const runSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const parsed = parseAddress(q);
+    if (!parsed) {
+      /* not an address and not a page: hand it to the site search instead of
+         doing nothing at all */
+      window.dispatchEvent(new CustomEvent("null:search"));
+      return;
+    }
+    if ("page" in parsed) go({ page: parsed.page });
+    else go({ page: "proxies", arg: { url: parsed.url } });
+  };
+
+  /* the strip is drawn twice so the loop has no seam */
+  const band = useMemo(() => [...CARDS, ...CARDS], []);
+
+  return (
+    <div className="hm">
+      <h1
+        className="hm-word"
+        style={{
+          backgroundImage: `linear-gradient(180deg, color-mix(in srgb, var(--text) 72%, var(--bg)) 0%, var(--text) 46%, ${palette.ink} 100%)`,
+          filter: `drop-shadow(0 0 42px color-mix(in srgb, ${palette.ink} 34%, transparent))`,
+        }}
+      >
+        null
+      </h1>
+
+      <p className="hm-line">{line}</p>
+
+      <form className="hm-search" onSubmit={runSearch} role="search">
+        <Search />
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Search for anything (on the site ofc)!"
+          aria-label="Search null"
+          spellCheck={false}
+        />
+      </form>
+
+      <div className="hm-links">
+        <QuickLink icon={Grid3x3} label="All Apps" muted onClick={() => setAppsOpen(true)} fixed />
+        <QuickLink icon={Plus} label="Add" muted onClick={() => setAddOpen(true)} fixed />
+        {list.map((s) => (
+          <QuickLink
+            key={s.id}
+            icon={iconFor(s.path)}
+            label={s.label}
+            onClick={() => {
+              const parsed = parseAddress(s.path);
+              if (!parsed) return;
+              if ("page" in parsed) go({ page: parsed.page });
+              else go({ page: "proxies", arg: { url: parsed.url } });
+            }}
+            onRemove={() => links.set({ list: list.filter((x) => x.id !== s.id) })}
+          />
+        ))}
+      </div>
+
+      <div className="hm-strip">
+        <div className="hm-band">
+          {band.map((c, i) => (
+            <article className="strip-card" key={`${c.name}-${i}`}>
+              <header>
+                <span className="strip-pic" title={c.avatar} aria-hidden="true" />
+                <span className="strip-name">{c.name}</span>
+                <span className="strip-dot">∙</span>
+                <span className="strip-role">{c.role}</span>
+              </header>
+              <p className="strip-text">{c.text}</p>
+              <p className="strip-lorem">{c.lorem}</p>
+            </article>
+          ))}
+        </div>
+      </div>
+
+      <Sheet open={appsOpen} onClose={() => setAppsOpen(false)} title="Apps" icon={<Grid3x3 />} width={560}>
+        <div className="appgrid">
+          {SHEET_PAGES.map((id: PageId) => {
+            const p = PAGES[id];
+            const Icon = p.icon;
+            return (
+              <button
+                key={id}
+                className="appgrid-btn"
+                onClick={() => {
+                  setAppsOpen(false);
+                  go({ page: id });
+                }}
+              >
+                <Icon />
+                <span>{p.name}</span>
+              </button>
+            );
+          })}
+        </div>
+      </Sheet>
+
+      <AddSheet open={addOpen} onClose={() => setAddOpen(false)} onAdd={(s) => links.set({ list: [...list, s] })} />
+    </div>
+  );
+}
+
+function QuickLink({
+  icon: Icon,
+  label,
+  muted,
+  onClick,
+  onRemove,
+  fixed,
+}: {
+  icon: LucideIcon;
+  label: string;
+  muted?: boolean;
+  onClick: () => void;
+  onRemove?: () => void;
+  fixed?: boolean;
+}) {
+  return (
+    <div className={`ql${fixed ? " ql--fixed" : ""}`}>
+      <button className="ql-btn" onClick={onClick} aria-label={label}>
+        <Icon className={muted ? "is-muted" : ""} />
+      </button>
+      {!fixed && onRemove && (
+        <button
+          className="ql-del"
+          aria-label={`Remove ${label}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove();
+          }}
+        >
+          <Trash2 />
+        </button>
+      )}
+      <span className="ql-label">{label}</span>
+    </div>
+  );
+}
+
+function AddSheet({
+  open,
+  onClose,
+  onAdd,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onAdd: (s: Shortcut) => void;
+}) {
+  const [label, setLabel] = useState("");
+  const [path, setPath] = useState("");
+  const [err, setErr] = useState<string | null>(null);
+
+  const submit = () => {
+    if (!label.trim()) {
+      setErr("Give it a name.");
+      return;
+    }
+    if (!parseAddress(path)) {
+      setErr("That is not a null:// address or a website.");
+      return;
+    }
+    onAdd({ id: label.toLowerCase().replace(/\W+/g, "-") + "-" + Date.now().toString(36), label: label.trim(), path: path.trim() });
+    setLabel("");
+    setPath("");
+    setErr(null);
+    onClose();
+  };
+
+  return (
+    <Sheet open={open} onClose={onClose} title="Add shortcut" width={430}>
+      <div className="form">
+        <label className="form-row">
+          <span>Label</span>
+          <input className="fld" value={label} placeholder="e.g., Games" onChange={(e) => setLabel(e.target.value)} />
+        </label>
+        <label className="form-row">
+          <span>Internal path</span>
+          <input className="fld" value={path} placeholder="e.g., null://g" onChange={(e) => setPath(e.target.value)} />
+        </label>
+        {err && <p className="form-err">{err}</p>}
+        <div className="form-actions">
+          <button className="btn" onClick={onClose}>
+            Cancel
+          </button>
+          <button className="btn btn--fill" onClick={submit}>
+            Add
+          </button>
+        </div>
+      </div>
+    </Sheet>
+  );
+}
+

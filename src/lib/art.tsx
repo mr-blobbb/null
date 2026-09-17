@@ -1,0 +1,229 @@
+/* NULL · art.tsx
+   The artwork the shop sells. Each piece is drawn rather than downloaded:
+   an animated SVG that takes its colours from the palette, so a decoration
+   looks right in Forest and in Light without a second asset. Every piece
+   loops forever and depends on nothing outside itself.
+
+   The class names here are animated in src/styles/shop.css. */
+
+import type { CSSProperties } from "react";
+import type { ShopItem } from "./econ";
+
+const VB = "0 0 100 100";
+
+function Svg({
+  children,
+  style,
+}: {
+  children: React.ReactNode;
+  style?: CSSProperties;
+}) {
+  return (
+    <svg viewBox={VB} className="art-svg" style={style} aria-hidden="true">
+      {children}
+    </svg>
+  );
+}
+
+/* ---------- avatar decorations ----------
+   Drawn over the picture, inside its round frame. */
+export function AvatarArt({ id }: { id: string | null | undefined }) {
+  if (!id) return null;
+  switch (id) {
+    case "orbit":
+      return (
+        <span className="art art--avatar art-orbit">
+          <Svg>
+            <circle cx="50" cy="6" r="4" />
+          </Svg>
+        </span>
+      );
+    case "halo":
+      return (
+        <span className="art art--avatar art-halo">
+          <Svg>
+            <circle cx="50" cy="50" r="47" fill="none" strokeWidth="3" />
+          </Svg>
+        </span>
+      );
+    case "eclipse":
+      return (
+        <span className="art art--avatar art-eclipse">
+          <Svg>
+            <circle cx="50" cy="12" r="16" />
+          </Svg>
+        </span>
+      );
+    case "stardust":
+      return (
+        <span className="art art--avatar">
+          <Svg>
+            {[
+              [22, 78],
+              [74, 26],
+              [62, 84],
+              [30, 22],
+              [86, 58],
+              [14, 44],
+            ].map(([x, y], i) => (
+              <circle key={i} cx={x} cy={y} r="3" className={`art-twinkle d${i}`} />
+            ))}
+          </Svg>
+        </span>
+      );
+    case "prism":
+      return <span className="art art--avatar art-prism" />;
+    case "signal":
+      return (
+        <span className="art art--avatar">
+          <Svg>
+            {[14, 34, 54, 74, 94].map((y, i) => (
+              <rect key={i} x="0" y={y} width="100" height="4" className={`art-scan d${i}`} />
+            ))}
+          </Svg>
+        </span>
+      );
+    case "solar":
+      return (
+        <span className="art art--avatar art-spin">
+          <Svg>
+            <circle
+              cx="50"
+              cy="50"
+              r="46"
+              fill="none"
+              strokeWidth="5"
+              strokeLinecap="round"
+              strokeDasharray="70 300"
+            />
+          </Svg>
+        </span>
+      );
+    case "rift":
+      return (
+        <span className="art art--avatar">
+          <Svg>
+            <circle
+              cx="50"
+              cy="50"
+              r="46"
+              fill="none"
+              strokeWidth="2"
+              strokeDasharray="18 26"
+              className="art-spin"
+            />
+            <circle
+              cx="50"
+              cy="50"
+              r="39"
+              fill="none"
+              strokeWidth="2"
+              strokeDasharray="10 32"
+              className="art-spin-back"
+            />
+          </Svg>
+        </span>
+      );
+    default:
+      return null;
+  }
+}
+
+/* ---------- profile effects ----------
+   A moving layer over the whole card, behind the text. */
+export function EffectArt({ id }: { id: string | null | undefined }) {
+  if (!id) return null;
+  switch (id) {
+    case "doves":
+      return (
+        <span className="fx fx-doves">
+          {[0, 1, 2].map((i) => (
+            <svg key={i} viewBox="0 0 40 20" className={`fx-dove d${i}`} aria-hidden="true">
+              <path d="M2 14 Q10 2 20 10 Q30 2 38 14" fill="none" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          ))}
+        </span>
+      );
+    case "glitch":
+      return (
+        <span className="fx fx-glitch">
+          {Array.from({ length: 7 }, (_, i) => (
+            <i key={i} className={`fx-bar d${i}`} />
+          ))}
+        </span>
+      );
+    case "duckpond":
+      return (
+        <span className="fx fx-pond">
+          {[
+            [14, 12],
+            [46, 7],
+            [78, 15],
+          ].map(([x, y], i) => (
+            <i key={i} className={`fx-lily d${i}`} style={{ left: `${x}%`, top: `${y}%` }} />
+          ))}
+          <span className="fx-beam b0" />
+          <span className="fx-beam b1" />
+          <span className="fx-beam b2" />
+        </span>
+      );
+    case "rainfall":
+      return (
+        <span className="fx fx-rain">
+          {Array.from({ length: 26 }, (_, i) => (
+            <i
+              key={i}
+              className="fx-drop"
+              style={{ left: `${(i * 3.9) % 100}%`, animationDelay: `${(i % 7) * 0.23}s` }}
+            />
+          ))}
+        </span>
+      );
+    case "embers":
+      return (
+        <span className="fx fx-embers">
+          {Array.from({ length: 18 }, (_, i) => (
+            <i
+              key={i}
+              className="fx-ember"
+              style={{ left: `${(i * 5.6) % 100}%`, animationDelay: `${(i % 9) * 0.44}s` }}
+            />
+          ))}
+        </span>
+      );
+    case "aurora":
+      return (
+        <span className="fx fx-aurora">
+          {[0, 1, 2].map((i) => (
+            <i key={i} className={`fx-band d${i}`} />
+          ))}
+        </span>
+      );
+    default:
+      return null;
+  }
+}
+
+/** The little preview drawn on a shop card. */
+export function PreviewArt({ item }: { item: ShopItem }) {
+  if (item.shelf === "tag") {
+    return (
+      <span className="tagchip" style={{ background: item.color, color: "#0b0b0d" }}>
+        {item.name}
+      </span>
+    );
+  }
+  if (item.shelf === "avatar") {
+    return (
+      <span className="avbox">
+        <AvatarArt id={item.id} />
+        <span className="avbox-face" />
+      </span>
+    );
+  }
+  return (
+    <span className="fxbox">
+      <EffectArt id={item.id} />
+    </span>
+  );
+}

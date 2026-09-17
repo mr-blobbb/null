@@ -1,58 +1,219 @@
-/* NULL · settings.css
-   The parts of the Settings page that are new enough not to belong in the
-   big sheets any more. Currently just the palette picker: sixteen whole
-   colour schemes, one card each. */
+/* ============================================================
+   NULL · settings.css
+   The settings popup: a column of tabs on the left, the pane on
+   the right, and the theme grid.
+   ============================================================ */
 
-.pal-row {
+.setwrap {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
-  gap: 10px;
-  width: 100%;
+  grid-template-columns: 172px 1fr;
+  gap: 18px;
+  min-height: 380px;
 }
-
-.pal {
+.setnav {
   display: flex;
   flex-direction: column;
-  gap: 7px;
-  padding: 8px;
-  border: var(--bw) solid var(--line);
-  border-radius: var(--r-lg);
-  background: var(--bg);
-  color: var(--text-2);
-  font: inherit;
-  font-size: 11.5px;
+  gap: 4px;
+  padding-right: 14px;
+  border-right: var(--bw) solid var(--line);
+}
+.setnav-btn {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 11px;
+  border-radius: var(--r-2);
+  color: var(--dim);
+  font-size: 13px;
+  text-align: left;
+  transition: background 0.14s var(--ease), color 0.14s var(--ease);
+}
+.setnav-btn:hover {
+  background: var(--bg-3);
+  color: var(--text);
+}
+.setnav-btn.is-on {
+  background: var(--bg-3);
+  color: var(--text);
+}
+.setnav-btn svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+.setpane {
+  max-height: 62vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.set-h {
+  font-size: 15px;
   font-weight: 600;
-  cursor: pointer;
-  transition: border-color 0.13s ease, color 0.13s ease;
+  margin-bottom: 6px;
 }
-.pal:hover {
-  border-color: var(--line-2);
-  color: var(--text);
+.set-sub {
+  font-size: 12.5px;
+  color: var(--dim);
+  margin: 14px 0 10px;
 }
-.pal.on {
-  border-color: var(--text);
-  color: var(--text);
+.set-note {
+  color: var(--dim);
+  font-size: 12.5px;
+  line-height: 1.6;
+  max-width: 62ch;
+}
+.set-hair {
+  margin: 20px 0 16px;
+}
+.setrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-top: var(--bw) solid var(--line);
+  font-size: 13px;
+}
+.setrow:first-of-type {
+  border-top: 0;
+}
+.setrow span {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.setrow b {
+  font-weight: 600;
+}
+.setrow em {
+  font-style: normal;
+  color: var(--dim);
+  font-size: 12.5px;
+}
+.setrow--col {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+.setrow--actions {
+  justify-content: flex-start;
+  border-top: 0;
+  padding-top: 16px;
 }
 
-.pal-sw {
+.switch {
+  appearance: none;
+  flex: none;
+  width: 40px;
+  height: 22px;
+  border-radius: 99px;
+  border: var(--bw) solid var(--line-2);
+  background: var(--bg-3);
   position: relative;
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  border: 1px solid var(--line-2);
-  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: background 0.16s var(--ease), border-color 0.16s var(--ease);
+}
+.switch::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--dim);
+  transition: transform 0.18s var(--ease), background 0.16s var(--ease);
+}
+.switch:checked {
+  background: var(--ac-1);
+  border-color: var(--ac-1);
+}
+.switch:checked::after {
+  transform: translateX(18px);
+  background: var(--bg);
+}
+
+/* the theme grid */
+.palgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 10px;
+}
+.palcard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 9px;
+  border: var(--bw) solid var(--line);
+  border-radius: var(--r-3);
+  background: var(--bg-2);
+  transition: border-color 0.14s var(--ease), transform 0.14s var(--ease);
+}
+.palcard:hover {
+  border-color: var(--line-2);
+  transform: translateY(-1px);
+}
+.palcard.is-on {
+  border-color: var(--text);
+}
+.palswatch {
+  position: relative;
+  height: 46px;
+  border-radius: var(--r-2);
+  border: var(--bw) solid var(--line);
   overflow: hidden;
 }
-
-/* the accent stripe along the bottom is what makes sixteen dark schemes
-   tell themselves apart at a glance */
-.pal-bar {
+.palswatch i {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 22%;
+  right: 8px;
+  bottom: 8px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: var(--bw) solid color-mix(in srgb, var(--bg) 40%, transparent);
+}
+.palname {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--dim);
+}
+.palcard.is-on .palname {
+  color: var(--text);
+}
+.palname svg {
+  width: 12px;
+  height: 12px;
 }
 
-.pal-n {
-  text-align: left;
+.colorfield {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12.5px;
+  color: var(--dim);
+}
+
+/* the data tab */
+.scroller {
+  max-height: 240px;
+  overflow-y: auto;
+  border: var(--bw) solid var(--line);
+  border-radius: var(--r-2);
+  background: var(--bg-3);
+  padding: 6px;
+  margin: 12px 0;
+}
+.keyrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 8px;
+  font-size: 12px;
+  border-radius: var(--r-1);
+}
+.keyrow:hover {
+  background: var(--bg-4);
 }
