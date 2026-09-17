@@ -473,19 +473,19 @@ export function itemsOf(ids: string[] | null | undefined): ShopItem[] {
 }
 
 /* ---------- sales ----------
-   Prices are not fixed any more. Every ten minutes the shelves are re-marked:
+   Prices are not fixed any more. Once a month the shelves are re-marked:
    about a third of what is on them goes on sale, each piece at its own
    percentage, so the crossing-out moves around the shop instead of living on
-   the same three cards forever.
+   the same three cards forever. The new prices arrive at midnight on the
+   first and stay put until the next month starts.
 
    Nothing is stored and nothing is random per render. A piece's roll is a hash
-   of its id and the window it is in, so a reload shows the same prices, two
-   tabs agree, and the only thing that changes anything is the clock.
+   of its id and the month it is in, so a reload shows the same prices, two
+   tabs agree, and the only thing that changes anything is the calendar.
 
    And on a holiday everything is half price, always. The days live in the
    table below, so the next one is a line of data rather than a deploy. */
 
-export const SALE_WINDOW = 10 * 60 * 1000;
 const SALE_CHANCE = 0.34;
 const SALE_STEPS = [10, 15, 20, 25, 30, 35, 40];
 const HOLIDAY_OFF = 50;
@@ -530,6 +530,12 @@ export type Deal = {
   holiday: boolean;
 };
 
+/** The month a moment falls in, as a key. The shelf is re-marked when this
+ *  changes, which happens once, at midnight on the first. */
+function monthKey(when: Date): string {
+  return `${when.getFullYear()}-${when.getMonth() + 1}`;
+}
+
 /** A stable fraction for a seed. The same seed always rolls the same number,
  *  which is the whole reason the shelf holds still between renders. */
 function roll(seed: string): number {
@@ -549,14 +555,15 @@ function onFive(n: number): number {
 /** What this piece is going for right now, or null when it is at its list
  *  price and there is nothing to cross out. */
 export function dealOf(item: ShopItem, now = Date.now()): Deal | null {
-  const holiday = holidayOf(new Date(now));
+  const when = new Date(now);
+  const holiday = holidayOf(when);
   if (holiday) {
     return { price: onFive(item.price / 2), was: item.price, off: HOLIDAY_OFF, holiday: true };
   }
   if (item.noSale) return null;
-  const window = Math.floor(now / SALE_WINDOW);
-  if (roll(`${item.id}:${window}`) >= SALE_CHANCE) return null;
-  const step = Math.floor(roll(`${item.id}:${window}:off`) * SALE_STEPS.length) % SALE_STEPS.length;
+  const month = monthKey(when);
+  if (roll(`${item.id}:${month}`) >= SALE_CHANCE) return null;
+  const step = Math.floor(roll(`${item.id}:${month}:off`) * SALE_STEPS.length) % SALE_STEPS.length;
   const off = SALE_STEPS[step];
   return { price: onFive(item.price * (1 - off / 100)), was: item.price, off, holiday: false };
 }

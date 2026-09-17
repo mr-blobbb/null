@@ -28,7 +28,6 @@ import {
   mintItemGift,
   owns,
   redeem,
-  SALE_WINDOW,
   SHOP,
   SHELVES,
   toggleEquip,
@@ -56,12 +55,12 @@ export function Shop({ onOpenSettings }: { onOpenSettings: () => void }) {
     window.setTimeout(() => setNote(null), 2600);
   };
 
-  /* The shelves are re-marked on a clock, so the page has to look at the clock
-     again — otherwise a visitor who leaves the shop open is reading yesterday's
-     prices. Twenty seconds is well inside the ten-minute window. */
+  /* Prices change at midnight on the first, so the page only has to look at
+     the clock often enough to notice — once a minute is far more than that,
+     and it also picks up a holiday starting while a tab is left open. */
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    const id = window.setInterval(() => setNow(Date.now()), 20_000);
+    const id = window.setInterval(() => setNow(Date.now()), 60_000);
     return () => window.clearInterval(id);
   }, []);
 
@@ -108,8 +107,7 @@ export function Shop({ onOpenSettings }: { onOpenSettings: () => void }) {
         </p>
       ) : (
         <p className="sh-meter tiny faint">
-          Prices are re-marked every {SALE_WINDOW / 60_000} minutes, so the crossing-out
-          moves around the shop.
+          Prices are re-marked once a month, so the crossing-out moves around the shop.
         </p>
       )}
 
