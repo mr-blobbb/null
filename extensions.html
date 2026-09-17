@@ -4,17 +4,21 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="color-scheme" content="dark light">
-  <meta name="theme-color" content="#09090b">
-  <title>Extensions · NULL</title>
-  <meta name="description" content="Install .nullext extensions with full access to NULL, or import Chrome popup extensions that stay sandboxed. Manage, launch and remove them here.">
+  <meta name="theme-color" content="#08080a">
+  <title>Extensions · null</title>
+  <meta name="description" content="Install .nullext extensions into NULL, or import Chrome popups that stay sandboxed.">
   <link rel="icon" id="favicon" href="public/favicon.svg" type="image/svg+xml">
   <link rel="manifest" href="public/manifest.webmanifest">
   <link rel="apple-touch-icon" href="public/icon-192.png">
   <link rel="stylesheet" href="src/styles/global.css">
   <link rel="stylesheet" href="src/styles/extra.css">
+  <link rel="stylesheet" href="src/styles/particles.css">
   <link rel="stylesheet" href="src/styles/perf.css">
-  <link rel="stylesheet" href="src/styles/dev.css">
   <link rel="stylesheet" href="src/styles/ext.css">
+  <link rel="stylesheet" href="src/styles/dev.css">
+  <link rel="stylesheet" href="src/styles/v2.css">
+  <link rel="stylesheet" href="src/styles/v2b.css">
+  <link rel="stylesheet" href="src/styles/settings.css">
   <script>
     (function () {
       try {
@@ -26,30 +30,28 @@
         /* the rail is the navigation, so the layout is decided here: without
            this a page would paint the wide bar for a frame first */
         document.documentElement.dataset.nav = "side";
-        if (p.glow && p.glow !== "off") document.documentElement.dataset.glow = p.glow;
-        if (p.retexture && p.retexture !== "off") document.documentElement.dataset.retexture = p.retexture;
       } catch (e) {}
     })();
   </script>
-  <link rel="stylesheet" href="src/styles/v2.css">
 </head>
 <body data-page="extensions">
   <a class="skip-link" href="#main">Skip to content</a>
-  <div class="glow-bg" aria-hidden="true"></div>
   <header data-mount="nav"></header>
 
-  <main id="main" class="page">
-    <div class="page-head">
-      <span class="eyebrow"><span data-icon="puzzle"></span>extensions · your site now</span>
+  <main id="main" class="pg">
+    <header class="ex-head">
+      <span class="set-ic"><span data-i="puzzle" data-i-size="22"></span></span>
       <h1>Extensions</h1>
-      <p>
-        A <b>.nullext</b> file runs inside NULL with full power: it can rewrite
-        the economy, coins, XP, quests, achievements, your saved data, the
-        themes, the player, search, even the dev console. An imported
-        <b>Chrome extension</b> only gets its popup, sandboxed away from all of
-        it. Both live here.
-      </p>
-    </div>
+      <span class="ex-tag">null · experimental</span>
+    </header>
+    <p class="ex-lead">
+      Install Chrome Web Store extensions into null. Null supports a subset of
+      the extension APIs, so not everything will run perfectly.
+    </p>
+    <form class="ex-find" id="extFind" role="search">
+      <span data-i="search" data-i-size="17"></span>
+      <input id="extSearch" type="text" placeholder="Search the Chrome Web Store" autocomplete="off" spellcheck="false" aria-label="Search the Chrome Web Store">
+    </form>
 
     <div id="extStart"></div>
     <div id="extBody"></div>
@@ -61,12 +63,13 @@
   <footer data-mount="foot"></footer>
   <noscript>
     <nav class="ns-nav">
-      <a href="./">Home</a><a href="games/">Games</a><a href="apps/">Apps</a><a href="proxies/">Proxies</a><a href="settings">Settings</a>
+      <a href="./">Home</a><a href="games/">Games</a><a href="apps/">Apps</a><a href="proxies/">Proxies</a><a href="shop">Shop</a><a href="settings">Settings</a>
     </nav>
   </noscript>
 
   <script src="src/utilities/store.js"></script>
   <script src="src/utilities/econ.js"></script>
+  <script src="src/utilities/icons.generated.js"></script>
   <script src="src/utilities/dom.js"></script>
   <script src="src/utilities/modal.js"></script>
   <script src="src/utilities/theme.js"></script>
@@ -77,11 +80,11 @@
   <script src="src/catalog/catalog.js"></script>
   <script src="src/content/content.js"></script>
   <script src="src/components/tabpresets.js"></script>
-  <script src="src/components/schedule.js"></script>
   <script src="src/components/cards.js"></script>
   <script src="src/components/search.js"></script>
-  <script src="src/components/daily.js"></script>
   <script src="src/utilities/ext.js"></script>
+  <script src="src/components/tabs.js"></script>
+  <script src="src/components/settings-sheet.js"></script>
   <script src="src/components/shell.js"></script>
   <script src="src/components/devconsole.js"></script>
   <script src="src/pages/extensions.js"></script>

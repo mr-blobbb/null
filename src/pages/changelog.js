@@ -10,11 +10,26 @@
   /* kind: "add" is the green plus, "fix" is the yellow wrench */
   var RELEASES = [
     {
+      v: "1.2.0",
+      date: "2026-09-17",
+      lead: "The icon, tab and settings release: a real icon set instead of drawings made up per screen, a null:// tab bar on every page, settings as a sheet over whatever you were reading, and a proxy window that loads live sites inside NULL.",
+      items: [
+        ["add", "Icons now come from Lucide, an actual maintained icon set, vendored into the site so there is no font to download and nothing to request."],
+        ["add", "A null:// tab bar across the site. Every page you open becomes a tab, tabs survive a reload, and the + opens the whole site map."],
+        ["add", "Settings is a sheet over the page you are on, with Appearance, Data and Privacy & ToS down the side. /settings still works."],
+        ["add", "The Proxies window: type an address and the page loads inside NULL through a Wisp relay, with the relay and the engine both switchable."],
+        ["add", "Profile grew a banner editor with an upload and zoom step, game save backup and restore, a card gradient and a name style with eight faces."],
+        ["fix", "Proxeis is spelled Proxies everywhere, which it should have been from the start."],
+        ["fix", "The period clock widget is gone: it was in the way on every page and it never stayed in step."],
+        ["fix", "Pages nobody could reach were deleted rather than left to rot: an unreachable page is a dead link waiting to happen."],
+      ],
+    },
+    {
       v: "1.1.0",
       date: "2026-09-17",
       lead: "The flat rebuild. NULL lost its gradients, gained a rail, and every page was rebuilt around one square, one line of text and one colour per theme.",
       items: [
-        ["add", "A rail down the left edge with hand-drawn icons: Home, Games, Apps, Proxeis and Shop up top, Profile, Changelog, Extensions and Settings along the bottom."],
+        ["add", "A rail down the left edge with hand-drawn icons: Home, Games, Apps, Proxies and Shop up top, Profile, Changelog, Extensions and Settings along the bottom."],
         ["add", "A new front door: the null wordmark, a line that changes every load, the site search, quick links you can add and remove, and a band of cards running past the window."],
         ["add", "The Changelog page."],
         ["add", "Sixteen real theme palettes that re-ink the whole site, not just the accent."],
@@ -30,9 +45,9 @@
       date: "2026-08-03",
       lead: "Welcome to NULL v1! This is the newest generation of NULL, built to last.",
       items: [
-        ["add", "The Games, Apps and Proxeis libraries, built automatically from the folders on disk."],
+        ["add", "The Games, Apps and Proxies libraries, built automatically from the folders on disk."],
         ["add", "The shared player, with fullscreen, favorites and the browser-tab presets."],
-        ["add", "Global search across games, apps, proxeis, announcements and pages."],
+        ["add", "Global search across games, apps, proxies and pages."],
         ["add", "The permanent school schedule, with the live period clock and period-end confetti."],
         ["add", "The Shop and the local economy, all of it stored in your own browser."],
         ["add", "Extensions: .nullext files with full access to NULL, plus imported Chrome popups."],

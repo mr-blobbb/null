@@ -757,43 +757,15 @@
         }),
         b("Reload", "refresh", function () { location.reload(); }),
       ] },
-      /* the newer surfaces: the manager, the lab and the hidden map */
+      /* the newer surfaces: the manager, and the middle of the night */
       { name: "surfaces", icon: "puzzle", items: [
         b("Extensions", "puzzle", function () {
           ok("opening the extensions manager");
           location.href = N.url("/extensions");
         }),
-        b("Labs", "beaker", function () {
-          ok("opening labs");
-          location.href = N.url("/labs");
-        }),
-        b("Root map", "code", function () {
-          ok("opening /root: nothing links there on purpose");
-          location.href = N.url("/root");
-        }),
-      ] },
-      /* the hidden pages: nothing on the site links them, so this card is how
-         you get there without typing the address */
-      { name: "eggs", icon: "eye", items: [
-        b("Void", "ban", function () {
-          ok("opening the void");
-          location.href = N.url("/void");
-        }),
-        b("Blob", "code", function () {
-          ok("opening blob");
-          location.href = N.url("/blob");
-        }),
-        b("Time", "clock", function () {
-          ok("opening time");
-          location.href = N.url("/time");
-        }),
-        b("Credits", "star", function () {
-          ok("opening credits");
-          location.href = N.url("/credits");
-        }),
-        b("Blob face on/off", "eye", function () {
-          var st = N.shell && N.shell.orb ? N.shell.orb() : null;
-          ok(st === true ? "blob face forced on" : st === false ? "blob face forced off" : "blob face back on the schedule");
+        b("Changelog", "scroll", function () {
+          ok("opening the changelog");
+          location.href = N.url("/changelog");
         }),
         b("Midnight modal", "clock", function () {
           if (N.shell && N.shell.midnightNow) N.shell.midnightNow();

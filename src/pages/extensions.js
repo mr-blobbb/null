@@ -1191,6 +1191,33 @@
     syncHash();
   });
 
+  /* ---------- searching the Chrome Web Store ----------
+     NULL cannot install straight from the store — there is no server to sign
+     the download, and a .crx is not what this page imports. What it can do is
+     open the store *in* the proxy window, which is the honest version of
+     "search the store": you look, you pick, you bring the folder back here.
+     Anything that is not already a NULL url is treated as this search. */
+  (function wireFinder() {
+    var form = d.qs("#extFind");
+    var input = d.qs("#extSearch");
+    if (!form || !input) return;
+    /* the starter list, the installed list and the docs all match the same
+       words, so typing here narrows the page as well as offering the store */
+    input.addEventListener("input", function () {
+      var q = input.value.trim().toLowerCase();
+      d.qsa(".ext-card, .start-card, .ea-card").forEach(function (el) {
+        el.classList.toggle("gone", !!q && el.textContent.toLowerCase().indexOf(q) < 0);
+      });
+    });
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var q = input.value.trim();
+      if (!q) return;
+      location.href =
+        N.url("/proxies/") + "?url=" + encodeURIComponent("https://chromewebstore.google.com/search/" + q);
+    });
+  })();
+
   /* #<id> highlights one extension, which is where the nav menu sends you */
   function focusHash() {
     var id = decodeURIComponent((location.hash || "").replace("#", ""));

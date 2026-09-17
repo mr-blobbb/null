@@ -10,6 +10,11 @@
   <link rel="icon" id="favicon" href="public/favicon.svg" type="image/svg+xml">
   <link rel="manifest" href="public/manifest.webmanifest">
   <link rel="apple-touch-icon" href="public/icon-192.png">
+  <!-- the eight faces a display name can wear. Only this page asks for them:
+       the rest of the site stays on the system stack, with no request. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Caveat:wght@600&family=Silkscreen&family=Pacifico&family=Gochi+Hand&family=Playfair+Display:wght@700&family=Press+Start+2P&family=Space+Mono:wght@700&display=swap">
   <link rel="stylesheet" href="src/styles/global.css">
   <link rel="stylesheet" href="src/styles/extra.css">
   <link rel="stylesheet" href="src/styles/particles.css">
@@ -17,6 +22,8 @@
   <link rel="stylesheet" href="src/styles/ext.css">
   <link rel="stylesheet" href="src/styles/dev.css">
   <link rel="stylesheet" href="src/styles/v2.css">
+  <link rel="stylesheet" href="src/styles/v2b.css">
+  <link rel="stylesheet" href="src/styles/settings.css">
   <script>
     (function () {
       try {
@@ -43,12 +50,13 @@
 
   <noscript>
     <nav class="ns-nav">
-      <a href="./">Home</a><a href="games/">Games</a><a href="apps/">Apps</a><a href="proxies/">Proxeis</a><a href="shop">Shop</a><a href="settings">Settings</a>
+      <a href="./">Home</a><a href="games/">Games</a><a href="apps/">Apps</a><a href="proxies/">Proxies</a><a href="shop">Shop</a><a href="settings">Settings</a>
     </nav>
   </noscript>
 
   <script src="src/utilities/store.js"></script>
   <script src="src/utilities/econ.js"></script>
+  <script src="src/utilities/icons.generated.js"></script>
   <script src="src/utilities/dom.js"></script>
   <script src="src/utilities/modal.js"></script>
   <script src="src/utilities/theme.js"></script>
@@ -59,10 +67,11 @@
   <script src="src/catalog/catalog.js"></script>
   <script src="src/content/content.js"></script>
   <script src="src/components/tabpresets.js"></script>
-  <script src="src/components/schedule.js"></script>
   <script src="src/components/cards.js"></script>
   <script src="src/components/search.js"></script>
   <script src="src/utilities/ext.js"></script>
+  <script src="src/components/tabs.js"></script>
+  <script src="src/components/settings-sheet.js"></script>
   <script src="src/components/shell.js"></script>
   <script src="src/components/devconsole.js"></script>
   <script src="src/pages/profile.js"></script>

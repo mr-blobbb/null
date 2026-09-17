@@ -210,7 +210,7 @@
         _h: norm(raw),
         _x: "",
         run: function () {
-          location.href = N.url("/announcements");
+          location.href = N.url(a.link || "/changelog");
         },
       });
     });
@@ -339,10 +339,14 @@
         results.appendChild(d.h("div", { class: "sr-group" }, "Jump to"));
         [
           { t: "Home", u: N.url("/"), i: "home" },
-          { t: "Games", u: N.url("/games/"), i: "game" },
-          { t: "Apps", u: N.url("/apps/"), i: "grid" },
-          { t: "Schedule", u: N.url("/schedule"), i: "sched" },
-          { t: "Settings", u: N.url("/settings"), i: "settings" },
+          { t: "Games", u: N.url("/games/"), i: "games" },
+          { t: "Apps", u: N.url("/apps/"), i: "apps" },
+          { t: "Proxies", u: N.url("/proxies/"), i: "globe" },
+          { t: "Shop", u: N.url("/shop"), i: "bag" },
+          { t: "Profile", u: N.url("/profile"), i: "person" },
+          { t: "Changelog", u: N.url("/changelog"), i: "scroll" },
+          { t: "Extensions", u: N.url("/extensions"), i: "puzzle" },
+          { t: "Settings", u: N.url("/settings"), i: "sliders" },
         ].forEach(function (s) {
           var it = {
             kind: "page",

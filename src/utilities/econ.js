@@ -1,8 +1,10 @@
  /* NULL · econ.js
-   The NULL economy, fully local. Playtime banks XP (10 XP per full 30
-   minutes in the player, 20 while a boost is active); every 100 XP banks
-   30 coins. Coins unlock shop items: beta games, custom theme accents,
-   the XP boost and effects. Nothing ever leaves the browser.
+   The NULL economy, fully local. Coins are paid for playtime, not for level:
+   three a minute while a game is on screen and the tab is awake, plus 30
+   coins every fifteen minutes on the site (see PLAY_PER_SEC and the play
+   clock near the bottom). XP still banks as a bonus on top, and off it, for
+   boosts. Coins unlock shop items: cosmetics, beta games, custom theme
+   accents and the XP boost. Nothing ever leaves the browser.
 
    Unlock state lives in null:eco:
      { time, xp, coins, next, pend, boostUntil, unlocks: { games, themes, particles, fx },

@@ -1,8 +1,9 @@
 /* NULL · router.js
    The site's navigation model in one place: every destination, what it is
-   called, which icon it wears and where it points. The rail, the All Apps
-   sheet, the mobile drawer and the palette are all built from this table, so
-   a new page is a line here and it shows up everywhere at once.
+   called, which icon it wears, the null:// address the tab bar shows, and the
+   file that answers for it. The rail, the tab bar, the All Apps sheet and the
+   command palette are all built from this table, so a page that exists is a
+   line here and a page that does not is a line deleted.
 
    Pages are plain HTML files. Extensionless site paths ("/shop") are what a
    visitor sees in the address bar: GitHub Pages answers those through
@@ -12,25 +13,17 @@
   var N = (window.N = window.N || {});
 
   var LINKS = {
-    home: { id: "home", t: "Home", url: "/", icon: "home" },
-    games: { id: "games", t: "Games", url: "/games/", icon: "games" },
-    apps: { id: "apps", t: "Apps", url: "/apps/", icon: "apps" },
-    proxies: { id: "proxies", t: "Proxeis", url: "/proxies/", icon: "globe" },
-    shop: { id: "shop", t: "Shop", url: "/shop", icon: "bag" },
-    profile: { id: "profile", t: "Profile", url: "/profile", icon: "person" },
-    changelog: { id: "changelog", t: "Changelog", url: "/changelog", icon: "scroll" },
-    extensions: { id: "extensions", t: "Extensions", url: "/extensions", icon: "puzzle" },
-    settings: { id: "settings", t: "Settings", url: "/settings", icon: "sliders" },
-    announcements: { id: "announcements", t: "Announcements", url: "/announcements", icon: "ann" },
-    schedule: { id: "schedule", t: "Schedule", url: "/schedule", icon: "clock" },
-    labs: { id: "labs", t: "Labs", url: "/labs", icon: "beaker" },
-    backups: { id: "backups", t: "Backups", url: "/backups", icon: "save" },
-    about: { id: "about", t: "About", url: "/about", icon: "info" },
-    district: { id: "district", t: "District", url: "/district", icon: "school" },
-    license: { id: "license", t: "License", url: "/license", icon: "scale" },
-    privacy: { id: "privacy", t: "Privacy", url: "/privacy", icon: "lock" },
-    terms: { id: "terms", t: "Terms", url: "/terms", icon: "file" },
-    cookies: { id: "cookies", t: "Cookies", url: "/cookies", icon: "cookie" },
+    home: { id: "home", t: "Home", url: "/", icon: "home", host: "home", file: "index.html" },
+    games: { id: "games", t: "Games", url: "/games/", icon: "games", host: "g", file: "games/index.html" },
+    apps: { id: "apps", t: "Apps", url: "/apps/", icon: "apps", host: "a", file: "apps/index.html" },
+    proxies: { id: "proxies", t: "Proxies", url: "/proxies/", icon: "globe", host: "p", file: "proxies/index.html" },
+    shop: { id: "shop", t: "Shop", url: "/shop", icon: "bag", host: "shop", file: "shop.html" },
+    profile: { id: "profile", t: "Profile", url: "/profile", icon: "person", host: "me", file: "profile.html" },
+    changelog: { id: "changelog", t: "Changelog", url: "/changelog", icon: "scroll", host: "log", file: "changelog.html" },
+    extensions: { id: "extensions", t: "Extensions", url: "/extensions", icon: "puzzle", host: "ext", file: "extensions.html" },
+    settings: { id: "settings", t: "Settings", url: "/settings", icon: "sliders", host: "set", file: "settings.html" },
+    /* not a door: the window a game or a proxied site opens in */
+    player: { id: "player", t: "Player", url: "/player", icon: "play", host: "play", file: "player.html" },
   };
 
   /* ---------- the rail ----------
@@ -44,8 +37,7 @@
      of the rail is what a nav is, the bottom half is where you go about you */
   var PRIMARY = RAIL_TOP;
 
-  /* everything the All Apps sheet lists, in reading order. Home is first
-     because it is the way back, and the four footer-only pages come last. */
+  /* everything the All Apps sheet lists, in reading order */
   var ALL = [
     LINKS.home,
     LINKS.games,
@@ -55,42 +47,14 @@
     LINKS.profile,
     LINKS.changelog,
     LINKS.extensions,
-    LINKS.announcements,
-    LINKS.schedule,
-    LINKS.labs,
-    LINKS.backups,
     LINKS.settings,
   ];
 
-  var MORE = [
-    { name: "Browse", links: [LINKS.announcements, LINKS.schedule, LINKS.labs, LINKS.backups] },
-    { name: "About", links: [LINKS.about, LINKS.district, LINKS.license, LINKS.privacy, LINKS.terms, LINKS.cookies] },
-  ];
+  var MORE = [];
+  var GROUPS = [{ name: "NULL", links: ALL }];
 
-  var GROUPS = [{ name: "NULL", links: ALL }].concat(MORE);
-
-  var FOOT = [
-    {
-      name: "Explore",
-      links: [
-        { t: "Home", url: "/" },
-        { t: "Games", url: "/games/" },
-        { t: "Apps", url: "/apps/" },
-        { t: "Proxeis", url: "/proxies/" },
-        { t: "Shop", url: "/shop" },
-        { t: "Extensions", url: "/extensions" },
-      ],
-    },
-    {
-      name: "About",
-      links: [
-        { t: "About NULL", url: "/about" },
-        { t: "Privacy", url: "/privacy" },
-        { t: "Terms", url: "/terms" },
-        { t: "License", url: "/license" },
-      ],
-    },
-  ];
+  /* the tab bar's order, and the name a tab wears before its title loads */
+  var TABBED = ALL;
 
   function norm(s) {
     if (s.length > 1 && s.charAt(s.length - 1) === "/") s = s.slice(0, -1);
@@ -98,23 +62,45 @@
     return s.replace(/\.html$/, "");
   }
 
-  function isActive(url) {
+  /* the path this window is on, with the folder NULL is served from removed,
+     so the same table lights up the right door at a domain root and under a
+     project path alike */
+  function here() {
     var p = location.pathname;
-    /* strip the folder NULL is served from, so the same table lights up the
-       right item at a domain root and under a project path alike */
     if (N.base && N.base !== "/" && p.indexOf(N.base) === 0) p = "/" + p.slice(N.base.length);
+    return p;
+  }
+
+  function isActive(url) {
+    var p = here();
     if (url === "/") return p === "/" || p === "/index.html";
     var dir = norm(p);
     var target = norm(url);
     return dir === target || dir === target + ".html";
   }
 
-  function inMore(url) {
-    return MORE.some(function (g) {
-      return g.links.some(function (l) {
-        return isActive(l.url);
-      });
-    });
+  /* which link this window is on, or null on a page that is nobody's door */
+  function current() {
+    var p = here();
+    var i;
+    for (i = 0; i < ALL.length; i++) {
+      if (isActive(ALL[i].url)) return ALL[i];
+    }
+    if (norm(p) === "/player") return LINKS.player;
+    return null;
+  }
+
+  /* "null://g" for the address bar of a tab */
+  function host(url) {
+    var i;
+    for (i = 0; i < ALL.length; i++) {
+      if (ALL[i].url === url) return ALL[i].host;
+    }
+    return norm(url).replace(/^\//, "") || "home";
+  }
+
+  function inMore() {
+    return false;
   }
 
   N.router = {
@@ -123,10 +109,13 @@
     RAIL_BOTTOM: RAIL_BOTTOM,
     PRIMARY: PRIMARY,
     ALL: ALL,
+    TABBED: TABBED,
     MORE: MORE,
     GROUPS: GROUPS,
-    FOOT: FOOT,
     isActive: isActive,
+    current: current,
+    here: here,
+    host: host,
     inMore: inMore,
     all: function () {
       return ALL.slice();

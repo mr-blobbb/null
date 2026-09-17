@@ -1,7 +1,12 @@
 /* NULL · library.js
-   One page for Games, Apps and Proxeis. The page name decides which list is
+   One page for Games, Apps and Proxies. The page name decides which list is
    on screen; everything else is identical on purpose, because the three are
    the same job: find a thing, open the thing.
+
+   Proxies carries one thing the other two do not: the window at the top that
+   loads a live website through the relay (see components/proxy.js). It sits
+   above the list because it is what the page is for now — the ready-made
+   links underneath are the shortlist.
 
    A tile is a square and a name. No description, no label chips, no badges.
    The category is still there (it is what the library is built from) but it
@@ -15,7 +20,7 @@
   var KINDS = {
     games: { list: "games", fav: "game", icon: "games", one: "game", many: "games" },
     apps: { list: "apps", fav: "app", icon: "apps", one: "app", many: "apps" },
-    proxies: { list: "proxies", fav: "proxy", icon: "globe", one: "proxy", many: "proxeis" },
+    proxies: { list: "proxies", fav: "proxy", icon: "globe", one: "proxy", many: "proxies" },
   };
 
   function init() {
@@ -29,6 +34,19 @@
     var chipsEl = d.qs("#libChips");
     var grid = d.qs("#grid");
     var emptyEl = d.qs("#empty");
+
+    /* the proxy window, on the proxies page only */
+    var proxyBox = d.qs("#proxyBox");
+    if (proxyBox && N.proxy) {
+      proxyBox.appendChild(d.h("h2", { class: "lb-h" }, "Open a website"));
+      proxyBox.appendChild(
+        d.h("p", { class: "lb-sub" }, "It loads inside NULL: the far page's links, images and requests all come back through the relay, so you never leave this tab."),
+      );
+      N.proxy.mount(proxyBox);
+      /* /proxies/?url=example.com is a link somebody can share */
+      var want = new URLSearchParams(location.search).get("url");
+      if (want) N.proxy.open(want);
+    }
 
     var list = [];
     var query = "";

@@ -16,15 +16,15 @@
    leaving every page unstyled.
 
    Bump CACHE/RUNTIME when the core file list changes so old caches are dropped. */
-const CACHE = "null-v14";
-const RUNTIME = "null-runtime-v14";
+const CACHE = "null-v15";
+const RUNTIME = "null-runtime-v15";
 
 /* Site paths, resolved against this script's own address: the cache then holds
    the real URLs whether NULL is at a domain root or under a project path. */
 const at = (path) => new URL(path.replace(/^\/+/, ""), self.location).href;
 
-/* Navigations use clean urls ("/schedule") while the host serves files
-   ("/schedule.html"). This works out the file a request is really for: an
+/* Navigations use clean urls ("/shop") while the host serves files
+   ("/shop.html"). This works out the file a request is really for: an
    extensionless path becomes its .html file, a folder becomes its index. */
 const fileFor = (path) => {
   const last = path.replace(/\/+$/, "").split("/").pop() || "";
@@ -37,16 +37,11 @@ const CORE = [
   "index.html",
   "404.html",
   "player.html",
-  "schedule.html",
   "settings.html",
   "profile.html",
   "changelog.html",
-  "announcements.html",
   "shop.html",
-  "backups.html",
   "extensions.html",
-  "labs.html",
-  "root.html",
   "games/",
   "apps/",
   "proxies/",
@@ -54,21 +49,20 @@ const CORE = [
   "public/manifest.webmanifest",
   "public/icon-192.png",
   "public/icon-512.png",
-  "public/fonts/material-symbols-rounded.woff2",
   "src/styles/global.css",
   "src/styles/extra.css",
   "src/styles/v2.css",
+  "src/styles/v2b.css",
+  "src/styles/settings.css",
   "src/styles/particles.css",
   "src/styles/perf.css",
   "src/styles/home.css",
   "src/styles/dev.css",
   "src/styles/shop.css",
-  "src/styles/legal.css",
-  "src/styles/about.css",
-  "src/styles/tour.css",
   "src/styles/ext.css",
   "src/utilities/store.js",
   "src/utilities/dom.js",
+  "src/utilities/icons.generated.js",
   "src/utilities/modal.js",
   "src/utilities/theme.js",
   "src/utilities/econ.js",
@@ -78,27 +72,23 @@ const CORE = [
   "src/catalog/catalog.js",
   "src/content/content.js",
   "src/components/tabpresets.js",
-  "src/components/schedule.js",
   "src/components/cards.js",
   "src/components/search.js",
   "src/components/daily.js",
+  "src/components/tabs.js",
+  "src/components/settings-sheet.js",
+  "src/components/proxy.js",
   "src/components/shell.js",
   "src/components/devconsole.js",
-  "src/components/tour.js",
   "src/utilities/ext.js",
   "src/utilities/procgen.js",
   "src/pages/home.js",
   "src/pages/library.js",
   "src/pages/player.js",
-  "src/pages/settings.js",
-  "src/pages/announcements.js",
-  "src/pages/schedule.js",
   "src/pages/shop.js",
-  "src/pages/legal.js",
-  "src/pages/about.js",
+  "src/pages/profile.js",
+  "src/pages/changelog.js",
   "src/pages/extensions.js",
-  "src/pages/labs.js",
-  "src/pages/root.js",
 ].map(at);
 
 /* ---------- cache hygiene ----------

@@ -1069,7 +1069,7 @@ html[data-palette="peach"] .hm-word {
 
 @media (max-width: 560px) {
   .hm {
-    padding-top: 9vh;
+    padding-top: 8vh;
   }
   .hm-links {
     gap: 12px;
@@ -1087,7 +1087,7 @@ html[data-palette="peach"] .hm-word {
 }
 
 /* ============================================================
-   7 · the library (Games / Apps / Proxeis)
+   7 · the library (Games / Apps / Proxies)
    ============================================================ */
 .lb-top {
   display: flex;

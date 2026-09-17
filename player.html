@@ -37,6 +37,7 @@
     })();
   </script>
   <link rel="stylesheet" href="src/styles/v2.css">
+  <link rel="stylesheet" href="src/styles/v2b.css">
 </head>
 <body data-page="player" class="player-page no-chrome">
   <div class="player" id="playerRoot">
@@ -51,8 +52,8 @@
       <!-- the player has no nav, but extension widgets still need somewhere
            to live while a game is on screen (see ext.js's slot("nav")) -->
       <div class="player-widgets" data-slot="nav">
-        <!-- the site's own period clock (shell.js), which has no nav bar here -->
-        <span class="clock-slot" data-clock="player"></span>
+        <!-- extension widgets mount here: a game is on screen, so there is no
+             nav for them to sit in -->
       </div>
       <div class="player-coin" id="pCoin" title="NULL coins: earned by playing">
         <span data-icon="coin"></span><b id="pCoinVal">0</b>
@@ -114,6 +115,7 @@
 
   <script src="src/utilities/store.js"></script>
   <script src="src/utilities/econ.js"></script>
+  <script src="src/utilities/icons.generated.js"></script>
   <script src="src/utilities/dom.js"></script>
   <script src="src/utilities/modal.js"></script>
   <script src="src/utilities/theme.js"></script>
@@ -123,9 +125,6 @@
   <script src="src/catalog/catalog.js"></script>
   <script src="src/content/content.js"></script>
   <script src="src/components/tabpresets.js"></script>
-  <!-- the schedule, so an extension widget that reads the bell times keeps
-       working while a game is on screen -->
-  <script src="src/components/schedule.js"></script>
   <script src="src/components/cards.js"></script>
   <!-- the extensions runtime, ahead of shell.js: the nav asks it for its menu -->
   <script src="src/utilities/ext.js"></script>

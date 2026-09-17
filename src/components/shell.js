@@ -168,7 +168,7 @@
      rail can never be hovered open. */
   function railRest() {
     var box = d.h("div", { class: "rail-rest" });
-    var groups = N.router.MORE.concat([{ name: "More", links: [N.router.LINKS.extensions] }]);
+    var groups = [{ name: "All pages", links: N.router.ALL }];
     groups.forEach(function (g) {
       box.appendChild(d.h("div", { class: "rg" }, g.name));
       g.links.forEach(function (l) {
@@ -224,14 +224,8 @@
     });
     el.appendChild(top);
 
-    /* the empty middle: extensions mount their own chips here, and the site's
-       period clock lives here when Settings has it on */
-    el.appendChild(
-      d.h("div", { class: "rail-mid" }, [
-        d.h("div", { class: "rail-slot", "data-slot": "nav" }),
-        d.h("div", { class: "rail-clock", "data-clock": "nav" }),
-      ]),
-    );
+    /* the empty middle: extensions mount their own chips here */
+    el.appendChild(d.h("div", { class: "rail-mid" }, [d.h("div", { class: "rail-slot", "data-slot": "nav" })]));
 
     var bottom = d.h("nav", { class: "rail-grp rail-grp--bottom" });
     N.router.RAIL_BOTTOM.forEach(function (l) {
@@ -274,9 +268,6 @@
     /* the mount point extensions get for their own nav chrome (see ext.js's
        slot()): a strip under the links, in the rail or in the bar */
     bar.appendChild(d.h("div", { "data-slot": "nav", class: "nav-slot" }));
-
-    /* the site's own period clock (see periodClock) */
-    bar.appendChild(d.h("span", { class: "clock-slot", "data-clock": "nav" }));
 
     /* Right actions. The bar used to carry a search field and a light/dark
        flip as well: both are gone. Search is "/" anywhere, the front door's
@@ -404,13 +395,13 @@
           "A massive site filled with ~2,300 games, and so much more. Developed by Mr Blob and NULL Labs to bring you the best alternative to SG Games ever! (Also bro our school had like 2 games sites 😭)"),
       ]),
     );
-    N.router.FOOT.forEach(function (col) {
-      var wrap = d.h("div", { class: "col" }, [d.h("h4", null, col.name)]);
-      col.links.forEach(function (l) {
-        wrap.appendChild(d.h("a", { href: N.url(l.url) }, l.t));
-      });
-      inner.appendChild(wrap);
+    /* every door NULL has, in reading order. The rail is how you get around,
+       but a footer is still where somebody looks for a sitemap. */
+    var wrap = d.h("div", { class: "col" }, [d.h("h4", null, "Explore")]);
+    N.router.ALL.forEach(function (l) {
+      wrap.appendChild(d.h("a", { href: N.url(l.url) }, l.t));
     });
+    inner.appendChild(wrap);
     /* extensions can mount here too (ext.js's slot("footer")) */
     inner.appendChild(d.h("div", { "data-slot": "foot", class: "foot-slot" }));
 var foot = d.h("footer", { class: "site-foot" }, [inner]); 
@@ -1031,7 +1022,13 @@ return foot;
   /* (re)build every clock on the page: Settings calls this when the switch
      moves, and a schedule edit can move the bells under it */
   function buildClocks() {
+    /* the period clock widget is gone: the chips are cleared and nothing is
+       built, so any [data-clock] left in old markup stays empty */
     clocks = [];
+    d.qsa("[data-clock]").forEach(function (el) {
+      el.textContent = "";
+    });
+    return;
     d.qsa("[data-clock]").forEach(function (slot) {
       slot.textContent = "";
       if (N.prefs.get("showClock") !== false) slot.appendChild(clockChip());
@@ -1437,14 +1434,6 @@ return foot;
     N.tab.apply();
     N.tab.smartStart();
     initSs();
-    watchPeriodEnd();
-    mountClocks();
-
-    /* the hidden pages: hold Backspace, the period-four orb, the clock codes */
-    armErase();
-    armTimeCode();
-    armOrb();
-    armMidnight();
 
     /* weekly wrap-up: slightly delayed so it stacks above (never under)
        the first-run welcome chain on the home page */

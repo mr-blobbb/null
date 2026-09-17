@@ -1,7 +1,11 @@
 /* NULL · content.js
-   Hand-edited site content that search + the home dashboard read.
+   Hand-edited site content that search and the palette read.
    The game/app/proxy library itself lives in src/catalog/generated-catalog.js
-   (rebuilt by the updater); announcements and page descriptions live here. */
+   (rebuilt by the updater); the posts and the page blurbs live here.
+
+   One rule: nothing in this file may point at a page that does not exist. The
+   link checker reads it, so a deleted page turns into a failed check instead
+   of a dead end for a visitor. */
 window.NULL_CONTENT = {
   announcements: [
     {
@@ -9,23 +13,24 @@ window.NULL_CONTENT = {
       title: "NULL is live",
       date: "2026-09-13",
       category: "notice",
+      link: "/changelog",
       desc: "NULL is up. Around 2,300 games, plus apps and proxies, all in one place and all running in your browser. No account, no install, nothing to sign up for. Pick something from the library and it plays.",
     },
     {
-      id: "start-here",
-      title: "Start here",
-      date: "2026-09-12",
+      id: "proxies",
+      title: "The proxy window works now",
+      date: "2026-09-17",
       category: "info",
-      link: "/about",
-      desc: "New around here? The search bar finds games and apps by name, and the tabs up top split everything into games, apps and proxies. Settings handles your theme, the tab disguise and the panic key. The About page walks through the rest.",
+      link: "/proxies/",
+      desc: "Proxies is not just a list of links any more: type an address and the page loads inside NULL, rewritten as it arrives so its links and requests stay in the frame. It rides on a Wisp relay, and the address of that relay is yours to change.",
     },
     {
       id: "shop-basics",
       title: "How the shop works",
-      date: "2026-09-11",
+      date: "2026-09-16",
       category: "info",
       link: "/shop",
-      desc: "Playing games banks XP, XP turns into coins, and coins buy themes, particle effects and a few extras in the Shop. It is all local: no real money, no payment, nothing charged. Open the Shop and see what is in stock.",
+      desc: "Coins come from playing: three a minute while a game is open, plus a bonus every fifteen minutes on the site. Coins buy avatar decorations, profile effects and name tags. All of it is local, and none of it costs anything.",
     },
   ],
 
@@ -39,156 +44,71 @@ window.NULL_CONTENT = {
      section at all (see shop.js). */
   betas: [],
 
+  /* the nine doors, and nothing else: the palette shows these, the search
+     ranks them, and the tab bar names them */
   pages: [
     {
       title: "Home",
       url: "/",
       grp: "Pages",
-      desc: "NULL home: search everything, featured library items, recently played and the live school schedule.",
-      kw: "home dashboard start welcome hub search",
+      desc: "The front door: search everything, jump to a page, and see what is new.",
+      kw: "home start welcome hub search front door",
     },
     {
       title: "Games",
       url: "/games/",
       grp: "Library",
-      desc: "The whole game library, built from what's in the folders, with warnings, labels and a player shell.",
+      desc: "The whole game library: one square each, searchable by name or by category.",
       kw: "play game arcade fun library",
     },
     {
       title: "Apps",
       url: "/apps/",
       grp: "Library",
-      desc: "Apps and tools that run inside the NULL player.",
-      kw: "tools utilities app calculator",
+      desc: "Tools and toys that run in a tab, laid out exactly like the games.",
+      kw: "app tool utility library",
     },
     {
       title: "Proxies",
       url: "/proxies/",
       grp: "Library",
-      desc: "External sites NULL links out to, with manual status markers.",
-      kw: "external links sites status",
-    },
-    {
-      title: "Announcements",
-      url: "/announcements",
-      grp: "Pages",
-      desc: "What’s new on NULL.",
-      kw: "news updates changelog posts",
-    },
-    {
-      title: "Schedule",
-      url: "/schedule",
-      grp: "Pages",
-      desc: "The school schedule: Regular and Homeroom/WIN days, live countdown, editable period names and lunch period.",
-      kw: "school bell time class period day lunch homeroom win",
-    },
-    {
-      title: "Backups",
-      url: "/backups",
-      grp: "Pages",
-      desc: "Alternate places to reach NULL if this domain goes down.",
-      kw: "mirror alternate domain access link",
+      desc: "Open a website inside NULL through a Wisp relay, or use the ready-made links.",
+      kw: "proxy wisp relay unblock browse mirror",
     },
     {
       title: "Shop",
       url: "/shop",
-      grp: "Extras",
-      desc: "Spend coins earned by playing on custom themes and effects, the custom background image, and the theme and particle editor.",
-      kw: "shop store coins xp unlock buy theme rewards editor background",
+      grp: "You",
+      desc: "Spend the coins you earn by playing on avatar decorations, profile effects and name tags.",
+      kw: "shop coins buy cosmetics decorate profile name tag gift",
+    },
+    {
+      title: "Profile",
+      url: "/profile",
+      grp: "You",
+      desc: "Your card: banner, picture, name, bio and library. Kept in this browser, not on a server.",
+      kw: "profile account login sign in banner avatar bio me",
+    },
+    {
+      title: "Changelog",
+      url: "/changelog",
+      grp: "You",
+      desc: "Every release, newest first, with what was added and what was fixed.",
+      kw: "changelog release notes news update version",
+    },
+    {
+      title: "Extensions",
+      url: "/extensions",
+      grp: "You",
+      desc: "Install .nullext extensions with full access to NULL, or import a Chrome popup.",
+      kw: "extension addon nullext chrome plugin widget",
     },
     {
       title: "Settings",
       url: "/settings",
-      grp: "Pages",
-      desc: "Theme, accent, layout compactness, seasonal and holiday themes, background image, tab presets, performance and Mini-Perf.",
-      kw: "preferences theme accent tab cloak performance density compact comfy spacious seasonal holiday halloween background",
-    },
-    {
-      title: "About",
-      url: "/about",
-      grp: "Info",
-      desc: "What NULL is, who made it, and how to add your own games.",
-      kw: "about what is how works readme",
-    },
-    {
-      title: "District",
-      url: "/district",
-      grp: "Info",
-      desc: "District information page.",
-      kw: "school district naperville 203",
-    },
-    {
-      title: "Privacy",
-      url: "/privacy",
-      grp: "Info",
-      desc: "What NULL stores, where it is stored, and what it never collects.",
-      kw: "privacy policy data local storage gdpr ccpa",
-    },
-    {
-      title: "Terms",
-      url: "/terms",
-      grp: "Info",
-      desc: "The agreement covering your use of NULL.",
-      kw: "terms of service rules agreement use",
-    },
-    {
-      title: "Cookies",
-      url: "/cookies",
-      grp: "Info",
-      desc: "How NULL handles cookies.",
-      kw: "cookies storage tracking",
-    },
-    {
-      title: "License",
-      url: "/license",
-      grp: "Info",
-      desc: "NULL’s open license, the GNU AGPL version 3.",
-      kw: "license agpl gnu copyleft open source",
-    },
-
-    /* The hidden pages. Nothing links them from the nav, but they are typed
-       in like any other page so search can turn them up. `body: false` keeps
-       the page text out of the index: blob alone would otherwise match half
-       the site's vocabulary. */
-    {
-      title: "Void",
-      url: "/void",
-      grp: "Hidden",
-      kind: "egg",
-      icon: "eye",
-      body: false,
-      desc: "An entirely black page with one small line in the middle. The void awaits, and it does not explain itself.",
-      kw: "void black blank dark nothing easter egg hidden lmao",
-    },
-    {
-      title: "Blob",
-      url: "/blob",
-      grp: "Hidden",
-      kind: "egg",
-      icon: "eye",
-      body: false,
-      desc: "A page that types blob lines at you, semi fast, forever. Not a mascot. A lifestyle.",
-      kw: "blob typing stream wobble easter egg hidden joke nldev",
-    },
-    {
-      title: "Time",
-      url: "/time",
-      grp: "Hidden",
-      kind: "egg",
-      icon: "clock",
-      body: false,
-      desc: "The clock page. NULL is open from midnight to 8:00 AM, and this tells you exactly where you stand.",
-      kw: "time clock midnight 8am vampire hours schedule easter egg hidden",
-    },
-    {
-      title: "Credits",
-      url: "/credits",
-      grp: "Hidden",
-      kind: "egg",
-      icon: "star",
-      body: false,
-      desc: "The credits roll, and a skip button that does not skip anything.",
-      kw: "credits roll thanks people skip easter egg hidden",
+      grp: "You",
+      desc: "Themes, effects, your data and the paperwork, over the top of whatever page you are on.",
+      kw: "settings theme palette appearance data privacy terms cookies",
     },
   ],
 };

@@ -126,12 +126,27 @@
     puzzle: "\ue87b", // extension
   };
 
-  function icon(name, cls) {
+  /* The old font glyph, kept only for a name the SVG set does not have.
+     Nothing ships this font any more; it is a last resort so an unknown name
+     draws a question mark instead of an empty box. */
+  function glyph(name, cls) {
     var span = document.createElement("span");
     span.className = "msr" + (cls ? " " + cls : "");
     span.setAttribute("aria-hidden", "true");
     span.textContent = P[name] || P.help;
     return span;
+  }
+
+  /* Everything that used to ask for the font now draws the real icon set:
+     Lucide, at 1em so it still follows whatever font-size its button has,
+     exactly the way the glyph did. */
+  function icon(name, cls) {
+    if (N.lucide && N.lucide[name]) {
+      var svg = svgIcon(name, "1em");
+      svg.setAttribute("class", "ic ic--in" + (cls ? " " + cls : ""));
+      return svg;
+    }
+    return glyph(name, cls);
   }
 
   /* ---------- NULL's own icon set ----------
@@ -345,6 +360,14 @@
     svg.setAttribute("aria-hidden", "true");
     svg.setAttribute("focusable", "false");
     svg.className.baseVal = "ic";
+
+    /* the shipped set first: Lucide path data, dropped straight in */
+    var lucide = N.lucide && N.lucide[name];
+    if (lucide) {
+      svg.innerHTML = lucide;
+      return svg;
+    }
+
     var cmds = IP[name];
     if (!cmds) return svg;
 

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "NULL: a plain black-and-white hub for games, apps, proxies and tools. Static HTML/CSS/JS: GitHub Pages serves these files as-is, and Node is only the build-time tooling (catalog scan, icon font subset, single-file releases, link check).",
+  "description": "NULL: a plain black-and-white hub for games, apps, proxies and tools. Static HTML/CSS/JS: GitHub Pages serves these files as-is, and Node is only the build-time tooling (catalog scan, icon set, link and page checks).",
   "homepage": "https://googleslides2026.github.io/",
   "repository": {
     "type": "git",
@@ -13,20 +13,15 @@
     "dev": "vite",
     "preview": "vite preview",
     "catalog": "node scripts/build-catalog.js",
-    "font": "node scripts/build-font.js",
-    "releases": "node scripts/build-releases.js",
-    "build": "node scripts/build-catalog.js && node scripts/build-releases.js",
+    "icons": "node scripts/build-icons.js",
+    "build": "node scripts/build-catalog.js && node scripts/build-icons.js",
     "check:links": "node scripts/check-links.js",
-    "check:releases": "node scripts/check-releases.js",
     "check:pages": "node scripts/check-pages.js",
     "check": "tsc -b"
   },
   "devDependencies": {
-    "esbuild": "^0.28.2",
-    "fontverter": "^2.0.0",
-    "harfbuzzjs": "^1.6.1",
     "jsdom": "^30.0.1",
-    "subset-font": "^2.7.0",
+    "lucide-static": "^1.47.0",
     "typescript": "^5.9.3",
     "vite": "^7.3.5"
   },

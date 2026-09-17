@@ -31,7 +31,7 @@
      One place, so the corner of the front door, the Changelog and anything
      else that prints a version never disagree about it. BUILD is the same
      YEARMONTHDATE the Changelog uses for a release. */
-  N.meta = { version: "1.0.0", build: "20260916" };
+  N.meta = { version: "1.2.0", build: "20260917" };
 
   /* ---------- where NULL lives ----------
      The pages link to each other with paths relative to the folder NULL is

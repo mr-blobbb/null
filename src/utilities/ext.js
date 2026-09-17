@@ -245,7 +245,6 @@
       search: N.search,
       player: N.player,
       daily: N.daily,
-      eggs: N.eggs,
       dev: N.dev,
       editor: N.editor,
       modal: N.modal,
