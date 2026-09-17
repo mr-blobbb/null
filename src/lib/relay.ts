@@ -95,6 +95,9 @@ export async function read(url: string, relay: string): Promise<Read> {
      handed back. That window — not the copy — is where the request is allowed
      to happen. */
 
+/* The shim is one template literal, so nothing inside it may use a backtick
+   or an interpolation — comments included. A backtick in one of these
+   comments once ended the literal early and took the build down with it. */
 const NAV = `<script data-null="nav">(function(){
   function out(u){ try { parent.postMessage({ nullFrame: String(u) }, "*"); } catch (e) {} }
 
@@ -113,7 +116,7 @@ const NAV = `<script data-null="nav">(function(){
   try { Object.defineProperty(window, "sessionStorage", { value: api, configurable: true }); } catch (e) {}
 
   /* ---------- a place to keep things ----------
-     An opaque origin has no Indexed Database: indexedDB.open throws a
+     An opaque origin has no Indexed Database at all. Asking for one throws a
      SecurityError the moment a page touches it, and a page whose persistence
      layer throws while it mounts unmounts itself and shows nothing at all.
      This is the same interface over plain objects — memory instead of disk,
