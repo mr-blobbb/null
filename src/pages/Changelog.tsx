@@ -11,6 +11,21 @@ type Release = { version: string; date: string; note: string; changes: Change[] 
 
 const RELEASES: Release[] = [
   {
+    version: "v1.1.1",
+    date: "September 17, 2026",
+    note: "The one where the browser gets a second road that actually works.",
+    changes: [
+      { kind: "tweak", text: "Audius stopped blaming the node for a song it does not have. It says whether the catalogue had nothing, had only gated matches, or really was down." },
+      { kind: "tweak", text: "A search that comes back empty is retried without the extra words, because Audius indexes titles." },
+      { kind: "add", text: "The copy road can make requests: a copied page's fetch and XHR are carried out by the window that owns the relay, so a site whose first API call is refused still draws." },
+      { kind: "add", text: "The copy road has somewhere to store things — an in-memory database for pages that persist, because an opaque origin throws on the real one." },
+      { kind: "add", text: "A window that fails says why: the reason the rewritten road did not come up, and the first error the page threw, on a bar above the frame." },
+      { kind: "tweak", text: "The rewritten window is judged by what it drew, not by a load event that fires for blank pages and error pages alike." },
+      { kind: "tweak", text: "The band of cards on the front door no longer vanishes on a normal laptop screen; the page steps down to fit it instead." },
+      { kind: "add", text: "The assistant answers whether or not the deployment has a key, and uses the deployment's key when there is one." },
+    ],
+  },
+  {
     version: "v1.1.0",
     date: "September 17, 2026",
     note: "The one with other people in it. NULL gets a server.",

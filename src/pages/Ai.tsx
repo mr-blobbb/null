@@ -9,8 +9,10 @@
    scores.
 
    The conversation is kept in this browser, like everything else, so closing
-   the tab does not throw it away. The key is not here at all: the call goes
-   to the Convex action, which reads it from the deployment's environment. */
+   the tab does not throw it away. The server road is asked first, because
+   there the key stays on the deployment where nobody can read it; a build
+   with no key set there falls back to src/lib/ai.ts, which carries a
+   scrambled key of its own so the assistant still answers. */
 
 import { useEffect, useRef, useState } from "react";
 import { useAction } from "convex/react";
@@ -18,6 +20,7 @@ import { Bot, Eraser, Loader, Send, Sparkles, UserRound } from "lucide-react";
 
 import { api } from "../../convex/_generated/api";
 import { Guard } from "../components/Guard";
+import { askModel, BUILT_IN_MODEL, builtInReady, type Said as Turn } from "../lib/ai";
 import { cloudOn, machine } from "../lib/cloud";
 import { createStore, useStore } from "../lib/store";
 import { Rich } from "../lib/rich";
@@ -89,8 +92,13 @@ function Desk() {
     if (el) el.scrollTop = el.scrollHeight;
   }, [lines.length, busy]);
 
-  const ready = said?.ready === true;
+  const builtin = builtInReady();
+  const ready = said !== null && (said.ready || builtin);
 
+  /** Which road an answer takes: the deployment's key when it has one, and
+   *  the one this build carries otherwise. A server that answers with a
+   *  failure falls through to the build's, so a missing key is not a dead
+   *  assistant. */
   async function send(text: string) {
     const q = text.trim();
     if (!q || busy) return;
@@ -102,19 +110,32 @@ function Desk() {
     setBusy(true);
     setProblem(null);
 
+    const turns: Turn[] = history.map((l) => ({
+      role: l.who === "you" ? "user" : "assistant",
+      content: l.body,
+    }));
+
     try {
-      const res = await ask({
-        messages: history.map((l) => ({ role: l.who === "you" ? "user" : "assistant", content: l.body })),
-      });
-      if (res.ok) {
+      let answer: { ok: true; text: string } | { ok: false; reason: string };
+      if (said?.ready) {
+        try {
+          const res = await ask({ messages: turns });
+          answer = res.ok ? { ok: true, text: res.text } : { ok: false, reason: res.reason };
+        } catch (e) {
+          answer = { ok: false, reason: (e as Error).message.replace(/^.*?Error: /, "") };
+        }
+        if (!answer.ok && builtin) answer = await askModel(turns);
+      } else {
+        answer = await askModel(turns);
+      }
+
+      if (answer.ok) {
         ai.set({
-          lines: [...ai.get().lines, { id: `a${Date.now()}`, who: "ai", body: res.text, at: Date.now() }],
+          lines: [...ai.get().lines, { id: `a${Date.now()}`, who: "ai", body: answer.text, at: Date.now() }],
         });
       } else {
-        setProblem(res.reason);
+        setProblem(answer.reason);
       }
-    } catch (e) {
-      setProblem((e as Error).message.replace(/^.*?Error: /, ""));
     } finally {
       setBusy(false);
     }
@@ -125,7 +146,12 @@ function Desk() {
       <div className="lb-top">
         <h1 className="lb-title">Assistant</h1>
         <span className="lb-count tiny faint">
-          <Bot /> {said === null ? "checking…" : ready ? `running on ${said.provider}` : "no key set"}
+          <Bot />
+          {said === null
+            ? "checking…"
+            : ready
+              ? `running on ${said.ready ? said.provider : BUILT_IN_MODEL}`
+              : "no key set"}
         </span>
         {lines.length > 0 && (
           <button className="btn btn--sm" onClick={() => ai.set({ lines: [] })}>
@@ -134,7 +160,7 @@ function Desk() {
         )}
       </div>
 
-      {said && !ready && (
+      {said && !ready && !builtin && (
         <div className="card card--pad ai-setup">
           <h3 className="set-h">
             <Sparkles /> One command and this works
@@ -232,7 +258,9 @@ npx convex env set OPENAI_API_KEY <your key>`}
 
       <p className="tiny faint ai-foot">
         Machine <span className="mono">{machine}</span> · the conversation is kept in this
-        browser, and the key only ever lives on the server.
+        browser. {said?.ready
+          ? "The key it runs on lives on the deployment."
+          : "This build carries its own key, scrambled — set OPENROUTER_API_KEY on the deployment to move it off the client."}
       </p>
     </div>
   );

@@ -184,44 +184,96 @@ type AudiusTrack = {
   user?: { name?: string; handle?: string } | null;
 };
 
-/** Search, and build the stream URL for every row. The stream endpoint is a
- *  redirect to the file itself, which is why the audio plays at full length
- *  in an ordinary <audio> tag. */
-async function searchAudius(q: string): Promise<Track[]> {
-  let last = "";
-  for (const node of NODES) {
-    try {
-      const res = await fetch(
-        `${node}/v1/tracks/search?query=${encodeURIComponent(q)}&app_name=${APP}&limit=25`,
-      );
-      if (!res.ok) {
-        last = `the node at ${new URL(node).hostname} answered ${res.status}`;
+/** What a look through Audius came back as. `none` and `gated` are answers —
+ *  the catalogue knew and had nothing that plays — and only `down` is a
+ *  failure. Reporting all three as "could not be reached" was both wrong and
+ *  the reason a missing song looked like a broken node. */
+type Reach = { tracks: Track[]; how: "ok" | "none" | "gated" | "down"; detail: string };
+
+/** Other ways of asking the same thing, in the order they are tried. Audius
+ *  matches titles, so "song name artist name" can come back empty where
+ *  "song name" finds it. Three tries at most, because each one is a request. */
+function attempts(term: string): string[] {
+  const out: string[] = [];
+  const add = (s: string) => {
+    const t = s.trim().replace(/\s+/g, " ");
+    if (t.length > 1 && !out.some((x) => x.toLowerCase() === t.toLowerCase())) out.push(t);
+  };
+  add(term);
+  const words = term.split(/\s+/).filter(Boolean);
+  if (words.length > 2) add(words.slice(0, 3).join(" "));
+  if (words.length > 1) add(words.slice(0, 2).join(" "));
+  return out.slice(0, 3);
+}
+
+function hostOf(url: string): string {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return url;
+  }
+}
+
+/** One node, one query. `null` means the node could not be asked at all, which
+ *  is a different thing from a node that answered with nothing. */
+async function askNode(node: string, term: string): Promise<AudiusTrack[] | null> {
+  try {
+    const res = await fetch(
+      `${node}/v1/tracks/search?query=${encodeURIComponent(term)}&app_name=${APP}&limit=25`,
+    );
+    if (!res.ok) return null;
+    const body = (await res.json()) as { data?: AudiusTrack[] };
+    return body.data ?? [];
+  } catch {
+    return null;
+  }
+}
+
+/** A row as the player wants it. The stream endpoint is a redirect to the file
+ *  itself, which is why the audio plays at full length in an ordinary
+ *  <audio> tag. */
+function rowOf(node: string, t: AudiusTrack): Track {
+  return {
+    key: `audius:${t.id}`,
+    id: String(t.id),
+    source: "audius" as const,
+    title: t.title || "Untitled",
+    artist: t.user?.name || t.user?.handle || "Unknown artist",
+    album: t.genre ?? "",
+    art: t.artwork?.["480x480"] ?? t.artwork?.["150x150"] ?? null,
+    audio: `${node}/v1/tracks/${t.id}/stream?app_name=${APP}`,
+    seconds: Math.round(t.duration ?? 0),
+    explicit: false,
+  };
+}
+
+/** Search Audius and build the stream URL for every row. */
+async function searchAudius(term: string): Promise<Reach> {
+  const notes: string[] = [];
+  let answered = false;
+  let gated = false;
+
+  for (const q of attempts(term)) {
+    for (const node of NODES) {
+      const rows = await askNode(node, q);
+      if (rows === null) {
+        notes.push(`the node at ${hostOf(node)} did not answer`);
         continue;
       }
-      const body = (await res.json()) as { data?: AudiusTrack[] };
-      const tracks = (body.data ?? [])
-        /* gated tracks come back unstreamable, and a silent row is worse than
-           no row */
-        .filter((t) => t.id && t.is_streamable !== false)
-        .map((t) => ({
-          key: `audius:${t.id}`,
-          id: String(t.id),
-          source: "audius" as const,
-          title: t.title || "Untitled",
-          artist: t.user?.name || t.user?.handle || "Unknown artist",
-          album: t.genre ?? "",
-          art: t.artwork?.["480x480"] ?? t.artwork?.["150x150"] ?? null,
-          audio: `${node}/v1/tracks/${t.id}/stream?app_name=${APP}`,
-          seconds: Math.round(t.duration ?? 0),
-          explicit: false,
-        }));
-      if (tracks.length) return tracks;
-      last = "that node had nothing for it";
-    } catch (e) {
-      last = (e as Error).message;
+      answered = true;
+      /* gated tracks come back unstreamable, and a silent row is worse than
+         no row — but if that is all there is, say so rather than "nothing" */
+      const playable = rows.filter((t) => t.id && t.is_streamable !== false);
+      if (playable.length) {
+        return { tracks: playable.map((t) => rowOf(node, t)), how: "ok", detail: q };
+      }
+      if (rows.length) gated = true;
     }
   }
-  throw new Error(last || "no Audius node answered");
+
+  if (!answered) return { tracks: [], how: "down", detail: notes[0] ?? "nothing answered" };
+  if (gated) return { tracks: [], how: "gated", detail: term };
+  return { tracks: [], how: "none", detail: term };
 }
 
 /** Apple's public search index, the fallback: it sends
@@ -258,17 +310,25 @@ export async function search(q: string, source: SourceId): Promise<Found> {
   if (!term) return { tracks: [], note: null };
 
   /* Audius first and directly: no server sits in this path, so it works on a
-     static deploy with no configuration at all. If it is somehow down, the
-     previews catalogue catches the fall. */
+     static deploy with no configuration at all. If it has nothing that plays,
+     the previews catalogue catches the fall, and the note says which of the
+     two things happened instead of blaming the node for both. */
   if (source === "audius") {
+    const reach = await searchAudius(term);
+    if (reach.tracks.length) return { tracks: reach.tracks, note: null };
+
+    const previews = "These are Apple previews, so they stop at thirty seconds.";
+    const note =
+      reach.how === "gated"
+        ? `Every match Audius has for “${reach.detail}” is gated, so none of them will play. ${previews}`
+        : reach.how === "none"
+          ? `Audius has nothing for “${reach.detail}”. ${previews}`
+          : `Audius could not be reached (${reach.detail}). ${previews}`;
+
     try {
-      return { tracks: await searchAudius(term), note: null };
-    } catch (e) {
-      const tracks = await searchKeyless(term);
-      return {
-        tracks,
-        note: `Audius could not be reached (${(e as Error).message}). These are Apple previews, so they stop at thirty seconds.`,
-      };
+      return { tracks: await searchKeyless(term), note };
+    } catch {
+      return { tracks: [], note };
     }
   }
 

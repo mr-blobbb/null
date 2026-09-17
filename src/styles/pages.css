@@ -88,11 +88,21 @@
   flex-wrap: wrap;
   max-width: 100%;
 }
-/* the circles step down with the window height so the row never wraps on a
-   short screen */
-@media (max-height: 820px) {
+/* A short window used to drop the band of cards, which meant the one thing on
+   the front door that is not a control disappeared on a normal laptop screen
+   and only came back in fullscreen. It stays now: everything above it steps
+   down instead, and the band itself gets a little shorter. */
+@media (max-height: 900px) {
+  .hm {
+    gap: clamp(6px, 1.2vh, 16px);
+    padding-top: clamp(6px, 1.6vh, 20px);
+  }
+  .hm-word {
+    font-size: clamp(44px, min(14vw, 16vh), 148px);
+  }
   .hm-links {
     gap: 12px;
+    margin-top: clamp(8px, 1.8vh, 22px);
   }
   .ql {
     width: 64px;
@@ -106,6 +116,49 @@
     height: 19px;
   }
   .hm-strip {
+    margin-top: clamp(10px, 1.8vh, 26px);
+  }
+  .strip-card {
+    width: 286px;
+    padding: 13px;
+  }
+}
+@media (max-height: 700px) {
+  .hm-word {
+    font-size: clamp(40px, min(13vw, 15vh), 124px);
+  }
+  .hm-search {
+    height: 40px;
+    margin-top: 4px;
+  }
+  .ql {
+    width: 58px;
+    gap: 6px;
+  }
+  .ql-btn {
+    width: 46px;
+    height: 46px;
+  }
+  .ql-btn svg {
+    width: 17px;
+    height: 17px;
+  }
+  .ql-label {
+    font-size: 10.5px;
+  }
+  .strip-card {
+    width: 262px;
+    padding: 11px;
+  }
+  .strip-lorem {
+    display: none;
+  }
+}
+@media (max-height: 560px) {
+  .hm-word {
+    font-size: clamp(34px, min(12vw, 13vh), 92px);
+  }
+  .hm-line {
     display: none;
   }
 }

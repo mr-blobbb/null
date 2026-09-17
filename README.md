@@ -93,9 +93,22 @@ with the sheet over the top.
 and toolbar as everything else: the address above is the site's real one, the
 reload button above reloads it, and back and forward walk its own history, so
 nothing repeats that furniture down here. `null://m` is the same window
-pointed at `aether.cx`, which refuses to be framed — so it is read through the
-relay and drawn as a sandboxed copy instead, which is a road that never asks
-the far site for permission.
+pointed at `aether.cx`, which sends `x-frame-options: DENY`.
+
+**A window is judged by what it drew, not by a load event.** When a page is
+opened, the rewritten window is looked at every 650ms: this app's own shell in
+the frame means the service worker was not the one answering, and an empty
+body means nothing came back — either way the second road gets its turn
+instead of leaving a black pane. The second road (`src/lib/relay.ts`) reads
+the page itself through the relay and draws it in a sandboxed frame: the far
+site is copied, not framed, so a site that refuses to be framed is never
+asked. The `<script data-null="nav">` shim inside that copy puts back what an
+opaque origin takes away — a working `localStorage`, an in-memory Indexed
+Database for pages that persist while they mount, and a bridge that carries
+the copy's `fetch` and `XMLHttpRequest` up to the window that owns the relay,
+because a request from an origin-less frame is refused by anything that looks
+at it. The first error the page throws is handed up as well, and the bar above
+the frame says which of the two happened.
 
 **Relays come and go, so there is a list.** `src/lib/browser.ts` holds the
 relays NULL knows about and tries each in turn: a bare handshake first, then
@@ -111,13 +124,20 @@ it needs no key, and its stream endpoint redirects to the real file. Qobuz,
 SoundCloud and YouTube Music send no CORS headers, so those go through the
 Convex action with a key — Qobuz without a subscriber token still returns
 previews, and the page says so rather than pretending. Apple's index is kept
-last as a fallback, thirty seconds a track.
+last as a fallback, thirty seconds a track. A search that comes back empty
+says which of the three things happened — the catalogue had nothing, every
+match is gated, or the node really was unreachable — and retries without the
+query's extra words first, because Audius indexes titles and not titles plus
+artists.
 
 **Two things are called a bot, on purpose.** Null Bot lives in the chat rooms
 and answers `$help`, `$playerdata`, `$rich`, `$roll` and friends from data
-NULL already has, so it cannot be wrong. `null://ai` is a real model behind a
-key on the deployment (`npx convex env set GROQ_API_KEY …`), and it says when
-it does not know.
+NULL already has, so it cannot be wrong. `null://ai` is a real model, and it says
+when it does not know. It asks the deployment's key first (`npx convex env set
+OPENROUTER_API_KEY …` or `GROQ_API_KEY …`); a build with none falls back to
+`src/lib/ai.ts`, which carries a scrambled key of its own so the assistant is
+never just a setup card. Scrambled is not hidden — put the key on the
+deployment and that road stops being used.
 
 **Effects left the profile card.** A wide looping clip painted behind the
 profile was being squashed into a strip and tinted until nothing of it

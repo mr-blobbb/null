@@ -18,7 +18,7 @@
    when the first does not come up or stops drawing. Both roads are inside
    NULL; neither ever asks the visitor to go somewhere else. */
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   Check,
@@ -35,7 +35,7 @@ import { entries } from "../lib/catalog";
 import { destinationFor, ENGINES, type EngineId, type PageId } from "../lib/nav";
 import { prefs } from "../lib/themes";
 import { useStore } from "../lib/store";
-import { ping, proxied, RELAYS, restart, start } from "../lib/browser";
+import { clientFor, ping, proxied, RELAYS, restart, start } from "../lib/browser";
 import { prepare, read } from "../lib/relay";
 import { activeTab, go, openDestination, openTab, useTabs } from "../lib/tabs";
 
@@ -52,6 +52,43 @@ export function Proxies({ url, back = "proxies" }: { url?: string; back?: PageId
    ============================================================ */
 type Mode = "booting" | "uv" | "reader" | "failed";
 
+/** A request a copied page made over the bridge in relay.ts. */
+type Ask = {
+  id: string;
+  url: string;
+  method: string;
+  headers: Record<string, string>;
+  body: string | null;
+};
+
+/** Bytes to base64 in chunks: spreading a whole megabyte into fromCharCode
+ *  blows the call stack. */
+function seal(buf: ArrayBuffer): string {
+  const bytes = new Uint8Array(buf);
+  let out = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    out += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  }
+  return btoa(out);
+}
+
+/** What the rewritten window is showing, when that can be read at all. The
+ *  frame is same-origin only when the service worker answered, which is
+ *  exactly the case worth telling apart from a page: an unreadable frame is
+ *  another origin, so it is a real page and none of our business. */
+function look(frame: HTMLIFrameElement | null): { ours: boolean; chars: number } | null {
+  try {
+    const doc = frame?.contentDocument;
+    if (!doc) return null;
+    const body = doc.body;
+    if (!body) return { ours: false, chars: 0 };
+    const ours = !!doc.querySelector(".app .rail") || !!doc.querySelector(".app .tabs");
+    return { ours, chars: (body.innerText || "").trim().length };
+  } catch {
+    return null;
+  }
+}
+
 function Browser({ url, relay, back }: { url: string; relay: string; back: PageId }) {
   const [mode, setMode] = useState<Mode>("booting");
   const [reason, setReason] = useState("");
@@ -60,9 +97,15 @@ function Browser({ url, relay, back }: { url: string; relay: string; back: PageI
   const [served, setServed] = useState(relay);
   /* the page the relay read, ready to draw */
   const [sheet, setSheet] = useState("");
-  /* did the rewritten window ever draw? if it has not in a dozen seconds, the
-     reader takes over rather than leaving a blank pane */
-  const [drew, setDrew] = useState(false);
+  /* whichever frame is up, so the copy can be answered and the rewritten
+     window can be looked at */
+  const frame = useRef<HTMLIFrameElement>(null);
+  /* the copy came through as an empty shell: nothing to read, nothing to
+     draw, and worth saying so instead of leaving a black pane */
+  const [thin, setThin] = useState(false);
+  /* the first thing the copy threw. Only shown when the page is empty as
+     well — a site that works is allowed to have console noise. */
+  const [says, setSays] = useState("");
   /* bumping this re-runs everything, which is what Try again does */
   const [attempt, setAttempt] = useState(0);
   /* The tab is the page: its address is this site's real one, the toolbar
@@ -98,7 +141,8 @@ function Browser({ url, relay, back }: { url: string; relay: string; back: PageI
     setReason("");
     setSheet("");
     setServed(relay);
-    setDrew(false);
+    setThin(false);
+    setSays("");
     (async () => {
       const b = await start(relay);
       if (!alive) return;
@@ -118,18 +162,108 @@ function Browser({ url, relay, back }: { url: string; relay: string; back: PageI
     };
   }, [relay, attempt, url, nonce, viaRelay]);
 
-  /* a rewritten window that never paints is a failure like any other */
+  /* Is the rewritten window showing a page? It used to be judged by the
+     frame's own `load` event, which fires just as happily for an error page,
+     for an empty document, and for this app's router catching /uv/service/…
+     and drawing null inside the frame — a window that looked loaded and
+     showed nothing. So the frame is looked at instead, every 650ms: our own
+     shell, or a body with nothing in it, means the worker did not answer and
+     the copy road gets its turn. */
   useEffect(() => {
-    if (mode !== "uv" || drew) return;
-    const timer = window.setTimeout(async () => {
-      const got = await viaRelay();
-      if (!got) {
-        setReason((r) => r || "The rewritten window never drew the page.");
-        setMode("failed");
+    if (mode !== "uv") return;
+    let ticks = 0;
+    const id = window.setInterval(async () => {
+      ticks += 1;
+      const seen = look(frame.current);
+
+      if (seen === null) {
+        window.clearInterval(id);
+        return;
       }
-    }, 12000);
-    return () => window.clearTimeout(timer);
-  }, [mode, drew, viaRelay]);
+      if (!seen.ours && seen.chars > 0) {
+        window.clearInterval(id);
+        return;
+      }
+      if (seen.ours || ticks >= 18) {
+        window.clearInterval(id);
+        setReason(
+          (r) =>
+            r ||
+            (seen.ours
+              ? "The service worker was not the one answering, so the frame came back as null itself."
+              : "The rewritten window never drew anything."),
+        );
+        const got = await viaRelay();
+        if (!got) setMode("failed");
+      }
+    }, 650);
+    return () => window.clearInterval(id);
+  }, [mode, viaRelay]);
+
+  /* Anything the copy cannot fetch itself comes back here. The copy has an
+     opaque origin, so its own request would go out as `Origin: null` and be
+     refused by whatever checks; this window has the relay, and this is where
+     the request is allowed to happen. */
+  useEffect(() => {
+    if (mode !== "reader") return;
+    let dead = false;
+
+    const answer = async (e: MessageEvent) => {
+      if (e.source !== frame.current?.contentWindow) return;
+      const data = e.data as { nullReq?: Ask; nullSay?: { chars: number }; nullErr?: string } | null;
+      if (!data) return;
+
+      if (data.nullErr) {
+        setSays((s) => s || `The page threw while it loaded: ${data.nullErr}`);
+        return;
+      }
+
+      if (data.nullSay) {
+        setThin(data.nullSay.chars < 60);
+        return;
+      }
+
+      const req = data.nullReq;
+      if (!req) return;
+      const post = (msg: unknown) => {
+        if (!dead) frame.current?.contentWindow?.postMessage(msg, "*");
+      };
+
+      try {
+        const client = await clientFor(served);
+        const res = await client.fetch(req.url, {
+          method: req.method,
+          headers: req.headers,
+          body: req.body ?? undefined,
+        } as RequestInit);
+
+        const heads: [string, string][] = [];
+        res.headers.forEach((v, k) => {
+          /* the length and the encoding belong to this hop, not the next one */
+          if (!/^(content-length|content-encoding)$/i.test(k)) heads.push([k, v]);
+        });
+
+        post({
+          nullRes: {
+            id: req.id,
+            status: res.status,
+            statusText: res.statusText,
+            headers: heads,
+            body: seal(await res.arrayBuffer()),
+            url: res.url,
+          },
+        });
+      } catch (err) {
+        post({ nullRes: { id: req.id, error: (err as Error).message } });
+      }
+    };
+
+    window.addEventListener("message", answer);
+    return () => {
+      dead = true;
+      window.removeEventListener("message", answer);
+    };
+  }, [mode, served]);
 
   /* a link inside the read page comes back here, and the window fetches it */
   useEffect(() => {
@@ -170,10 +304,10 @@ function Browser({ url, relay, back }: { url: string; relay: string; back: PageI
       {(mode === "uv" || mode === "booting") && src && (
         <iframe
           key={`${nonce}-${url}`}
+          ref={frame}
           className="bw-frame"
           src={src}
           title={host}
-          onLoad={() => setDrew(true)}
           referrerPolicy="no-referrer"
           allow="clipboard-read; clipboard-write; fullscreen; gamepad; autoplay"
         />
@@ -184,8 +318,34 @@ function Browser({ url, relay, back }: { url: string; relay: string; back: PageI
           <span className="bw-mode" title={`Fetched by ${served} for a sandboxed copy`}>
             <Radio /> relay copy
           </span>
+
+          {/* why this window is on its second road. It sits above the frame
+              rather than over it: the point of it is to be read. */}
+          {(reason || thin || says) && (
+            <div className="bw-why">
+              <TriangleAlert />
+              <span>
+                {reason || "This site came through as an empty copy."}
+                {thin
+                  ? " It also arrived nearly empty — a site built entirely in JavaScript needs its own scripts to run, and only the rewritten window can give it that."
+                  : ""}
+                {thin && says ? ` ${says}` : ""}
+              </span>
+              <button
+                className="btn btn--sm"
+                onClick={() => {
+                  restart();
+                  setAttempt((n) => n + 1);
+                }}
+              >
+                <RotateCw /> Try the rewritten window
+              </button>
+            </div>
+          )}
+
           <iframe
             key={`${nonce}-${url}-copy`}
+            ref={frame}
             className="bw-frame"
             srcDoc={sheet}
             title={host}
