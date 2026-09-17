@@ -191,11 +191,26 @@
   height: 66px;
   display: block;
 }
+/* the round picture under the decoration: the player's own face */
 .avbox-face {
   position: absolute;
-  inset: 10px;
+  inset: 4px;
+  display: grid;
+  place-items: center;
   border-radius: 50%;
+  overflow: hidden;
+  border: var(--bw) solid var(--line);
   background: var(--bg-4);
+  color: var(--faint);
+}
+.avbox-face img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.avbox-face svg {
+  width: 22px;
+  height: 22px;
 }
 .fxbox {
   position: relative;
@@ -212,8 +227,12 @@
   display: block;
   pointer-events: none;
 }
+/* A decoration is a frame *around* the picture, not a lid on it: it sits
+   a little wider than the circle, and always above the image. */
 .art--avatar {
+  inset: -13%;
   border-radius: 50%;
+  z-index: 2;
 }
 
 /* orbit: one bright dot, carried round */
@@ -518,6 +537,148 @@
   font-size: 10.5px;
   font-weight: 700;
   letter-spacing: 0.08em;
+}
+
+/* ---------- avatar decorations, layer by layer ----------
+   The pieces the decorations are built from. Everything loops forever and
+   is silent by construction: no file is fetched and nothing is played. */
+
+/* rings */
+.art-ring {
+  fill: none;
+  stroke: var(--line-2);
+  stroke-width: 1.6;
+}
+.art-ring.faint {
+  opacity: 0.5;
+}
+.art-ring.glow {
+  stroke: var(--ac-1);
+  stroke-width: 2.4;
+  opacity: 0.6;
+  filter: drop-shadow(0 0 6px var(--ac-1));
+}
+.art-ring.rim {
+  stroke: var(--ac-1);
+  stroke-width: 1.4;
+  animation: art-rim 2.6s ease-in-out infinite;
+}
+@keyframes art-rim {
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* arcs: a ring with a bite taken out, so the turn is visible */
+.art-arc {
+  fill: none;
+  stroke: var(--ac-1);
+  stroke-width: 3;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 6px var(--ac-1));
+}
+/* one long arc, for the halo */
+.art-arc.cut {
+  stroke-dasharray: 34 261;
+}
+/* one short arc, for the sun */
+.art-arc.hot {
+  stroke-width: 5;
+  stroke-dasharray: 70 300;
+}
+/* the thin ones, for the rift: their dash lengths stay in the drawing */
+.art-arc.cool {
+  stroke: var(--dim);
+  stroke-width: 2;
+  filter: none;
+}
+
+/* beads: the dots that carry the eye round the frame */
+.art-bead {
+  fill: var(--ac-1);
+  filter: drop-shadow(0 0 6px var(--ac-1));
+}
+.art-bead.dim {
+  fill: var(--dim);
+  filter: none;
+}
+
+/* a whole layer turning, one inside the other */
+.art-turn {
+  position: absolute;
+  inset: 0;
+  display: block;
+  animation: art-spin 6.4s linear infinite;
+}
+.art-orbit-in {
+  animation-duration: 9.6s;
+}
+
+/* groups inside one drawing, turning about the middle of the box */
+.art-drift {
+  transform-box: view-box;
+  transform-origin: center;
+  animation: art-spin 7.6s linear infinite;
+}
+.art-drift.back {
+  animation: art-spin-back 11s linear infinite;
+}
+
+/* twinkles grow about their own middle, not the middle of the drawing */
+.art-spark,
+.art-twinkle {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.art-spark {
+  fill: var(--ac-1);
+  animation: art-twinkle 3.4s ease-in-out infinite;
+}
+.art-spark.d1 {
+  animation-delay: 0.85s;
+}
+.art-spark.d2 {
+  animation-delay: 1.7s;
+}
+.art-spark.d3 {
+  animation-delay: 2.55s;
+}
+
+/* the eclipse disc, with light leaking around it */
+.art-moon {
+  fill: var(--bg);
+  stroke: var(--line-2);
+  stroke-width: 1.5;
+}
+.art-moon-glow {
+  fill: var(--ac-1);
+  opacity: 0.35;
+  filter: blur(4px);
+  animation: art-breathe 3.2s ease-in-out infinite;
+}
+
+/* prism: a second band inside the first, turning the other way */
+.art-prism-in {
+  position: absolute;
+  inset: 11%;
+  display: block;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 180deg,
+    transparent 0deg,
+    var(--dim) 60deg,
+    transparent 140deg,
+    transparent 220deg,
+    var(--ac-1) 280deg,
+    transparent 340deg
+  );
+  mask: radial-gradient(circle, transparent 66%, #000 68%);
+  -webkit-mask: radial-gradient(circle, transparent 66%, #000 68%);
+  animation: art-spin-back 6.6s linear infinite;
 }
 
 /* honour the reduce-motion switch, the performance switch, and the system

@@ -1,12 +1,18 @@
 /* NULL · art.tsx
    The artwork the shop sells. Each piece is drawn rather than downloaded:
    an animated SVG that takes its colours from the palette, so a decoration
-   looks right in Forest and in Light without a second asset. Every piece
-   loops forever and depends on nothing outside itself.
+   looks right in Forest and in Light without a second asset.
+
+   Every piece loops forever and is silent by construction: there is no
+   <video>, no <audio> and no file to fetch, only CSS keyframes, so a
+   decoration can never come with sound attached.
 
    The class names here are animated in src/styles/shop.css. */
 
 import type { CSSProperties } from "react";
+import { UserRound } from "lucide-react";
+
+import { useAccount } from "./account";
 import type { ShopItem } from "./econ";
 
 const VB = "0 0 100 100";
@@ -26,7 +32,9 @@ function Svg({
 }
 
 /* ---------- avatar decorations ----------
-   Drawn over the picture, inside its round frame. */
+   Drawn over the picture, inside its round frame. The frame is a little
+   wider than the picture (`inset: -13%` in the stylesheet) so rings and
+   orbiting things read as a halo around the face instead of a lid on it. */
 export function AvatarArt({ id }: { id: string | null | undefined }) {
   if (!id) return null;
   switch (id) {
@@ -34,59 +42,102 @@ export function AvatarArt({ id }: { id: string | null | undefined }) {
       return (
         <span className="art art--avatar art-orbit">
           <Svg>
-            <circle cx="50" cy="6" r="4" />
+            <circle cx="50" cy="50" r="46" className="art-ring" />
+            <circle cx="50" cy="50" r="37" className="art-ring faint" />
+            <circle cx="50" cy="3.5" r="4.5" className="art-bead" />
           </Svg>
+          <span className="art-turn art-orbit-in">
+            <Svg>
+              <circle cx="50" cy="9" r="2.6" className="art-bead dim" />
+              <circle cx="50" cy="91" r="2.6" className="art-bead dim" />
+            </Svg>
+          </span>
         </span>
       );
+
     case "halo":
       return (
         <span className="art art--avatar art-halo">
           <Svg>
-            <circle cx="50" cy="50" r="47" fill="none" strokeWidth="3" />
+            <circle cx="50" cy="50" r="47" className="art-ring glow" />
+            <g className="art-drift">
+              <circle cx="50" cy="50" r="47" className="art-arc cut" />
+            </g>
           </Svg>
         </span>
       );
+
     case "eclipse":
       return (
         <span className="art art--avatar art-eclipse">
           <Svg>
-            <circle cx="50" cy="12" r="16" />
+            <circle cx="50" cy="50" r="46" className="art-ring faint" />
+            <circle cx="50" cy="4" r="9" className="art-moon-glow" />
+            <circle cx="50" cy="4" r="9" className="art-moon" />
           </Svg>
         </span>
       );
+
     case "stardust":
       return (
         <span className="art art--avatar">
           <Svg>
-            {[
-              [22, 78],
-              [74, 26],
-              [62, 84],
-              [30, 22],
-              [86, 58],
-              [14, 44],
-            ].map(([x, y], i) => (
-              <circle key={i} cx={x} cy={y} r="3" className={`art-twinkle d${i}`} />
-            ))}
+            <circle cx="50" cy="50" r="46" className="art-ring faint" />
+            <g className="art-drift">
+              {[
+                [50, 4],
+                [96, 50],
+                [50, 96],
+                [4, 50],
+              ].map(([x, y], i) => (
+                /* the group holds the position, the path does the twinkling:
+                   a CSS animation would otherwise replace the translate */
+                <g key={i} transform={`translate(${x} ${y})`}>
+                  <path
+                    className={`art-spark d${i}`}
+                    d="M0 -6.5 L1.7 -1.7 L6.5 0 L1.7 1.7 L0 6.5 L-1.7 1.7 L-6.5 0 L-1.7 -1.7 Z"
+                  />
+                </g>
+              ))}
+            </g>
+            <g className="art-drift back">
+              {[
+                [76, 24],
+                [76, 76],
+                [24, 76],
+                [24, 24],
+              ].map(([x, y], i) => (
+                <circle key={i} cx={x} cy={y} r="2.4" className={`art-twinkle d${i}`} />
+              ))}
+            </g>
           </Svg>
         </span>
       );
+
     case "prism":
-      return <span className="art art--avatar art-prism" />;
+      return (
+        <span className="art art--avatar art-prism">
+          <i className="art-prism-in" />
+        </span>
+      );
+
     case "signal":
       return (
         <span className="art art--avatar">
           <Svg>
-            {[14, 34, 54, 74, 94].map((y, i) => (
+            {[10, 30, 50, 70, 90].map((y, i) => (
               <rect key={i} x="0" y={y} width="100" height="4" className={`art-scan d${i}`} />
             ))}
+            <circle cx="50" cy="50" r="46" className="art-ring rim" />
           </Svg>
         </span>
       );
+
     case "solar":
       return (
         <span className="art art--avatar art-spin">
           <Svg>
+            <circle cx="50" cy="50" r="46" className="art-ring faint" />
             <circle
               cx="50"
               cy="50"
@@ -95,10 +146,13 @@ export function AvatarArt({ id }: { id: string | null | undefined }) {
               strokeWidth="5"
               strokeLinecap="round"
               strokeDasharray="70 300"
+              className="art-arc hot"
             />
+            <circle cx="96" cy="50" r="4" className="art-bead" />
           </Svg>
         </span>
       );
+
     case "rift":
       return (
         <span className="art art--avatar">
@@ -110,7 +164,7 @@ export function AvatarArt({ id }: { id: string | null | undefined }) {
               fill="none"
               strokeWidth="2"
               strokeDasharray="18 26"
-              className="art-spin"
+              className="art-spin art-arc cool"
             />
             <circle
               cx="50"
@@ -119,11 +173,15 @@ export function AvatarArt({ id }: { id: string | null | undefined }) {
               fill="none"
               strokeWidth="2"
               strokeDasharray="10 32"
-              className="art-spin-back"
+              className="art-spin-back art-arc cool"
             />
+            <g className="art-drift back">
+              <circle cx="50" cy="11" r="2.8" className="art-bead" />
+            </g>
           </Svg>
         </span>
       );
+
     default:
       return null;
   }
@@ -204,6 +262,17 @@ export function EffectArt({ id }: { id: string | null | undefined }) {
   }
 }
 
+/** The round picture a decoration sits on: the player's own face when they
+ *  have one, a silhouette when they do not. */
+function Face() {
+  const me = useAccount();
+  return (
+    <span className="avbox-face">
+      {me.pfp ? <img src={me.pfp} alt="" /> : <UserRound />}
+    </span>
+  );
+}
+
 /** The little preview drawn on a shop card. */
 export function PreviewArt({ item }: { item: ShopItem }) {
   if (item.shelf === "tag") {
@@ -216,8 +285,8 @@ export function PreviewArt({ item }: { item: ShopItem }) {
   if (item.shelf === "avatar") {
     return (
       <span className="avbox">
+        <Face />
         <AvatarArt id={item.id} />
-        <span className="avbox-face" />
       </span>
     );
   }

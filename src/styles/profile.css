@@ -128,7 +128,8 @@
   place-items: center;
   width: 96px;
   height: 96px;
-  border-radius: var(--r-4);
+  /* round, because the shop sells frames that sit on the rim */
+  border-radius: 50%;
   border: var(--bw) solid var(--line-2);
   background: var(--bg-3);
   color: var(--faint);
@@ -138,7 +139,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: calc(var(--r-4) - 2px);
+  border-radius: 50%;
 }
 .pf-pic > svg {
   width: 38px;
