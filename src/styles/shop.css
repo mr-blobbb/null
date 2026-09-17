@@ -141,6 +141,34 @@
   font-size: 11px;
   color: var(--faint);
 }
+/* how much is off, so a crossed-out price says why it is crossed out */
+.shop-off {
+  margin-left: auto;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  background: var(--bg-3);
+  border: 1px solid var(--line);
+}
+.shop-off.is-holiday {
+  color: var(--bg);
+  background: var(--ac-1);
+  border-color: transparent;
+}
+
+/* the holiday banner: the one day the shop says something out loud */
+.sh-sale {
+  margin: 4px 0 10px;
+  padding: 7px 11px;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--ac-1) 45%, var(--line));
+  background: color-mix(in srgb, var(--ac-1) 12%, transparent);
+  color: var(--text);
+}
 .shop-actions {
   display: flex;
   align-items: center;

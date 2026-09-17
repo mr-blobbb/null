@@ -6,7 +6,7 @@
    Coins: three a minute while the tab is open and you are moving, plus thirty
    every fifteen minutes. The rate is in src/lib/econ.ts. */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Check,
   Coins,
@@ -21,16 +21,20 @@ import {
 import { PreviewArt } from "../lib/art";
 import {
   buy,
+  dealOf,
+  holidayOf,
   MAX_TAGS,
   mintCoinsGift,
   mintItemGift,
   owns,
   redeem,
+  SALE_WINDOW,
   SHOP,
   SHELVES,
   toggleEquip,
   useEcon,
   wearing,
+  type Deal,
   type ShopItem,
 } from "../lib/econ";
 import { isOwner } from "../lib/owner";
@@ -51,6 +55,17 @@ export function Shop({ onOpenSettings }: { onOpenSettings: () => void }) {
     setNote(msg);
     window.setTimeout(() => setNote(null), 2600);
   };
+
+  /* The shelves are re-marked on a clock, so the page has to look at the clock
+     again — otherwise a visitor who leaves the shop open is reading yesterday's
+     prices. Twenty seconds is well inside the ten-minute window. */
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 20_000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  const holiday = holidayOf(new Date(now));
 
   return (
     <div className="page">
@@ -87,6 +102,17 @@ export function Shop({ onOpenSettings }: { onOpenSettings: () => void }) {
         {Math.max(0, 15 - Math.floor((me.seconds % 900) / 60))} min · {me.plays} launches so far
       </p>
 
+      {holiday ? (
+        <p className="sh-sale tiny">
+          {holiday} · everything on the shelf is half price today.
+        </p>
+      ) : (
+        <p className="sh-meter tiny faint">
+          Prices are re-marked every {SALE_WINDOW / 60_000} minutes, so the crossing-out
+          moves around the shop.
+        </p>
+      )}
+
       {owner && <p className="sh-owner tiny">Owner · everything on the shelf is already yours.</p>}
 
       {SHELVES.map((shelf) => {
@@ -107,11 +133,12 @@ export function Shop({ onOpenSettings }: { onOpenSettings: () => void }) {
                 <Card
                   key={item.id}
                   item={item}
+                  deal={dealOf(item, now)}
                   owned={owns(item.id, owner)}
                   on={wearing(shelf.id, item.id)}
                   coins={me.coins}
                   onBuy={() => {
-                    const r = buy(item.id);
+                    const r = buy(item.id, now);
                     if (!r.ok) return say(r.reason ?? "No.");
                     say(`${item.name} is yours.`);
                   }}
@@ -176,6 +203,7 @@ export function Shop({ onOpenSettings }: { onOpenSettings: () => void }) {
 
 function Card({
   item,
+  deal,
   owned,
   on,
   coins,
@@ -184,6 +212,8 @@ function Card({
   onGift,
 }: {
   item: ShopItem;
+  /** today's price, when the piece is on sale */
+  deal: Deal | null;
   owned: boolean;
   on: boolean;
   coins: number;
@@ -191,7 +221,8 @@ function Card({
   onEquip: () => void;
   onGift: () => void;
 }) {
-  const afford = coins >= item.price;
+  const cost = deal?.price ?? item.price;
+  const afford = coins >= cost;
   return (
     <article className={`shop-card${owned ? " is-owned" : ""}${on ? " is-on" : ""}`}>
       <div className="shop-art">
@@ -201,9 +232,12 @@ function Card({
       <p className="shop-desc">{item.desc}</p>
       <div className="shop-price">
         <Coins />
-        <b>{item.price.toLocaleString()}</b>
-        {/* a piece sold at full price has nothing to cross out */}
-        {item.was !== undefined && <s>{item.was.toLocaleString()}</s>}
+        <b>{cost.toLocaleString()}</b>
+        {/* a piece at its list price has nothing to cross out */}
+        {deal && <s>{deal.was.toLocaleString()}</s>}
+        {deal && (
+          <em className={`shop-off${deal.holiday ? " is-holiday" : ""}`}>−{deal.off}%</em>
+        )}
       </div>
       <div className="shop-actions">
         {/* an unlocked item may be passed on, which is how the owner can

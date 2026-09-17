@@ -24,10 +24,12 @@ export type ShopItem = {
   shelf: Shelf;
   name: string;
   desc: string;
+  /** the list price: what the piece costs on an ordinary day, and the number a
+   *  sale crosses out. What it goes for right now is `dealOf`. */
   price: number;
-  /** the crossed-out price, so a number reads like a price, not a placeholder.
-   *  A piece sold at full price simply has none. */
-  was?: number;
+  /** never in the rotating sale. It is sold at its list price, and only a
+   *  holiday takes anything off it. */
+  noSale?: true;
   /** name tags carry their own colour */
   color?: string;
   /** a tag with a dark fill writes its name in light ink instead */
@@ -78,7 +80,6 @@ export const SHOP: ShopItem[] = [
     name: "Orbit",
     desc: "A ring of light circling your picture.",
     price: 780,
-    was: 920,
   },
   {
     id: "halo",
@@ -86,7 +87,6 @@ export const SHOP: ShopItem[] = [
     name: "Halo",
     desc: "A soft ring that never quite touches.",
     price: 960,
-    was: 1140,
   },
   {
     id: "eclipse",
@@ -94,7 +94,6 @@ export const SHOP: ShopItem[] = [
     name: "Eclipse",
     desc: "A dark disc sliding across your edge.",
     price: 1040,
-    was: 1240,
   },
   {
     id: "stardust",
@@ -102,7 +101,6 @@ export const SHOP: ShopItem[] = [
     name: "Stardust",
     desc: "Slow sparkles drifting off the frame.",
     price: 1180,
-    was: 1400,
   },
   {
     id: "prism",
@@ -110,7 +108,6 @@ export const SHOP: ShopItem[] = [
     name: "Prism",
     desc: "A rotating band of colour round the rim.",
     price: 1240,
-    was: 1460,
   },
   {
     id: "signal",
@@ -118,7 +115,6 @@ export const SHOP: ShopItem[] = [
     name: "Signal",
     desc: "Scanlines rolling up your picture.",
     price: 1320,
-    was: 1560,
   },
   {
     id: "solar",
@@ -126,7 +122,6 @@ export const SHOP: ShopItem[] = [
     name: "Solar flare",
     desc: "A hot arc that laps you, once a loop.",
     price: 1480,
-    was: 1720,
   },
   {
     id: "rift",
@@ -134,7 +129,6 @@ export const SHOP: ShopItem[] = [
     name: "Rift",
     desc: "Two rings spinning opposite ways.",
     price: 1600,
-    was: 1880,
   },
   /* the two that are real footage: a light that runs round the rim, and
      violet fire that climbs the face. Both screen onto the picture, so the
@@ -145,7 +139,6 @@ export const SHOP: ShopItem[] = [
     name: "Chroma",
     desc: "A soft light that circles your picture and never stops.",
     price: 1380,
-    was: 1620,
   },
   {
     id: "ember",
@@ -153,7 +146,6 @@ export const SHOP: ShopItem[] = [
     name: "Ember",
     desc: "Violet fire, climbing the edge of your face.",
     price: 1540,
-    was: 1780,
   },
 
   /* profile effects: whole-card backgrounds, looping and silent */
@@ -163,7 +155,6 @@ export const SHOP: ShopItem[] = [
     name: "Pixel Art",
     desc: "A pixel image: rain and a cat.",
     price: 1180,
-    was: 1400,
   },
   {
     id: "blocks",
@@ -171,7 +162,6 @@ export const SHOP: ShopItem[] = [
     name: "Calm Forest",
     desc: "Minecraft landscape!",
     price: 1320,
-    was: 1560,
   },
   {
     id: "hex",
@@ -179,7 +169,6 @@ export const SHOP: ShopItem[] = [
     name: "Hexagon",
     desc: "Moving hexagons moving in and out of a plane.",
     price: 1080,
-    was: 1280,
   },
   {
     id: "galaxy",
@@ -187,7 +176,6 @@ export const SHOP: ShopItem[] = [
     name: "Galaxy",
     desc: "A ringed disk and a sky that never holds still.",
     price: 1520,
-    was: 1780,
   },
 
   /* name tags */
@@ -197,7 +185,6 @@ export const SHOP: ShopItem[] = [
     name: "STAR",
     desc: "effortlessly",
     price: 720,
-    was: 880,
     color: "#f0c85a",
   },
   {
@@ -206,7 +193,6 @@ export const SHOP: ShopItem[] = [
     name: "COOL",
     desc: "effortlessly",
     price: 760,
-    was: 900,
     color: "#6cc7ff",
   },
   {
@@ -215,7 +201,6 @@ export const SHOP: ShopItem[] = [
     name: "TUFF",
     desc: "Certified tuff",
     price: 820,
-    was: 980,
     color: "#e2686a",
   },
   {
@@ -224,7 +209,6 @@ export const SHOP: ShopItem[] = [
     name: "SPECIAL",
     desc: "One of a kind",
     price: 900,
-    was: 1080,
     color: "#c08bff",
   },
   {
@@ -233,7 +217,6 @@ export const SHOP: ShopItem[] = [
     name: "AURA",
     desc: "+1000 aura",
     price: 960,
-    was: 1140,
     color: "#58c98e",
   },
   {
@@ -242,7 +225,6 @@ export const SHOP: ShopItem[] = [
     name: "NAME",
     desc: "It just says NAME",
     price: 720,
-    was: 860,
     color: "#b9b9c0",
   },
   {
@@ -251,7 +233,6 @@ export const SHOP: ShopItem[] = [
     name: "LARP",
     desc: "None of it was real",
     price: 1040,
-    was: 1240,
     color: "#ff8a5c",
   },
   {
@@ -260,7 +241,6 @@ export const SHOP: ShopItem[] = [
     name: "GOAT",
     desc: "Greatest of all time",
     price: 1600,
-    was: 1880,
     color: "#f2c14e",
     glyph: "★",
     art: "glow",
@@ -271,7 +251,6 @@ export const SHOP: ShopItem[] = [
     name: "CLUTCH",
     desc: "Down to the last second",
     price: 940,
-    was: 1120,
     color: "#ffe066",
     art: "beat",
   },
@@ -281,7 +260,6 @@ export const SHOP: ShopItem[] = [
     name: "NPC",
     desc: "Dialogue not included",
     price: 720,
-    was: 860,
     color: "#a9a9b2",
     art: "cursor",
   },
@@ -291,7 +269,6 @@ export const SHOP: ShopItem[] = [
     name: "SIGMA",
     desc: "Self-employed",
     price: 980,
-    was: 1160,
     color: "#8fb8e8",
   },
   {
@@ -300,7 +277,6 @@ export const SHOP: ShopItem[] = [
     name: "MENACE",
     desc: "A certified problem",
     price: 1120,
-    was: 1340,
     color: "#ff5d5d",
     art: "stripe",
   },
@@ -310,7 +286,6 @@ export const SHOP: ShopItem[] = [
     name: "DELULU",
     desc: "It is real to me",
     price: 880,
-    was: 1060,
     color: "#f0a6c8",
     art: "sway",
   },
@@ -320,7 +295,6 @@ export const SHOP: ShopItem[] = [
     name: "HAUNTED",
     desc: "Presence noted",
     price: 1240,
-    was: 1480,
     color: "#2b2b34",
     ink: "#e9e9f0",
     art: "haunt",
@@ -331,7 +305,6 @@ export const SHOP: ShopItem[] = [
     name: "GLITCH",
     desc: "Not a bug, a feature",
     price: 1360,
-    was: 1580,
     color: "#5ce1c4",
     art: "split",
   },
@@ -341,7 +314,6 @@ export const SHOP: ShopItem[] = [
     name: "CHEF",
     desc: "Let him cook",
     price: 860,
-    was: 1020,
     color: "#ffb86b",
   },
   {
@@ -350,7 +322,6 @@ export const SHOP: ShopItem[] = [
     name: "PIXEL",
     desc: "Drawn by hand",
     price: 900,
-    was: 1080,
     color: "#9ae6a0",
     art: "mono",
   },
@@ -360,7 +331,6 @@ export const SHOP: ShopItem[] = [
     name: "SLEEPY",
     desc: "Five more minutes",
     price: 780,
-    was: 940,
     color: "#b6bede",
     art: "doze",
   },
@@ -370,7 +340,6 @@ export const SHOP: ShopItem[] = [
     name: "COOKED",
     desc: "It is so over",
     price: 1060,
-    was: 1260,
     color: "#ff7a45",
     art: "jitter",
   },
@@ -380,7 +349,6 @@ export const SHOP: ShopItem[] = [
     name: "UNEMPLOYED",
     desc: "But working on it",
     price: 700,
-    was: 840,
     color: "#cfd6c4",
     art: "bob",
   },
@@ -390,7 +358,6 @@ export const SHOP: ShopItem[] = [
     name: "CEO",
     desc: "Of absolutely nothing",
     price: 1180,
-    was: 1380,
     color: "#e8d8a8",
   },
   {
@@ -399,7 +366,6 @@ export const SHOP: ShopItem[] = [
     name: "LOCAL",
     desc: "Gatekeeper, actually",
     price: 760,
-    was: 900,
     color: "#c6c6d0",
   },
   {
@@ -408,7 +374,6 @@ export const SHOP: ShopItem[] = [
     name: "MOIST",
     desc: "Why would you buy this",
     price: 980,
-    was: 1160,
     color: "#79c9d6",
     art: "drip",
   },
@@ -420,6 +385,7 @@ export const SHOP: ShopItem[] = [
     name: "CURSED",
     desc: "Do not wear this",
     price: 4200,
+    noSale: true,
     color: "#17171f",
     ink: "#e8e8f0",
     art: "cursed",
@@ -506,21 +472,120 @@ export function itemsOf(ids: string[] | null | undefined): ShopItem[] {
     .filter((i): i is ShopItem => i !== undefined);
 }
 
+/* ---------- sales ----------
+   Prices are not fixed any more. Every ten minutes the shelves are re-marked:
+   about a third of what is on them goes on sale, each piece at its own
+   percentage, so the crossing-out moves around the shop instead of living on
+   the same three cards forever.
+
+   Nothing is stored and nothing is random per render. A piece's roll is a hash
+   of its id and the window it is in, so a reload shows the same prices, two
+   tabs agree, and the only thing that changes anything is the clock.
+
+   And on a holiday everything is half price, always. The days live in the
+   table below, so the next one is a line of data rather than a deploy. */
+
+export const SALE_WINDOW = 10 * 60 * 1000;
+const SALE_CHANCE = 0.34;
+const SALE_STEPS = [10, 15, 20, 25, 30, 35, 40];
+const HOLIDAY_OFF = 50;
+
+/** The days NULL celebrates, and how far back the celebration reaches. */
+const HOLIDAYS: { name: string; month: number; day: number; span?: number }[] = [
+  { name: "New Year", month: 1, day: 1 },
+  { name: "Valentine's Day", month: 2, day: 14 },
+  { name: "St Patrick's Day", month: 3, day: 17 },
+  { name: "April Fools", month: 4, day: 1 },
+  { name: "Halloween", month: 10, day: 31, span: 1 },
+  { name: "Christmas", month: 12, day: 25, span: 1 },
+  { name: "New Year's Eve", month: 12, day: 31 },
+];
+
+/** The fourth Thursday in November: the one holiday that moves. */
+function thanksgiving(year: number): number {
+  const first = new Date(year, 10, 1).getDay();
+  return 1 + ((4 - first + 7) % 7) + 21;
+}
+
+/** The holiday this day is, if it is one. */
+export function holidayOf(when = new Date()): string | null {
+  const month = when.getMonth() + 1;
+  const day = when.getDate();
+  if (month === 11 && day === thanksgiving(when.getFullYear())) return "Thanksgiving";
+  for (const h of HOLIDAYS) {
+    if (h.month !== month) continue;
+    if (day <= h.day && day >= h.day - (h.span ?? 0)) return h.name;
+  }
+  return null;
+}
+
+export type Deal = {
+  /** what it costs right now */
+  price: number;
+  /** the list price, crossed out next to it */
+  was: number;
+  /** how much is off, as a percentage */
+  off: number;
+  /** true when this is the holiday half-price, not the rotation */
+  holiday: boolean;
+};
+
+/** A stable fraction for a seed. The same seed always rolls the same number,
+ *  which is the whole reason the shelf holds still between renders. */
+function roll(seed: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < seed.length; i++) {
+    h ^= seed.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return ((h >>> 0) % 100_000) / 100_000;
+}
+
+/** Prices read like prices: they land on a five. */
+function onFive(n: number): number {
+  return Math.round(n / 5) * 5;
+}
+
+/** What this piece is going for right now, or null when it is at its list
+ *  price and there is nothing to cross out. */
+export function dealOf(item: ShopItem, now = Date.now()): Deal | null {
+  const holiday = holidayOf(new Date(now));
+  if (holiday) {
+    return { price: onFive(item.price / 2), was: item.price, off: HOLIDAY_OFF, holiday: true };
+  }
+  if (item.noSale) return null;
+  const window = Math.floor(now / SALE_WINDOW);
+  if (roll(`${item.id}:${window}`) >= SALE_CHANCE) return null;
+  const step = Math.floor(roll(`${item.id}:${window}:off`) * SALE_STEPS.length) % SALE_STEPS.length;
+  const off = SALE_STEPS[step];
+  return { price: onFive(item.price * (1 - off / 100)), was: item.price, off, holiday: false };
+}
+
+/** What a piece costs right now: the deal if it has one, the list if not. */
+export function priceNow(item: ShopItem, now = Date.now()): number {
+  return dealOf(item, now)?.price ?? item.price;
+}
+
 /** Does this browser own the item? `owner` is the account that owns the site,
  *  which gets the whole shelf without paying for any of it. */
 export function owns(id: string, owner = false): boolean {
   return owner || econ.get().owned.includes(id);
 }
 
-export function buy(id: string): { ok: boolean; reason?: string } {
+export function buy(id: string, now = Date.now()): { ok: boolean; reason?: string } {
   const item = itemOf(id);
   if (!item) return { ok: false, reason: "That item is not on the shelf." };
   const s = econ.get();
   if (s.owned.includes(id)) return { ok: false, reason: "You already own it." };
-  if (s.coins < item.price) return { ok: false, reason: "Not enough coins yet." };
+  /* The till charges what the tag says, which on a sale day is not the list.
+     `now` comes from the page, so the price on the card and the price charged
+     are the same reading of the clock even if the window turns over in
+     between. */
+  const cost = priceNow(item, now);
+  if (s.coins < cost) return { ok: false, reason: "Not enough coins yet." };
   econ.set({
-    coins: s.coins - item.price,
-    spent: s.spent + item.price,
+    coins: s.coins - cost,
+    spent: s.spent + cost,
     owned: [...s.owned, id],
   });
   return { ok: true };
