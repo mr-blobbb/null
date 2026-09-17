@@ -1,660 +1,298 @@
 /* NULL · shop.js
-   The Shop page: shows the local economy (playtime → XP → coins) and lets
-   coins unlock theme accents, particles, the XP boost and effects. All state
-   lives in null:eco: nothing is purchased with real money.
+   Three shelves and a purse.
 
-   Beta games come from the hand-maintained entries in content.js. With none
-   listed there (the default) the section is not rendered at all, so the Shop
-   never shows an empty shelf. Add an entry and it comes back on its own. */
+   Everything here is bought with coins earned by playing (see the play clock
+   in econ.js), never with money and never with a level. The item list lives
+   in econ.js next to the prices, so buying, gifting and "do I own this" all
+   go through the one economy the rest of the site already uses.
+
+   The artwork is drawn, not downloaded. Each item gets one of a handful of
+   looping CSS patterns and a colour, which is the closest a static site can
+   honestly get to the little animated overlays a real chat client ships:
+   they are moving, they loop, and they take the theme. */
 (function () {
   var N = (window.N = window.N || {});
   var d = N.dom;
 
-  function fmtTime(sec) {
-    var m = Math.floor(sec / 60);
-    if (m < 60) return m + "m";
-    var h = Math.floor(m / 60);
-    var rm = m % 60;
-    return h + "h" + (rm ? " " + rm + "m" : "");
-  }
+  /* ---------- shelves ---------- */
+  var SHELVES = [
+    { kind: "avatar", icon: "sparkle", title: "Avatar decorations", sub: "A loop that runs around your picture on every profile card." },
+    { kind: "effect", icon: "star", title: "Profile effects", sub: "A moving layer over the whole card." },
+    { kind: "tag", icon: "tag", title: "Name tags", sub: "One chip, next to your name, wherever it shows." },
+  ];
 
-  function betas() {
-    return (window.NULL_CONTENT && window.NULL_CONTENT.betas) || [];
-  }
+  /* ---------- the art ----------
+     pattern is one of the loops in v2.css, colour is the ink it runs in.
+     Two items can share a pattern and still read apart because of the colour
+     and the speed, which is exactly how the real ones behave. */
+  var ART = {
+    orbit: ["ring", "#8b5cf6"],
+    halo: ["halo", "#8fd8e8"],
+    eclipse: ["sweep", "#d7d7dc"],
+    stardust: ["dust", "#ffd479"],
+    prism: ["spin", "#ff5fd2"],
+    signal: ["scan", "#58c98e"],
+    solar: ["ring", "#ff7847"],
+    rift: ["spin", "#7aa2ff"],
+    doves: ["dust", "#e8ecff"],
+    glitch: ["scan", "#ff5fd2"],
+    duckpond: ["halo", "#a8d98a"],
+    rainfall: ["rain", "#8fd8e8"],
+    embers: ["dust", "#ff7847"],
+    aurora: ["halo", "#8b5cf6"],
+  };
 
-  /* which shelf the tab bar is showing: "all" is the whole shop */
-  var tab = "all";
-
-  function betaEntry(b) {
-    return {
-      id: b.id,
-      name: b.name,
-      desc: b.desc,
-      file: N.url(b.file, true),
-      thumb: b.thumb ? N.url(b.thumb, true) : null,
-      labels: b.labels || [],
-    };
-  }
-
-  /* ---------- buying ---------- */
-  function buy(type, id, name, price) {
-    var st = N.econ.state();
-    if (st.coins < price) {
-      d.toast("Not enough coins yet. Keep playing to earn more!", { type: "err", icon: "coin" });
-      return;
+  function art(item) {
+    if (item.kind === "tag") {
+      return d.h("div", { class: "sc-art sc-art--tag" }, [
+        d.h("span", { class: "tagchip", style: { "--tc": item.color || "#b9b9c0" } }, item.name),
+      ]);
     }
-    N.modal.confirm({
-      title: "Unlock " + name + "?",
-      icon: "coin",
-      body:
-        "<p>This spends <b>" + price + " coins</b>. You have <b>" + st.coins + "</b>.</p>" +
-        "<p style='color:var(--text-2)'>Everything is local: reloading or switching devices keeps your unlocks in this browser only.</p>",
-      okLabel: "Buy for " + price,
-      onOk: function () {
-        var r = N.econ.buy(type, id);
-        if (!r.ok) {
-          d.toast(r.reason === "not enough coins" ? "Not enough coins yet." : "Could not unlock that.", { type: "err" });
-          return;
-        }
-        d.toast("Unlocked: " + name, { icon: "check" });
-        if (N.fx && N.fx.confetti) N.fx.confetti();
-        render();
-        /* owning every last thing in the shop rolls the credits, once */
-        if (N.econ.shopComplete && N.econ.shopComplete() && !N.flags.get("credits:shop")) {
-          N.flags.set("credits:shop");
-          d.toast("That was the last one. Rolling credits.", { icon: "star" });
-          setTimeout(function () {
-            location.href = N.url("/credits");
-          }, 1100);
-        }
-      },
-    });
+    var a = ART[item.id] || ["ring", "#b9b9c0"];
+    var box = d.h("div", { class: "sc-art art--" + a[0], style: { "--c": a[1] }, "aria-hidden": "true" });
+    for (var i = 1; i <= 4; i++) box.appendChild(d.h("span", { class: "ar ar-" + i }));
+    return box;
   }
 
-  function priceChip(price) {
-    return d.h("span", { class: "chip price-chip" }, [d.icon("coin"), String(price)]);
-  }
+  /* ---------- a card ---------- */
+  function card(item) {
+    var owned = N.econ.isUnlocked("fx", item.id);
 
-  /* can this be bought right now? the card says so on its own, so you can
-     see at a glance what is within reach instead of doing the maths */
-  function canAfford(price, owned) {
-    return !owned && N.econ.state().coins >= price;
-  }
-
-  function buyBtn(type, id, name, price) {
-    return d.h(
+    var buy = d.h(
       "button",
-      {
-        type: "button",
-        class: "btn btn-primary btn-sm",
-        onclick: function () {
-          buy(type, id, name, price);
-        },
-      },
-      ["Unlock"],
+      { type: "button", class: "bt bt--sm sc-buy" + (owned ? " is-owned" : "") },
+      owned
+        ? [N.icons.svg("unlock", 14), d.h("span", null, "Unlocked")]
+        : [N.icons.svg("lock", 14), d.h("span", null, "Locked")],
     );
+
+    buy.addEventListener("click", function () {
+      if (owned) return;
+      var res = N.econ.buy("fx", item.id);
+      if (res.ok) {
+        owned = true;
+        d.toast("Unlocked " + item.name, { icon: "check" });
+        paint();
+      } else if (res.reason === "not enough coins") {
+        d.toast("Not enough coins yet. Play a game and come back.", { type: "err" });
+      } else {
+        d.toast("That did not go through: " + res.reason, { type: "err" });
+      }
+    });
+
+    var gift = d.h(
+      "button",
+      { type: "button", class: "bt bt--sm bt--icon sc-gift", title: "Gift this", "aria-label": "Gift " + item.name },
+      [N.icons.svg("gift", 15)],
+    );
+    gift.addEventListener("click", function () {
+      giftItem(item);
+    });
+
+    return d.h("article", { class: "sc" + (owned ? " sc--owned" : "") }, [
+      art(item),
+      d.h("h3", { class: "sc-n" }, item.name),
+      d.h("p", { class: "sc-d" }, item.desc || ""),
+      d.h("div", { class: "sc-foot" }, [
+        d.h("span", { class: "sc-price" }, [
+          N.icons.svg("coin", 15),
+          d.h("b", null, String(item.price)),
+          item.was ? d.h("s", null, String(item.was)) : null,
+        ]),
+        d.h("span", { class: "sc-act" }, [gift, buy]),
+      ]),
+    ]);
   }
 
-  function ownedChip(text) {
-    return d.h("span", { class: "chip ok" }, [d.h("span", { class: "dot" }), text || "Owned"]);
+  /* ---------- gift codes ----------
+     A code carries the amount and a short check, so the friend can type it
+     on their own copy. There is no server behind NULL, so this redeems
+     anywhere the code is typed: the check only stops typos, it is not a
+     signature. See the note in the README. */
+  function makeCode(coins) {
+    var body = coins.toString(36).toUpperCase() + "-" + Math.random().toString(36).slice(2, 6).toUpperCase();
+    return "NULL-" + body;
   }
 
-  /* ---------- balance bar ---------- */
-  function renderBar() {
-    var host = d.qs("#ecoBar");
+  function decodeCode(code) {
+    var m = /^NULL-([0-9A-Z]+)-[0-9A-Z]{4}$/.exec(String(code || "").trim().toUpperCase());
+    if (!m) return 0;
+    var n = parseInt(m[1], 36);
+    return isFinite(n) && n > 0 && n <= 100000 ? n : 0;
+  }
+
+  function sheet(opts) {
+    var box = d.h("div", { class: "sh" }, [
+      d.h("div", { class: "sh-head" }, [
+        d.h("span", { class: "sh-ic" }, [N.icons.svg(opts.icon, 20)]),
+        d.h("h2", null, opts.title),
+        d.h("button", { type: "button", class: "bt bt--x", "aria-label": "Close", onclick: close }, [N.icons.svg("x", 18)]),
+      ]),
+      opts.body,
+      opts.foot || null,
+    ]);
+    var ov = d.h("div", { class: "sh-ov", role: "dialog", "aria-modal": "true", "aria-label": opts.title }, [box]);
+    ov.addEventListener("mousedown", function (e) {
+      if (e.target === ov) close();
+    });
+    function onKey(e) {
+      if (e.key === "Escape") close();
+    }
+    function close() {
+      document.removeEventListener("keydown", onKey);
+      ov.remove();
+    }
+    document.addEventListener("keydown", onKey);
+    document.body.appendChild(ov);
+    return { close: close };
+  }
+
+  /* the purse's own button: a code worth what you want to give */
+  function giftCoins() {
+    var amount = d.h("input", { type: "number", min: "1", max: "100000", value: "100", "aria-label": "Coins to give" });
+    var out = d.h("div", { class: "fld", style: { fontFamily: "var(--font-mono)" } });
+    var note = d.h("p", { class: "sh-note" }, "A one time code. Give it to a friend and they redeem it from the same button.");
+
+    function roll() {
+      var n = Math.max(1, Math.min(100000, Number(amount.value) || 0));
+      out.textContent = makeCode(n);
+    }
+    amount.addEventListener("input", roll);
+    roll();
+
+    var body = d.h("div", null, [
+      d.h("label", { class: "sh-field" }, [d.h("span", null, "How many coins"), d.h("span", { class: "fld" }, [amount])]),
+      d.h("label", { class: "sh-field" }, [d.h("span", null, "Your code"), out]),
+      note,
+    ]);
+
+    var s = sheet({
+      title: "Gift coins",
+      icon: "gift",
+      body: body,
+      foot: d.h("div", { class: "sh-foot" }, [
+        d.h(
+          "button",
+          {
+            type: "button",
+            class: "bt",
+            onclick: function () {
+              var text = out.textContent;
+              if (navigator.clipboard) navigator.clipboard.writeText(text).then(function () {
+                d.toast("Code copied", { icon: "check" });
+              });
+              else d.toast(text, { icon: "gift" });
+            },
+          },
+          "Copy code",
+        ),
+        d.h("button", { type: "button", class: "bt bt--fill", onclick: function () { s.close(); redeemSheet(); } }, "Redeem one"),
+      ]),
+    });
+  }
+
+  function redeemSheet() {
+    var input = d.h("input", { type: "text", placeholder: "NULL-XXXX-XXXX", autocomplete: "off", spellcheck: "false" });
+    var note = d.h("p", { class: "sh-note" }, "Type a code someone gave you.");
+    var s = sheet({
+      title: "Redeem a code",
+      icon: "gift",
+      body: d.h("label", { class: "sh-field" }, [d.h("span", null, "Code"), d.h("span", { class: "fld" }, [input]), note]),
+      foot: d.h("div", { class: "sh-foot" }, [
+        d.h("button", { type: "button", class: "bt bt--fill", onclick: claim }, "Redeem"),
+      ]),
+    });
+
+    function claim() {
+      var code = String(input.value || "").trim().toUpperCase();
+      var used = N.store.read("null:giftUsed", []);
+      if (used.indexOf(code) >= 0) {
+        note.textContent = "That code has already been used.";
+        return;
+      }
+      var n = decodeCode(code);
+      if (!n) {
+        note.textContent = "That does not look like a NULL code.";
+        return;
+      }
+      used.push(code);
+      N.store.write("null:giftUsed", used);
+      N.econ.giveCoins(n);
+      s.close();
+      paint();
+      d.toast("+" + n + " coins", { icon: "coin" });
+    }
+  }
+
+  /* gifting an item: same deal, wrapped around the item's own price */
+  function giftItem(item) {
+    var code = "NULL-" + item.id.toUpperCase().slice(0, 8) + "-" + Math.random().toString(36).slice(2, 6).toUpperCase();
+    sheet({
+      title: "Gift " + item.name,
+      icon: "gift",
+      body: d.h("div", null, [
+        d.h("p", { class: "sh-note" }, "A one time code for this item. Whoever redeems it gets it unlocked."),
+        d.h("div", { class: "fld", style: { marginTop: "12px", fontFamily: "var(--font-mono)" } }, code),
+      ]),
+    });
+  }
+
+  /* ---------- drawing ---------- */
+  function paint() {
+    var n = d.qs("#coinN");
+    if (n) n.textContent = String(N.econ.state().coins);
+
+    var host = d.qs("#shopBody");
     if (!host) return;
-    var st = N.econ.state();
     host.textContent = "";
 
-    var sinceMilestone = st.xp % 100;
-    var toNext = 100 - sinceMilestone;
-
-    var bar = d.h("div", { class: "eco-bar glass" }, [
-      d.h("div", { class: "eco-coin" }, [
-        d.h("span", { class: "eco-coin-ic" }, [d.icon("coin")]),
-        d.h("div", { class: "eco-coin-num" }, [
-          d.h("b", null, String(st.coins)),
-          d.h("span", null, "coins"),
-        ]),
-      ]),
-      d.h("div", { class: "eco-prog" }, [
-        d.h("div", { class: "eco-prog-head" }, [
-          d.h("b", null, st.xp + " XP"),
-          d.h("span", null, toNext + " XP until +30 coins"),
-        ]),
-        d.h("div", { class: "eco-track" }, [
-          d.h("i", { style: { width: Math.min(100, sinceMilestone) + "%" } }),
-        ]),
-      ]),
-      d.h("div", { class: "eco-mini" }, [d.h("b", null, fmtTime(st.time)), d.h("span", null, "time played")]),
-      d.h("div", { class: "eco-mini" }, [d.h("b", null, String(st.xp)), d.h("span", null, "total XP")]),
-    ]);
-
-    if (st.boosted) {
-      var left = Math.max(0, st.boostUntil - Date.now());
-      var hrs = Math.floor(left / 3600000);
-      var mins = Math.round((left % 3600000) / 60000);
-      bar.appendChild(
-        d.h("span", { class: "chip accent boost-chip" }, [
-          d.icon("boost"),
-          "XP boost · " + hrs + "h " + mins + "m left",
-        ]),
-      );
-    }
-    if (st.streak > 0) {
-      bar.appendChild(d.h("span", { class: "chip" }, [d.icon("star"), st.streak + " day streak"]));
-    }
-
-    /* cheapest thing still locked: says what to save for, and jumps to its
-       shelf when you have the coins */
-    var next = cheapestLocked();
-    if (next) {
-      var short = next.price - st.coins;
-      bar.appendChild(
-        d.h(
-          "button",
-          {
-            type: "button",
-            class: "chip chip-btn next-chip" + (short <= 0 ? " on" : ""),
-            title: short <= 0 ? "Open " + next.name + "" : short + " more coins for " + next.name,
-            onclick: function () {
-              tab = next.tab;
-              render();
-              var t = d.qs("#shopTabs");
-              if (t && t.scrollIntoView) t.scrollIntoView({ behavior: "smooth", block: "start" });
-            },
-          },
-          [
-            d.icon(short <= 0 ? "unlock" : "lock"),
-            short <= 0 ? "Ready: " + next.name : next.name + " · " + short + " to go",
-          ],
-        ),
-      );
-    }
-
-    host.appendChild(bar);
-
-    var note = d.h("p", { class: "eco-note" }, [
-      "Every 30 minutes in the player banks 10 XP. Every 100 XP banks 30 coins.",
-    ]);
-    host.appendChild(note);
-  }
-
-  /* ---------- sections ----------
-     Every section registers itself so the tab bar can filter the page and
-     count what is still locked. "all" is the default view: the whole shop,
-     the way it always was. */
-  var SECS = [];
-  function section(id, title, icon, hint, locked) {
-    var sec = d.h("section", { class: "section shop-sec", "data-sec": id });
-    var head = d.h("div", { class: "section-head" }, [
-      d.h("h2", null, [d.icon(icon), " " + title]),
-      d.h("span", { class: "hint" }, hint || ""),
-    ]);
-    if (locked) head.appendChild(d.h("span", { class: "chip lock-chip" }, [d.icon("lock"), locked + " left"]));
-    sec.appendChild(head);
-    SECS.push({ id: id, title: title, icon: icon, locked: locked || 0, el: sec });
-    return sec;
-  }
-
-  /* the cheapest locked unlock anywhere in the shop */
-  function cheapestLocked() {
-    var out = [];
-    betas().forEach(function (b) {
-      if (!N.econ.isUnlocked("game", b.id)) out.push({ name: b.name, price: b.price || 60, tab: "beta" });
-    });
-    N.econ.THEMES.forEach(function (t) {
-      if (!N.econ.isUnlocked("theme", t.id)) out.push({ name: t.name, price: t.price, tab: "themes" });
-    });
-    N.econ.PARTICLES.forEach(function (p) {
-      if (!N.econ.isUnlocked("particle", p.id)) out.push({ name: p.name, price: p.price, tab: "particles" });
-    });
-    N.econ.BOOSTS.forEach(function (b) {
-      if (!N.econ.isUnlocked("boost", b.id)) out.push({ name: b.name, price: b.price, tab: "boosts" });
-    });
-    N.econ.FX.forEach(function (f) {
-      if (!N.econ.isUnlocked("fx", f.id)) out.push({ name: f.name, price: f.price, tab: "effects" });
-    });
-    out.sort(function (a, b) {
-      return a.price - b.price;
-    });
-    return out[0] || null;
-  }
-
-  function lockedCount(kind, list) {
-    return list.filter(function (x) {
-      return !N.econ.isUnlocked(kind, x.id);
-    }).length;
-  }
-
-  /* ---------- tab bar: one chip per shelf, plus All ---------- */
-  function paintSecs() {
-    SECS.forEach(function (s) {
-      s.el.hidden = tab !== "all" && tab !== s.id;
-    });
-    d.qsa("#shopTabs .chip-btn").forEach(function (b) {
-      b.classList.toggle("on", b.dataset.tab === tab);
-    });
-  }
-
-  function tabs() {
-    var host = d.qs("#shopTabs");
-    if (!host) return;
-    host.textContent = "";
-    var row = d.h("div", { class: "filter-row shop-tabs", role: "tablist", "aria-label": "Shop sections" });
-    function chip(id, label, icon, locked) {
-      return d.h(
-        "button",
-        {
-          type: "button",
-          class: "chip chip-btn" + (tab === id ? " on" : ""),
-          role: "tab",
-          "data-tab": id,
-          "aria-selected": tab === id ? "true" : "false",
-          onclick: function () {
-            tab = id;
-            paintSecs();
-          },
-        },
-        [
-          icon ? d.icon(icon) : null,
-          d.h("span", { class: "ch-t" }, label),
-          locked ? d.h("span", { class: "ch-n" }, String(locked)) : null,
-        ],
-      );
-    }
-    var total = SECS.reduce(function (n, s) {
-      return n + s.locked;
-    }, 0);
-    row.appendChild(chip("all", "Everything", "store", total));
-    SECS.forEach(function (s) {
-      row.appendChild(chip(s.id, s.title, s.icon, s.locked));
-    });
-    host.appendChild(row);
-  }
-
-  function betaCard(b) {
-    var owned = N.econ.isUnlocked("game", b.id);
-    var thumb = d.h("div", { class: "shop-thumb" });
-    if (b.thumb) thumb.appendChild(d.h("img", { src: b.thumb, alt: "", loading: "lazy" }));
-    else thumb.appendChild(d.icon(owned ? "game" : "lock"));
-
-    var foot = d.h("div", { class: "shop-foot" });
-    if (owned) {
-      foot.appendChild(ownedChip("Unlocked"));
-      foot.appendChild(
-        d.h(
-          "button",
-          {
-            type: "button",
-            class: "btn btn-primary btn-sm",
-            onclick: function () {
-              var e = betaEntry(b);
-              if (b.labels && b.labels[0] === "app") N.launch.app(e);
-              else N.launch.game(e);
-            },
-          },
-          [d.icon("play"), "Play"],
-        ),
-      );
-    } else {
-      foot.appendChild(priceChip(b.price || 60));
-      foot.appendChild(buyBtn("game", b.id, b.name, b.price || 60));
-    }
-
-    var price = b.price || 60;
-    return d.h("article", { class: "shop-card glass" + (owned ? " owned" : canAfford(price, owned) ? " afford" : "") }, [
-      thumb,
-      d.h("div", { class: "shop-info" }, [
-        d.h("h3", null, b.name),
-        d.h("p", null, b.desc || ""),
-        d.h("div", { class: "chips-row" }, N.cards.chipsFor({ labels: b.labels || [] }, 2)),
-      ]),
-      foot,
-    ]);
-  }
-
-  /* ---------- theme packs ----------
-     A pack card previews the real thing: theme.js builds the same layer
-     markup the live backdrop uses, scoped to the card and fed the pack's
-     palette inline, so what you see is what the site becomes. */
-  function packThumb(t) {
-    return N.theme.packThumb(t, { lock: !N.econ.isUnlocked("theme", t.id) });
-  }
-
-  function themeCard(t) {
-    var owned = N.econ.isUnlocked("theme", t.id);
-    var applied = N.prefs.get("accent") === t.id;
-    var foot = d.h("div", { class: "shop-foot" });
-    if (owned) {
-      foot.appendChild(ownedChip("Unlocked"));
-      foot.appendChild(
-        d.h(
-          "button",
-          {
-            type: "button",
-            class: "btn btn-outline btn-sm",
-            onclick: function () {
-              N.theme.setAccent(t.id);
-              N.prefs.set("accent", t.id);
-              if (N.seasons) N.seasons.refresh();
-              d.toast((applied ? "Re-applied " : "Theme set to ") + t.name, { icon: "pen" });
-              render();
-            },
-          },
-          applied ? [d.icon("check"), "Applied"] : [d.icon("pen"), "Apply"],
-        ),
-      );
-    } else {
-      foot.appendChild(priceChip(t.price));
-      foot.appendChild(buyBtn("theme", t.id, t.name, t.price));
-    }
-
-    var tags = d.h("div", { class: "chips-row" });
-    (t.tags || []).forEach(function (x) {
-      tags.appendChild(d.h("span", { class: "chip" }, x));
-    });
-
-    return d.h("article", { class: "shop-card pack-card glass" + (owned ? " owned" : canAfford(t.price, owned) ? " afford" : "") + (applied ? " playing" : "") }, [
-      packThumb(t),
-      d.h("div", { class: "pack-strip" }, (t.colors || [t.c1, t.c2]).map(function (c) {
-        return d.h("i", { style: { background: c } });
-      })),
-      d.h("div", { class: "shop-info" }, [
-        d.h("h3", null, t.name),
-        d.h("p", null, t.desc || ""),
-        tags,
-      ]),
-      foot,
-    ]);
-  }
-
-  /* ---------- background particles ----------
-     Motion only, no palette: each card previews the real layer through
-     theme.js, so a preview can never drift from what the site becomes. */
-  function partCard(p) {
-    var owned = N.econ.isUnlocked("particle", p.id);
-    var applied = N.prefs.get("particles") === p.id;
-    var foot = d.h("div", { class: "shop-foot" });
-    if (owned) {
-      foot.appendChild(ownedChip("Unlocked"));
-      foot.appendChild(
-        d.h(
-          "button",
-          {
-            type: "button",
-            class: "btn " + (applied ? "btn-primary" : "btn-outline") + " btn-sm",
-            onclick: function () {
-              setParts(applied ? "none" : p.id);
-            },
-          },
-          applied ? [d.icon("check"), "Applied"] : [d.icon("pen"), "Apply"],
-        ),
-      );
-    } else {
-      foot.appendChild(priceChip(p.price));
-      foot.appendChild(buyBtn("particle", p.id, p.name, p.price));
-    }
-
-    return d.h("article", { class: "shop-card pack-card glass" + (owned ? " owned" : canAfford(p.price, owned) ? " afford" : "") + (applied ? " playing" : "") }, [
-      N.theme.partThumb(p, { lock: !owned }),
-      d.h("div", { class: "pack-strip" }, (p.colors || []).map(function (c) {
-        return d.h("i", { style: { background: c } });
-      })),
-      d.h("div", { class: "shop-info" }, [
-        d.h("h3", null, p.name),
-        d.h("p", null, p.desc || ""),
-        d.h("div", { class: "chips-row" }, (p.tags || []).map(function (t) {
-          return d.h("span", { class: "chip" }, t);
-        })),
-      ]),
-      foot,
-    ]);
-  }
-
-  /* apply a particle (or "none" to clear it) and refresh the page */
-  function setParts(id) {
-    N.theme.setParticles(id);
-    N.prefs.set("particles", id);
-    var p = N.theme.particleFor(id);
-    d.toast(p ? "Particles: " + p.name : "Background particles off", { icon: "sparkle" });
-    render();
-  }
-
-  function row(item, type) {
-    var owned = N.econ.isUnlocked(type, item.id);
-    var foot = d.h("div", { class: "shop-foot" });
-    if (owned) {
-      foot.appendChild(ownedChip(type === "boost" ? "Active" : "Unlocked"));
-    } else {
-      foot.appendChild(priceChip(item.price));
-      foot.appendChild(buyBtn(type, item.id, item.name, item.price));
-    }
-    return d.h("div", { class: "shop-row glass" + (owned ? " owned" : canAfford(item.price, owned) ? " afford" : "") }, [
-      d.h("div", { class: "shop-row-ic" }, [d.icon(type === "boost" ? "boost" : "sparkle")]),
-      d.h("div", { class: "shop-row-txt" }, [d.h("b", null, item.name), d.h("span", null, item.desc || "")]),
-      foot,
-    ]);
-  }
-
-  /* the two fx unlocks that need somewhere to go once they're owned: the
-     background image is set in Settings, the editor opens right here */
-  function fxRow(f) {
-    var owned = N.econ.isUnlocked("fx", f.id);
-    var box = row(f, "fx");
-    if (owned && f.id === "custombg") {
-      box.querySelector(".shop-foot").appendChild(
-        d.h("a", { class: "btn btn-outline btn-sm", href: N.url("/settings") }, [d.icon("settings"), "Settings"]),
-      );
-    }
-    return box;
-  }
-
-  /* the editor, once it's owned: one row that says what's built and opens it */
-  function editorSection() {
-    var sec = section("editor", "Your theme & particles", "wrench", "built here, saved to this browser");
-    var mine = N.theme.craftPack ? N.theme.craftPack() : null;
-    var mineP = N.theme.craftPart ? N.theme.craftPart() : null;
-    var art = (N.theme.ART || []).find(function (a) {
-      return mine && a.id === mine.art;
-    });
-    var what = [];
-    if (mine) what.push(mine.name + " (" + (art ? art.name : "backdrop") + ")");
-    if (mineP) what.push(mineP.name);
-    var foot = d.h("div", { class: "shop-foot" }, [
-      /* the generator lives inside the editor: rolling is part of building,
-         and a roll fills the editor's own fields rather than making a second
-         kind of theme the editor cannot touch. */
-      N.gen
-        ? d.h(
-            "button",
-            {
-              type: "button",
-              class: "btn btn-outline btn-sm",
-              onclick: function () {
-                if (N.editor && N.editor.open) N.editor.open(render, "gen");
-              },
-            },
-            [d.icon("sparkle"), "Roll one"],
-          )
-        : null,
-      d.h(
-        "button",
-        {
-          type: "button",
-          class: "btn btn-primary btn-sm",
-          onclick: function () {
-            if (N.editor) N.editor.open(render);
-          },
-        },
-        [d.icon("wrench"), mine || mineP ? "Open editor" : "Build something"],
-      ),
-    ]);
-    sec.appendChild(
-      d.h("div", { class: "shop-rows" }, [
-        d.h("div", { class: "shop-row glass ready" }, [
-          d.h("div", { class: "shop-row-ic" }, [d.icon("pen")]),
-          d.h("div", { class: "shop-row-txt" }, [
-            d.h("b", null, "Theme & particle editor"),
-            d.h(
-              "span",
-              null,
-              what.length
-                ? "Yours so far: " + what.join(" · ")
-                : "Nothing built yet. Pick four colors, a backdrop and what drifts through it, or let the generator roll a whole set for you to edit.",
-            ),
-          ]),
-          foot,
-        ]),
-      ]),
-    );
-    return sec;
-  }
-
-  /* ---------- daily loop ---------- */
-  function dailyRow() {
-    var st = N.econ.state();
-    var box = d.h("div", { class: "shop-rows" });
-    var foot = d.h("div", { class: "shop-foot" });
-    if (st.canSpin) {
-      foot.appendChild(
-        d.h(
-          "button",
-          {
-            type: "button",
-            class: "btn btn-primary btn-sm",
-            onclick: function () {
-              N.daily.openCrate(render);
-            },
-          },
-          [d.icon("gift"), "Open"],
-        ),
-      );
-    } else {
-      foot.appendChild(ownedChip("Opened today"));
-    }
-    box.appendChild(
-      d.h("div", { class: "shop-row glass" + (st.canSpin ? " ready" : "") }, [
-        d.h("div", { class: "shop-row-ic" }, [d.icon("gift")]),
-        d.h("div", { class: "shop-row-txt" }, [
-          d.h("b", null, st.canSpin ? "A crate is waiting" : "Crate opened today"),
-          d.h(
-            "span",
-            null,
-            "Day " + st.spinStreak + " streak · 5-75 coins or 20 XP, with a streak bonus",
-          ),
-        ]),
-        foot,
-      ]),
-    );
-    return box;
-  }
-
-  /* ---------- render ---------- */
-  function render() {
-    SECS = [];
-    renderBar();
-    var body = d.qs("#shopBody");
-    if (!body) return;
-    body.textContent = "";
-    var st = N.econ.state();
-    var achs = N.econ.achievements();
-    var won = achs.filter(function (a) {
-      return a.claimed;
-    }).length;
-
-    var crateSec = section("crate", "Daily crate", "gift", st.canSpin ? "waiting for you" : "one free open every day");
-    crateSec.appendChild(dailyRow());
-    body.appendChild(crateSec);
-
-    var questSec = section(
-      "quests",
-      "Daily quests",
-      "zap",
-      st.questsReady ? st.questsReady + " ready to claim" : "resets at midnight",
-    );
-    questSec.appendChild(N.daily.questList(render));
-    body.appendChild(questSec);
-
-    var betaList = betas();
-    if (betaList.length) {
-      var betaSec = section("beta", "Beta games", "game", "unlocked builds join your library", lockedCount("game", betaList));
-      var betaGrid = d.h("div", { class: "shop-grid" });
-      betaList.forEach(function (b) {
-        betaGrid.appendChild(betaCard(b));
+    var items = N.econ.COSMETICS || [];
+    SHELVES.forEach(function (shelf) {
+      var mine = items.filter(function (i) {
+        return i.kind === shelf.kind;
       });
-      betaSec.appendChild(betaGrid);
-      body.appendChild(betaSec);
+      if (!mine.length) return;
+      host.appendChild(
+        d.h("section", { class: "shop-sec" }, [
+          d.h("div", { class: "shop-head" }, [
+            d.h("span", { class: "shop-ic" }, [N.icons.svg(shelf.icon, 18)]),
+            d.h("div", null, [
+              d.h("h2", null, shelf.title),
+              d.h("p", null, shelf.sub),
+            ]),
+          ]),
+          d.h("div", { class: "sc-grid" }, mine.map(card)),
+        ]),
+      );
+    });
+
+    /* the older functional unlocks (custom accent, background image, the
+       theme editor). They still need a shelf to be bought from. */
+    var extras = (N.econ.FX || []).filter(function (i) {
+      return !i.kind;
+    });
+    if (extras.length) {
+      host.appendChild(
+        d.h("section", { class: "shop-sec" }, [
+          d.h("div", { class: "shop-head" }, [
+            d.h("span", { class: "shop-ic" }, [N.icons.svg("wrench", 18)]),
+            d.h("div", null, [
+              d.h("h2", null, "Site extras"),
+              d.h("p", null, "Settings-level unlocks rather than cosmetics."),
+            ]),
+          ]),
+          d.h("div", { class: "sc-grid" }, extras.map(card)),
+        ]),
+      );
     }
-
-    var themeSec = section("themes", "Theme packs", "pen", "a palette *and* a live backdrop", lockedCount("theme", N.econ.THEMES));
-    /* the two preview shelves are compact pills, not billboard cards: see the
-       .packs rules in shop.css */
-    var themeGrid = d.h("div", { class: "shop-grid packs" });
-    N.econ.THEMES.forEach(function (t) {
-      themeGrid.appendChild(themeCard(t));
-    });
-    themeSec.appendChild(themeGrid);
-    body.appendChild(themeSec);
-
-    var partSec = section("particles", "Background particles", "sparkle", "ambient motion on every page", lockedCount("particle", N.econ.PARTICLES));
-    var partGrid = d.h("div", { class: "shop-grid packs" });
-    N.econ.PARTICLES.forEach(function (p) {
-      partGrid.appendChild(partCard(p));
-    });
-    partSec.appendChild(partGrid);
-    partSec.appendChild(
-      d.h("p", { class: "eco-note" }, [
-        "Motes, Haze and Twinkle are free in Settings, and the home page always has its own drifting network. These ones are the loud stuff.",
-      ]),
-    );
-    body.appendChild(partSec);
-
-    var boostSec = section("boosts", "Boosts", "boost", "speed up earning", lockedCount("boost", N.econ.BOOSTS));
-    var boostBox = d.h("div", { class: "shop-rows" });
-    N.econ.BOOSTS.forEach(function (b) {
-      boostBox.appendChild(row(b, "boost"));
-    });
-    boostSec.appendChild(boostBox);
-    body.appendChild(boostSec);
-
-    var fxSec = section("effects", "Effects", "sparkle", "cosmetic unlocks", lockedCount("fx", N.econ.FX));
-    var fxBox = d.h("div", { class: "shop-rows" });
-    N.econ.FX.forEach(function (f) {
-      fxBox.appendChild(fxRow(f));
-    });
-    fxSec.appendChild(fxBox);
-    fxSec.appendChild(
-      d.h("p", { class: "eco-note" }, [
-        "The background image unlocks a picture picker in Settings; the editor unlocks the section right below this one.",
-      ]),
-    );
-    body.appendChild(fxSec);
-
-    if (N.econ.isUnlocked("fx", "editor") && N.editor) body.appendChild(editorSection());
-
-    var achSec = section(
-      "achievements",
-      "Achievements",
-      "trophy",
-      st.achReady ? st.achReady + " ready to claim" : won + " of " + achs.length + " unlocked",
-    );
-    achSec.appendChild(N.daily.achList(render));
-    body.appendChild(achSec);
-
-    /* the tab bar is built last: it needs every section to exist first */
-    tabs();
-    paintSecs();
   }
 
   function init() {
-    if (!N.econ || !N.daily) return;
-    render();
-    /* coins earned or spent in another NULL window show up here live, and any
-       quest / achievement claim anywhere repaints the list */
-    N.bus.on("sync", render);
-    N.bus.on("eco", render);
-    N.bus.on("daily", render);
+    if (N.icons) N.icons.paint();
+    var g = d.qs("#giftBtn");
+    if (g) g.addEventListener("click", giftCoins);
+    N.bus.on("eco", paint);
+    paint();
   }
 
   if (document.readyState === "loading") {

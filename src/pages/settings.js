@@ -46,6 +46,7 @@
   function refresh() {
     var p = N.prefs.data;
     paintTheme(p);
+    paintPalettes(p);
     buildAccentRow();
     paintAccent(p);
     paintPerf(p);
@@ -74,10 +75,50 @@
 
   /* ---------- theme ---------- */
   function paintTheme(p) {
-    var light = p.theme === "light";
+    /* whether the page counts as light comes from the palette now, so the
+       switch agrees with the scheme that is actually on */
+    var pal = (N.theme.paletteById && N.theme.paletteById(p.palette || "null")) || { light: false, t: "Null" };
     var sw = d.qs("#themeSwitch");
-    if (sw) sw.checked = light;
-    setText("#themeHint", light ? "Light, NULL inverted." : "Dark, NULL's default.");
+    if (sw) sw.checked = !!pal.light;
+    setText("#themeHint", pal.t + (pal.light ? ", a light scheme." : ", a dark scheme."));
+  }
+
+  /* ---------- palettes ----------
+     Sixteen whole colour schemes, one card each. The swatch is the page
+     colour with the accent across the bottom, which is enough to tell them
+     apart at a glance without loading a screenshot of every page. */
+  function paintPalettes(p) {
+    var row = d.qs("#palRow");
+    if (!row || !N.theme.palettes) return;
+    row.textContent = "";
+    var current = p.palette || "null";
+
+    N.theme.palettes.forEach(function (pal) {
+      var b = d.h(
+        "button",
+        {
+          type: "button",
+          class: "pal" + (pal.id === current ? " on" : ""),
+          "data-val": pal.id,
+          "aria-pressed": pal.id === current ? "true" : "false",
+        },
+        [
+          d.h("span", { class: "pal-sw", style: { background: pal.bg } }, [
+            d.h("span", { class: "pal-bar", style: { background: pal.fg } }),
+          ]),
+          d.h("span", { class: "pal-n" }, pal.t),
+        ],
+      );
+      b.addEventListener("click", function () {
+        N.prefs.set("palette", pal.id);
+        N.theme.setPalette(pal.id);
+        if (N.seasons) N.seasons.refresh();
+        paintPalettes(N.prefs.data);
+        paintTheme(N.prefs.data);
+        d.toast(pal.t + " theme", { icon: "check" });
+      });
+      row.appendChild(b);
+    });
   }
 
   /* ---------- accent ----------
@@ -814,15 +855,17 @@
      bind: the controls themselves
      ============================================================ */
   function bind() {
-    /* theme: one switch, not two buttons */
+    /* theme: one switch, not two buttons. It flips between the two plain
+       schemes, Light and the default; anything more colourful is picked from
+       the palette row in the same card. */
     var tsw = d.qs("#themeSwitch");
     if (tsw) {
       tsw.addEventListener("change", function () {
-        var t = tsw.checked ? "light" : "dark";
-        N.theme.setTheme(t);
-        N.prefs.set("theme", t);
+        var pal = tsw.checked ? "light" : "null";
+        N.prefs.set("palette", pal);
+        N.theme.setPalette(pal);
         refresh();
-        d.toast(t === "light" ? "Light theme on" : "Dark theme on", { icon: t === "light" ? "sun" : "moon" });
+        d.toast(tsw.checked ? "Light theme on" : "Dark theme on", { icon: tsw.checked ? "sun" : "moon" });
       });
     }
 

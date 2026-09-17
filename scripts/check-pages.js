@@ -119,13 +119,17 @@ for (const page of PAGES) {
   if (errors.length) console.log("  errors: " + errors.slice(0, 3).join(" | "));
 
   const chrome = !doc.body.classList.contains("no-chrome");
-  ok(!!doc.querySelector(".topbar") === chrome, chrome ? "nav mounts" : "nav stays off (raw page)");
+  ok(!!doc.querySelector(".rail") === chrome, chrome ? "nav mounts" : "nav stays off (raw page)");
   if (chrome) {
-    /* the rail is the default nav (Settings can still pick the top bar), and
-       the head script has to have decided before the first paint */
+    /* the rail is the navigation, and the head script has to have decided
+       which before the first paint */
     ok(
-      doc.documentElement.dataset.nav === (win.N.prefs.get("navLayout") === "bar" ? "bar" : "side"),
-      "the nav layout is written on <html> (" + doc.documentElement.dataset.nav + ")",
+      doc.documentElement.dataset.nav === "side",
+      "the rail layout is written on <html> (" + doc.documentElement.dataset.nav + ")",
+    );
+    ok(
+      doc.querySelectorAll(".rail .ril").length === win.N.router.RAIL_TOP.length + win.N.router.RAIL_BOTTOM.length,
+      "…with every door drawn",
     );
   }
   ok(
@@ -138,11 +142,14 @@ for (const page of PAGES) {
   }
 
   if (page === "index.html") {
-    /* the front door is one wordmark, one search box and the ways in: the
-       shelves and the counts live on the library pages now */
-    ok(!!doc.querySelector(".door-word"), "the front door shows the wordmark");
+    /* the front door is one wordmark, one line, one search box and the row
+       of circles: the shelves live on the library pages */
+    const word = doc.querySelector(".hm-word");
+    ok(!!word && word.textContent === "null", "the front door shows the wordmark");
+    ok(!!(doc.querySelector("#hmLine") || {}).textContent, "…and a line picked for this load");
     ok(!!doc.querySelector("#homeSearch #searchInput"), "the front door carries the site search");
-    ok(doc.querySelectorAll(".door-links a").length >= 4, "the quick links render");
+    ok(doc.querySelectorAll("#hmLinks .ql").length >= 7, "the circles render (All Apps, Add, five shortcuts)");
+    ok(!!doc.querySelector("#hmMeta"), "…and the corner readout");
   }
 
   /* the dev console (type nldev) has to build, filter, and actually seed a
@@ -201,7 +208,7 @@ for (const page of PAGES) {
         /* with nothing filtered the count is just the total: a filter is what
            turns it into "shown / total" */
         const seen = counter ? counter.textContent : "";
-        ok(!!counter && (seen === String(after) || seen === after + " / " + after), "the library page re-counts itself (\"" + seen + "\")");
+        ok(!!counter && seen === after + " of " + after, "the library page re-counts itself (\"" + seen + "\")");
         const clear = Array.from(doc.querySelectorAll(".dc-b")).find((b) => /Clear placeholders/.test(b.textContent));
         if (clear) clear.click();
         ok(win.N.catalog.games().length === before, "clearing removes them again (" + win.N.catalog.games().length + ")");
@@ -245,14 +252,19 @@ for (const page of PAGES) {
     }
   }
   if (page === "shop.html") {
-    /* the beta shelf is hand-maintained in content.js: with the list empty
-       the section should not be there at all, not sitting there empty */
-    const betas = (win.NULL_CONTENT && win.NULL_CONTENT.betas) || [];
-    const body = doc.querySelector("#shopBody").textContent;
-    ok(doc.querySelectorAll("#shopBody .shop-card").length > 0, "the shop lists its unlocks (" + doc.querySelectorAll("#shopBody .shop-card").length + " cards)");
+    /* three cosmetic shelves, then the older settings-level unlocks */
+    const cards = doc.querySelectorAll("#shopBody .sc");
+    ok(cards.length > 0, "the shop lists its items (" + cards.length + " cards)");
+    ok(!!doc.querySelector("#shopBody .sc-art"), "…each with its own artwork");
+    const heads = Array.from(doc.querySelectorAll("#shopBody .shop-head h2")).map((h) => h.textContent);
     ok(
-      /Beta games/.test(body) === betas.length > 0,
-      betas.length ? "beta builds are listed (" + betas.length + ")" : "no beta section while the beta list is empty",
+      heads.indexOf("Avatar decorations") >= 0 && heads.indexOf("Name tags") >= 0,
+      "…grouped on their shelves (" + heads.join(", ") + ")",
+    );
+    ok(!!doc.querySelector("#coinN") && !!doc.querySelector("#giftBtn"), "the purse shows coins and a gift button");
+    ok(
+      doc.querySelectorAll("#shopBody .sc-buy").length === cards.length,
+      "…every card carrying a lock state",
     );
   }
 
@@ -290,7 +302,7 @@ for (const page of PAGES) {
     /* an empty folder is a normal state: say so instead of drawing nothing */
     const kind = page.split("/")[0];
     if (!win.N.catalog[kind]().length) {
-      ok(!!doc.querySelector("#empty .empty"), "an empty " + kind + " folder shows the empty state");
+      ok(!!(doc.querySelector("#empty") || {}).textContent, "an empty " + kind + " folder shows the empty state");
     }
   }
   if (page === "player.html") {
@@ -344,9 +356,23 @@ for (const page of PAGES) {
     themeSw.checked = true;
     fire(themeSw);
     ok(
-      win.N.prefs.get("theme") === "light" && doc.documentElement.dataset.theme === "light",
+      win.N.prefs.get("palette") === "light" &&
+        doc.documentElement.dataset.palette === "light" &&
+        doc.documentElement.dataset.theme === "light",
       "the theme switch flips to light",
     );
+    /* the palette picker: sixteen schemes, one card each, and picking one
+       repaints the page rather than only the accent */
+    ok(qa("#palRow .pal").length === win.N.theme.palettes.length, "every palette has a card (" + qa("#palRow .pal").length + ")");
+    const forest = qa("#palRow .pal").find((b) => b.dataset.val === "forest");
+    ok(!!forest, "…including Forest");
+    if (forest) {
+      forest.click();
+      ok(
+        doc.documentElement.dataset.palette === "forest" && win.N.prefs.get("palette") === "forest",
+        "…and picking one re-inks the page (" + doc.documentElement.dataset.palette + ")",
+      );
+    }
     themeSw.checked = false;
     fire(themeSw);
     ok(doc.documentElement.dataset.theme === "dark", "…and back to dark");
@@ -649,23 +675,22 @@ console.log("\nstarters and the site clock");
   pl.dom.window.close();
 }
 
-/* ---------- the particle network ----------
-   The front door's backdrop is a canvas: theme.js draws the dots and the
-   hairlines between them, which is the effect people mean by a particle
-   network. It belongs to the home page now instead of being a free particle
-   set, it draws one frame in a thumbnail rather than fifty loops, and a set
-   somebody saved back when this was a node/link pair still has to come back
-   as the real thing. */
-console.log("\nthe particle network");
+/* ---------- the front door's backdrop ----------
+   A still grid of dots, painted with one tiled gradient. No canvas, no
+   motion: the home page is texture and text and nothing else. The card band
+   under it is the only moving thing, and it carries the placeholder quote
+   plus the rest of the shelf. */
+console.log("\nthe front door backdrop");
 {
   const { dom, errors } = load("index.html", "/");
   const win = dom.window;
   const doc = win.document;
   await wait(500);
 
-  ok(!!doc.querySelector(".door-net .pt-net"), "the front door mounts the particle network");
-  ok(doc.querySelectorAll(".door-net b").length === 0, "…with no DOM nodes pretending to be a network");
-  ok(!win.N.theme.particleFor("constellation"), "…and it is not a particle set to pick any more");
+  ok(!!doc.querySelector(".dots"), "the front door paints its grid of dots");
+  ok(!doc.querySelector(".dots canvas"), "…with nothing animated behind the text");
+  ok(doc.querySelectorAll(".hm-track .mc").length >= 12, "the card band is populated");
+  ok(!!doc.querySelector(".mc-av"), "…each card carrying its little square picture slot");
   ok(errors.length === 0, "no script errors (" + errors.slice(0, 2).join(" | ") + ")");
   win.close();
 }
@@ -701,29 +726,25 @@ console.log("\nthe nav model");
   const doc = win.document;
   await wait(400);
 
-  ok(win.N.router.PRIMARY.length === 4, "the rail carries four doors");
-  const btn = doc.querySelector(".more-nav .nav-link");
-  ok(!!btn, "…and a More button");
-  if (btn) btn.click();
-  await wait(60);
-  const rows = Array.from(doc.querySelectorAll(".more-nav .more-menu a.mi")).map((a) => a.getAttribute("href"));
-  const want = win.N.router.MORE.reduce((n, g) => n + g.links.length, 0);
-  ok(rows.length === want && want >= 10, "the panel lists every other page (" + rows.length + ")");
-  ok(rows.every((h) => h && h.charAt(0) === "/"), "…with real links");
-  ok(!!doc.querySelector(".more-nav .more-menu .em-all"), "…and the extensions menu rides along");
-
-  /* The rail writes the same pages out under the More row, and shows them
-     only while it is open (extra.css owns that half). The list is text, so
-     the extension popups stay in the flyout alone. */
-  const rest = doc.querySelector(".nav-links .rail-rest");
-  ok(!!rest, "…and the rail writes the rest of the site out under it");
-  const restRows = rest ? Array.from(rest.querySelectorAll("a.rr")) : [];
-  ok(restRows.length === want + 1, "…one row per page, Extensions included (" + restRows.length + ")");
+  ok(win.N.router.RAIL_TOP.length === 5, "the rail carries five doors up top");
+  ok(win.N.router.RAIL_BOTTOM.length === 4, "…and four along the bottom");
+  const doors = Array.from(doc.querySelectorAll(".rail .rail-grp .ril"));
+  ok(doors.length === 9, "…all nine drawn (" + doors.length + ")");
   ok(
-    restRows.every((a) => (a.getAttribute("href") || "").charAt(0) === "/"),
-    "…with real links",
+    doors.map((a) => a.dataset.id).join(",") === "home,games,apps,proxies,shop,profile,changelog,extensions,settings",
+    "…in the order they were asked for (" + doors.map((a) => a.dataset.id).join(",") + ")",
   );
-  ok(!doc.querySelector(".rail-rest .mi"), "…and no second copy of the extension menu");
+  ok(!!doc.querySelector('.rail .ril[data-id="home"] .ril-ic svg'), "…each with its own drawn icon");
+  ok(!!doc.querySelector(".rail .ril.on"), "…and the page you are on is the only one marked");
+
+  /* All Apps: the one place the whole site map lives now */
+  const allBtn = doc.querySelector("#hmLinks .ql--fixed .ql-c");
+  ok(!!allBtn, "the front door has an All Apps circle");
+  if (allBtn) allBtn.click();
+  await wait(60);
+  const listed = Array.from(doc.querySelectorAll(".sh-ov .ap")).map((a) => a.getAttribute("href"));
+  ok(listed.length === win.N.router.ALL.length, "…and it lists every page (" + listed.length + ")");
+  ok(listed.every((h) => h && h.charAt(0) === "/"), "…with real links");
   ok(errors.length === 0, "no script errors (" + errors.slice(0, 2).join(" | ") + ")");
   win.close();
 }
@@ -745,9 +766,9 @@ console.log("\nserved from /site/");
   ok(errors.length === 0, "no script errors (" + errors.slice(0, 2).join(" | ") + ")");
   ok(win.N.base === "/site/", "the folder is worked out from the page (" + win.N.base + ")");
 
-  const brand = doc.querySelector("a.brand");
-  ok(!!brand && brand.getAttribute("href") === "/site/", "the brand links to the root NULL is served from");
-  const nav = doc.querySelector("a.nav-link");
+  const home = doc.querySelector('.rail .ril[data-id="home"]');
+  ok(!!home && home.getAttribute("href") === "/site/", "the home door links to the root NULL is served from");
+  const nav = doc.querySelector('.rail .ril[data-id="games"]');
   ok(!!nav && nav.getAttribute("href").indexOf("/site/") === 0, "nav links carry the folder (" + (nav ? nav.getAttribute("href") : "none") + ")");
   const foot = doc.querySelector(".site-foot a[href]");
   ok(!!foot && foot.getAttribute("href").indexOf("/site/") === 0, "footer links carry the folder (" + (foot ? foot.getAttribute("href") : "none") + ")");

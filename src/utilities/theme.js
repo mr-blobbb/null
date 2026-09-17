@@ -947,6 +947,66 @@
     N.bus.emit("theme", t);
   }
 
+  /* ---------- palettes ----------
+     A palette is the whole colour scheme, not an accent: it re-inks the page,
+     the surfaces, the borders and the text at once (see the blocks in
+     src/styles/v2.css). It is kept apart from setTheme, which only decides
+     whether the page is light or dark, because the two do different jobs and
+     a palette can change the answer to the second one. */
+  var PALETTES = [
+    { id: "null", t: "Null", bg: "#08080a", fg: "#f4f4f5", light: false },
+    { id: "midnight", t: "Midnight", bg: "#080c18", fg: "#7aa2ff", light: false },
+    { id: "darker", t: "Darker", bg: "#000000", fg: "#d7d7dc", light: false },
+    { id: "forest", t: "Forest", bg: "#070d09", fg: "#7fd18b", light: false },
+    { id: "sunset", t: "Sunset", bg: "#150b10", fg: "#ff9a76", light: false },
+    { id: "nord", t: "Nord", bg: "#242933", fg: "#88c0d0", light: false },
+    { id: "mono", t: "Mono", bg: "#0e0e0e", fg: "#ffffff", light: false },
+    { id: "light", t: "Light", bg: "#f4f4f5", fg: "#101012", light: true },
+    { id: "abyss", t: "Abyss", bg: "#03060d", fg: "#4dd0e1", light: false },
+    { id: "matcha", t: "Matcha", bg: "#0c130d", fg: "#a8d98a", light: false },
+    { id: "ember", t: "Ember", bg: "#120806", fg: "#ff7847", light: false },
+    { id: "glacier", t: "Glacier", bg: "#070e12", fg: "#8fd8e8", light: false },
+    { id: "void", t: "Void", bg: "#000000", fg: "#8b5cf6", light: false },
+    { id: "peach", t: "Peach", bg: "#fbf1ea", fg: "#ef7f4f", light: true },
+    { id: "synthwave", t: "Synthwave", bg: "#100722", fg: "#ff5fd2", light: false },
+    { id: "custom", t: "Custom", bg: "#0b0b0d", fg: "#c9c9d2", light: false },
+  ];
+
+  function paletteById(id) {
+    return PALETTES.filter(function (p) {
+      return p.id === id;
+    })[0];
+  }
+
+  /* A custom palette is four plain colours written straight onto the root,
+     so it does not need a block in the stylesheet. */
+  function setPalette(id) {
+    var p = paletteById(id) || PALETTES[0];
+    root.dataset.palette = p.id;
+    if (p.id !== "custom") {
+      ["--bg", "--bg-2", "--glass-bg", "--glass-bg-2", "--glass-bg-3", "--elev"].forEach(function (v) {
+        root.style.removeProperty(v);
+      });
+    }
+    if (p.id === "custom") {
+      var c = N.prefs.get("paletteCustom") || {};
+      if (c.bg) {
+        root.style.setProperty("--bg", c.bg);
+        root.style.setProperty("--bg-2", c.bg2 || c.bg);
+        root.style.setProperty("--glass-bg", c.bg2 || c.bg);
+        root.style.setProperty("--glass-bg-2", c.bg3 || c.bg2 || c.bg);
+      }
+      if (c.tx) root.style.setProperty("--text", c.tx);
+      if (c.ln) {
+        root.style.setProperty("--line", c.ln);
+        root.style.setProperty("--line-2", c.ln);
+      }
+      if (c.ac) root.style.setProperty("--ac-1", c.ac);
+    }
+    setTheme(p.light ? "light" : "dark");
+    N.bus.emit("palette", p.id);
+  }
+
   function setAccent(id) {
     var a = ACCENTS.concat(extraAccents()).find(function (x) {
       return x.id === id;
@@ -1001,11 +1061,10 @@
     else delete root.dataset.density;
     if (p.miniPerf) root.dataset.mini = "1";
     else delete root.dataset.mini;
-    /* nav layout: the attribute always says which one is on, so the rail CSS
-       (see the rail block in extra.css) and any extension CSS can both key
-       off it. The head script on each page writes the same value before the
-       first paint, so it never flashes the other nav. */
-    root.dataset.nav = p.navLayout === "bar" ? "bar" : "side";
+    /* nav layout: the rail is the only navigation now, so this is written
+       unconditionally and the head script on each page writes the same value
+       before the first paint. Extensions still read the attribute. */
+    root.dataset.nav = "side";
     applyBg();
   }
 
@@ -1070,7 +1129,9 @@
 
   function applyAll() {
     var p = N.prefs.data;
-    setTheme(p.theme);
+    /* the palette first: it decides the base ink everything else sits on,
+       including whether the page counts as light or dark */
+    setPalette(p.palette || "null");
     setPerf(p.perf);
     applyLayout();
     /* glow first: Neon's backdrop is built from the glow palette, so the
@@ -1154,6 +1215,10 @@
       applyPack(packFor(curPack));
     },
     setTheme: setTheme,
+    /* the whole colour scheme: see PALETTES above */
+    palettes: PALETTES,
+    setPalette: setPalette,
+    paletteById: paletteById,
     setAccent: setAccent,
     setGlow: setGlow,
     setComet: setComet,

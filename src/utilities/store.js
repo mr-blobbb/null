@@ -27,6 +27,12 @@
 
   N.store = { read: read, write: write, del: del };
 
+  /* ---------- what build this is ----------
+     One place, so the corner of the front door, the Changelog and anything
+     else that prints a version never disagree about it. BUILD is the same
+     YEARMONTHDATE the Changelog uses for a release. */
+  N.meta = { version: "1.0.0", build: "20260916" };
+
   /* ---------- where NULL lives ----------
      The pages link to each other with paths relative to the folder NULL is
      served from, so the same files run at a domain root and under a subfolder
@@ -101,7 +107,11 @@
   /* ---------- preferences ---------- */
   var PREFS_KEY = "null:prefs";
   var DEFAULTS = {
-    theme: "dark", // dark | light
+    theme: "dark", // dark | light (derived from the palette, kept for older data)
+    palette: "null", // the whole colour scheme: see the list in theme.js
+    paletteCustom: {}, // an id from PALETTES, or a scheme written out by hand
+    quickLinks: null, // front-door circles: null = the default row
+    loggedIn: false, // the local account on this device (see pages/profile.js)
     accent: "off", // palette id from theme.js
     particles: "none", // ambient background particle id from econ.js
     glow: "off", // glow preset id from theme.js

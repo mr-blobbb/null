@@ -16,8 +16,8 @@
    leaving every page unstyled.
 
    Bump CACHE/RUNTIME when the core file list changes so old caches are dropped. */
-const CACHE = "null-v13";
-const RUNTIME = "null-runtime-v13";
+const CACHE = "null-v14";
+const RUNTIME = "null-runtime-v14";
 
 /* Site paths, resolved against this script's own address: the cache then holds
    the real URLs whether NULL is at a domain root or under a project path. */
@@ -39,6 +39,8 @@ const CORE = [
   "player.html",
   "schedule.html",
   "settings.html",
+  "profile.html",
+  "changelog.html",
   "announcements.html",
   "shop.html",
   "backups.html",
@@ -55,6 +57,7 @@ const CORE = [
   "public/fonts/material-symbols-rounded.woff2",
   "src/styles/global.css",
   "src/styles/extra.css",
+  "src/styles/v2.css",
   "src/styles/particles.css",
   "src/styles/perf.css",
   "src/styles/home.css",

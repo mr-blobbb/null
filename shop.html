@@ -4,35 +4,31 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="color-scheme" content="dark light">
-  <meta name="theme-color" content="#09090b">
-  <title>Shop · NULL</title>
-  <meta name="description" content="Spend coins earned by playing on beta games, custom themes and effects. Local, no real money.">
+  <meta name="theme-color" content="#08080a">
+  <title>Shop · null</title>
+  <meta name="description" content="Spend the coins you earn by playing on avatar decorations, profile effects and name tags.">
   <link rel="icon" id="favicon" href="public/favicon.svg" type="image/svg+xml">
   <link rel="manifest" href="public/manifest.webmanifest">
   <link rel="apple-touch-icon" href="public/icon-192.png">
   <link rel="stylesheet" href="src/styles/global.css">
   <link rel="stylesheet" href="src/styles/extra.css">
   <link rel="stylesheet" href="src/styles/shop.css">
-  <link rel="stylesheet" href="src/styles/tour.css">
   <link rel="stylesheet" href="src/styles/particles.css">
   <link rel="stylesheet" href="src/styles/perf.css">
-  <!-- extensions, labs, /root and the Labs retextures: site-wide on purpose -->
   <link rel="stylesheet" href="src/styles/ext.css">
   <link rel="stylesheet" href="src/styles/dev.css">
+  <link rel="stylesheet" href="src/styles/v2.css">
   <script>
     (function () {
       try {
         var p = JSON.parse(localStorage.getItem("null:prefs") || "{}");
-        var t = p.theme === "light" ? "light" : "dark";
-        document.documentElement.dataset.theme = t;
+        var pal = p.palette || "null";
+        document.documentElement.dataset.palette = pal;
+        document.documentElement.dataset.theme = pal === "light" || pal === "peach" ? "light" : "dark";
         if (p.perf) document.documentElement.dataset.perf = p.perf === "ultra" ? "ultra" : "1";
-        /* the side rail is the default nav, so which one is on is decided
-           here: without this the top bar shows for a frame first */
-        document.documentElement.dataset.nav = p.navLayout === "bar" ? "bar" : "side";
-        if (p.glow && p.glow !== "off") document.documentElement.dataset.glow = p.glow;
-        /* a retexture redesigns every page, so it has to land before the
-           first paint, exactly like the theme */
-        if (p.retexture && p.retexture !== "off") document.documentElement.dataset.retexture = p.retexture;
+        /* the rail is the navigation, so the layout is decided here: without
+           this a page would paint the wide bar for a frame first */
+        document.documentElement.dataset.nav = "side";
         if (p.labs) document.documentElement.dataset.labs = p.labs;
       } catch (e) {}
     })();
@@ -40,29 +36,26 @@
 </head>
 <body data-page="shop">
   <a class="skip-link" href="#main">Skip to content</a>
-  <div class="glow-bg" aria-hidden="true"></div>
   <header data-mount="nav"></header>
 
-  <main id="main" class="page">
-    <div class="page-head">
-      <span class="eyebrow"><span data-icon="store"></span>shop · earned, never bought</span>
-      <h1>Shop</h1>
-      <p>
-        Play games to bank XP and coins, then spend them here. Beta games,
-        custom themes and effects, all unlocked with local progress. No real
-        money, no accounts, nothing leaves this browser.
-      </p>
+  <main id="main" class="pg">
+    <div class="sh-top">
+      <div class="sh-intro">
+        <h1 class="pg-title">Shop</h1>
+        <p class="pg-sub">Earn coins by playing, hitting achievements, and hanging around. Spend them on the fun stuff.</p>
+      </div>
+      <div class="sh-purse">
+        <span class="purse" title="Your coins"><span data-i="coin" data-i-size="17"></span><b id="coinN">0</b><span class="purse-u">coins</span></span>
+        <button type="button" class="bt" id="giftBtn"><span data-i="gift" data-i-size="17"></span>Gift coins</button>
+      </div>
     </div>
 
-    <div id="ecoBar"></div>
-    <div id="shopTabs"></div>
     <div id="shopBody"></div>
   </main>
 
-  <footer data-mount="foot"></footer>
   <noscript>
     <nav class="ns-nav">
-      <a href="./">Home</a><a href="games/">Games</a><a href="apps/">Apps</a><a href="proxies/">Proxies</a><a href="schedule">Schedule</a><a href="settings">Settings</a>
+      <a href="./">Home</a><a href="games/">Games</a><a href="apps/">Apps</a><a href="proxies/">Proxeis</a><a href="shop">Shop</a><a href="settings">Settings</a>
     </nav>
   </noscript>
 
@@ -82,14 +75,11 @@
   <script src="src/components/cards.js"></script>
   <script src="src/components/search.js"></script>
   <script src="src/components/daily.js"></script>
-  <!-- the extensions runtime, ahead of shell.js: the nav asks it for its menu -->
+  <script src="src/utilities/procgen.js"></script>
+  <script src="src/components/editor.js"></script>
   <script src="src/utilities/ext.js"></script>
   <script src="src/components/shell.js"></script>
   <script src="src/components/devconsole.js"></script>
-  <!-- the generator is a tab inside the editor, so it loads with it -->
-  <script src="src/utilities/procgen.js"></script>
-  <script src="src/components/editor.js"></script>
-  <script src="src/components/tour.js"></script>
   <script src="src/pages/shop.js"></script>
 </body>
 </html>

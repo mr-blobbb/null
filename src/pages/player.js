@@ -57,35 +57,28 @@
       });
     }
 
-    /* ---------- playtime → XP → coins ----------
-       Only visible time counts. Every 30s of play is banked; coin
-       milestones are celebrated right away so earning feels immediate. */
+    /* ---------- playtime → coins ----------
+       Coins come from time now, not from XP: three a minute while this game
+       is open, plus a milestone every fifteen. The clock itself lives in
+       econ.js, because it has to know about idle and hidden tabs; all the
+       player does is tell it a game is on. */
     function paintCoins() {
       var el = d.qs("#pCoinVal");
       if (el && N.econ) el.textContent = N.econ.state().coins;
     }
     function trackTime() {
-      if (!N.econ) return;
-      var acc = 0;
-      var iv = setInterval(function () {
-        if (document.hidden) return;
-        acc += 5;
-        if (acc >= 30) {
-          var got = N.econ.bank(acc);
-          acc = 0;
-          if (got.coins) {
-            paintCoins();
-            d.toast("+" + got.coins + " coins: spend them in the Shop", { icon: "coin" });
-            if (N.fx && N.fx.confetti) N.fx.confetti();
-          }
+      if (!N.econ || !N.econ.play) return;
+      N.econ.play(true);
+      /* banked a coin at a time, so the count in the bar moves as you play */
+      N.bus.on("playCoins", function (e) {
+        paintCoins();
+        if (e && e.milestone) {
+          d.toast("+" + e.coins + " coins: 15 minutes on NULL", { icon: "coin" });
+          if (N.fx && N.fx.confetti) N.fx.confetti();
         }
-      }, 5000);
+      });
       window.addEventListener("beforeunload", function () {
-        if (acc > 0) {
-          N.econ.bank(acc);
-          acc = 0;
-        }
-        clearInterval(iv);
+        N.econ.play(false);
       });
     }
     paintCoins();

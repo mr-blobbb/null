@@ -22,12 +22,13 @@
     (function () {
       try {
         var p = JSON.parse(localStorage.getItem("null:prefs") || "{}");
-        var t = p.theme === "light" ? "light" : "dark";
-        document.documentElement.dataset.theme = t;
+        var pal = p.palette || "null";
+        document.documentElement.dataset.palette = pal;
+        document.documentElement.dataset.theme = pal === "light" || pal === "peach" ? "light" : "dark";
         if (p.perf) document.documentElement.dataset.perf = p.perf === "ultra" ? "ultra" : "1";
-        /* the side rail is the default nav, so which one is on is decided
-           here: without this the top bar shows for a frame first */
-        document.documentElement.dataset.nav = p.navLayout === "bar" ? "bar" : "side";
+        /* the rail is the navigation, so the layout is decided here: without
+           this a page would paint the wide bar for a frame first */
+        document.documentElement.dataset.nav = "side";
         if (p.glow && p.glow !== "off") document.documentElement.dataset.glow = p.glow;
         /* a retexture redesigns every page, so it has to land before the
            first paint, exactly like the theme */
@@ -36,6 +37,8 @@
       } catch (e) {}
     })();
   </script>
+  <link rel="stylesheet" href="src/styles/v2.css">
+  <link rel="stylesheet" href="src/styles/settings.css">
 </head>
 <body data-page="settings">
   <a class="skip-link" href="#main">Skip to content</a>
@@ -95,6 +98,13 @@
                     <span class="tt-thumb"></span>
                   </span>
                 </label>
+              </div>
+              <div class="set-row set-row--stack">
+                <div class="lbl-txt">
+                  <b>Palette</b>
+                  <span>The whole colour scheme, not just an accent: page, surfaces, borders, text and highlights all move together.</span>
+                </div>
+                <div id="palRow" class="pal-row" role="group" aria-label="Theme palette"></div>
               </div>
             </section>
 
@@ -348,14 +358,11 @@
                 <span class="set-htxt"><b>Navigation</b><span>Where the site's own nav lives.</span></span>
               </h2>
               <div class="set-row set-row--stack">
-                <div class="lbl-txt">
-                  <b>Layout</b>
-                  <span>Side rail is the default: the same nav down the left as icons, sliding open with names when you hover it, with every page keeping its full height. It needs a window at least 420px wide; anything narrower gets the top bar instead, which you can also pick here.</span>
-                </div>
-                <div class="seg seg--wide" id="navSeg" role="group" aria-label="Navigation layout">
-                  <button type="button" data-val="bar">Top bar</button>
-                  <button type="button" data-val="side">Side rail</button>
-                </div>
+                <p class="set-sub">
+                  The rail down the left edge is the navigation: five doors at the top, four at
+                  the bottom, names on hover and nothing that slides open. There is no top bar to
+                  switch to any more, and the rail keeps its width down to phone sizes.
+                </p>
               </div>
               <div class="set-row">
                 <div class="lbl-txt">

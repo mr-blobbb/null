@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="color-scheme" content="dark light">
   <meta name="theme-color" content="#08080a">
-  <title>null</title>
-  <meta name="description" content="NULL: a flat, fast hub for games, apps, proxeis and tools. Local-first, no accounts.">
+  <title>Profile · null</title>
+  <meta name="description" content="Your null profile: banner, bio, library and account, all on this device.">
   <link rel="icon" id="favicon" href="public/favicon.svg" type="image/svg+xml">
   <link rel="manifest" href="public/manifest.webmanifest">
   <link rel="apple-touch-icon" href="public/icon-192.png">
@@ -16,7 +16,6 @@
   <link rel="stylesheet" href="src/styles/perf.css">
   <link rel="stylesheet" href="src/styles/ext.css">
   <link rel="stylesheet" href="src/styles/dev.css">
-  <link rel="stylesheet" href="src/styles/home.css">
   <link rel="stylesheet" href="src/styles/v2.css">
   <script>
     (function () {
@@ -26,35 +25,21 @@
         document.documentElement.dataset.palette = pal;
         document.documentElement.dataset.theme = pal === "light" || pal === "peach" ? "light" : "dark";
         if (p.perf) document.documentElement.dataset.perf = p.perf === "ultra" ? "ultra" : "1";
+        /* the rail is the navigation, so the layout is decided here: without
+           this a page would paint the wide bar for a frame first */
         document.documentElement.dataset.nav = "side";
         if (p.labs) document.documentElement.dataset.labs = p.labs;
       } catch (e) {}
     })();
   </script>
 </head>
-<body data-page="home">
+<body data-page="profile">
   <a class="skip-link" href="#main">Skip to content</a>
-  <div class="dots" aria-hidden="true"></div>
   <header data-mount="nav"></header>
 
-  <main id="main" class="hm">
-    <h1 class="hm-word">null</h1>
-    <p class="hm-line" id="hmLine" aria-live="polite"></p>
-
-    <form class="hm-search" id="homeSearch" role="search" aria-label="Search null">
-      <span data-i="search" data-i-size="19"></span>
-      <input id="searchInput" type="text" placeholder="Search for anything (on the site ofc)!" autocomplete="off" spellcheck="false" aria-label="Search null">
-    </form>
-
-    <!-- App / All Apps, then the shortcuts the visitor keeps. Filled in by
-         src/pages/home.js: the list is editable, the first two are not. -->
-    <div class="hm-links" id="hmLinks"></div>
-
-    <!-- one continuous band of cards, dissolving at both edges -->
-    <div class="hm-strip" id="hmStrip" aria-label="What people say"></div>
+  <main id="main" class="pg" data-wide="1">
+    <div id="profBody"></div>
   </main>
-
-  <div class="hm-meta" id="hmMeta"></div>
 
   <noscript>
     <nav class="ns-nav">
@@ -77,10 +62,9 @@
   <script src="src/components/schedule.js"></script>
   <script src="src/components/cards.js"></script>
   <script src="src/components/search.js"></script>
-  <script src="src/components/daily.js"></script>
   <script src="src/utilities/ext.js"></script>
   <script src="src/components/shell.js"></script>
   <script src="src/components/devconsole.js"></script>
-  <script src="src/pages/home.js"></script>
+  <script src="src/pages/profile.js"></script>
 </body>
 </html>

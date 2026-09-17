@@ -4,9 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="color-scheme" content="dark light">
-  <meta name="theme-color" content="#09090b">
-  <title>Games · NULL</title>
-  <meta name="description" content="The NULL game library: auto-discovered, labels and warnings included.">
+  <meta name="theme-color" content="#08080a">
+  <title>Games · null</title>
+  <meta name="description" content="The null game library: every game, one square each.">
   <link rel="icon" id="favicon" href="../public/favicon.svg" type="image/svg+xml">
   <link rel="manifest" href="../public/manifest.webmanifest">
   <link rel="apple-touch-icon" href="../public/icon-192.png">
@@ -14,24 +14,21 @@
   <link rel="stylesheet" href="../src/styles/extra.css">
   <link rel="stylesheet" href="../src/styles/particles.css">
   <link rel="stylesheet" href="../src/styles/perf.css">
-  <!-- extensions, labs, /root and the Labs retextures: site-wide on purpose -->
   <link rel="stylesheet" href="../src/styles/ext.css">
-  <link rel="stylesheet" href="../src/styles/tour.css">
   <link rel="stylesheet" href="../src/styles/dev.css">
+  <link rel="stylesheet" href="../src/styles/tour.css">
+  <link rel="stylesheet" href="../src/styles/v2.css">
   <script>
     (function () {
       try {
         var p = JSON.parse(localStorage.getItem("null:prefs") || "{}");
-        var t = p.theme === "light" ? "light" : "dark";
-        document.documentElement.dataset.theme = t;
+        var pal = p.palette || "null";
+        document.documentElement.dataset.palette = pal;
+        document.documentElement.dataset.theme = pal === "light" || pal === "peach" ? "light" : "dark";
         if (p.perf) document.documentElement.dataset.perf = p.perf === "ultra" ? "ultra" : "1";
-        /* the side rail is the default nav, so which one is on is decided
-           here: without this the top bar shows for a frame first */
-        document.documentElement.dataset.nav = p.navLayout === "bar" ? "bar" : "side";
-        if (p.glow && p.glow !== "off") document.documentElement.dataset.glow = p.glow;
-        /* a retexture redesigns every page, so it has to land before the
-           first paint, exactly like the theme */
-        if (p.retexture && p.retexture !== "off") document.documentElement.dataset.retexture = p.retexture;
+        /* the rail is the navigation, so the layout is decided here: without
+           this a page would paint the wide bar for a frame first */
+        document.documentElement.dataset.nav = "side";
         if (p.labs) document.documentElement.dataset.labs = p.labs;
       } catch (e) {}
     })();
@@ -41,41 +38,37 @@
   <a class="skip-link" href="#main">Skip to content</a>
   <header data-mount="nav"></header>
 
-  <main id="scrollview" class="sview">
-    <div class="lib-head">
-      <h1>Games</h1>
-      <span class="lib-total" id="count"></span>
-    </div>
-
-    <!-- one tool row: filter, sort, labels, reset. Nothing else. -->
-    <div class="lib-bar">
-      <span class="lib-find">
-        <span data-icon="search"></span>
-        <input id="libSearch" type="text" placeholder="Filter games" aria-label="Filter games">
+  <main id="main" class="pg">
+    <!-- one row: the name, the search, the sort, Random, and how many of the
+         whole library you are looking at. Nothing else up here. -->
+    <div class="lb-top">
+      <h1 class="pg-title">Games</h1>
+      <span class="fld lb-find">
+        <span data-i="search" data-i-size="18"></span>
+        <input id="libSearch" type="text" placeholder="Search Games" autocomplete="off" spellcheck="false" aria-label="Search games">
       </span>
-      <span class="select-field sel-wrap lib-sort">
+      <span class="fld lb-sort">
         <select id="sortSel" aria-label="Sort games">
-          <option value="name">A-Z</option>
-          <option value="plays">Popularity</option>
-          <option value="new">Recently added</option>
+          <option value="name">A–Z</option>
+          <option value="plays">Popular</option>
+          <option value="new">Newest</option>
           <option value="id">Label</option>
         </select>
       </span>
-      <button type="button" class="lib-btn" id="btnLabels" aria-expanded="false" aria-controls="labelRow">
-        <span data-icon="list"></span>Labels<span class="lib-pick" id="labelCount" hidden></span>
-      </button>
-      <div id="labelRow" class="lib-labels" role="group" aria-label="Filter by label" hidden></div>
+      <button type="button" class="bt lb-rand" id="btnRandom"><span data-i="dice" data-i-size="17"></span>Random</button>
+      <span class="lb-count" id="count"></span>
     </div>
 
-    <div id="recSec" class="rec-sec" hidden></div>
-    <div id="favSec" class="fav-sec"></div>
-    <div id="grid" class="lib-grid"></div>
-    <div id="empty"></div>
+    <!-- All + Favorites, each carrying its own count -->
+    <div class="lb-chips" id="libChips" role="group" aria-label="Filter games"></div>
+
+    <div class="lb-grid" id="grid"></div>
+    <div class="lb-empty" id="empty" hidden></div>
   </main>
 
   <noscript>
     <nav class="ns-nav">
-      <a href="../">Home</a><a href="../games/">Games</a><a href="../apps/">Apps</a><a href="../proxies/">Proxies</a><a href="../schedule">Schedule</a><a href="../settings">Settings</a>
+      <a href="../">Home</a><a href="../games/">Games</a><a href="../apps/">Apps</a><a href="../proxies/">Proxeis</a><a href="../shop">Shop</a><a href="../settings">Settings</a>
     </nav>
   </noscript>
 
@@ -94,11 +87,9 @@
   <script src="../src/components/schedule.js"></script>
   <script src="../src/components/cards.js"></script>
   <script src="../src/components/search.js"></script>
-  <!-- the extensions runtime, ahead of shell.js: the nav asks it for its menu -->
   <script src="../src/utilities/ext.js"></script>
   <script src="../src/components/shell.js"></script>
   <script src="../src/components/devconsole.js"></script>
-  <script src="../src/components/tour.js"></script>
   <script src="../src/pages/library.js"></script>
 </body>
 </html>

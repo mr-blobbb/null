@@ -187,6 +187,63 @@
     return box;
   }
 
+  /* ---------- the rail ----------
+     NULL's navigation is one thin column pinned to the left edge of the
+     window: five doors at the top, four at the bottom, and a long empty
+     stretch between them so the eye never reads a list. It never opens,
+     never slides and never becomes a drawer: a door's name shows up in a
+     tooltip beside it and nowhere else, which is what lets the rail stay
+     56px wide and the page underneath it stay usable.
+
+     The older topbar() below is still here for the 404 page and for anyone
+     who picks the wide bar in Settings. */
+  function railDoor(link) {
+    var on = N.router.isActive(link.url);
+    return d.h(
+      "a",
+      {
+        class: "ril" + (on ? " on" : ""),
+        href: N.url(link.url),
+        "data-id": link.id,
+        "aria-label": link.t,
+        "aria-current": on ? "page" : null,
+      },
+      [
+        d.h("span", { class: "ril-ic" }, [N.icons.svg(link.icon, 21)]),
+        d.h("span", { class: "ril-tip" }, link.t),
+      ],
+    );
+  }
+
+  function navRail() {
+    var el = d.h("aside", { class: "rail", "aria-label": "Primary" });
+
+    var top = d.h("nav", { class: "rail-grp rail-grp--top" });
+    N.router.RAIL_TOP.forEach(function (l) {
+      top.appendChild(railDoor(l));
+    });
+    el.appendChild(top);
+
+    /* the empty middle: extensions mount their own chips here, and the site's
+       period clock lives here when Settings has it on */
+    el.appendChild(
+      d.h("div", { class: "rail-mid" }, [
+        d.h("div", { class: "rail-slot", "data-slot": "nav" }),
+        d.h("div", { class: "rail-clock", "data-clock": "nav" }),
+      ]),
+    );
+
+    var bottom = d.h("nav", { class: "rail-grp rail-grp--bottom" });
+    N.router.RAIL_BOTTOM.forEach(function (l) {
+      bottom.appendChild(railDoor(l));
+    });
+    el.appendChild(bottom);
+
+    return el;
+  }
+
+  N.nav = { build: navRail, rail: navRail, door: railDoor };
+
   /* ---------- topbar ---------- */
   function topbar() {
     var bar = d.h("div", { class: "topbar" });
@@ -373,7 +430,9 @@ return foot;
       class: "btn-icon btn-outline back-top elev",
       "aria-label": "Back to top",
     }, [d.icon("up")]);
-    var scroller = document.body.classList.contains("lb") ? d.qs("#scrollview") : window;
+    /* library pages used to scroll inside their own element; they scroll the
+       window now, so the lookup falls back instead of handing back a null */
+    var scroller = document.body.classList.contains("lb") ? d.qs("#scrollview") || window : window;
     var shown = false;
     function onScroll() {
       var y = scroller === window
@@ -1349,6 +1408,9 @@ return foot;
        whose address GitHub keeps for the redirect dance to work. */
     if (N.cleanAddress) N.cleanAddress();
 
+    /* the newer hairline set: [data-i="name"] in static markup */
+    if (N.icons && N.icons.paint) N.icons.paint();
+
     /* resolve [data-icon] placeholders left in static HTML */
     d.qsa("[data-icon]").forEach(function (el) {
       var ic = d.icon(el.dataset.icon);
@@ -1364,7 +1426,9 @@ return foot;
     if (!raw) {
       var navMount = d.qs('[data-mount="nav"]');
       var footMount = d.qs('[data-mount="foot"]');
-      if (navMount) navMount.appendChild(topbar());
+      /* the rail is the navigation now (components/nav.js). topbar() is kept
+         for the 404 page and any page that asks for the wide bar. */
+      if (navMount) navMount.appendChild(N.nav && N.nav.build ? N.nav.build() : topbar());
       if (footMount) footMount.appendChild(footer());
     }
 

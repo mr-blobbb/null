@@ -363,6 +363,39 @@
   var BOOSTS = [
     { id: "xpboost", name: "XP boost", price: 30, desc: "Double XP for 24 hours: every 30 minutes banks 20 XP." },
   ];
+  /* ---------- the cosmetics ----------
+     kind decides which shelf an item sits on in the Shop (avatar / effect /
+     tag); was is the crossed-out "before" price, which is set by hand so the
+     numbers look like prices instead of round placeholders. */
+  var COSMETICS = [
+    /* avatar decorations: a loop that runs around the picture */
+    { id: "orbit", kind: "avatar", name: "Orbit", price: 780, was: 920, desc: "A ring of light circling your picture." },
+    { id: "halo", kind: "avatar", name: "Halo", price: 960, was: 1140, desc: "A soft ring that never quite touches." },
+    { id: "eclipse", kind: "avatar", name: "Eclipse", price: 1040, was: 1240, desc: "A dark disc sliding across your edge." },
+    { id: "stardust", kind: "avatar", name: "Stardust", price: 1180, was: 1400, desc: "Slow sparkles drifting off the frame." },
+    { id: "prism", kind: "avatar", name: "Prism", price: 1240, was: 1460, desc: "A rotating band of colour round the rim." },
+    { id: "signal", kind: "avatar", name: "Signal", price: 1320, was: 1560, desc: "Scanlines rolling up your picture." },
+    { id: "solar", kind: "avatar", name: "Solar flare", price: 1480, was: 1720, desc: "A hot arc that laps you, once a loop." },
+    { id: "rift", kind: "avatar", name: "Rift", price: 1600, was: 1880, desc: "Two rings spinning opposite ways." },
+
+    /* profile effects: a moving layer over the whole card */
+    { id: "doves", kind: "effect", name: "Doves", price: 980, was: 1180, desc: "Doves in flight across your card." },
+    { id: "glitch", kind: "effect", name: "Glitch", price: 1120, was: 1340, desc: "Your card, thoroughly datamoshed." },
+    { id: "duckpond", kind: "effect", name: "Duck Pond", price: 1260, was: 1480, desc: "Lily pads above, sunbeams below." },
+    { id: "rainfall", kind: "effect", name: "Rainfall", price: 880, was: 1040, desc: "Fine rain over everything." },
+    { id: "embers", kind: "effect", name: "Embers", price: 1060, was: 1260, desc: "Slow orange sparks rising off the card." },
+    { id: "aurora", kind: "effect", name: "Aurora", price: 1420, was: 1660, desc: "Bands of light drifting behind the card." },
+
+    /* name tags: a chip that sits next to your name */
+    { id: "tstar", kind: "tag", name: "STAR", price: 720, was: 880, color: "#f0c85a", desc: "effortlessly" },
+    { id: "tcool", kind: "tag", name: "COOL", price: 760, was: 900, color: "#6cc7ff", desc: "effortlessly" },
+    { id: "ttuff", kind: "tag", name: "TUFF", price: 820, was: 980, color: "#e2686a", desc: "Certified tuff" },
+    { id: "tspecial", kind: "tag", name: "SPECIAL", price: 900, was: 1080, color: "#c08bff", desc: "One of a kind" },
+    { id: "taura", kind: "tag", name: "AURA", price: 960, was: 1140, color: "#58c98e", desc: "+1000 aura" },
+    { id: "tname", kind: "tag", name: "NAME", price: 720, was: 860, color: "#b9b9c0", desc: "It just says NAME" },
+    { id: "tlarp", kind: "tag", name: "LARP", price: 1040, was: 1240, color: "#ff8a5c", desc: "None of it was real" },
+  ];
+
   var FX = [
     { id: "goldconfetti", name: "Golden confetti", price: 30, desc: "Period-end confetti drops in gold instead of grayscale." },
     { id: "rainbowconfetti", name: "Rainbow confetti", price: 60, desc: "Period-end confetti drops in every colour of the rainbow. Wins over golden if you own both." },
@@ -370,6 +403,10 @@
     { id: "custombg", name: "Custom background image", price: 100, desc: "Unlocks a background picture in Settings: paste a link or upload a file, then set how it fits, how far it dims behind the page and how soft it is." },
     { id: "editor", name: "Theme & particle editor", price: 150, desc: "Unlocks the editor in the Shop: build your own theme pack and particle set, pick the colours, tint, backdrop art and exactly what drifts through it." },
   ];
+
+  /* the Shop sells FX plus the cosmetics; the cosmetics are kept in their own
+     list so the shelf order stays readable and priceFor() still finds them */
+  var ALL_FX = FX.concat(COSMETICS);
 
   /* the editor's two creations are stored by theme.js (null:craft) and owned
      for as long as the editor is. They are never bought on their own. */
@@ -646,7 +683,7 @@
     if (type === "theme") return THEMES;
     if (type === "particle") return PARTICLES;
     if (type === "boost") return BOOSTS;
-    if (type === "fx") return FX;
+    if (type === "fx") return ALL_FX;
     if (type === "game") return (window.NULL_CONTENT && window.NULL_CONTENT.betas) || [];
     return [];
   }
@@ -778,8 +815,87 @@
     return { ok: true };
   }
 
+  /* ---------- the play clock ----------
+     Coins come from time, not from a level: three a minute while a game or
+     an app is actually open, paid a coin at a time so the number in the Shop
+     moves while you play, plus a 30 coin milestone every 15 minutes on the
+     site.
+
+     "Actually open" is the whole design. The clock does not run until
+     play(true) is called (the player does it when a game opens), it stops the
+     moment the tab is hidden, and it stops again after a minute and a half
+     with no keystroke, click, scroll or pointer move. A page left open on a
+     desk overnight earns nothing. */
+  var PLAY_PER_SEC = 3 / 60; // 3 a minute: 15 every five
+  var IDLE_MS = 90 * 1000;
+  var MILESTONE_S = 15 * 60;
+  var MILESTONE_COINS = 30;
+
+  var clock = { on: false, carry: 0, ran: 0, idle: 0, at: 0, timer: 0 };
+
+  function clockLive() {
+    return clock.on && !document.hidden && clock.idle < IDLE_MS;
+  }
+
+  function clockTick() {
+    var now = Date.now();
+    var secs = Math.min(5, Math.max(0, (now - clock.at) / 1000));
+    clock.at = now;
+    if (!clockLive()) return;
+
+    clock.ran += secs;
+    clock.carry += secs * PLAY_PER_SEC;
+    var whole = Math.floor(clock.carry);
+    if (whole > 0) {
+      clock.carry -= whole;
+      giveCoins(whole);
+      N.bus.emit("playCoins", { coins: whole, milestone: false });
+    }
+    if (clock.ran >= MILESTONE_S) {
+      clock.ran -= MILESTONE_S;
+      giveCoins(MILESTONE_COINS);
+      N.bus.emit("playCoins", { coins: MILESTONE_COINS, milestone: true });
+    }
+  }
+
+  /* one set of listeners for the whole site, put on the first time the clock
+     runs: nothing ever touches the machine while no game is open */
+  function clockListen() {
+    if (clock.timer) return;
+    function wake() {
+      clock.idle = 0;
+    }
+    ["pointermove", "pointerdown", "keydown", "wheel", "scroll", "touchstart"].forEach(function (ev) {
+      window.addEventListener(ev, wake, { passive: true });
+    });
+    clock.timer = setInterval(function () {
+      if (!clock.on) return;
+      /* the idle count only ever climbs here; wake() is what knocks it back
+         down, so once it passes the limit nothing is paid until real input */
+      clock.idle += 1;
+      clockTick();
+    }, 1000);
+  }
+
+  /* the player turns the clock on when a game opens and off when it closes */
+  function play(on) {
+    on = !!on;
+    if (on === clock.on) return;
+    clock.on = on;
+    clock.at = Date.now();
+    if (on) clockListen();
+    N.bus.emit("playState", on);
+  }
+
   N.econ = {
     THEMES: THEMES,
+    /* the Shop's own shelves (see COSMETICS above) */
+    COSMETICS: COSMETICS,
+    /* the play clock: play(true) while a game is open, play(false) when it is not */
+    play: play,
+    playState: function () {
+      return { on: clock.on, ran: Math.round(clock.ran), live: clockLive(), idle: clock.idle };
+    },
     FREE_PACKS: FREE_PACKS,
     PARTICLES: PARTICLES,
     FREE_PARTICLES: FREE_PARTICLES,
