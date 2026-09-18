@@ -198,6 +198,81 @@ export function AvatarArt({ id, still }: { id: string | null | undefined; still?
         </span>
       );
 
+    case "pulse":
+      return (
+        <span className="art art--avatar">
+          <Svg>
+            <circle cx="50" cy="50" r="46" className="art-ring rim" />
+            {[0, 1, 2].map((i) => (
+              <circle key={i} cx="50" cy="50" r="46" className={`art-wave d${i}`} />
+            ))}
+          </Svg>
+        </span>
+      );
+
+    /* Two ellipses on one centre: the vertical and the horizontal, turning
+       opposite ways, which is what makes it read as a gyroscope rather than
+       as two rings lying flat. */
+    case "meridian":
+      return (
+        <span className="art art--avatar">
+          <Svg>
+            <circle cx="50" cy="50" r="46" className="art-ring faint" />
+            <ellipse cx="50" cy="50" rx="46" ry="15" className="art-spin art-arc cool" />
+            <ellipse cx="50" cy="50" rx="15" ry="46" className="art-spin-back art-arc cool" />
+            <circle cx="96" cy="50" r="3" className="art-bead" />
+          </Svg>
+        </span>
+      );
+
+    /* The bars are wider than the frame on purpose: a tear that starts and
+       ends inside the circle reads as a mistake, one running off both edges
+       reads as a signal breaking. */
+    case "glitch":
+      return (
+        <span className="art art--avatar">
+          <Svg>
+            <circle cx="50" cy="50" r="46" className="art-ring rim" />
+            {[18, 34, 56, 74].map((y, i) => (
+              <rect key={i} x="-20" y={y} width="140" height="4" rx="2" className={`art-tear d${i}`} />
+            ))}
+          </Svg>
+        </span>
+      );
+
+    /* a wedge behind the bead, so the bead has a direction */
+    case "comet":
+      return (
+        <span className="art art--avatar">
+          <Svg>
+            <circle cx="50" cy="50" r="46" className="art-ring faint" />
+            <g className="art-drift fast">
+              <path className="art-tail" d="M50 5 L43.5 16 L56.5 16 Z" />
+              <circle cx="50" cy="5" r="4" className="art-bead" />
+            </g>
+          </Svg>
+        </span>
+      );
+
+    case "ash":
+      return (
+        <span className="art art--avatar">
+          <Svg>
+            <circle cx="50" cy="50" r="46" className="art-ring faint" />
+            {[
+              [22, 26],
+              [70, 18],
+              [40, 62],
+              [82, 66],
+              [30, 84],
+              [62, 44],
+            ].map(([x, y], i) => (
+              <circle key={i} cx={x} cy={y} r="1.8" className={`art-flake d${i}`} />
+            ))}
+          </Svg>
+        </span>
+      );
+
     default:
       return null;
   }
@@ -279,6 +354,70 @@ const EFFECTS: Record<string, () => React.ReactNode> = {
     </svg>
   ),
 
+  /* dust crossing the card: the specks only twinkle, the field they sit in
+     does the travelling, so nothing needs to know how tall the card is */
+  drift: () => [
+    <span key="field" className="fx-field">
+      {Array.from({ length: 34 }, (_, i) => (
+        <i
+          key={i}
+          className="fx-mote"
+          style={{
+            left: `${(i * 31) % 100}%`,
+            top: `${(i * 61) % 100}%`,
+            animationDelay: `${(i % 12) * 0.7}s`,
+          }}
+        />
+      ))}
+    </span>,
+  ],
+
+  /* television snow: specks that light up where they are and never travel */
+  static: () => [
+    ...Array.from({ length: 90 }, (_, i) => (
+      <i
+        key={`n${i}`}
+        className="fx-noise"
+        style={{
+          left: `${(i * 29) % 100}%`,
+          top: `${(i * 47) % 100}%`,
+          animationDelay: `${(i % 9) * 0.11}s`,
+        }}
+      />
+    )),
+    <i key="creep" className="fx-snowcreep" />,
+  ],
+
+  /* a channel with nothing on it */
+  crt: () => [
+    <i key="lines" className="fx-lines" />,
+    <i key="bar" className="fx-bar" />,
+    <i key="glow" className="fx-crtglow" />,
+  ],
+
+  /* bands of light, breathing over the card */
+  aurora: () => [
+    <i key="b0" className="fx-band b0" />,
+    <i key="b1" className="fx-band b1" />,
+    <i key="b2" className="fx-band b2" />,
+  ],
+
+  /* ash coming down, turning as it falls — the one effect here that falls the
+     whole height of the card, so it moves in percentages and not in pixels */
+  ashfall: () => [
+    ...Array.from({ length: 26 }, (_, i) => (
+      <i
+        key={`a${i}`}
+        className="fx-petal"
+        style={{
+          left: `${(i * 7.7) % 100}%`,
+          animationDelay: `${(i % 10) * 0.42}s`,
+          animationDuration: `${7 + (i % 5)}s`,
+        }}
+      />
+    )),
+  ],
+
   /* a ringed disk over a sky full of stars */
   galaxy: () => [
     ...Array.from({ length: 26 }, (_, i) => (
@@ -302,6 +441,11 @@ const EFFECT_CLASS: Record<string, string> = {
   blocks: "fx-blocks",
   hex: "fx-hex",
   galaxy: "fx-galaxy",
+  drift: "fx-drift",
+  static: "fx-static",
+  crt: "fx-crt",
+  aurora: "fx-aurora",
+  ashfall: "fx-ashfall",
 };
 
 /** The real clip behind each background, in public/decor (see its README for

@@ -147,6 +147,41 @@ export const SHOP: ShopItem[] = [
     desc: "Violet fire, climbing the edge of your face.",
     price: 1540,
   },
+  {
+    id: "pulse",
+    shelf: "avatar",
+    name: "Pulse",
+    desc: "A ring leaving your picture, three times a loop.",
+    price: 920,
+  },
+  {
+    id: "meridian",
+    shelf: "avatar",
+    name: "Meridian",
+    desc: "Two thin rings crossing on different axes.",
+    price: 1260,
+  },
+  {
+    id: "glitch",
+    shelf: "avatar",
+    name: "Glitch",
+    desc: "Bars that tear sideways across the frame.",
+    price: 1440,
+  },
+  {
+    id: "comet",
+    shelf: "avatar",
+    name: "Comet",
+    desc: "A bead with a burning tail, going round and round.",
+    price: 1580,
+  },
+  {
+    id: "ash",
+    shelf: "avatar",
+    name: "Ashfall",
+    desc: "Fine grey ash coming off the top of the frame.",
+    price: 1720,
+  },
 
   /* profile effects: whole-card backgrounds, looping and silent */
   {
@@ -176,6 +211,41 @@ export const SHOP: ShopItem[] = [
     name: "Galaxy",
     desc: "A ringed disk and a sky that never holds still.",
     price: 1520,
+  },
+  {
+    id: "drift",
+    shelf: "effect",
+    name: "Drift",
+    desc: "Slow white specks crossing the card, the way dust does.",
+    price: 1260,
+  },
+  {
+    id: "static",
+    shelf: "effect",
+    name: "Static",
+    desc: "Television snow that never settles into a picture.",
+    price: 1180,
+  },
+  {
+    id: "crt",
+    shelf: "effect",
+    name: "Dead Channel",
+    desc: "Scanlines, a bar that never arrives, and a wandering glow.",
+    price: 1420,
+  },
+  {
+    id: "aurora",
+    shelf: "effect",
+    name: "Aurora",
+    desc: "Bands of light breathing over your card.",
+    price: 1660,
+  },
+  {
+    id: "ashfall",
+    shelf: "effect",
+    name: "Ashfall",
+    desc: "Petals of ash coming down, turning as they fall.",
+    price: 1780,
   },
 
   /* name tags */
