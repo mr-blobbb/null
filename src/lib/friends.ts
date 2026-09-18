@@ -228,7 +228,7 @@ const PAGE_WORD: Record<string, string> = {
   movies: "watching something",
   extensions: "looking at extensions",
   changelog: "reading the changelog",
-  partners: "reading the partner wall",
+  dms: "answering their messages",
 };
 
 export type LiveRow = { user: string; name: string; seen: number; online: boolean; activity: Activity | null };

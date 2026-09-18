@@ -97,7 +97,13 @@ export async function read(url: string, relay: string): Promise<Read> {
 
 /* The shim is one template literal, so nothing inside it may use a backtick
    or an interpolation — comments included. A backtick in one of these
-   comments once ended the literal early and took the build down with it. */
+   comments once ended the literal early and took the build down with it.
+
+   The same rule reaches further than quotes: every backslash in this string
+   is an escape, so a regular expression written here needs two. One went into
+   a url() pattern, arrived at the browser as half of itself and threw on
+   parse, which is why the asset bridge below spells its patterns with doubled
+   backslashes. */
 const NAV = `<script data-null="nav">(function(){
   function out(u){ try { parent.postMessage({ nullFrame: String(u) }, "*"); } catch (e) {} }
 
@@ -449,6 +455,130 @@ const NAV = `<script data-null="nav">(function(){
     };
   }
   try { window.XMLHttpRequest = BridgeXHR; } catch (e) {}
+
+  /* ---------- the asset bridge ----------
+     A <link>, an <img> and a <script src> are fetched by the frame itself,
+     not by the page's own code, so the two bridges above never see them. An
+     opaque origin makes those requests leave as Origin: null, and a network
+     that filters by hostname refuses them before that ever matters — which is
+     why a copied page used to arrive as its own inline styles and not much
+     else.
+
+     So: any resource that fails to load on its own is pulled over the same
+     bridge, and handed back as a blob this copy owns. Lazy on purpose — a
+     page whose pictures and sheets load normally pays nothing for this, and a
+     filtered one gets its stylesheet, its scripts and its pictures back.
+
+     A stylesheet is fetched as text rather than as bytes, because the images
+     and fonts named inside it are relative to the sheet, so each one is
+     pulled and swapped in before the text is poured into the page. */
+  var grabbed = {};
+
+  function against(u, base) {
+    try { return new URL(String(u), base).href; } catch (e) { return String(u); }
+  }
+  function b64(bytes) {
+    var s = "";
+    for (var i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+    return btoa(s);
+  }
+  /* a blob URL first, because it keeps the bytes out of the DOM; a data URL
+     for a browser that will not hand one to a frame with no origin */
+  function local(got) {
+    try { return URL.createObjectURL(new Blob([got.bytes], { type: got.type })); } catch (e) {}
+    try { return "data:" + got.type + ";base64," + b64(got.bytes); } catch (e) {}
+    return null;
+  }
+  function pull(url, type) {
+    var key = String(url);
+    if (!grabbed[key]) {
+      grabbed[key] = ask(key, "GET", { accept: type || "*/*" }, null).then(function (r) {
+        if (!r) throw new Error("no answer");
+        if (r.status && r.status >= 400) throw new Error("HTTP " + r.status);
+        var kind = "";
+        (r.headers || []).forEach(function (p) {
+          if (String(p[0]).toLowerCase() === "content-type") kind = String(p[1]).split(";")[0];
+        });
+        var blob = local({ bytes: bytes64(r.body), type: kind || type || "application/octet-stream" });
+        if (!blob) throw new Error("nothing to hand back");
+        return { url: blob };
+      });
+    }
+    return grabbed[key];
+  }
+  function pour(href, css) {
+    var st = document.createElement("style");
+    st.setAttribute("data-null-sheet", href);
+    st.textContent = css;
+    var into = document.head || document.documentElement || document.body;
+    if (!into || !into.appendChild) throw new Error("nowhere to put it");
+    into.appendChild(st);
+  }
+  function grabSheet(href) {
+    return ask(href, "GET", { accept: "text/css,*/*" }, null).then(function (r) {
+      var css = r && r.body ? asText(bytes64(r.body)) : "";
+      if (!css.trim()) return false;
+      var refs = [], seen = {};
+      css.replace(/url\\(\\s*(['\"]?)([^'\")]+)\\1\\s*\\)/gi, function (all, q, raw) {
+        var s = String(raw).trim();
+        if (/^(data:|blob:|about:|#)/i.test(s) || seen[s]) return all;
+        seen[s] = 1;
+        refs.push(s);
+        return all;
+      });
+      if (!refs.length) {
+        pour(href, css);
+        return true;
+      }
+      return Promise.all(refs.map(function (s) {
+        return pull(against(s, href), "").then(function (got) { return got.url; }, function () { return null; });
+      })).then(function (urls) {
+        var out = css;
+        for (var i = 0; i < refs.length; i++) {
+          if (urls[i]) out = out.split(refs[i]).join(urls[i]);
+        }
+        pour(href, out);
+        return true;
+      });
+    }).catch(function () { return false; });
+  }
+
+  var WANT = { img: 1, script: 1, link: 1, source: 1, video: 1, audio: 1, track: 1, embed: 1, input: 1, object: 1, image: 1, use: 1 };
+  function kindFor(tag, raw) {
+    if (tag === "script") return "text/javascript,*/*";
+    if (tag === "img" || tag === "image") return "image/*,*/*";
+    if (tag === "video") return "video/*,*/*";
+    if (tag === "audio") return "audio/*,*/*";
+    if (tag === "link" || /\\.css($|\\?)/i.test(raw)) return "text/css,*/*";
+    return "*/*";
+  }
+  function rescue(el) {
+    var tag = el && el.tagName ? String(el.tagName).toLowerCase() : "";
+    if (!WANT[tag] || !el.getAttribute || el.getAttribute("data-null-pulled")) return;
+    var attr = tag === "object" ? "data" : tag === "link" || tag === "image" || tag === "use" ? "href" : "src";
+    var raw = el.getAttribute(attr);
+    if (!raw || /^(data:|blob:|about:|javascript:)/i.test(raw)) return;
+    var here = document.baseURI;
+    el.setAttribute("data-null-pulled", "1");
+
+    if (tag === "link" && String(el.getAttribute("rel") || "").toLowerCase().indexOf("stylesheet") >= 0) {
+      grabSheet(against(raw, here));
+      return;
+    }
+    pull(against(raw, here), kindFor(tag, raw)).then(function (got) {
+      /* a srcset would win over the src that was just fixed, and every
+         candidate in it failed the same way */
+      if (tag === "img" && el.removeAttribute) el.removeAttribute("srcset");
+      el.setAttribute(attr, got.url);
+    }, function () {});
+  }
+
+  /* resource errors do not bubble, but they do reach a capturing listener on
+     the window — one hook, and it is the one every kind of asset shares */
+  addEventListener("error", function (e) {
+    var el = e && (e.target || e.srcElement);
+    if (el && el.tagName) rescue(el);
+  }, true);
 
   /* ---------- telling the window above what happened ----------
      A page that threw while it mounted unmounts itself and leaves a black

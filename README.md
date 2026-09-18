@@ -76,6 +76,7 @@ src/styles/
   voice.css saves.css the channel, and the save slots
   emoji.css           the composer's pad, shelf and names
   social.css          gifts and jams
+  messages.css        the conversation list, and the thread beside it
   staff.css           roles, the picker, the badge colours
   shop.css            the counters, the shelves, and every animation
   profile.css         the sign-in card, the player card, the account list
@@ -141,8 +142,14 @@ opaque origin takes away — a working `localStorage`, an in-memory Indexed
 Database for pages that persist while they mount, and a bridge that carries
 the copy's `fetch` and `XMLHttpRequest` up to the window that owns the relay,
 because a request from an origin-less frame is refused by anything that looks
-at it. The first error the page throws is handed up as well, and the bar above
-the frame says which of the two happened.
+at it. The same bridge takes the resources the frame fetches *for itself*: a
+stylesheet, a script or a picture that fails to load on its own is pulled over
+the relay and the element is pointed at what came back, with the images and
+fonts a sheet names pulled alongside it, because those are relative to the
+sheet rather than to the page. It is deliberately lazy — nothing is fetched
+twice, and a page whose files load normally pays nothing for it. The first
+error the page throws is handed up as well, and the bar above the frame says
+which of the two happened.
 
 **Relays come and go, so there is a list.** `src/lib/browser.ts` holds the
 relays NULL knows about and tries each in turn: a bare handshake first, then
@@ -270,11 +277,13 @@ is never applied to a message you did not switch it on for, and the person you
 are talking to reads it decoded, because they are on the same site. What it
 changes is what the words look like to something that is *not* in the room.
 
-**Badges are drawn, never fetched.** The partner wall reads whoever holds the
-PARTNER role out of the directory, so the page cannot go stale, and draws each
-badge in code from the handle — a shape, a pair of colours taken from the
-name, the initials. A partner who joins tomorrow has a badge without anybody
-designing one, and a filter that refuses images cannot take the wall away.
+**A conversation gets a whole window when it deserves one.** Messages is the
+chat pop-out's other half: the same `dms` rows and the same mutation behind it,
+laid out as a list of conversations with the thread beside it. Names, pictures,
+role chips and the green dot come from the directory the page is already
+reading, the day is written once where the day changes, and what has arrived
+since you last had a thread open is this browser's own stamp — a thing a
+machine can know and a server cannot.
 
 **The background is one canvas, or it is a still frame.** `Ambient.tsx` draws
 the fog and the specks itself: nothing is fetched and nothing is a library.

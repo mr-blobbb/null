@@ -11,6 +11,18 @@ type Release = { version: string; date: string; note: string; changes: Change[] 
 
 const RELEASES: Release[] = [
   {
+    version: "v1.2.1",
+    date: "September 18, 2026",
+    note: "The one about the two places you look at other people: a page for messages, and a browser that waits for the pictures.",
+    changes: [
+      { kind: "add", text: "Messages: a page of its own. Every conversation you are in down the left, most recent first, the one you pick on the right, and a box at the bottom that sends. Names, pictures, role chips and the green dot come from the search box's directory — so anybody can be written to from the box itself, whether or not there is a thread yet." },
+      { kind: "add", text: "What arrived since you last had a thread open is marked, and it is this browser's own stamp rather than the server's: whether you have read something is a thing a machine knows and a server cannot." },
+      { kind: "add", text: "The day is written once where the day changes, runs of lines from the same person share one picture, and gifts and trades take their place in the stream in the order they happened, exactly as they do in the pop-out." },
+      { kind: "tweak", text: "The partner wall is gone. The PARTNER badge still marks whoever holds the role, and the door it sat behind on the rail is Messages now." },
+      { kind: "tweak", text: "A copied page no longer arrives as its own inline styles and nothing else. A stylesheet, a script or a picture that fails to load on its own is pulled over the relay instead, together with the images and fonts the sheet names, because those are relative to the sheet and not to the page. It is lazy: a page whose files load normally fetches nothing twice." },
+    ],
+  },
+  {
     version: "v1.2.0",
     date: "September 18, 2026",
     note: "The one with other people in it, properly: talking, saving, gifting, and a wall for the people who built the shelves.",

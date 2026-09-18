@@ -28,12 +28,37 @@ type Ask = { id: string; url: string; method: string; headers: Record<string, st
 const sent: { nullReq?: Ask; nullErr?: string; nullSay?: { chars: number }; nullFrame?: string }[] = [];
 const handlers: Record<string, ((e: unknown) => void)[]> = {};
 
+/* One fake element, enough to be a link or a picture: the bridge reaches for
+   tagName, the one attribute that failed and the place the answer goes. */
+class El {
+  tagName: string;
+  attrs: Record<string, string> = {};
+  textContent = "";
+  constructor(tag: string) {
+    this.tagName = tag.toUpperCase();
+  }
+  getAttribute(k: string): string | null {
+    return Object.prototype.hasOwnProperty.call(this.attrs, k) ? this.attrs[k] : null;
+  }
+  setAttribute(k: string, v: string): void {
+    this.attrs[k] = String(v);
+  }
+  removeAttribute(k: string): void {
+    delete this.attrs[k];
+  }
+}
+
 const win: Record<string, unknown> = {};
+const poured: El[] = [];
 const doc = {
   baseURI: "https://aether.cx/",
   body: { innerText: "aether" },
-  head: { prepend() {} },
-  createElement: () => ({}),
+  documentElement: { appendChild: (el: El) => poured.push(el) },
+  head: {
+    prepend() {},
+    appendChild: (el: El) => poured.push(el),
+  },
+  createElement: (tag: string) => new El(tag),
   addEventListener() {},
 };
 
@@ -176,6 +201,61 @@ const g = (win.fetch as (u: string) => Promise<Response>)("https://api.aether.cx
 const greq = sent.map((m) => m.nullReq).filter(Boolean).at(-1);
 reply({ id: greq?.id, error: "the relay refused" });
 ok("a bridged failure rejects instead of hanging", await g.then(() => false, () => true));
+
+/* ---- the asset bridge ----
+   The half of a copied page that never went through the bridge: a picture, a
+   stylesheet and a script are fetched by the frame itself, and on a filtered
+   network they come back as nothing at all. What is checked here is that a
+   resource which failed is asked for over the bridge, that what comes back is
+   pointed at, and that it happens once rather than in a loop. */
+async function wait(ms = 20) {
+  await new Promise((r) => setTimeout(r, ms));
+}
+const last = () => sent.map((m) => m.nullReq).filter(Boolean).at(-1);
+const err = (el: El) => (handlers.error || []).forEach((h) => h({ target: el }));
+const png = Buffer.from("\x89PNG\r\n\x1a\n").toString("base64");
+
+const img = new El("img");
+img.setAttribute("src", "/art/cover.png");
+err(img);
+const ireq = last();
+ok("a blocked picture is asked for over the bridge", ireq?.url === "https://aether.cx/art/cover.png", ireq?.url);
+reply({ id: ireq?.id, status: 200, statusText: "OK", headers: [["content-type", "image/png"]], body: png });
+await wait();
+ok("and the element ends up pointing at what came back", /^(blob:|data:image\/png)/.test(img.getAttribute("src") || ""), img.getAttribute("src"));
+
+err(img);
+await wait();
+ok("a second failure does not fetch it again", sent.filter((m) => m.nullReq?.url === "https://aether.cx/art/cover.png").length === 1);
+
+/* a stylesheet is text, and everything it names is relative to the sheet */
+const link = new El("link");
+link.setAttribute("rel", "stylesheet");
+link.setAttribute("href", "css/site.css");
+err(link);
+const sreq = last();
+ok("a blocked stylesheet is asked for as text", sreq?.url === "https://aether.cx/css/site.css" && sreq?.headers?.accept === "text/css,*/*", sreq?.headers?.accept);
+reply({ id: sreq?.id, status: 200, statusText: "OK", headers: [["content-type", "text/css"]], body: Buffer.from("body{background:url(bg.png)}").toString("base64") });
+await wait();
+
+const breq = last();
+ok("the picture inside it is asked for relative to the sheet", breq?.url === "https://aether.cx/css/bg.png", breq?.url);
+reply({ id: breq?.id, status: 200, statusText: "OK", headers: [["content-type", "image/png"]], body: png });
+await wait();
+
+const sheet = poured.at(-1);
+ok("the sheet is poured into the page once it is whole", sheet?.tagName === "STYLE" && sheet.attrs["data-null-sheet"] === "https://aether.cx/css/site.css");
+ok("and its own url()s point at what came back", !!sheet && /^body\{background:url\((blob:|data:)/.test(sheet.textContent), sheet?.textContent);
+
+/* a script is bytes that have to run where they land, so it comes back as a
+   blob this copy owns and the element is pointed at that */
+const script = new El("script");
+script.setAttribute("src", "js/app.js");
+err(script);
+const jreq = last();
+reply({ id: jreq?.id, status: 200, statusText: "OK", headers: [["content-type", "text/javascript"]], body: Buffer.from("window.__ran=1").toString("base64") });
+await wait();
+ok("a blocked script is pointed at a blob of its own", /^blob:/.test(script.getAttribute("src") || ""), script.getAttribute("src"));
 
 console.log(bad ? `\n${bad} failed` : "\nall good");
 if (bad) process.exit(1);

@@ -25,6 +25,9 @@ import "./styles/emoji.css";
 import "./styles/markdown.css";
 /* gifts and jams: the two things members do for each other */
 import "./styles/social.css";
+/* the messages page, which is the one place a conversation gets a whole
+   window instead of a pop-out */
+import "./styles/messages.css";
 /* imported last: the quiet pass, which overrides a few wrote-in sizes */
 import "./styles/refine.css";
 

@@ -10,8 +10,8 @@ import {
   Clapperboard,
   Compass,
   Gamepad2,
-  Handshake,
   MessageCircle,
+  MessagesSquare,
   Music,
   Globe,
   House,
@@ -43,7 +43,7 @@ export type PageId =
   | "settings"
   | "users"
   | "rich"
-  | "partners"
+  | "dms"
   | "missing"
   | "player";
 
@@ -183,14 +183,14 @@ export const PAGES: Record<PageId, Page> = {
     blurb: "Everybody who has signed in here, owner first.",
     keywords: "members users people profiles community accounts who joined",
   },
-  partners: {
-    id: "partners",
-    name: "Partners",
-    address: "null://partners",
-    route: "/partners",
-    icon: Handshake,
-    blurb: "Who NULL is built on: the shelves, the engines, and the badges.",
-    keywords: "partners badges credits thanks friends shelves sponsors",
+  dms: {
+    id: "dms",
+    name: "Messages",
+    address: "null://dm",
+    route: "/dms",
+    icon: MessagesSquare,
+    blurb: "Every conversation you are in, with the one you pick beside it.",
+    keywords: "messages dm dms direct talk inbox conversations private",
   },
   rich: {
     id: "rich",
@@ -243,7 +243,7 @@ export const RAIL_TOP: PageId[] = ["home", "games", "apps", "ai", "chat", "movie
 export const RAIL_BOTTOM: PageId[] = [
   "rich",
   "users",
-  "partners",
+  "dms",
   "profile",
   "changelog",
   "extensions",
@@ -263,7 +263,7 @@ export const ALL_PAGES: PageId[] = [
   "shop",
   "rich",
   "users",
-  "partners",
+  "dms",
   "profile",
   "changelog",
   "extensions",

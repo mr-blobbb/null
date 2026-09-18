@@ -327,7 +327,7 @@ function Browser({ url, relay, back }: { url: string; relay: string; back: PageI
               <span>
                 {reason || "This site came through as an empty copy."}
                 {thin
-                  ? " It also arrived nearly empty — a site built entirely in JavaScript needs its own scripts to run, and only the rewritten window can give it that."
+                  ? " It also arrived nearly empty. Every file the copy loads for itself — its stylesheets, its scripts, its pictures — is retried over the relay, so this is usually the network refusing them rather than the copy not asking."
                   : ""}
                 {thin && says ? ` ${says}` : ""}
               </span>

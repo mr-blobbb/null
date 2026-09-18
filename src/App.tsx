@@ -20,7 +20,7 @@ import { Proxies } from "./pages/Proxies";
 import { Shop } from "./pages/Shop";
 import { Members } from "./pages/Members";
 import { Richest } from "./pages/Richest";
-import { Partners } from "./pages/Partners";
+import { Dms } from "./pages/Dms";
 import { Ai } from "./pages/Ai";
 import { Chat } from "./pages/Chat";
 import { Music } from "./pages/Music";
@@ -43,7 +43,7 @@ import { overlayExtensions, useExt } from "./lib/extensions";
 import { useJamWatch } from "./lib/jam";
 import { watchLibrary } from "./lib/music";
 
-const VERSION = "1.2.0";
+const VERSION = "1.2.1";
 const BUILT = "20260918";
 
 export function App() {
@@ -186,8 +186,8 @@ export function App() {
         return <Chat />;
       case "rich":
         return <Richest />;
-      case "partners":
-        return <Partners />;
+      case "dms":
+        return <Dms />;
       case "users":
         return <Members />;
       case "profile":
@@ -257,13 +257,17 @@ export function App() {
           {/* the fog sits under the dot grid, which sits under the page */}
           <Ambient />
           <div className="dots" aria-hidden="true" />
-          {/* Three pages own the whole window rather than scrolling inside
-              it: the front door, the chat rooms and the assistant. The shell
-              says so once, here, instead of every page guessing its height. */}
+          {/* Four pages own the whole window rather than scrolling inside
+              it: the front door, the chat rooms, the assistant, and the
+              messages page. The shell says so once, here, instead of every
+              page guessing its height. */}
           <div
             key={`${tab.id}-${tab.nonce}`}
             className={`page-host${
-              tab.now.page === "home" || tab.now.page === "chat" || tab.now.page === "ai"
+              tab.now.page === "home" ||
+              tab.now.page === "chat" ||
+              tab.now.page === "ai" ||
+              tab.now.page === "dms"
                 ? " page-host--fit"
                 : ""
             }`}
