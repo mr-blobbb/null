@@ -1237,3 +1237,1242 @@
   max-width: 420px;
   overflow-wrap: anywhere;
 }
+
+/* ============================================================
+   the rooms, round two
+   Everything the chat draws and the stylesheet had not been told
+   about: the shelves, the right-hand rail, the bar over a message,
+   the composer's tools, the report card and the profile card.
+   ============================================================ */
+
+/* ---------- the shelves ----------
+   Rules stands alone; Info and Social fold. A shelf is a heading, a count
+   and a hairline down the left of its rooms, so a folded sidebar still reads
+   as a list of rooms rather than a list of words. */
+
+.ch-list {
+  gap: 9px;
+  padding-right: 2px;
+}
+.ch-shelf {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+/* rules stands on its own above the two shelves, with a line under it */
+.ch-shelf--solo {
+  padding-bottom: 8px;
+  border-bottom: var(--bw) solid var(--line);
+}
+.ch-shelf-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 6px;
+  border-radius: var(--r-2);
+  color: var(--faint);
+  font-size: 10.5px;
+  font-weight: 620;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  text-align: left;
+  transition: background 0.14s var(--ease), color 0.14s var(--ease);
+}
+.ch-shelf-head:hover {
+  background: var(--bg-3);
+  color: var(--dim);
+}
+.ch-shelf-head > svg {
+  width: 13px;
+  height: 13px;
+  flex: none;
+}
+.ch-shelf-head span {
+  flex: 1 1 auto;
+}
+.ch-shelf-n {
+  font-variant-numeric: tabular-nums;
+}
+.ch-chev {
+  width: 12px;
+  height: 12px;
+  flex: none;
+  transition: transform 0.18s var(--ease);
+}
+.ch-shelf-head.is-open .ch-chev {
+  transform: rotate(180deg);
+}
+.ch-shelf-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-left: 4px;
+  padding-left: 6px;
+  border-left: var(--bw) solid var(--line);
+}
+/* the staff-only mark: a dot on the edge of the row, quiet enough to ignore */
+.ch-lock {
+  flex: none;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--line-2);
+}
+
+/* ---------- the room header and its search ---------- */
+
+.ch-find {
+  position: relative;
+  flex: 0 1 300px;
+  min-width: 130px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 10px;
+  border: var(--bw) solid var(--line);
+  border-radius: var(--r-2);
+  background: color-mix(in srgb, var(--bg-2) 68%, transparent);
+  transition: border-color 0.16s var(--ease), background 0.16s var(--ease);
+}
+.ch-find:focus-within {
+  border-color: var(--line-2);
+  background: var(--bg-3);
+}
+.ch-find > svg {
+  flex: none;
+  width: 13px;
+  height: 13px;
+  color: var(--faint);
+}
+.ch-find input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 12.5px;
+}
+.ch-find input:focus {
+  outline: none;
+}
+.ch-find input::placeholder {
+  color: var(--faint);
+}
+.ch-find-x {
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: var(--faint);
+}
+.ch-find-x:hover {
+  color: var(--text);
+}
+.ch-find-x svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* ---------- the member rail ----------
+   The same width as the channels column, because the two edges of a chat
+   window should agree with each other. A row is a face with a dot on it, a
+   styled name, the handle underneath, and whatever the person is wearing. */
+
+.ch-members {
+  flex: none;
+  width: 216px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-left: var(--bw) solid var(--line);
+  background: var(--bg-2);
+}
+.ch-members-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 14px 9px;
+  border-bottom: var(--bw) solid var(--line);
+  color: var(--faint);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.ch-members-head > svg {
+  width: 14px;
+  height: 14px;
+}
+.ch-members-head span {
+  flex: 1 1 auto;
+}
+.ch-mgroup {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 2px 8px 16px;
+  scrollbar-width: thin;
+}
+.ch-mhead {
+  display: flex;
+  gap: 5px;
+  padding: 14px 6px 5px;
+  color: var(--faint);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.ch-mhead b {
+  font-weight: 620;
+  color: var(--dim);
+  font-variant-numeric: tabular-nums;
+}
+.ch-mhead.is-dim {
+  opacity: 0.66;
+}
+
+.ch-member {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 5px 7px;
+  border-radius: var(--r-2);
+  text-align: left;
+  transition: background 0.14s var(--ease);
+}
+.ch-member:hover {
+  background: var(--bg-3);
+}
+.ch-member.is-dim {
+  opacity: 0.55;
+}
+.ch-member.is-dim:hover {
+  opacity: 1;
+}
+.ch-member-pic {
+  position: relative;
+  isolation: isolate;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: var(--bw) solid var(--line);
+  border-radius: 50%;
+  background: var(--bg-3);
+  color: var(--dim);
+  font-size: 11px;
+  font-weight: 620;
+}
+.ch-member-pic img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+.ch-member-pic > svg {
+  width: 14px;
+  height: 14px;
+}
+.ch-member-txt {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.ch-member-name {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  font-weight: 620;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ch-member-at {
+  font-size: 10.5px;
+  color: var(--faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ch-member-tag {
+  flex: none;
+  height: 17px;
+  padding: 0 6px;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+}
+.ch-verified {
+  flex: none;
+  width: 13px;
+  height: 13px;
+}
+.ch-you {
+  font-style: normal;
+  padding: 0 4px;
+  border-radius: 3px;
+  background: var(--bg-4);
+  color: var(--dim);
+  font-size: 9px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+/* the dot on the corner of a face: green means here, grey means not */
+.ch-dot {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--bg-2);
+  background: var(--faint);
+}
+.ch-dot.is-on {
+  background: var(--ok);
+}
+.ch-dot--big {
+  right: 1px;
+  bottom: 1px;
+  width: 15px;
+  height: 15px;
+  border-width: 3px;
+}
+
+/* ---------- still until you look at one ---------
+   A room holds dozens of tags and rings, and dozens of moving things is a
+   room you cannot read. Everything rests where it is; the pointer on the row
+   it belongs to is what starts it. The two clip decorations are told the same
+   thing by their own prop (see art.tsx) — CSS can pause a drawing, not a
+   video. */
+.ch .art,
+.ch .art *,
+.ch .tagchip,
+.ch .tagchip::before,
+.ch .tagchip::after {
+  animation-play-state: paused;
+}
+.ch :is(.say, .ch-member, .ch-pop, .ch-toolpop, .ch-modal):hover .art,
+.ch :is(.say, .ch-member, .ch-pop, .ch-toolpop, .ch-modal):hover .art *,
+.ch :is(.say, .ch-member, .ch-pop, .ch-toolpop, .ch-modal):hover .tagchip,
+.ch :is(.say, .ch-member, .ch-pop, .ch-toolpop, .ch-modal):hover .tagchip::before,
+.ch :is(.say, .ch-member, .ch-pop, .ch-toolpop, .ch-modal):hover .tagchip::after,
+.ch .say-picbtn:hover .art,
+.ch .say-picbtn:hover .art * {
+  animation-play-state: running;
+}
+
+/* ---------- a line ----------
+   The hover bar rides the top edge of the line, so the actions are above the
+   thing they act on. Nothing about a message moves until the pointer is on
+   it, which is what keeps a busy room quiet. */
+
+.say {
+  position: relative;
+}
+.ch-bar {
+  position: absolute;
+  top: -9px;
+  right: 10px;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  padding: 2px;
+  border: var(--bw) solid var(--line-2);
+  border-radius: var(--r-2);
+  background: color-mix(in srgb, var(--bg-2) 90%, transparent);
+  backdrop-filter: blur(14px) saturate(130%);
+  -webkit-backdrop-filter: blur(14px) saturate(130%);
+  box-shadow: 0 14px 32px -20px #000;
+  opacity: 0;
+  transform: translateY(3px);
+  pointer-events: none;
+  transition: opacity 0.14s var(--ease), transform 0.14s var(--ease);
+}
+.say:hover .ch-bar,
+.say:focus-within .ch-bar {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+.ch-hbtn {
+  width: 26px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-1);
+  color: var(--dim);
+  transition: background 0.14s var(--ease), color 0.14s var(--ease);
+}
+.ch-hbtn:hover {
+  background: var(--bg-4);
+  color: var(--text);
+}
+.ch-hbtn.is-bad:hover {
+  color: var(--bad);
+}
+.ch-hbtn svg {
+  width: 13px;
+  height: 13px;
+}
+
+.ch-reactor {
+  position: absolute;
+  top: 24px;
+  right: 10px;
+  /* above the scrim that closes it, or the first click would land on the
+     scrim and the picker would be a thing you can only look at */
+  z-index: 37;
+  display: flex;
+  gap: 2px;
+  padding: 5px;
+  border: var(--bw) solid var(--line-2);
+  border-radius: var(--r-3);
+  background: var(--bg-2);
+  box-shadow: 0 20px 44px -24px #000;
+  animation: sheet-in 0.14s var(--ease);
+}
+.ch-reactor-btn {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-1);
+  font-size: 15px;
+  transition: background 0.12s var(--ease), transform 0.12s var(--ease);
+}
+.ch-reactor-btn:hover {
+  background: var(--bg-4);
+  transform: translateY(-1px) scale(1.12);
+}
+
+.say-verified {
+  flex: none;
+  width: 14px;
+  height: 14px;
+}
+.say-image {
+  display: block;
+  margin-top: 5px;
+  max-width: min(420px, 100%);
+}
+.say-image img {
+  display: block;
+  width: 100%;
+  border: var(--bw) solid var(--line);
+  border-radius: var(--r-2);
+}
+.say-reacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 5px;
+}
+.say-react {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 7px;
+  border: var(--bw) solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg-2) 78%, transparent);
+  font-size: 12px;
+  transition: border-color 0.14s var(--ease), background 0.14s var(--ease), transform 0.14s var(--ease);
+}
+.say-react b {
+  color: var(--dim);
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+}
+.say-react:hover {
+  border-color: var(--line-2);
+  background: var(--bg-3);
+  transform: translateY(-1px);
+}
+.say-reply {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  margin: 2px 0;
+  padding: 3px 9px;
+  border-left: 2px solid var(--line-2);
+  border-radius: var(--r-1);
+  color: var(--dim);
+}
+.say-reply svg {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  color: var(--faint);
+}
+.say-reply .linkish {
+  font-size: 11.5px;
+  font-weight: 620;
+  color: var(--text);
+}
+.say-reply-body {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--faint);
+}
+.say-ping {
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 1px 7px;
+  border: var(--bw) solid var(--line-2);
+  border-radius: 999px;
+  color: var(--dim);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.say-mentionlist {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: 6px;
+}
+.say-mentionlist em {
+  font-style: normal;
+  padding: 0 5px;
+  border-radius: 3px;
+  background: var(--bg-4);
+  color: var(--dim);
+  font-size: 10.5px;
+}
+
+/* ---------- the composer ----------
+   Tools in a tray of their own, the box, the send. The tray is a real
+   surface rather than four loose glyphs, which is the difference between a
+   toolbar and four things that happen to be in a row. */
+
+.ch-box {
+  position: relative;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 9px;
+  padding: 11px 12px 13px;
+}
+.ch-boxrow {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+.ch-tools {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border: var(--bw) solid var(--line);
+  border-radius: var(--r-2);
+  background: color-mix(in srgb, var(--bg-3) 72%, transparent);
+}
+.ch-tool {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-1);
+  color: var(--dim);
+  transition: background 0.14s var(--ease), color 0.14s var(--ease);
+}
+.ch-tool:hover {
+  background: var(--bg-4);
+  color: var(--text);
+}
+.ch-tool.is-on {
+  background: var(--bg-4);
+  color: var(--text);
+  box-shadow: inset 0 0 0 var(--bw) var(--line-2);
+}
+.ch-tool svg {
+  width: 14px;
+  height: 14px;
+}
+.ch-send {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: var(--bw) solid var(--line-2);
+  border-radius: var(--r-2);
+  background: var(--bg-4);
+  color: var(--text);
+  transition: transform 0.14s var(--ease), background 0.14s var(--ease);
+}
+.ch-send:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: color-mix(in srgb, var(--bg-4) 76%, var(--text) 12%);
+}
+.ch-send:disabled {
+  opacity: 0.45;
+}
+.ch-send svg {
+  width: 15px;
+  height: 15px;
+}
+.ch-replybar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border: var(--bw) solid var(--line);
+  border-left: 2px solid var(--line-2);
+  border-radius: var(--r-2);
+  background: var(--bg-2);
+  color: var(--dim);
+  font-size: 12px;
+}
+.ch-replybar svg {
+  flex: none;
+  width: 13px;
+  height: 13px;
+  color: var(--faint);
+}
+.ch-replybar span {
+  flex: 1 1 auto;
+}
+.ch-replybar b {
+  color: var(--text);
+}
+.ch-imgprev {
+  position: relative;
+  align-self: flex-start;
+  max-width: 200px;
+}
+.ch-imgprev img {
+  display: block;
+  width: 100%;
+  border: var(--bw) solid var(--line);
+  border-radius: var(--r-2);
+}
+.ch-imgprev .ch-icon {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 22px;
+  height: 22px;
+  background: color-mix(in srgb, var(--bg) 68%, transparent);
+}
+
+/* anything behind an open tool, so one click closes it */
+.ch-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+}
+.ch-toolpop {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: calc(100% - 4px);
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 12px;
+  border: var(--bw) solid var(--line-2);
+  border-radius: var(--r-3);
+  background: var(--bg-2);
+  box-shadow: 0 28px 64px -30px #000;
+  animation: sheet-in 0.16s var(--ease);
+}
+.ch-toolpop--emoji {
+  right: auto;
+  width: 256px;
+}
+.ch-toolpop-head {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.ch-toolpop p {
+  margin: 0;
+  line-height: 1.5;
+}
+.ch-toolpop-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.ch-toolpop-prev {
+  max-height: 110px;
+  object-fit: contain;
+  border: var(--bw) solid var(--line);
+  border-radius: var(--r-2);
+}
+.ch-emojigrid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 2px;
+}
+.ch-emojibtn {
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-1);
+  font-size: 15px;
+  transition: background 0.12s var(--ease), transform 0.12s var(--ease);
+}
+.ch-emojibtn:hover {
+  background: var(--bg-4);
+  transform: scale(1.15);
+}
+.ch-musicro {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 7px;
+  border-radius: var(--r-2);
+  text-align: left;
+  transition: background 0.14s var(--ease);
+}
+.ch-musicro:hover {
+  background: var(--bg-3);
+}
+.ch-musicro-art {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: var(--bw) solid var(--line);
+  border-radius: var(--r-1);
+  background: var(--bg-3);
+  color: var(--faint);
+}
+.ch-musicro-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ch-musicro-art svg {
+  width: 15px;
+  height: 15px;
+}
+.ch-musicro-txt {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.ch-musicro-txt b {
+  font-size: 12.5px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ch-musicro-txt span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ch-musicro-tag {
+  flex: none;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: var(--bg-4);
+  color: var(--dim);
+  font-size: 9px;
+  font-style: normal;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.ch-musicro-add {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-1);
+  background: var(--bg-4);
+  color: var(--dim);
+  font-size: 13px;
+}
+
+.ch-typing {
+  flex: none;
+  margin: 0;
+  padding: 0 16px 6px;
+}
+
+/* ---------- a card over everything ----------
+   Both the report box and the profile card dim and blur what is behind them,
+   because a popup you can still read the room through is a popup you have to
+   work to read. */
+
+.ch-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 240;
+  display: grid;
+  place-items: center;
+  padding: 22px;
+  background: color-mix(in srgb, var(--bg) 48%, transparent);
+  backdrop-filter: blur(18px) saturate(125%);
+  -webkit-backdrop-filter: blur(18px) saturate(125%);
+  animation: veil-in 0.16s var(--ease);
+}
+
+.ch-modal {
+  width: min(520px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  padding: 18px;
+  border: var(--bw) solid var(--line-2);
+  border-radius: var(--r-4);
+  background: var(--bg-2);
+  box-shadow: 0 34px 80px -34px #000;
+  animation: sheet-in 0.18s var(--ease);
+}
+.ch-modal-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.ch-modal-head b {
+  flex: 1 1 auto;
+  font-size: 15px;
+  font-weight: 640;
+  letter-spacing: -0.01em;
+}
+.ch-modal-flag {
+  flex: none;
+  width: 17px;
+  height: 17px;
+  color: var(--warn);
+  animation: ch-flag-wob 1.5s ease-in-out infinite;
+}
+.ch-modal-line {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--dim);
+}
+.ch-quote {
+  display: flex;
+  gap: 9px;
+  align-items: baseline;
+  padding: 9px 11px;
+  border-left: 2px solid var(--line-2);
+  border-radius: var(--r-1);
+  background: var(--bg-3);
+  color: var(--dim);
+  font-size: 12.5px;
+}
+.ch-quote b {
+  flex: none;
+  color: var(--text);
+}
+.ch-quote span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ch-why {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.ch-whybox {
+  min-height: 88px;
+  resize: vertical;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.ch-modal-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ch-modal-count {
+  margin-right: auto;
+}
+
+@keyframes ch-flag-wob {
+  0%,
+  100% {
+    transform: rotate(-7deg);
+  }
+  50% {
+    transform: rotate(8deg);
+  }
+}
+[data-motion="off"] .ch-modal-flag,
+[data-motion="off"] .ch-pop-flag {
+  animation: none;
+}
+
+/* ---------- the profile card ----------
+   Centred, banner on top, the face straddling the seam: half in the banner and
+   half below it, with the presence dot on its lower-right corner. Under that,
+   who they are, what they wrote, and the numbers. */
+
+.ch-pop {
+  position: relative;
+  width: min(560px, 100%);
+  max-height: min(88vh, 760px);
+  overflow-y: auto;
+  border: var(--bw) solid var(--line-2);
+  border-radius: var(--r-4);
+  background: var(--bg-2);
+  box-shadow: 0 40px 90px -36px #000;
+  scrollbar-width: thin;
+  animation: sheet-in 0.2s var(--ease);
+}
+.ch-pop.is-flagged {
+  border-color: color-mix(in srgb, var(--warn) 55%, var(--line-2));
+}
+.ch-pop-banner {
+  position: relative;
+  height: 124px;
+  border-radius: var(--r-4) var(--r-4) 0 0;
+  border-bottom: var(--bw) solid var(--line);
+  background: var(--bg-3);
+}
+.ch-pop-banner::after {
+  /* the seam is a soft shadow, so a bright banner does not look pasted on */
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 34px;
+  background: linear-gradient(to top, color-mix(in srgb, var(--bg) 34%, transparent), transparent);
+  pointer-events: none;
+}
+.ch-pop-x {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  z-index: 2;
+  background: color-mix(in srgb, var(--bg) 60%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.ch-pop-flag {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 24px;
+  padding: 0 9px;
+  border: var(--bw) solid var(--warn);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--warn) 20%, var(--bg-2));
+  color: var(--warn);
+  font-size: 11px;
+  font-weight: 640;
+  font-variant-numeric: tabular-nums;
+  animation: ch-flag-wob 1.6s ease-in-out infinite;
+}
+.ch-pop-flag svg {
+  width: 12px;
+  height: 12px;
+}
+.ch-pop-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 20px 18px;
+}
+.ch-pop-avatar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: -52px;
+}
+.ch-pop-pic {
+  position: relative;
+  isolation: isolate;
+  flex: none;
+  width: 104px;
+  height: 104px;
+  display: grid;
+  place-items: center;
+  border: 3px solid var(--bg-2);
+  border-radius: 50%;
+  background: var(--bg-3);
+  color: var(--dim);
+  font-size: 30px;
+  font-weight: 640;
+  box-shadow: 0 12px 28px -16px #000;
+}
+.ch-pop-pic img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+.ch-pop-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 7px;
+  padding-bottom: 4px;
+}
+.ch-pop-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  font-size: 21px;
+  font-weight: 660;
+  letter-spacing: -0.015em;
+}
+.ch-pop-handle {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--dim);
+  font-size: 12.5px;
+}
+.ch-pop-presence {
+  color: var(--faint);
+  font-size: 10.5px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.ch-pop-presence.is-on {
+  color: var(--ok);
+}
+.ch-pop-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+}
+.ch-pop-bio {
+  margin: 2px 0 0;
+  font-size: 13.5px;
+  line-height: 1.62;
+}
+.ch-pop-bio.is-empty {
+  color: var(--faint);
+  font-style: italic;
+}
+.ch-pop-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(126px, 1fr));
+  gap: 9px;
+  padding: 12px;
+  border: var(--bw) solid var(--line);
+  border-radius: var(--r-3);
+  background: color-mix(in srgb, var(--bg-3) 58%, transparent);
+}
+.ch-fact {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.ch-fact i {
+  font-style: normal;
+  color: var(--faint);
+  font-size: 9.5px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.ch-fact b {
+  font-size: 13px;
+  font-weight: 620;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ch-pop-banned {
+  padding: 1px 6px;
+  border: var(--bw) solid var(--bad);
+  border-radius: 999px;
+  color: var(--bad);
+  font-size: 9.5px;
+  font-style: normal;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.ch-flags {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: var(--bw) solid color-mix(in srgb, var(--warn) 45%, var(--line));
+  border-radius: var(--r-3);
+  background: color-mix(in srgb, var(--warn) 7%, transparent);
+}
+.ch-flags-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--warn);
+  font-size: 12px;
+  font-weight: 620;
+}
+.ch-flags-head svg {
+  flex: none;
+  width: 13px;
+  height: 13px;
+}
+.ch-flags-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ch-flags-list li {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 9px;
+  border-radius: var(--r-2);
+  background: color-mix(in srgb, var(--bg) 45%, transparent);
+}
+.ch-flags-list li b {
+  font-size: 12.5px;
+}
+.ch-flags-list li span {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.ch-pop-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding-top: 11px;
+  border-top: var(--bw) solid var(--line);
+}
+.ch-pop-ban {
+  margin-left: auto;
+}
+.ch-pop-report {
+  flex: 1 1 100%;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.ch-pop-report textarea {
+  flex: 1 1 auto;
+  min-height: 46px;
+  resize: vertical;
+  font-size: 13px;
+}
+.ch-pop-note {
+  margin: 0;
+}
+
+/* ---------- direct messages ---------- */
+
+.dm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+.dm-log {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  max-height: 340px;
+  overflow-y: auto;
+  padding: 4px 2px;
+  scrollbar-width: thin;
+}
+.dm-hello {
+  margin: 0;
+}
+.dm-line {
+  align-self: flex-start;
+  max-width: 78%;
+  margin: 0;
+  padding: 7px 11px;
+  border: var(--bw) solid var(--line);
+  border-radius: var(--r-3);
+  background: var(--bg-2);
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.dm-line.is-mine {
+  align-self: flex-end;
+  border-color: var(--line-2);
+  background: var(--bg-3);
+}
+.dm-line img {
+  display: block;
+  max-width: 100%;
+  margin-bottom: 5px;
+  border-radius: var(--r-2);
+}
+.dm-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dm-box .ch-input {
+  min-height: 36px;
+}
+
+/* ---------- narrow windows ----------
+   The rail narrows before it moves: a three-column chat needs about a
+   thousand pixels to be a three-column chat. */
+
+@media (max-width: 1080px) {
+  .ch-side,
+  .ch-members {
+    width: 184px;
+  }
+}
+@media (max-width: 900px) {
+  .ch-side,
+  .ch-members {
+    width: 168px;
+  }
+  .ch-find {
+    flex: 0 1 180px;
+  }
+}
+@media (max-width: 760px) {
+  .ch-members {
+    width: 100%;
+    max-height: 32%;
+    border-left: none;
+    border-top: var(--bw) solid var(--line);
+  }
+  .ch-head {
+    flex-wrap: wrap;
+  }
+  .ch-find {
+    flex: 1 1 100%;
+  }
+  .ch-toolpop--emoji {
+    width: auto;
+    right: 12px;
+  }
+  .ch-emojigrid {
+    grid-template-columns: repeat(8, 1fr);
+  }
+}
+

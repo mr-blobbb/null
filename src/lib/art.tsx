@@ -10,7 +10,7 @@
 
    The class names here are animated in src/styles/shop.css. */
 
-import { useState, type CSSProperties } from "react";
+import { useRef, useState, type CSSProperties } from "react";
 
 import { useAccount } from "./account";
 import { NullFace } from "./brand";
@@ -43,13 +43,13 @@ const FACE_CLIP: Record<string, string> = {
   ember: "avatar-ember.mp4",
 };
 
-export function AvatarArt({ id }: { id: string | null | undefined }) {
+export function AvatarArt({ id, still }: { id: string | null | undefined; still?: boolean }) {
   if (!id) return null;
   const clip = FACE_CLIP[id];
   if (clip) {
     return (
       <span className="art art--clip">
-        <FaceVideo file={clip} />
+        <FaceVideo file={clip} still={still} />
       </span>
     );
   }
@@ -346,14 +346,22 @@ function CardVideo({ file }: { file: string }) {
    the stylesheet screens them over the picture: black disappears, the glow
    stays. `object-fit: cover` in a round, clipped box is what makes one sit
    centred on the face at any size — the shop tile and the profile alike. */
-function FaceVideo({ file }: { file: string }) {
+function FaceVideo({ file, still }: { file: string; still?: boolean }) {
   const [failed, setFailed] = useState(false);
+  const el = useRef<HTMLVideoElement>(null);
   if (failed) return null;
   return (
     <video
+      ref={el}
       className="art-video"
       src={decor(file)}
-      autoPlay
+      /* a room full of loops is a room you cannot read. `still` asks for a
+         decoration that rests on its first frame until the pointer is on the
+         thing it decorates — the CSS can pause a drawing, but a clip has to be
+         told, which is why this one prop exists. */
+      autoPlay={!still}
+      onMouseEnter={() => el.current?.play().catch(() => {})}
+      onMouseLeave={() => el.current?.pause()}
       muted
       loop
       playsInline

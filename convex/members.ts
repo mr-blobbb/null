@@ -99,14 +99,14 @@ export const list = query({
 export const pictures = query({
   args: { users: v.array(v.string()) },
   handler: async (ctx, { users }) => {
-    const out: { user: string; pfp: string | null; avatar: string | null }[] = [];
+    const out: { user: string; pfp: string | null; avatar: string | null; nameStyle: string }[] = [];
     const seen = new Set<string>();
     for (const asked of users.slice(0, 60)) {
       const key = asked.trim().toLowerCase();
       if (!key || seen.has(key)) continue;
       seen.add(key);
       const row = await ctx.db.query("members").withIndex("by_user", (q) => q.eq("user", key)).first();
-      if (row) out.push({ user: key, pfp: row.pfp, avatar: row.avatar });
+      if (row) out.push({ user: key, pfp: row.pfp, avatar: row.avatar, nameStyle: row.nameStyle });
     }
     return out;
   },
@@ -331,6 +331,36 @@ export const unban = mutation({
       await ctx.db.delete(b._id);
     }
     await ctx.db.patch(row._id, { banned: false, machineBanned: false, banReason: undefined });
+  },
+});
+
+/** Open reports against one member, for a card with a flag on it.
+ *
+ *  Gated the way every other staff action here is: the caller says who they
+ *  are and the member row decides whether the claim stands, so the reasons are
+ *  not handed to a visitor who merely knows the URL. Non-staff get null rather
+ *  than an empty list, which is what lets the card leave the whole panel out. */
+export const reports = query({
+  args: { user: v.string(), by: v.string(), claimed: v.boolean() },
+  handler: async (ctx, { user, by, claimed }) => {
+    if (!(await isStaff(ctx, by, claimed))) return null;
+    const key = user.trim().toLowerCase();
+    const rows = await ctx.db
+      .query("reports")
+      .withIndex("by_user", (q) => q.eq("user", key))
+      .collect();
+    const open = rows.filter((r) => !r.handled).sort((a, b) => b.at - a.at);
+    return {
+      open: open.length,
+      total: rows.length,
+      reasons: open.slice(0, 6).map((r) => ({
+        id: r._id as string,
+        by: r.by,
+        reason: r.reason,
+        at: r.at,
+        fromChat: !!r.message,
+      })),
+    };
   },
 });
 

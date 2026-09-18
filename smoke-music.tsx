@@ -125,7 +125,21 @@ ok("the queue can be cleared", musicLib.music.get().queue.length === 0 && musicL
 
 /* 3 · the cloak */
 ok("the cloak list is the long one", cloak.CLOAKS.length >= 15);
-ok("smart cloak picks from the list", cloak.CLOAKS.some((c) => c.id === cloak.smartPick(new Date(2026, 8, 17, 10)).id));
+/* Every hour of a week, not one roll. The pick is made once and then looked
+   for: asking inside `some` re-rolls on each element, so only the two cloaks
+   that hour can return could ever match and the check failed one run in four. */
+let stray = "";
+for (let day = 0; day < 7 && !stray; day++) {
+  for (let hour = 0; hour < 24; hour++) {
+    const pick = cloak.smartPick(new Date(2026, 8, 14 + day, hour));
+    if (!cloak.CLOAKS.some((c) => c.id === pick.id)) {
+      stray = `day ${day} at ${hour} picked "${pick.id}", which is not on the list`;
+      break;
+    }
+  }
+}
+ok("smart cloak always picks from the list", !stray);
+if (stray) console.log(`     ${stray}`);
 ok("off means off", cloak.cloakFor("off", false).id === "off");
 ok("a chosen cloak is honoured", cloak.cloakFor("classroom", false).title === "Classes");
 ok("the panic key overrides the setting", cloak.cloakFor("off", true).id !== "off");

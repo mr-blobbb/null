@@ -151,3 +151,15 @@
 .card {
   background: color-mix(in srgb, var(--bg-2) 82%, transparent);
 }
+
+/* ---------- the chat's three columns, once there is no room for three ----------
+   community.css narrows both side columns on the way down. Below 760 the chat
+   stacks instead, and the channels take the full width again — so the last
+   word on it lives here, which is imported last. The member rail keeps its
+   own full-width rule down there because it is the last block in the stack. */
+
+@media (max-width: 760px) {
+  .ch-side {
+    width: 100%;
+  }
+}

@@ -41,18 +41,117 @@ const HUMAN = {
 /* what the room asks the directory for: the faces of the people in it */
 const PICS = [{ user: "mrblob", pfp: "data:image/png;base64,iVBORw0KGgo=", avatar: "chroma" }];
 
+/* the server's fixed channel list, plus one room somebody made by hand. The
+   list is reassigned once below, to put the owner in a room they made. */
+let rooms: {
+  slug: string;
+  name: string;
+  topic: string;
+  kind: string;
+  gate: string | null;
+  fixed: boolean;
+}[];
+
 const ROOMS = [
-  { slug: "general", name: "general", topic: "everything at once", at: 0, general: true },
-  { slug: "high-scores", name: "high-scores", topic: "brag here", at: 1, general: false },
+  { slug: "rules", name: "rules", topic: "the rules", kind: "text", gate: "staff", fixed: true },
+  { slug: "announcements", name: "announcements", topic: "what staff say", kind: "text", gate: "staff", fixed: true },
+  { slug: "updates", name: "updates", topic: "what changed", kind: "text", gate: "staff", fixed: true },
+  { slug: "links", name: "links", topic: "things worth clicking", kind: "text", gate: "staff", fixed: true },
+  { slug: "staff-shitpost", name: "staff-shitpost", topic: "staff only", kind: "text", gate: "staff", fixed: true },
+  { slug: "general", name: "general", topic: "everything at once", kind: "text", gate: null, fixed: true },
+  { slug: "member-shitpost", name: "member-shitpost", topic: "the other kind", kind: "text", gate: null, fixed: true },
+  { slug: "general-voice", name: "general-voice", topic: "the voice room", kind: "voice", gate: null, fixed: true },
+  { slug: "high-scores", name: "high-scores", topic: "brag here", kind: "text", gate: null, fixed: false },
+];
+rooms = ROOMS;
+
+/* the directory, as the rail asks for it: one owner, one mod, one plain
+   member who has gone quiet */
+const MEMBERS = [
+  {
+    user: "mrblob",
+    name: "mr blob",
+    bio: "" as string,
+    pfp: null as string | null,
+    nameStyle: "{}",
+    online: true,
+    owner: true,
+    roles: [] as string[],
+    wearing: { avatar: "chroma" as string | null, effect: null, tags: ["tstar"] },
+  },
+  {
+    user: "quietmod",
+    name: "quiet mod",
+    bio: "",
+    pfp: null as string | null,
+    nameStyle: "{}",
+    online: true,
+    owner: false,
+    roles: ["mod"] as string[],
+    wearing: { avatar: null, effect: null, tags: [] as string[] },
+  },
+  {
+    user: "gone",
+    name: "gone",
+    bio: "",
+    pfp: null as string | null,
+    nameStyle: "{}",
+    online: false,
+    owner: false,
+    roles: [] as string[],
+    wearing: { avatar: null, effect: null, tags: [] as string[] },
+  },
 ];
 
-/* the real useQuery is told which query it is running, so the stub can be
-   too: anything with a `thread` argument is messages, everything else is the
-   thread list */
+const CARD = {
+  user: "quietmod",
+  name: "quiet mod",
+  bio: "keeps the rooms civil",
+  banner: "",
+  pfp: null,
+  joined: Date.now() - 86_400_000 * 30,
+  nameStyle: "{}",
+  wearing: { avatar: null, effect: null, tags: [] as string[] },
+  coins: 1200,
+  owner: false,
+  roles: ["mod"],
+  online: true,
+  views: 3,
+  banned: false,
+};
+
+/* The stub answers by query, not by guessing from the arguments: a rail that
+   is handed the room list renders nonsense, and nonsense that renders is a
+   test that says everything is fine.
+
+   A reference cannot be compared with `===`, because `api` is Convex's proxy
+   and every read of a property mints a new one. The name it carries is the
+   stable thing, so that is what the stub switches on. */
+const NAME = Symbol.for("functionName");
+const nameOf = (q: unknown) => (q as Record<symbol, string>)?.[NAME] ?? "";
+
 mock.module("convex/react", () => ({
-  useQuery: (_q: unknown, args?: Record<string, unknown>) => {
-    if (args && "users" in args) return PICS;
-    return args && "thread" in args ? [BOT, HUMAN] : ROOMS;
+  useQuery: (q: unknown) => {
+    switch (nameOf(q)) {
+      case "members:pictures":
+        return PICS;
+      case "members:list":
+        return MEMBERS;
+      case "members:card":
+        return CARD;
+      case "members:graph":
+        return { following: [], followers: [], friends: [] };
+      case "members:reports":
+        return { open: 0, total: 0, reasons: [] };
+      case "chat:recent":
+        return [BOT, HUMAN];
+      case "chat:threads":
+        return rooms;
+      case "chat:typists":
+        return [];
+      default:
+        return undefined;
+    }
   },
   useMutation: () => async () => null,
   useAction: () => async () => ({ ok: true, text: "hi" }),
@@ -95,9 +194,32 @@ ok("the room header is there", chatOut.includes("ch-hash") && chatOut.includes("
 account.set({ user: OWNER, name: OWNER, joined: Date.now() });
 const ownerOut = renderToStaticMarkup(<Chat /> as never);
 ok("signed in, the message box appears", ownerOut.includes("ch-input") && ownerOut.includes("ch-tool"));
-ok("the owner gets a Clear button on a made room", ownerOut.includes("Clear this room"));
-ok("general cannot be deleted from the interface", !ownerOut.includes("Delete this thread"));
+/* the owner's clear button belongs to a room somebody made; the fixed ones are
+   not clearable, and the server refuses even if the interface were wrong */
+ok("a fixed channel is never offered for clearing", !ownerOut.includes("Clear this room"));
+ok("a made room is listed apart from the shelves", chatOut.includes("Rooms"));
+
+/* the owner, standing in the one room somebody made by hand: the address does
+   not match, so the room they land in is it, and the clear button appears */
+rooms = [{ slug: "chill", name: "chill", topic: "made by hand", kind: "text", gate: null, fixed: false }];
+const madeOut = renderToStaticMarkup(<Chat /> as never);
+ok("the owner gets a Clear button on a made room", madeOut.includes("Clear this room"));
+rooms = ROOMS;
 account.set({ user: null });
+
+/* ---------- the shape of the rooms ---------- */
+for (const [what, fine] of [
+  ["the channels are shelved, not flat", chatOut.includes("ch-shelf-head") && chatOut.includes("Info") && chatOut.includes("Social")],
+  ["the search box is a real field", chatOut.includes("ch-find") && chatOut.includes("Search messages")],
+  ["the rail groups the room", chatOut.includes("ch-member") && chatOut.includes("OWNER") && chatOut.includes("STAFF")],
+  ["and separates who is here from who is not", chatOut.includes("ONLINE") && chatOut.includes("OFFLINE")],
+  ["every face carries a presence dot", chatOut.includes("ch-dot")],
+  ["a name keeps its own styling in the rail", chatOut.includes("ch-member-name")],
+  ["a line carries a bar over it", chatOut.includes("ch-bar")],
+  ["the bar offers a reaction, a reply and a report", chatOut.includes('title="Add a reaction"') && chatOut.includes('title="Reply"') && chatOut.includes('title="Report"')],
+  ["someone else's line is never deletable by you", !chatOut.includes("Delete message")],
+  ["the composer's tools exist once you can post", ownerOut.includes("ch-tools") && ownerOut.includes("ch-tool")],
+] as [string, boolean][]) ok(what, fine);
 
 /* ---------- the assistant ---------- */
 const ai = renderToStaticMarkup(<Ai /> as never);
