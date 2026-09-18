@@ -52,6 +52,7 @@ import { Guard } from "../components/Guard";
 import { cloudOn, machine } from "../lib/cloud";
 import { CloudDown } from "../lib/outage";
 import { useAccount, nameStyleCss, type NameStyle } from "../lib/account";
+import { countOf, myChoice, parseVote, totalVotes, type Poll } from "../lib/vote";
 import { isOwner, OWNER_TAG } from "../lib/owner";
 import { itemsOf, useEcon } from "../lib/econ";
 import { toggleBlock, useBlocked } from "../lib/members";
@@ -79,6 +80,7 @@ type Row = {
   image: string | null;
   replyTo: string | null;
   reactions: { e: string; by: string[] }[];
+  poll: Poll | null;
   mentions: string[];
   everyone: boolean;
   md: string;
@@ -460,6 +462,7 @@ function Feed({
   const posts = useQuery(api.chat.recent, { thread: slug }) as Row[] | undefined;
   const send = useMutation(api.chat.send);
   const doReact = useMutation(api.chat.react);
+  const doVote = useMutation(api.chat.vote);
   const me = useAccount();
   const eco = useEcon();
   const mus = useMusic();
@@ -495,7 +498,10 @@ function Feed({
   const feed = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const said = useMemo(() => screen(draft, staff), [draft, staff]);
+  /* a /vote line is read out of the draft before anything else looks at it:
+     the poll is content, the line itself is not */
+  const vote = useMemo(() => (staff ? parseVote(draft) : { body: draft, poll: null }), [draft, staff]);
+  const said = useMemo(() => screen(vote.body, staff), [vote.body, staff]);
 
   /* typing: tell the room, once every few seconds while keys are moving */
   const doTyping = useMutation(api.chat.typing);
@@ -547,7 +553,7 @@ function Feed({
 
   async function post() {
     const text = said.clean.trim();
-    if ((!text && !image) || busy || !signedIn) return;
+    if ((!text && !image && !vote.poll) || busy || !signedIn) return;
     setBusy(true);
     setNote(null);
     try {
@@ -561,6 +567,7 @@ function Feed({
         thread: slug,
         image: image ?? undefined,
         replyTo: reply?.id,
+        poll: vote.poll ?? undefined,
       })) as { caught?: string[] | null } | null;
       setDraft("");
       setImage(null);
@@ -576,6 +583,18 @@ function Feed({
   const react = (id: string, emoji: string) => {
     setReactFor(null);
     void doReact({ id, emoji, by: handle, machine, owner: isOwner(me.user) }).catch((e) =>
+      setNote((e as Error).message.replace(/^.*?Error: /, "")),
+    );
+  };
+
+  /* one vote each, kept on the message, so the tally is the same on every
+     machine that opens the room */
+  const pick = (id: string, option: string) => {
+    if (!signedIn) {
+      setNote("Sign in to vote.");
+      return;
+    }
+    void doVote({ id, option, by: handle, machine, owner: isOwner(me.user) }).catch((e) =>
       setNote((e as Error).message.replace(/^.*?Error: /, "")),
     );
   };
@@ -637,6 +656,7 @@ function Feed({
               onReply={() => setReply(m)}
               onReact={() => setReactFor(reactFor === m.id ? null : m.id)}
               onPickEmoji={(e) => react(m.id, e)}
+              onVote={(option) => pick(m.id, option)}
               onReport={() => setReportFor(m)}
               onDelete={() => setReactFor(null)}
               onProblem={setNote}
@@ -669,6 +689,14 @@ function Feed({
               <X />
             </button>
           </div>
+        )}
+
+        {/* the line is not sent as text — it becomes the box under the
+            message — so say what it turned into before it goes */}
+        {vote.poll && (
+          <p className="ch-pollnote tiny faint">
+            <Check /> Poll attached: “{vote.poll.title}” with {vote.poll.options.length} choices.
+          </p>
         )}
 
         {canPostHere ? (
@@ -752,7 +780,7 @@ function Feed({
                 className="ch-send"
                 title="Send"
                 onClick={() => void post()}
-                disabled={busy || (!said.clean.trim() && !image)}
+                disabled={busy || (!said.clean.trim() && !image && !vote.poll)}
               >
                 <Send />
               </button>
@@ -977,6 +1005,7 @@ function Line({
   onReply,
   onReact,
   onPickEmoji,
+  onVote,
   onReport,
   onDelete,
   onProblem,
@@ -995,6 +1024,7 @@ function Line({
   onReply: () => void;
   onReact: () => void;
   onPickEmoji: (emoji: string) => void;
+  onVote: (option: string) => void;
   onReport: () => void;
   onDelete: () => void;
   onProblem: (why: string) => void;
@@ -1120,6 +1150,8 @@ function Line({
           </span>
         )}
 
+        {m.poll && <Poll poll={m.poll} me={me} onVote={onVote} />}
+
         {(m.reactions?.length ?? 0) > 0 && (
           <span className="say-reacts">
             {m.reactions.map((r) => (
@@ -1139,6 +1171,47 @@ function Line({
           <span className="say-ping">everyone was pinged</span>
         )}
       </div>
+    </div>
+  );
+}
+
+/* ---------- a staff vote ----------
+   Two or more little boxes under the message that asked the question. The
+   tally is drawn once you have picked something — until then the boxes are
+   just choices, because seeing which way the room is leaning is not voting.
+   A second tap on your own choice takes it back. */
+function Poll({ poll, me, onVote }: { poll: Poll; me: string; onVote: (option: string) => void }) {
+  const total = totalVotes(poll);
+  const mine = myChoice(poll, me);
+
+  return (
+    <div className="poll">
+      <span className="poll-title">{poll.title}</span>
+      <div className="poll-opts">
+        {poll.options.map((o) => {
+          const n = countOf(poll, o.id);
+          const pct = total ? Math.round((n / total) * 100) : 0;
+          const picked = mine === o.id;
+          return (
+            <button
+              key={o.id}
+              className={`poll-opt${picked ? " is-mine" : ""}${mine ? " is-tallied" : ""}`}
+              onClick={() => onVote(o.id)}
+              title={picked ? "Take your vote back" : `Vote for “${o.text}”`}
+            >
+              {/* the fill is the bar: how much of the room picked this one */}
+              {mine && <span className="poll-fill" style={{ width: `${pct}%` }} aria-hidden="true" />}
+              <span className="poll-txt">{o.text}</span>
+              {mine && <b className="poll-pct">{pct}%</b>}
+              {picked && <Check className="poll-tick" />}
+            </button>
+          );
+        })}
+      </div>
+      <span className="poll-foot tiny faint">
+        {total === 0 ? "No votes yet" : `${total} vote${total === 1 ? "" : "s"}`}
+        {mine ? " · tap yours again to take it back" : " · one vote each"}
+      </span>
     </div>
   );
 }

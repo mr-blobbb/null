@@ -167,6 +167,7 @@ function draw(m: any, member: any) {
     image: m.image ?? null,
     replyTo: m.replyTo ?? null,
     reactions: reactsOf(m),
+    poll: m.poll ?? null,
     mentions: m.mentions ?? [],
     everyone: m.everyone === true,
     md: m.md ?? "basic",
@@ -237,6 +238,14 @@ export const send = mutation({
     thread: v.optional(v.string()),
     image: v.optional(v.string()),
     replyTo: v.optional(v.string()),
+    /** a /vote line the client read out of the body. Only staff may send one,
+     *  and the shape is checked here rather than trusted. */
+    poll: v.optional(
+      v.object({
+        title: v.string(),
+        options: v.array(v.object({ id: v.string(), text: v.string() })),
+      }),
+    ),
   },
   handler: async (ctx, args) => {
     const slug = args.thread || GENERAL;
@@ -257,7 +266,10 @@ export const send = mutation({
     }
 
     const said = screen(args.body, staff);
-    if (!said.clean.trim() && !args.image) throw new Error("say something first");
+    /* a poll is content too: a vote under nothing but its own question is a
+       thing staff do on purpose */
+    const poll = voteOf(args.poll, staff);
+    if (!said.clean.trim() && !args.image && !poll) throw new Error("say something first");
 
     /* a wall, not a door */
     const since = Date.now() - 4000;
@@ -289,6 +301,7 @@ export const send = mutation({
       thread: slug,
       image: args.image ? args.image.slice(0, 300_000) : undefined,
       replyTo: args.replyTo ?? undefined,
+      poll: poll ?? undefined,
       reactions: {},
       reactedBy: [],
       reacts: [],
@@ -323,6 +336,77 @@ export const send = mutation({
     }
 
     return { caught: said.caught.length ? said.caught : null, mentions, everyone };
+  },
+});
+
+/* ---------- votes ---------- */
+
+/** A vote attached to a message, or null.
+ *
+ *  Staff only: the check is here and not on the client, because the client is
+ *  a claim. Everything else is a bound — a question that fits on a line, no
+ *  more choices than a box can hold, and no titles made of markup, since the
+ *  choices are drawn as text and never as HTML. */
+function voteOf(
+  sent: { title: string; options: { id: string; text: string }[] } | undefined,
+  staff: boolean,
+): { title: string; options: { id: string; text: string }[]; votes: { id: string; by: string[] }[] } | null {
+  if (!sent || !staff) return null;
+  const options = sent.options
+    .map((o) => (o ? screen(String(o.text), staff).clean.trim() : ""))
+    .filter(Boolean)
+    .slice(0, 6)
+    .map((text, i) => ({ id: `o${i + 1}`, text: text.slice(0, 80) }));
+  /* two choices is the least a vote can be; one is a statement */
+  if (options.length < 2) return null;
+  const title = screen(String(sent.title ?? ""), staff).clean.trim().slice(0, 90) || "Vote";
+  return { title, options, votes: options.map((o) => ({ id: o.id, by: [] })) };
+}
+
+/** One vote each, and a second tap takes it back. Clicking a different choice
+ *  moves the vote rather than adding another: a tally that lets one person
+ *  count twice is not a tally. */
+export const vote = mutation({
+  args: {
+    id: v.string(),
+    option: v.string(),
+    by: v.string(),
+    machine: v.string(),
+    owner: v.boolean(),
+  },
+  handler: async (ctx, { id, option, by, machine }) => {
+    const key = id ? await ctx.db.normalizeId("messages", id as never) : null;
+    const m = key ? await ctx.db.get(key) : null;
+    if (!key || !m || !m.poll) throw new Error("that vote is gone");
+
+    const row = await memberOf(ctx, by);
+    if (row?.banned) throw new Error("This account is banned.");
+    const mb = await ctx.db.query("bans").withIndex("by_machine", (q: any) => q.eq("machine", machine)).first();
+    if (mb) throw new Error("This browser is banned.");
+
+    const me = by.trim().toLowerCase();
+    if (!me) throw new Error("Sign in to vote.");
+
+    const poll = {
+      title: m.poll.title,
+      options: m.poll.options,
+      votes: (m.poll.votes ?? []).map((v: any) => ({ id: String(v.id), by: [...(v.by ?? [])] })),
+    };
+    /* a choice that is not on this poll is not a vote */
+    if (!poll.options.some((o: any) => o.id === option)) throw new Error("that is not one of the choices");
+
+    const before = poll.options.find((o: any) => (poll.votes.find((v: any) => v.id === o.id)?.by ?? []).includes(me));
+    const same = before?.id === option;
+
+    for (const v of poll.votes) v.by = v.by.filter((h: string) => h !== me);
+    if (!same) {
+      const hit = poll.votes.find((v: any) => v.id === option);
+      if (!hit) poll.votes.push({ id: option, by: [me] });
+      else hit.by.push(me);
+    }
+
+    await ctx.db.patch(key, { poll });
+    return same ? null : option;
   },
 });
 

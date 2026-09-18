@@ -38,6 +38,32 @@ const HUMAN = {
   bot: false,
 };
 
+/* a staff vote riding on a line, the way /vote turns into one */
+const POLL = {
+  id: "m3",
+  user: "mrblob",
+  name: "mr blob",
+  body: "# attention null users!\nvote below:",
+  at: Date.now() - 28_000,
+  owner: true,
+  tags: [],
+  machine: "abc",
+  bot: false,
+  replyTo: null,
+  reactions: [],
+  poll: {
+    title: "which UI option should we use?",
+    options: [
+      { id: "o1", text: "keep the current UI" },
+      { id: "o2", text: "change it plz" },
+    ],
+    votes: [
+      { id: "o1", by: ["mrblob"] },
+      { id: "o2", by: ["quill"] },
+    ],
+  },
+};
+
 /* a line answering another one, so the reply stub is exercised too */
 const REPLY = {
   id: "m2",
@@ -159,7 +185,7 @@ mock.module("convex/react", () => ({
       case "members:reports":
         return { open: 0, total: 0, reasons: [] };
       case "chat:recent":
-        return [BOT, HUMAN, REPLY];
+        return [BOT, HUMAN, POLL, REPLY];
       case "chat:messageById":
         return BOT;
       case "chat:threads":
@@ -186,6 +212,7 @@ const { Tour } = await import("./src/components/Tour");
 const { Rich, parse } = await import("./src/lib/rich");
 const { Markdown } = await import("./src/lib/md");
 const { RAIL_TOP, ALL_PAGES, PAGES } = await import("./src/lib/nav");
+const { parseVote } = await import("./src/lib/vote");
 const { RELAYS } = await import("./src/lib/browser");
 const { account } = await import("./src/lib/account");
 const { OWNER } = await import("./src/lib/owner");
@@ -208,6 +235,11 @@ ok("the owner badge and shop tag both render", chatOut.includes("tagchip--owner"
 ok("a line wears one tag, not a pile", !chatOut.includes("say-more"));
 ok("a reply draws the line it answers", chatOut.includes("say-reply") && chatOut.includes("coins ......."));
 ok("a reaction is drawn with its count", chatOut.includes("say-react") && chatOut.includes("🔥"));
+ok("a poll is drawn as its own box", chatOut.includes("poll-title") && chatOut.includes("keep the current UI"));
+ok(
+  "the choices are not drawn as a tally until you have voted",
+  !chatOut.includes("poll-pct") && !chatOut.includes("is-tallied"),
+);
 ok("the author's picture is in the room", chatOut.includes('<img src="data:image/png;base64,iVBORw0KGgo='));
 ok("and the decoration they wear is drawn over it", chatOut.includes("art art--clip"));
 ok("only the person with a picture gets one", (chatOut.match(/<img /g) ?? []).length === 1);
@@ -234,12 +266,21 @@ ok("unblocking forgets, and the line comes back", (() => {
 
 /* ---------- the rooms, as the owner ---------- */
 account.set({ user: OWNER, name: OWNER, joined: Date.now() });
+/* the owner is one of the two people who voted, so the render below has a
+   tally to draw and a choice of theirs to mark */
+POLL.poll.votes = [
+  { id: "o1", by: [OWNER.toLowerCase()] },
+  { id: "o2", by: ["quill"] },
+];
 const ownerOut = renderToStaticMarkup(<Chat /> as never);
 ok("signed in, the message box appears", ownerOut.includes("ch-input") && ownerOut.includes("ch-tool"));
 /* the owner's clear button belongs to a room somebody made; the fixed ones are
    not clearable, and the server refuses even if the interface were wrong */
 ok("a fixed channel is never offered for clearing", !ownerOut.includes("Clear this room"));
 ok("a made room is listed apart from the shelves", chatOut.includes("Rooms"));
+/* signed in and having voted: the share of the room that picked each choice */
+ok("your own vote turns the choices into a tally", ownerOut.includes("poll-pct") && ownerOut.includes("is-tallied"));
+ok("your choice is the one marked", ownerOut.includes("poll-opt is-mine"));
 
 /* the owner, standing in the one room somebody made by hand: the address does
    not match, so the room they land in is it, and the clear button appears */
@@ -248,6 +289,20 @@ const madeOut = renderToStaticMarkup(<Chat /> as never);
 ok("the owner gets a Clear button on a made room", madeOut.includes("Clear this room"));
 rooms = ROOMS;
 account.set({ user: null });
+
+/* ---------- reading a staff vote out of a message ----------
+   The line comes out of the body and becomes a box, so what is checked is the
+   sentence that survives, what the two choices came out as, and the case that
+   is not a vote at all. */
+const parsed = parseVote(
+  "# attention null users!\nwe are selecting a new default UI menu option! vote below:\n/vote #keep the current UI #change it plz it sucks #which UI option should we use?",
+);
+ok("the prose stays and the /vote line goes", parsed.body.includes("attention null users") && !parsed.body.includes("/vote"));
+ok("the last hash is the question", parsed.poll?.title === "which UI option should we use?");
+ok("the hashes before it are the choices", parsed.poll?.options.length === 2 && parsed.poll?.options[0].text === "keep the current UI");
+ok("a second choice is what makes it a vote", parseVote("/vote #only one thing").poll === null);
+ok("no /vote line, nothing changes", parseVote("just talking about voting").poll === null);
+ok("two hashes is a vote with a plain title", parseVote("/vote #yes #no").poll?.title === "Vote");
 
 /* ---------- the shape of the rooms ---------- */
 for (const [what, fine] of [

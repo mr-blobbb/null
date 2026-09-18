@@ -105,6 +105,16 @@ export default defineSchema({
     everyone: v.optional(v.boolean()),
     /** the kind of markdown the author was allowed: "staff" or "basic" */
     md: v.optional(v.string()),
+    /** a staff vote riding on the line: the question, the choices, and who
+     *  picked what. Votes are a list of { id, by } for the same reason
+     *  reactions are: an option id is ASCII, an emoji is not. */
+    poll: v.optional(
+      v.object({
+        title: v.string(),
+        options: v.array(v.object({ id: v.string(), text: v.string() })),
+        votes: v.array(v.object({ id: v.string(), by: v.array(v.string()) })),
+      }),
+    ),
   })
     .index("by_at", ["at"])
     .index("by_thread_at", ["thread", "at"]),

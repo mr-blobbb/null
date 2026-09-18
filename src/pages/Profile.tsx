@@ -42,6 +42,7 @@ import {
   changePassword,
   changeUser,
   deleteAccount,
+  knownAccounts,
   markBackup,
   NAME_FONTS,
   nameStyleCss,
@@ -84,6 +85,9 @@ function SignIn() {
   const [ageOk, setAgeOk] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  /* read on every render: signing in or deleting an account changes the list,
+     and this card is the one place it is shown */
+  const known = knownAccounts();
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -164,6 +168,41 @@ function SignIn() {
           {busy ? "Processing…" : mode === "in" ? "Sign in" : "Sign up"}
           {!busy && <ArrowRight />}
         </button>
+
+        {/* every account this browser keeps, so switching between two people
+            on one machine is a click instead of remembering a handle */}
+        {known.length > 0 && (
+          <div className="pf-kept">
+            <span className="tiny faint">Accounts on this device</span>
+            <div className="pf-kept-row">
+              {known.map((a) => (
+                <button
+                  key={a.handle}
+                  type="button"
+                  className={`pf-kept-chip${a.live ? " is-on" : ""}`}
+                  title={`Sign in as @${a.handle}`}
+                  onClick={() => {
+                    setMode("in");
+                    setUser(a.handle);
+                    setError(null);
+                  }}
+                >
+                  {a.pfp ? (
+                    <img src={a.pfp} alt="" />
+                  ) : (
+                    <span className="pf-kept-face">{(a.name || a.handle).slice(0, 1).toUpperCase()}</span>
+                  )}
+                  <b>{a.name || a.handle}</b>
+                  <i>@{a.handle}</i>
+                </button>
+              ))}
+            </div>
+            <p className="tiny faint">
+              Signing in as one of these leaves the others, and everything in them, exactly as they
+              are.
+            </p>
+          </div>
+        )}
 
         <p className="pf-swap">
           {mode === "in" ? (

@@ -3,7 +3,15 @@
    profile card around it. The card itself travels: when there is a server to
    ask, signing in pulls the cloud card back over the local one, so a new
    device (or a fresh logout) still has the name, picture, banner, name style
-   and shop picks the member chose — see restoreCard(). */
+   and shop picks the member chose — see restoreCard().
+
+   Several accounts live on one device, and they are kept whole. The book in
+   `null:accounts` holds every account ever made here, keyed by handle, and
+   `null:account` is only whichever one *this tab* is signed into — so signing
+   out, signing back in, or making a second account never costs anybody the
+   profile they already had, and two tabs can be two different people. Which
+   account a tab holds is remembered in sessionStorage, which is per tab, not
+   per browser. See `the account book` below. */
 
 import { createStore, useStore } from "./store";
 import { OWNER, isOwner, ownerCred } from "./owner";
@@ -108,6 +116,70 @@ if (!stored.handle && stored.pass) {
   account.set({ handle: stored.user || stored.name });
 }
 
+/* ---------- the book ----------
+   Every account made on this device, whole, under its handle. The live
+   account mirrors into it on every write, which is what makes signing out
+   cost nothing: the lock comes off the record, the record stays. */
+const book = createStore<Record<string, Account>>("accounts", {});
+
+/** Where this tab's account is remembered. Per tab, not per browser, so two
+ *  tabs can hold two people. */
+const TAB_KEY = "null:session";
+
+function tabHandle(): string {
+  try {
+    return keyOf(sessionStorage.getItem(TAB_KEY) ?? "");
+  } catch {
+    return "";
+  }
+}
+
+function setTab(handle: string) {
+  try {
+    if (handle) sessionStorage.setItem(TAB_KEY, handle);
+    else sessionStorage.removeItem(TAB_KEY);
+  } catch {
+    /* a browser that refuses sessionStorage still has the live account */
+  }
+}
+
+/** True when the two records carry the same values, so an unchanged live
+ *  account does not rewrite the book on every keystroke elsewhere. */
+function same(a: Account, b: Account): boolean {
+  return (Object.keys(b) as (keyof Account)[]).every((k) => a[k] === b[k]);
+}
+
+function mirror(live: Account) {
+  const k = keyOf(live.handle || live.user || "");
+  if (!k) return;
+  const all = book.get();
+  const before = all[k];
+  if (before && same(before, live)) return;
+  book.set({ ...all, [k]: { ...live, handle: live.handle || k } });
+}
+
+account.subscribe(() => mirror(account.get()));
+
+/* Which account this tab starts as: the one it was last signed into on this
+   tab, else whatever the browser was holding, which is also what a brand new
+   tab gets. A device upgrading from the one-account version adopts that
+   account into the book on the way through. */
+(function boot() {
+  const live = account.get();
+  const all = book.get();
+  const want = tabHandle();
+
+  if (want && all[want]) {
+    account.set({ ...EMPTY, ...all[want] });
+    return;
+  }
+  const held = keyOf(live.handle || live.user || "");
+  if (held) {
+    if (!all[held]) book.set({ ...all, [held]: { ...live, handle: live.handle || held } });
+    setTab(held);
+  }
+})();
+
 export function useAccount(): Account {
   return useStore(account);
 }
@@ -150,37 +222,30 @@ export function signUp(user: string, pass: string, confirm: string): { ok: boole
   if (isOwner(user)) return { ok: false, error: "That name is taken." };
   if (pass.length < 4) return { ok: false, error: "Passwords need 4 characters." };
   if (pass !== confirm) return { ok: false, error: "Those passwords do not match." };
-  /* Signing up for the account this browser already holds is signing back in.
-     The profile stays exactly as it was: a returning player should not lose
-     the name, bio and banner they set just because they came through the
-     other form. */
-  const held = heldHandle();
-  if (held && account.get().pass && held.toLowerCase() === user.toLowerCase()) {
-    return signIn(user, pass);
-  }
-  /* A browser holds one account. Starting a second one on top of it would
-     throw the first profile away, so it is refused by name rather than done
-     quietly. */
-  if (held && account.get().pass) {
-    return {
-      ok: false,
-      error: `This browser already holds @${held}. Sign in as @${held}, or delete that account first.`,
-    };
-  }
+
+  /* An account with this handle is already on the device — this is that person
+     coming back through the other form. It takes the password it was made
+     with, and nothing about their profile is touched. */
+  const k = keyOf(user);
+  if (book.get()[k]) return signIn(user, pass);
 
   const salt = Math.random().toString(36).slice(2, 10);
   const now = Date.now();
+  /* a whole record, not a patch: EMPTY first, so nothing of the account that
+     was live a moment ago leaks into this one */
   account.set({
+    ...EMPTY,
     user,
     handle: user,
     name: user,
     pass: `${salt}$${digest(salt, pass)}`,
     joined: now,
     lastUserChange: now,
-    bio: "",
-    pfp: null,
-    banner: BANNER_DEFAULT,
   });
+  setTab(user);
+  /* a handle the directory already knows gets its card back: that is how a new
+     device picks up the picture and banner that were set on another one */
+  void restoreCard(user);
   return { ok: true };
 }
 
@@ -192,30 +257,62 @@ export function signIn(user: string, pass: string): { ok: boolean; error?: strin
     const mine = isOwner(s.user);
     const now = Date.now();
     const salt = Math.random().toString(36).slice(2, 10);
+    /* whatever the owner left on this device last time, so unlocking does not
+       reset the name and banner they set */
+    const was = book.get()[keyOf(OWNER)];
     account.set({
+      ...EMPTY,
+      ...(was ?? {}),
       user: OWNER,
       handle: OWNER,
-      name: mine && s.name ? s.name : OWNER,
+      name: mine && s.name ? s.name : (was?.name ?? OWNER),
       pass: `${salt}$${digest(salt, pass)}`,
-      joined: mine && s.joined ? s.joined : now,
-      lastUserChange: mine && s.lastUserChange ? s.lastUserChange : now,
+      joined: mine && s.joined ? s.joined : (was?.joined ?? now),
+      lastUserChange: mine && s.lastUserChange ? s.lastUserChange : (was?.lastUserChange ?? now),
     });
+    setTab(OWNER);
     void restoreCard(OWNER);
     return { ok: true };
   }
   if (isOwner(user)) return { ok: false, error: "That password is not it." };
-  const held = heldHandle();
-  if (!held) return { ok: false, error: "There is no account on this browser yet." };
-  if (held.toLowerCase() !== user.toLowerCase()) {
-    return { ok: false, error: "No account called that here." };
+
+  const k = keyOf(user);
+  const rec = book.get()[k];
+  /* the accounts this browser remembers, by the name on them: no record means
+     there is nothing here to open, and the way in is to sign up with the same
+     handle, which pulls the cloud card down with it */
+  if (!rec) {
+    return { ok: false, error: `No account called @${k} is kept on this browser. Sign up with that handle to bring it back.` };
   }
-  const [salt, hash] = s.pass.split("$");
-  if (digest(salt, pass) !== hash) return { ok: false, error: "That password is not it." };
-  /* Signing in clears the lock and nothing else — then the cloud card comes
-     down, which is what makes the profile travel between machines. */
-  account.set({ user: held, handle: held });
-  void restoreCard(held);
+  const [salt, hash] = rec.pass.split("$");
+  if (!salt || digest(salt, pass) !== hash) return { ok: false, error: "That password is not it." };
+
+  /* Signing in swaps which account is live and clears its lock — the record,
+     and every other account on the device, is left exactly as it was. Then
+     the cloud card comes down, which is what makes a profile travel. */
+  account.set({ ...EMPTY, ...rec, user: rec.handle || k });
+  setTab(k);
+  void restoreCard(k);
   return { ok: true };
+}
+
+/* ============================================================
+   the account book
+   ============================================================ */
+
+/** One row in the book, for the list on the sign-in card. */
+export type KnownAccount = {
+  handle: string;
+  name: string;
+  pfp: string | null;
+  /** true for the account this tab is signed into right now */
+  live: boolean;
+};
+
+/* a function declaration rather than a const, because the book's boot step
+   runs at module load and needs this before its line */
+function keyOf(user: string): string {
+  return user.replace(/^@/, "").trim().toLowerCase();
 }
 
 export function hasAccount(): boolean {
@@ -295,9 +392,31 @@ export function signOut() {
   account.set({ user: null });
 }
 
-/** Delete: the profile and the handle both go, which frees the name again. */
+/** Delete: this one account goes out of the book and the name is free again.
+ *  Every other account on the device is left alone. */
 export function deleteAccount() {
+  const k = keyOf(account.get().handle || account.get().user || "");
+  if (k) {
+    const all = { ...book.get() };
+    delete all[k];
+    book.set(all);
+  }
+  setTab("");
   account.set({ ...EMPTY, joined: Date.now() });
+}
+
+/** The accounts this browser keeps, for the list under the sign-in form. */
+export function knownAccounts(): KnownAccount[] {
+  const live = keyOf(account.get().user || "");
+  return Object.values(book.get())
+    .filter((a) => !!a.pass && !!(a.handle || a.user))
+    .map((a) => ({
+      handle: a.handle || a.user || "",
+      name: a.name || a.handle || a.user || "",
+      pfp: a.pfp ?? null,
+      live: keyOf(a.handle || a.user || "") === live,
+    }))
+    .sort((a, b) => a.handle.localeCompare(b.handle));
 }
 
 export function changePassword(oldPass: string, pass: string, confirm: string): { ok: boolean; error?: string } {
@@ -322,7 +441,16 @@ export function changeUser(user: string): { ok: boolean; error?: string } {
     const days = Math.ceil((wait - since) / (24 * 60 * 60 * 1000));
     return { ok: false, error: `You can change this again in ${days} day${days === 1 ? "" : "s"}.` };
   }
+  /* the record moves with the handle: the new key is written by the mirror on
+     the line above, and the old one goes, so the book never holds a ghost */
+  const from = keyOf(s.handle || s.user || "");
   account.set({ user, handle: user, lastUserChange: Date.now() });
+  setTab(user);
+  if (from && from !== keyOf(user)) {
+    const all = { ...book.get() };
+    delete all[from];
+    book.set(all);
+  }
   return { ok: true };
 }
 

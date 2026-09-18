@@ -72,6 +72,58 @@
   color: var(--dim);
   text-align: center;
 }
+/* the accounts this browser keeps: a row of little cards, so one machine can
+   hold several people without any of them losing their profile */
+.pf-kept {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.pf-kept-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.pf-kept-chip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 10px 4px 4px;
+  border: var(--bw) solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg-2) 80%, transparent);
+  transition: border-color 0.14s var(--ease), transform 0.14s var(--ease);
+}
+.pf-kept-chip:hover {
+  border-color: var(--line-2);
+  transform: translateY(-1px);
+}
+.pf-kept-chip.is-on {
+  border-color: var(--line-2);
+  background: var(--bg-3);
+}
+.pf-kept-chip img,
+.pf-kept-face {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  object-fit: cover;
+  background: var(--bg-3);
+  font-size: 10.5px;
+  font-weight: 700;
+}
+.pf-kept-chip b {
+  font-size: 12px;
+}
+.pf-kept-chip i {
+  color: var(--faint);
+  font-size: 10.5px;
+  font-style: normal;
+}
 .pf-tip {
   display: flex;
   align-items: flex-start;
