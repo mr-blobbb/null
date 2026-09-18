@@ -61,10 +61,19 @@ export type ExtState = {
 };
 
 export const extStore = createStore<ExtState>("ext", {
-  installed: ["clock", "notes"],
-  on: { clock: true, notes: true, stats: false },
+  /* installed but dark: nothing runs until the member turns it on, which is
+     what "all off by default" means in practice */
+  installed: ["clock", "notes", "stats"],
+  on: { clock: false, notes: false, stats: false },
   notes: {},
 });
+
+/* A browser that installed extensions when they came on by default keeps its
+   settings; a fresh one starts with everything dark. */
+const legacy = extStore.get();
+if (legacy.installed.length === 2 && legacy.on.clock === true) {
+  extStore.set({ ...legacy, on: { clock: false, notes: false, stats: false } });
+}
 
 export function useExt(): ExtState {
   return useStore(extStore);

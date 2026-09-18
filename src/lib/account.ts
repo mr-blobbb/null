@@ -1,7 +1,9 @@
 /* NULL · account.ts
    The account is local: a handle, a salted hash of the password, and the
-   profile card around it. Nothing leaves the browser, which is why there is
-   no email field and no reset flow to get wrong. */
+   profile card around it. The card itself travels: when there is a server to
+   ask, signing in pulls the cloud card back over the local one, so a new
+   device (or a fresh logout) still has the name, picture, banner, name style
+   and shop picks the member chose — see restoreCard(). */
 
 import { createStore, useStore } from "./store";
 import { OWNER, isOwner, ownerCred } from "./owner";
@@ -198,6 +200,7 @@ export function signIn(user: string, pass: string): { ok: boolean; error?: strin
       joined: mine && s.joined ? s.joined : now,
       lastUserChange: mine && s.lastUserChange ? s.lastUserChange : now,
     });
+    void restoreCard(OWNER);
     return { ok: true };
   }
   if (isOwner(user)) return { ok: false, error: "That password is not it." };
@@ -208,15 +211,81 @@ export function signIn(user: string, pass: string): { ok: boolean; error?: strin
   }
   const [salt, hash] = s.pass.split("$");
   if (digest(salt, pass) !== hash) return { ok: false, error: "That password is not it." };
-  /* Signing in clears the lock and nothing else. The name, bio, banner and
-     picture are exactly where they were left, because signing out never
-     touched them. */
+  /* Signing in clears the lock and nothing else — then the cloud card comes
+     down, which is what makes the profile travel between machines. */
   account.set({ user: held, handle: held });
+  void restoreCard(held);
   return { ok: true };
 }
 
 export function hasAccount(): boolean {
   return !!account.get().user;
+}
+
+/* ---------- the travelling card ----------
+
+   Accounts are locks on a browser; the profile card is on the server. Signing
+   in on a machine that has never seen the handle would otherwise start from
+   defaults, so the sign-in path asks the directory for the card and lays it
+   over the local one. Every field the profile page edits comes back with it.
+
+   The server holds the truth for name, bio, banner, picture, name style and
+   what the shop has equipped; coins and owned items are deliberately local
+   (the coin clock runs per browser), so only the equipped picks are taken. */
+
+/** One field back from the cloud card, or null when there is nothing there. */
+type CloudCard = {
+  name?: string;
+  bio?: string;
+  banner?: string;
+  pfp?: string | null;
+  nameStyle?: string;
+  wearing?: { avatar: string | null; effect: string | null; tags: string[] };
+};
+
+let pulled = "";
+
+/** Lay the cloud card over this browser's. Called after a successful sign-in
+ *  (and after the owner unlock), never throws. */
+export async function restoreCard(user: string): Promise<void> {
+  const key = user.replace(/^@/, "").trim().toLowerCase();
+  if (!key) return;
+  try {
+    const { cloud } = await import("./cloud");
+    const { api } = await import("../../convex/_generated/api");
+    const c = cloud();
+    if (!c) return;
+    const card = (await c.query(api.members.card, { user: key })) as CloudCard | null;
+    if (!card) return;
+
+    pulled = key;
+    const patch: Record<string, unknown> = {};
+    if (card.name && card.name.trim()) patch.name = card.name.trim().slice(0, 40);
+    if (typeof card.bio === "string") patch.bio = card.bio.slice(0, 400);
+    if (typeof card.banner === "string" && card.banner) patch.banner = card.banner;
+    if (card.pfp !== undefined) patch.pfp = card.pfp ?? null;
+    if (typeof card.nameStyle === "string" && card.nameStyle) {
+      try {
+        const style = JSON.parse(card.nameStyle);
+        if (style && typeof style === "object") patch.nameStyle = { ...account.get().nameStyle, ...style };
+      } catch {
+        /* a style that will not parse is a style nobody set on purpose */
+      }
+    }
+    if (card.wearing) {
+      const { econ } = await import("./econ");
+      econ.set({
+        equipped: {
+          avatar: card.wearing.avatar ?? null,
+          effect: card.wearing.effect ?? null,
+          tags: Array.isArray(card.wearing.tags) ? card.wearing.tags.slice(0, 2) : [],
+        },
+      });
+    }
+    if (Object.keys(patch).length) account.set(patch);
+  } catch {
+    /* offline, or the deployment is having a day: the local card stands */
+  }
 }
 
 /** Lock the account; keep everything in it. The name a player set, their bio,
