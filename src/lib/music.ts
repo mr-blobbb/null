@@ -24,7 +24,7 @@ import { cloud } from "./cloud";
 import { api } from "../../convex/_generated/api";
 import { createStore, useStore } from "./store";
 
-export type SourceId = "audius" | "qobuz" | "soundcloud" | "ytmusic" | "keyless";
+export type SourceId = "audius" | "archive" | "qobuz" | "soundcloud" | "ytmusic" | "keyless";
 
 export type Track = {
   /** source:id, which is what a playlist stores */
@@ -61,6 +61,13 @@ export const SOURCES: {
     id: "audius",
     name: "Audius",
     note: "Full tracks, no key, no server — the catalogue NULL plays out of the box. Every row here is the whole song.",
+    keyLabel: null,
+    placeholder: "",
+  },
+  {
+    id: "archive",
+    name: "Internet Archive",
+    note: "Everything the Archive holds that is music, in full: live shows, radio plays, classical, netlabels, records nobody else kept. No key and no server — and archive.org is one of the few hosts a school filter usually leaves alone, which is the other half of why it is here.",
     keyLabel: null,
     placeholder: "",
   },
@@ -298,6 +305,80 @@ async function searchKeyless(q: string): Promise<Track[]> {
   }));
 }
 
+/* ---------- the Internet Archive ----------
+   The one other catalogue that answers a browser directly, hands back whole
+   tracks rather than thirty seconds of one, and wants nothing in return but a
+   query. It is a *collection* rather than a shelf: one item is a show, an
+   album or a series, and its tracks are the files inside it. So a search
+   finds the items and then asks the best of them what is in them, which is why
+   this is the only source here that makes more than one request per search. */
+const ARC = "https://archive.org";
+/** How many items a search opens, and how many tracks are taken from each. */
+const ARC_ITEMS = 8;
+const ARC_TRACKS = 8;
+
+/** "07 - Basin Street Blues.mp3" -> "Basin Street Blues" */
+function trackName(file: string): string {
+  return file
+    .replace(/\.[a-z0-9]+$/i, "")
+    .replace(/^\s*(\(?\d{1,3}\)?)\s*[-.)]?\s*/, "")
+    .replace(/_/g, " ")
+    .trim() || file;
+}
+
+async function searchArchive(term: string): Promise<Track[]> {
+  const q = `${term} AND mediatype:(audio) AND format:("VBR MP3")`;
+  const url =
+    `${ARC}/advancedsearch.php?q=${encodeURIComponent(q)}` +
+    "&fl%5B%5D=identifier&fl%5B%5D=title&fl%5B%5D=creator&fl%5B%5D=year" +
+    `&rows=${ARC_ITEMS}&page=1&output=json&sort%5B%5D=downloads+desc`;
+  const found = (await (await fetch(url)).json()) as {
+    response?: { docs?: { identifier: string; title?: string; creator?: string | string[]; year?: string }[] };
+  };
+
+  const items = found.response?.docs ?? [];
+  /* asked together rather than one after the other: eight items in series is
+     eight round trips before the first row appears */
+  const opened = await Promise.all(
+    items.map(async (item) => {
+      try {
+        const meta = (await (await fetch(`${ARC}/metadata/${item.identifier}`)).json()) as {
+          files?: { name?: string; format?: string; source?: string }[];
+        };
+        const files = (meta.files ?? []).filter(
+          (f) => /\.mp3$/i.test(f.name ?? "") && f.format !== "Metadata",
+        );
+        return { item, files };
+      } catch {
+        return { item, files: [] };
+      }
+    }),
+  );
+
+  const rows: Track[] = [];
+  for (const { item, files } of opened) {
+    const creator = Array.isArray(item.creator) ? item.creator[0] : item.creator;
+    for (const file of files.slice(0, ARC_TRACKS)) {
+      const name = file.name ?? "";
+      rows.push({
+        key: `archive:${item.identifier}/${name}`,
+        id: `${item.identifier}/${name}`,
+        source: "archive" as const,
+        title: trackName(name),
+        artist: creator || "Internet Archive",
+        album: item.title ?? item.identifier,
+        art: `${ARC}/services/img/${item.identifier}`,
+        audio: `${ARC}/download/${item.identifier}/${encodeURIComponent(name)}`,
+        /* the Archive writes a duration on some files and not others, and the
+           player learns the real one when it starts playing anyway */
+        seconds: 0,
+        explicit: false,
+      });
+    }
+  }
+  return rows;
+}
+
 /* The three named sources need a key *and* a server: their APIs do not answer
    a browser at all. Until the backend is told a key, asking one of them
    searches the keyless catalogue instead, and says so. */
@@ -329,6 +410,22 @@ export async function search(q: string, source: SourceId): Promise<Found> {
       return { tracks: await searchKeyless(term), note };
     } catch {
       return { tracks: [], note };
+    }
+  }
+
+  if (source === "archive") {
+    try {
+      const rows = await searchArchive(term);
+      return {
+        tracks: rows,
+        note: rows.length ? null : `The Internet Archive has nothing playable filed under “${term}”.`,
+      };
+    } catch (e) {
+      const rows = await searchKeyless(term);
+      return {
+        tracks: rows,
+        note: `The Archive could not be asked (${(e as Error).message}). These are Apple previews, and they play.`,
+      };
     }
   }
 

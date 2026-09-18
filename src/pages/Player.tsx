@@ -9,35 +9,37 @@
    Three roads, tried in order, because no single one works everywhere. Which
    one goes first is decided by what the stash answers with:
 
-   · **frame** — the honest road, and the first one for a stash that serves
-     html as html over a header that does not refuse framing (raw.githack, and
-     that is what the library is mirrored through). The game gets a real
-     document: its scripts find the elements they came with, its canvases,
-     workers, modules and saves all work, and it has no way into ours.
-   · **copy** — the page is fetched, given a <base> and served to a frame as a
-     blob, so the frame never asks the far host for anything and no host can
-     refuse it. This is the road for a stash that hands html over as
-     text/plain, and the one that picks up a game whose host does refuse to be
-     framed. A blob document is a real document too, which is why it comes
-     before the last road rather than after it.
+   · **copy** — the page is fetched, given a <base> so its own files resolve
+     back to the stash, and handed to a frame as a blob. It is first, and not
+     because of MIME types: this is the road that **never navigates to the
+     stash**. A filtered network — a school agent, an extension, an enterprise
+     policy — blocks by URL, and what it blocks is the navigation, which is why
+     a game in a frame comes back as "this page has been blocked by Chrome"
+     rather than as a game. A frame holding a blob document was never sent to
+     that URL at all, so there is nothing there to block. It is also still a
+     real document, which is the other half of the point: a game's scripts find
+     the elements they came with.
    · **inline** — the page's markup into a shadow root in this document, its
-     scripts re-created so they run. No frame at all, so nothing can refuse
-     it, and it is the only road left when even the relay will not hand the
-     page over. Its price is real: a shadow root is not a document, so a game
-     whose script opens with `document.getElementById` finds nothing. That is
-     why it is last, and why a game that needs its own document is never sent
-     down it.
+     scripts re-created so they run. Nothing is framed and nothing is navigated
+     to, so nothing can refuse it — but a shadow root is not a document, so a
+     game whose script opens with `document.getElementById` finds nothing. That
+     is the whole reason it sits behind the copy road and not in front of it.
+   · **frame** — the honest road, and now the last one: the game gets its own
+     document, its own origin, its real storage and workers. It is what a game
+     that checks where it is running needs. It is also the road that asks the
+     network for a URL, so on a filtered network it is the one that fails.
 
    All three run code from a stash this site does not control, and the last one
-   runs it in NULL's own document. The pill is always there to leave. */
+   runs it in NULL's own document. The pill is always there to leave, and its
+   route button walks the game on to the next road when a road is not enough. */
 
 import { useEffect, useRef, useState, type RefObject } from "react";
-import { ArrowLeft, Expand, ExternalLink, Gamepad2, RefreshCw, Route } from "lucide-react";
+import { ArrowLeft, Cloud, Expand, ExternalLink, Gamepad2, RefreshCw, Route, TriangleAlert } from "lucide-react";
 
 import { find } from "../lib/catalog";
 import { go } from "../lib/tabs";
 import { trackPlay } from "../lib/econ";
-import { AS_TEXT, baseOf, COPYABLE, mountInline, readPage, rebased } from "../lib/rungame";
+import { AS_TEXT, baseOf, mountInline, readPage, rebased } from "../lib/rungame";
 
 /** How long a frame gets to show something before the next road is tried. A
  *  host that resets the connection never fires `load`, so this is the only way
@@ -49,22 +51,15 @@ const isRemote = (file?: string) => !!file && /^https?:\/\//i.test(file);
 type Road = "frame" | "copy" | "inline";
 
 function roadsFor(file: string): Road[] {
-  /* raw GitHub serves html as text/plain, which no frame will run, so the
-     page is copied into a frame of our own instead */
-  if (AS_TEXT.test(file)) return ["copy", "inline"];
-  /* the mirror the library is served through: proper types, no framing
-     header, and it answers this document's own fetch, so all three roads are
-     open and the most faithful one is first */
-  if (COPYABLE.test(file)) return ["frame", "copy", "inline"];
-  /* an unknown host is the one most likely to refuse a frame and least likely
-     to let this document read it, so it is read through the site's own relay
-     and handed to a frame we fill ourselves; framing it directly is the last
-     thing tried */
-  return ["copy", "inline", "frame"];
+  /* raw GitHub serves html as text/plain, so a frame handed that URL shows its
+     own source code — there is nothing for the frame road to offer */
+  return AS_TEXT.test(file) ? ["copy", "inline"] : ["copy", "inline", "frame"];
 }
 
 export function Player({ kind, id }: { kind: string; id: string }) {
   const entry = find(kind as "game" | "app", id);
+  /** an entry can ask to be read before it starts — see games/README.txt */
+  const [read, setRead] = useState(false);
   const [nonce, setNonce] = useState(0);
   /** bumped when a player asks for the game by another road than this one */
   const [route, setRoute] = useState(0);
@@ -122,7 +117,21 @@ export function Player({ kind, id }: { kind: string; id: string }) {
         </button>
       </header>
 
-      {entry?.file ? (
+      {entry?.warning && !read ? (
+        <div className="play-empty">
+          <TriangleAlert />
+          <h2>{entry.warning.title}</h2>
+          <p>{entry.warning.body}</p>
+          <div className="play-empty-row">
+            <button className="btn" onClick={() => go({ page: kind === "app" ? "apps" : "games" })}>
+              <ArrowLeft /> Back to the library
+            </button>
+            <button className="btn btn--fill" onClick={() => setRead(true)}>
+              Continue to {entry.name}
+            </button>
+          </div>
+        </div>
+      ) : entry?.file ? (
         isRemote(entry.file) ? (
           <RemoteGame key={nonce} file={entry.file} name={entry.name} frame={frame} route={route} />
         ) : (
@@ -134,6 +143,26 @@ export function Player({ kind, id }: { kind: string; id: string }) {
             allow="fullscreen; gamepad; autoplay; pointer-lock"
           />
         )
+      ) : entry?.url ? (
+        /* a cloud title: named, pictured, browsable, and not a file anywhere.
+           The service that streams it is the only place it can be played, so
+           the card hands over to the service rather than pretending. */
+        <div className="play-empty">
+          <Cloud />
+          <h2>{entry.name} is streamed, not downloaded</h2>
+          <p>
+            Cloud titles run on a service that holds the licence and brokers every session, so
+            there is nothing here to copy into a frame. Opening the service is where it plays.
+          </p>
+          <div className="play-empty-row">
+            <button className="btn" onClick={() => go({ page: "games" })}>
+              <ArrowLeft /> Back to the library
+            </button>
+            <a className="btn btn--fill" href={entry.url} target="_blank" rel="noreferrer noopener">
+              <ExternalLink /> Open the cloud service
+            </a>
+          </div>
+        </div>
       ) : (
         <div className="play-empty">
           <Gamepad2 />

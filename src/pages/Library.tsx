@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 
 import { browse, entries, sources, SORTS, type Entry, type Kind, type SortId } from "../lib/catalog";
+import { Cover } from "../components/Cover";
 import { toggleFavorite, pushRecent, useAccount } from "../lib/account";
 import { openTab } from "../lib/tabs";
 import { trackPlay } from "../lib/econ";
@@ -203,29 +204,12 @@ function Tile({
   fav: boolean;
   onOpen: () => void;
 }) {
-  /* Artwork comes from someone else's stash, so it is allowed to be missing.
-     A card that has lost its picture falls back to the plain square it would
-     have had without one, rather than the browser's broken-image glyph. */
-  const [art, setArt] = useState(true);
   return (
     <div className="tile">
       <button className="tile-btn" onClick={onOpen} title={entry.name}>
-        {entry.thumb && art ? (
-          <img
-            src={entry.thumb}
-            alt=""
-            loading="lazy"
-            decoding="async"
-            /* no referrer: a stash that hotlink-checks would otherwise refuse
-               every icon this shelf asks it for */
-            referrerPolicy="no-referrer"
-            onError={() => setArt(false)}
-          />
-        ) : (
-          <span className="tile-blank">
-            <Icon />
-          </span>
-        )}
+        {/* artwork from someone else's stash, at every host that serves it, and
+            a square drawn out of the name when none of them answer */}
+        <Cover entry={entry} icon={Icon} />
       </button>
       <button
         className={`tile-star${fav ? " is-on" : ""}`}

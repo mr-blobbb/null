@@ -36,6 +36,7 @@ import {
   X,
 } from "lucide-react";
 
+import { Cover } from "../components/Cover";
 import {
   account,
   BANNER_SWATCHES,
@@ -452,7 +453,7 @@ function SignedIn() {
               title={e.name}
             >
               <span className="tile-btn">
-                {e.thumb ? <img src={e.thumb} alt="" /> : <span className="tile-blank"><Gamepad2 /></span>}
+                <Cover entry={e} />
               </span>
               <span className="tile-name">{e.name}</span>
             </button>

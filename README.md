@@ -118,11 +118,16 @@ going quiet costs a handshake instead of a dead window. A relay is a WebSocket
 server and cannot live on a static host, which is the one thing about this
 site a visitor may have to supply themselves — add your own on the shelf page.
 
-**Music plays whole songs.** Audius is the default source and the reason the
-player is not a sample player: its API sends `access-control-allow-origin: *`,
-it needs no key, and its stream endpoint redirects to the real file. Qobuz,
-SoundCloud and YouTube Music send no CORS headers, so those go through the
-Convex action with a key — Qobuz without a subscriber token still returns
+**Music plays whole songs.** Two sources do it with no key and no server, and
+they are the two that come first. Audius is the default: its API sends
+`access-control-allow-origin: *`, it needs no key, and its stream endpoint hands
+back the real file. The Internet Archive (`archive.org`) is the second: full
+length audio out of a catalogue that never closes, its search and metadata
+endpoints both answer a browser, and — the other half of why it is here — a host
+a school filter usually leaves alone. It is a collection rather than a shelf, so
+one search opens the best few items and lists the tracks inside them. The rest
+need a server: Qobuz, SoundCloud and YouTube Music send no CORS headers, so they
+go through the Convex action with a key — Qobuz without a subscriber token still returns
 previews, and the page says so rather than pretending. Apple's index is kept
 last as a fallback, thirty seconds a track. A search that comes back empty
 says which of the three things happened — the catalogue had nothing, every
@@ -150,20 +155,38 @@ tags and bio — and hands back a PNG. Nothing is uploaded.
 gmshelf shelves — seraph, truffled, the Chicken King's Vault and the Ultimate
 Game Stash — and rewrites `src/lib/discovered.ts`: over two thousand games, with
 artwork matched by name out of each shelf's covers folder and genres from the
-old UGS listing. Every address in it is mirrored through raw.githack, and that is
-the whole reason the games run: it is the one host that hands html back as html.
-jsDelivr calls it `text/plain`, ckv is past jsDelivr's package limit, and a
-browser will not run a page it has been told is text — which is what "this page
-is blocked by Chrome" is. Nothing is fetched at runtime; the shelf is a file in
-the repo, rebuilt when the script runs.
+old UGS listing, plus the cloud titles further down. Games are mirrored through
+raw.githack and not jsDelivr, for two reasons that both look like a broken game:
+jsDelivr labels `.html` as `text/plain`, so a frame handed one shows the page's
+own source code, and ckv is past jsDelivr's package size limit, so over there its
+files answer 403. Nothing is fetched at runtime; the shelf is a file in the repo,
+rebuilt when the script runs.
 
-**A game opens in a document.** The player tries the frame road first for a stash
-that serves html and does not refuse framing, because a game's scripts expect a
-real document — a shadow root has no `getElementById` for them to find their own
-canvas with. Then the copy road (the page fetched, given a base, handed to a
-frame as a blob, which no host can refuse), and the inline road last. The frames
-carry `allow="pointer-lock"` because an fps game cannot capture the mouse
-without it.
+**A game opens in a document, and never by navigating to the stash.** Three
+roads, and the copy road is first: the page is fetched, given a `<base>` so its
+own files resolve back to the stash, and handed to a frame as a blob. Two things
+make that the right order. A game's scripts expect a real document — a shadow
+root has no `getElementById` for them to find their own canvas with, which is
+what the inline road is for and why it is not first. And a filtered network
+blocks by URL, so what it blocks is the *navigation*: a game in a frame asking
+for its own address comes back as "this page has been blocked by Chrome", while
+a frame holding a blob was never sent to that URL at all. The frame road is kept
+as the last one, for a game that checks where it is running, and the pill's route
+button walks a game on to the next road by hand. The frames carry
+`allow="pointer-lock"` because an fps game cannot capture the mouse without it.
+
+**Artwork is offered at three hosts.** A cover is the same picture on jsDelivr,
+on raw GitHub and on the mirror, and the card takes the first one that loads
+(`Cover.tsx`) — a school filter refuses whole hosts, and one refused host should
+not cost every tile its picture. When all three are refused the square is drawn
+instead, out of the game's own name, so a filtered shelf still reads as a shelf.
+
+**A second shelf is not a shelf of files.** `stratus-api`'s cloud catalogue is
+written out as names, keys, covers and tags, with no address to play one at —
+those titles are streamed by a service that holds the licence and brokers every
+session. A card for one says so and hands over to the service (`catalog.ts`,
+`CLOUD_SITE`), which is the honest shape for it: an invented embed URL would
+only be a broken tile with extra steps.
 
 ## Adding things
 

@@ -205,11 +205,7 @@ export function rebased(html: string, file: string): string {
   return base + html;
 }
 
-/** The stashes that answer a cross-origin fetch, so their pages can be read
- *  and run here rather than framed. Truffled sends no CORS header at all,
- *  which is why it is not on this list. */
-export const COPYABLE =
-  /raw\.githack\.com|rawcdn\.githack\.com|cdn\.jsdelivr\.net|raw\.githubusercontent\.com|gist\.githubusercontent\.com/;
-
-/** raw GitHub serves html as text/plain, so no frame will ever run it. */
+/** Hosts that serve a page as text rather than as html, so a frame handed
+ *  their URL renders the page's own source code. raw GitHub is the one the
+ *  library runs into: it labels every file text/plain with nosniff. */
 export const AS_TEXT = /raw\.githubusercontent\.com|gist\.githubusercontent\.com/;

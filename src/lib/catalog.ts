@@ -16,9 +16,15 @@
    player frames the first kind directly and bridges the second (see
    Player.tsx). `thumb` is optional artwork, same deal. */
 
-import { ROWS } from "./discovered";
+import { CLOUD, ROWS } from "./discovered";
 
 export type Kind = "game" | "app" | "proxy";
+
+/** Where the cloud shelf belongs. Those titles are not files anywhere: they are
+ *  streamed by a service that holds the licence and brokers each session, so
+ *  the card can name them and say where they live, and that is honest — a
+ *  made-up embed URL would only be a broken tile with extra steps. */
+export const CLOUD_SITE = "https://cherrion.top/";
 
 export type Entry = {
   id: string;
@@ -27,8 +33,12 @@ export type Entry = {
   /** where it opens. A game or app: a file or URL. A proxy: a site. */
   file?: string;
   url?: string;
-  /** optional artwork. Without one the card shows a plain square and a glyph */
+  /** optional artwork. Without one the card shows a drawn square instead */
   thumb?: string;
+  /** the same artwork at other addresses, best first. `thumb` is the first of
+   *  them: a filtered network refuses whole hosts, and one refused host should
+   *  not cost a card its picture (see Cover.tsx) */
+  thumbs?: string[];
   labels: string[];
   status?: "Fine" | "Rough" | "Blocked" | "Remote";
   warning?: { title: string; body: string };
@@ -82,26 +92,72 @@ const SHELF_NAME: Record<string, string> = {
 /** The address of a file inside a shelf. */
 const inShelf = (shelf: string, file: string) => `${MIRROR}/${shelf}/main/${file}`;
 
+/** The same picture at every host that serves it, best first.
+ *
+ *  jsDelivr leads because it is a real CDN — fast, and the most likely of the
+ *  three to be allowed through a school filter. It is left out for ckv, which
+ *  is over jsDelivr's package limit: over there every file in the repo, images
+ *  included, answers 403. Then GitHub's own file host, then the mirror the
+ *  games themselves are served through. */
+function coverHosts(shelf: string, cover: string): string[] {
+  const out = [
+    `https://raw.githubusercontent.com/${shelf}/main/${cover}`,
+    inShelf(shelf, cover),
+  ];
+  if (shelf !== "gmshelf/ckv") out.unshift(`https://cdn.jsdelivr.net/gh/${shelf}@main/${cover}`);
+  return out;
+}
+
 /** Discovered games, marked as remote so a card can say where it loads from.
  *  Local entries win a name clash: this repo's own shelf is always the one
  *  it serves. */
 function discovered(): Entry[] {
   const local = new Set(GAMES.map((g) => g.name.toLowerCase()));
   return ROWS.filter(([, name]) => !local.has(name.toLowerCase())).map(
-    ([id, name, shelf, file, coverShelf, cover, genre]) => ({
+    ([id, name, shelf, file, coverShelf, cover, genre]) => {
+      const art = cover ? coverHosts(coverShelf, cover) : [];
+      return {
+        id,
+        name,
+        kind: "game" as const,
+        file: inShelf(shelf, file),
+        ...(art.length ? { thumb: art[0], thumbs: art } : {}),
+        labels: [SHELF_NAME[shelf] ?? shelf, ...(genre ? [genre] : []), "Remote"],
+        status: "Remote" as const,
+      };
+    },
+  );
+}
+
+/** Everything this repo serves or mirrors, before the cloud titles. */
+const SHELF: Entry[] = [...GAMES, ...discovered()];
+
+/** The cloud catalogue, which is browsable and not playable here. Anything the
+ *  shelf already carries is left to the shelf: a game with a file is a game you
+ *  can play, and a card for one should not be a card you cannot. */
+function cloudGames(): Entry[] {
+  const known = new Set(SHELF.map((e) => e.name.toLowerCase()));
+  return CLOUD.filter(([, name]) => !known.has(name.toLowerCase())).map(
+    ([id, name, key, cover, tags]) => ({
       id,
       name,
       kind: "game" as const,
-      file: inShelf(shelf, file),
-      ...(cover ? { thumb: inShelf(coverShelf, cover) } : {}),
-      labels: [SHELF_NAME[shelf] ?? shelf, ...(genre ? [genre] : []), "Remote"],
+      url: CLOUD_SITE,
+      ...(cover ? { thumb: cover } : {}),
+      labels: ["Cloud", ...tags, "Remote"],
       status: "Remote" as const,
+      /* the key is what the service files it under, which is the one useful
+         thing to print on a card that cannot be launched */
+      warning: {
+        title: `${name} (${key}) runs in the cloud`,
+        body: "Cloud titles are streamed by a service that holds the licence, so NULL cannot copy one into a frame to play. Opening the service is where it plays.",
+      },
     }),
   );
 }
 
 export const LIBRARY: Record<Kind, Entry[]> = {
-  game: [...GAMES, ...discovered()],
+  game: [...SHELF, ...cloudGames()],
   app: APPS,
   proxy: PROXIES,
 };
