@@ -417,7 +417,12 @@ ok("a live relay is tried first", RELAYS[0].url === "wss://anura.pro/");
    Three things were asked for at once and each has a fact behind it: the bar
    carries the list, `:name` is a lookup, and the pad shows the shelves. */
 const { REACTIONS, suggest, emojiOf, nameOf: emojiName, GROUPS } = await import("./src/lib/emoji");
+const { GRANTABLE, STAFF_TAGS, roleRank, roleOf } = await import("./src/lib/staff");
 const { EmojiPicker } = await import("./src/components/EmojiPicker");
+const { GiftCard, GiftButton } = await import("./src/components/GiftBox");
+const { describeGift, pending, freshPending, markSeen } = await import("./src/lib/gift");
+const { jam, joinJam, leaveJam } = await import("./src/lib/jam");
+ok("the gift button is importable", typeof GiftButton === "function");
 const ON_THE_BAR = [
   "👍", "👎", "❤️", "🔥", "🎉", "💯", "😂", "🤣", "💀", "😮",
   "🤔", "👀", "🤯", "😢", "😭", "🙏", "🥀", "✅", "❌",
@@ -516,24 +521,44 @@ signOut();
    that the owner is offered it and nobody else is. */
 const { StaffRoles } = await import("./src/components/StaffRoles");
 const { ReportBox } = await import("./src/components/ReportBox");
+const chatSrc = fs.readFileSync("src/pages/Chat.tsx", "utf8");
+const membersSrc = fs.readFileSync("src/pages/Members.tsx", "utf8");
+const membersTs = fs.readFileSync("convex/members.ts", "utf8");
+const socialTs = fs.readFileSync("convex/social.ts", "utf8");
+const giftSrc = fs.readFileSync("src/lib/gift.ts", "utf8");
+const jamSrc = fs.readFileSync("src/lib/jam.ts", "utf8");
+const appSrc = fs.readFileSync("src/App.tsx", "utf8");
+const musicSrc = fs.readFileSync("src/pages/Music.tsx", "utf8");
+const musicSrc2 = fs.readFileSync("src/lib/music.ts", "utf8");
 const rolesOut = renderToStaticMarkup(
-  <StaffRoles user="quietmod" roles={["mod"]} by="therealmrblob" owner note={() => {}} /> as never,
+  <StaffRoles user="quietmod" roles={["mod"]} verified={false} by="therealmrblob" owner note={() => {}} /> as never,
 );
-ok("the owner is offered both staff tags", rolesOut.includes("Make ADMIN") && rolesOut.includes("MOD — take back"));
-ok("and it says what a role means", rolesOut.includes("staff roles") && rolesOut.includes("see reports"));
+/* the whole list, exactly as the owner asked for it */
+const ROLE_NAMES = ["ADMIN", "CO-OWNER", "DEV", "BETA", "LINKER", "PARTNER"];
+ok("the owner is offered every role", ROLE_NAMES.every((r) => rolesOut.includes(r)));
+ok("and the verified circle beside them", rolesOut.includes("VERIFIED"));
+ok("one button each, and no more", (rolesOut.match(/sr-btn/g) ?? []).length === ROLE_NAMES.length + 1);
+ok("it says what a role lets them do", rolesOut.includes("see reports") && rolesOut.includes("only a mark"));
+/* the page's list and the server's list have to stay the same list, or a
+   button grants nothing and nobody finds out until somebody complains */
+ok("the server's list is the same list", GRANTABLE.every((r) => membersTs.includes(`"${r}"`)));
+ok("each role has its own colour and icon", new Set(STAFF_TAGS.map((t) => t.color)).size === STAFF_TAGS.length);
+ok("the pecking order puts the higher role first", roleRank("admin") < roleRank("linker"));
+ok("a role from an older list sinks below them", roleRank("mod") > roleRank("partner") && roleRank("mod") < 99);
+ok("a verified member wears the circle in the rooms", membersTs.includes("verified") && chatSrc.includes("VerifiedMark"));
 ok(
   "their own card never offers it",
   renderToStaticMarkup(
-    <StaffRoles user="mrblob" roles={[]} by="mrblob" owner mine note={() => {}} /> as never,
+    <StaffRoles user="mrblob" roles={[]} verified={false} by="mrblob" owner mine note={() => {}} /> as never,
   ) === "",
 );
 ok(
   "nobody who is not the owner sees it",
-  renderToStaticMarkup(<StaffRoles user="mrblob" roles={[]} by="someone" owner={false} note={() => {}} /> as never) ===
+  renderToStaticMarkup(
+    <StaffRoles user="mrblob" roles={[]} verified={false} by="someone" owner={false} note={() => {}} /> as never,
+  ) ===
     "",
 );
-const chatSrc = fs.readFileSync("src/pages/Chat.tsx", "utf8");
-const membersSrc = fs.readFileSync("src/pages/Members.tsx", "utf8");
 ok("the chat card carries it", chatSrc.includes("<StaffRoles"));
 ok("so does the members board", membersSrc.includes("<StaffRoles"));
 
@@ -548,6 +573,108 @@ const reportOut = renderToStaticMarkup(
 );
 ok("the report card asks for a reason", reportOut.includes("ch-why") && reportOut.includes("Harassment"));
 ok("and counts the words nobody enjoys writing", reportOut.includes("/400") && reportOut.includes("Send report"));
+
+/* ---------- gifts ---------- */
+
+const giftRow = {
+  id: "g1",
+  from: "mrblob",
+  to: "quietmod",
+  gives: "coins",
+  amount: 250,
+  note: "nice one",
+  at: 1_700_000_000_000,
+  mine: false,
+  claimed: false,
+  declined: false,
+};
+const giftOut = renderToStaticMarkup(<GiftCard gift={giftRow} me="quietmod" /> as never);
+ok("a gift says what it is", giftOut.includes("250 coins") && giftOut.includes("nice one"));
+ok("it names the gifter", giftOut.includes("@mrblob"));
+ok("and offers one way to take it", giftOut.includes("Open") && giftOut.includes("gf-take"));
+
+ok(
+  "a piece off the shelf is named, not printed as an id",
+  describeGift({ gives: "tcursed", amount: 0 }) === "CURSED" &&
+    describeGift({ gives: "coins", amount: 40 }) === "40 coins",
+);
+ok(
+  "only what is still shut is pending",
+  pending([
+    giftRow,
+    { ...giftRow, id: "g2", claimed: true },
+    { ...giftRow, id: "g3", declined: true },
+    { ...giftRow, id: "g4", mine: true },
+  ]).length === 1,
+);
+ok("and the pop-up shows itself once", (() => {
+  const first = freshPending([giftRow]);
+  if (!first) return false;
+  markSeen(first.id);
+  return freshPending([giftRow]) === null;
+})());
+ok("the sender may take an unopened one back", giftSrc.includes("unsendGift") && socialTs.includes("unsendGift"));
+ok(
+  "the coins leave the sender's own purse, and come back if the server refuses",
+  giftSrc.includes("econ.set({ coins: s.coins - coins") && giftSrc.includes("econ.get().coins + coins"),
+);
+ok("the gift is only credited once the server said yes", (() => {
+  const at = giftSrc.indexOf("settleGift");
+  const credit = giftSrc.indexOf("coins: s.coins + gift.amount");
+  return at > 0 && credit > at;
+})());
+ok("the DM thread draws the exchange", chatSrc.includes("<GiftCard"));
+ok("and pops one up when a thread opens", chatSrc.includes("<GiftPop") && chatSrc.includes("freshPending"));
+ok("both cards can hand something over", chatSrc.includes("<GiftButton") && membersSrc.includes("<GiftButton"));
+ok("the composer in a DM has one too", (chatSrc.match(/<GiftButton/g) ?? []).length >= 2);
+
+/* ---------- jams ---------- */
+
+ok("a code is four letters and nothing else", joinJam("ab", "me").ok === false && joinJam("JCQP", "me").ok === true);
+ok("joining and leaving move the room, not the page", (() => {
+  joinJam("jcqp", "me");
+  const inRoom = jam.get().code === "JCQP" && jam.get().role === "guest";
+  leaveJam();
+  return inRoom && jam.get().code === null;
+})());
+ok("the host pushes and the guest only reads", jamSrc.includes("pushJam") && jamSrc.includes("peekJam"));
+ok("a jam runs from the shell, so it survives a page change", appSrc.includes("useJamWatch"));
+ok("the music page carries the button", musicSrc.includes("<JamButton"));
+
+/* ---------- the library that follows you ---------- */
+
+const { mergeShelf } = await import("./src/lib/music");
+const song = (key: string) => ({ key, id: key, source: "audius", title: key, artist: "x", album: "", art: null, audio: null, seconds: 0, explicit: false });
+ok(
+  "two machines' favourites add up rather than replace one another",
+  mergeShelf({ favorites: [song("a")], playlists: [] }, { favorites: [song("b")], playlists: [] }).favorites.length === 2,
+);
+ok(
+  "and the same song kept on both is kept once",
+  mergeShelf({ favorites: [song("a")], playlists: [] }, { favorites: [song("a")], playlists: [] }).favorites.length === 1,
+);
+ok(
+  "a playlist from each side keeps every track either of them had",
+  mergeShelf(
+    { favorites: [], playlists: [{ id: "p1", name: "driving", at: 2, tracks: [song("a")] }] },
+    { favorites: [], playlists: [{ id: "p1", name: "Driving", at: 5, tracks: [song("b")] }] },
+  ).playlists[0].tracks.length === 2,
+);
+ok(
+  "and the older name wins, so the title does not flip about",
+  mergeShelf(
+    { favorites: [], playlists: [{ id: "p1", name: "driving", at: 2, tracks: [] }] },
+    { favorites: [], playlists: [{ id: "p1", name: "Driving", at: 5, tracks: [] }] },
+  ).playlists[0].name === "driving",
+);
+ok(
+  "a shelf with nothing wrong in it is left alone",
+  mergeShelf({ favorites: [], playlists: [] }, { favorites: [], playlists: [] }).playlists.length === 0,
+);
+ok(
+  "the page pushes and pulls the shelf under the handle that is signed in",
+  musicSrc2.includes("saveTunes") && musicSrc2.includes("mergeShelf") && appSrc.includes("watchLibrary"),
+);
 
 let bad = 0;
 for (const [what, fine] of checks) {

@@ -19,6 +19,8 @@ import "./styles/staff.css";
 import "./styles/emoji.css";
 /* what the markdown renderer produces, wherever it is used */
 import "./styles/markdown.css";
+/* gifts and jams: the two things members do for each other */
+import "./styles/social.css";
 /* imported last: the quiet pass, which overrides a few wrote-in sizes */
 import "./styles/refine.css";
 

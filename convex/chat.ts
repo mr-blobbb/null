@@ -158,6 +158,8 @@ function draw(m: any, member: any) {
     at: m.at,
     owner: m.owner || member?.owner === true,
     roles: member?.roles ?? [],
+    /** the circle beside the name, from the directory rather than the row */
+    verified: member?.verified === true,
     avatar: member ? member.avatar : null,
     tags: member
       ? (member.tags ?? (member.tag ? [member.tag] : []))

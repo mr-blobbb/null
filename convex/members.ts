@@ -88,6 +88,8 @@ export const list = query({
         owner: r.owner,
         /** staff roles: the owner is one by definition */
         roles: r.roles ?? [],
+        /** the circle beside their name */
+        verified: r.verified === true,
         online: r.seen >= Date.now() - ONLINE_MS,
         activity: r.activity ?? null,
         activityVisible: r.activityVisible ?? "everyone",
@@ -145,6 +147,7 @@ export const card = query({
       coins: row.coins,
       owner: row.owner,
       roles: row.roles ?? [],
+      verified: row.verified === true,
       online,
       activity: showActivity,
       views: row.views ?? 0,
@@ -262,19 +265,40 @@ export const remove = mutation({
 
 /* ---------- staff ---------- */
 
-/** The owner pins a role onto someone: "admin" or "mod". Passing an empty
- *  list takes the role away. Only the owner does this. */
+/** The roles the owner may hand out. Kept here as well as in the page, because
+ *  the browser's copy of this list is a convenience and this one is the rule. */
+const ROLES = ["admin", "coowner", "dev", "beta", "linker", "partner"];
+
+/** The owner pins roles onto someone. The whole set arrives every time, so
+ *  taking one back is the same write as granting one. Only the owner does
+ *  this, and the check is against the member row rather than the claim. */
 export const setRoles = mutation({
   args: { by: v.string(), claimed: v.boolean(), user: v.string(), roles: v.array(v.string()) },
   handler: async (ctx, { by, claimed, user, roles }) => {
     if (!(await isOwnerCheck(ctx, by, claimed))) throw new Error("only the owner can grant roles");
     const row = await memberOf(ctx, user);
     if (!row) throw new Error("no member called that");
-    const clean = [...new Set(roles.map((r) => r.trim().toLowerCase()))].filter((r) =>
-      ["admin", "mod"].includes(r),
+    const had = row.roles ?? [];
+    /* a role from an older list that this person already holds stays: an owner
+       granting ADMIN should not silently cost somebody their MOD */
+    const clean = [...new Set(roles.map((r) => r.trim().toLowerCase()))].filter(
+      (r) => ROLES.includes(r) || had.includes(r),
     );
     await ctx.db.patch(row._id, { roles: clean });
     return clean;
+  },
+});
+
+/** The circle next to a name. Not a role — it says nothing about permissions —
+ *  but it is granted from the same control by the same person. */
+export const setVerified = mutation({
+  args: { by: v.string(), claimed: v.boolean(), user: v.string(), on: v.boolean() },
+  handler: async (ctx, { by, claimed, user, on }) => {
+    if (!(await isOwnerCheck(ctx, by, claimed))) throw new Error("only the owner can verify somebody");
+    const row = await memberOf(ctx, user);
+    if (!row) throw new Error("no member called that");
+    await ctx.db.patch(row._id, { verified: on });
+    return on;
   },
 });
 

@@ -27,12 +27,15 @@
   --font-press: "Press Start 2P", var(--font);
   --font-space: "Space Mono", var(--mono);
 
-  /* soft corners, thin edges: the whole site is one hairline and a rounding */
-  --r-1: 7px;
-  --r-2: 12px;
-  --r-3: 16px;
-  --r-4: 21px;
-  --r-5: 28px;
+  /* soft corners, thin edges: the whole site is one hairline and a rounding.
+     The scale moved up a notch from where it started — the panels are one
+     step rounder, the way a modern chat client's are, and the gaps between
+     the numbers stayed the same so nothing had to be re-measured. */
+  --r-1: 9px;
+  --r-2: 14px;
+  --r-3: 19px;
+  --r-4: 24px;
+  --r-5: 32px;
 
   --rail: 54px;
   --chrome: 42px;

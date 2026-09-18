@@ -14,6 +14,7 @@ import type * as filter from "../filter.js";
 import type * as gifs from "../gifs.js";
 import type * as members from "../members.js";
 import type * as music from "../music.js";
+import type * as social from "../social.js";
 import type * as store from "../store.js";
 
 import type {
@@ -29,6 +30,7 @@ declare const fullApi: ApiFromModules<{
   gifs: typeof gifs;
   members: typeof members;
   music: typeof music;
+  social: typeof social;
   store: typeof store;
 }>;
 

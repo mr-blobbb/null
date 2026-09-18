@@ -36,8 +36,11 @@ export default defineSchema({
     /** the last time any machine saw them */
     seen: v.number(),
     /* ---------- staff ---------- */
-    /** staff roles as the owner grants them: "admin", "mod", or both */
+    /** staff roles as the owner grants them: admin, coowner, dev, beta,
+     *  linker, partner — any number of them at once */
     roles: v.optional(v.array(v.string())),
+    /** the circle beside the name. Not a permission, just a mark. */
+    verified: v.optional(v.boolean()),
     /* ---------- presence ---------- */
     /** what this person is doing right now: { kind, name, detail } as JSON */
     activity: v.optional(v.string()),
@@ -179,4 +182,62 @@ export default defineSchema({
     name: v.string(),
     at: v.number(),
   }).index("by_thread", ["thread"]),
+
+  /* ---------- what members do for each other ---------- */
+
+  /** one member handing another something: coins, or a piece off the shelf.
+   *  `gives` is an item id or the literal "coins"; the receiving machine
+   *  settles it against its own till, because that is where coins live. */
+  gifts: defineTable({
+    from: v.string(),
+    to: v.string(),
+    gives: v.string(),
+    amount: v.number(),
+    note: v.string(),
+    at: v.number(),
+    /** set when the receiver takes it — and never twice. On a trade it means
+     *  accepted rather than paid: the two halves move separately. */
+    claimedAt: v.optional(v.number()),
+    /** set when they wave it away instead */
+    declined: v.optional(v.boolean()),
+    /* ---------- a trade ---------- */
+    /** what the sender asks for in return, absent on a plain gift. Same shape
+     *  as `gives`: an item id or the literal "coins" */
+    wants: v.optional(v.string()),
+    wantAmount: v.optional(v.number()),
+    /** each half of a swap, marked by the side that parted with it. Neither
+     *  half moves until the side that owes it has said so, which is what
+     *  stops a trade from paying out twice or from paying out to nobody. */
+    gave: v.optional(v.boolean()),
+    got: v.optional(v.boolean()),
+  })
+    .index("by_to", ["to"])
+    .index("by_from", ["from"])
+    .index("by_to_at", ["to", "at"]),
+
+  /** favourites and playlists, as the page stores them, so the same library
+   *  is on every machine somebody signs in from */
+  tunes: defineTable({
+    user: v.string(),
+    favorites: v.string(),
+    playlists: v.string(),
+    at: v.number(),
+  }).index("by_user", ["user"]),
+
+  /** a room listening together: the code to join, who is holding it, and the
+   *  row the host last pushed */
+  jams: defineTable({
+    code: v.string(),
+    host: v.string(),
+    /** the Track as JSON, or absent when nothing has been played yet */
+    track: v.optional(v.string()),
+    playing: v.boolean(),
+    /** where in the track the host was when they pushed it */
+    at: v.number(),
+    /** when they pushed it, which is how a guest knows how far to catch up */
+    stamp: v.number(),
+    open: v.boolean(),
+  })
+    .index("by_code", ["code"])
+    .index("by_host", ["host"]),
 });

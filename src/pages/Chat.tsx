@@ -20,13 +20,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAction, useMutation, useQuery } from "convex/react";
 import {
-  BadgeCheck,
   Bot,
   Check,
   ChevronDown,
   CircleSlash,
   Copy,
-  CornerUpLeft,
   Crown,
   Film,
   Flag,
@@ -35,7 +33,6 @@ import {
   Megaphone,
   MessageCircle,
   Music2,
-  Plus,
   Reply,
   Search,
   Send,
@@ -52,7 +49,7 @@ import { Guard } from "../components/Guard";
 import { cloudOn, machine } from "../lib/cloud";
 import { CloudDown } from "../lib/outage";
 import { useAccount, nameStyleCss, type NameStyle } from "../lib/account";
-import { countOf, myChoice, parseVote, totalVotes, type Poll } from "../lib/vote";
+import { parseVote, type Poll } from "../lib/vote";
 import { isOwner, OWNER_TAG } from "../lib/owner";
 import { itemsOf, useEcon } from "../lib/econ";
 import { toggleBlock, useBlocked } from "../lib/members";
@@ -60,13 +57,33 @@ import { AvatarArt, TagChip } from "../lib/art";
 import { screen } from "../lib/filter";
 import { Markdown } from "../lib/md";
 import { go } from "../lib/tabs";
-import { roleOf, STAFF_TAGS } from "../lib/staff";
+import { roleRank } from "../lib/staff";
 import { emojiOf, REACTIONS, suggest } from "../lib/emoji";
 import { NullFace } from "../lib/brand";
 import { Sheet } from "../components/Sheet";
 import { EmojiPicker } from "../components/EmojiPicker";
 import { StaffRoles } from "../components/StaffRoles";
 import { ReportBox } from "../components/ReportBox";
+/* the other half of a DM: coins and pieces changing hands, and the little
+   pop-up that puts one in front of the person it was sent to */
+import { GiftButton, GiftCard, GiftPop, useGiftRows } from "../components/GiftBox";
+import { freshPending, markSeen, type Gift as GiftRow } from "../lib/gift";
+import { RoleChip, VerifiedMark } from "../components/RoleMark";
+/* the furniture of a line: the music row it shares, the poll under it, the
+   delete and reply controls, the mention tint */
+import {
+  DeleteBtn,
+  Mentions,
+  MusicRow,
+  /* the vote box is imported under a second name: `Poll` is also the shape of
+     the data a line carries, and the page needs both */
+  Poll as PollBox,
+  ReplyStub,
+  memberId,
+  parseStyle,
+  tagIds,
+  trackLine,
+} from "../components/LineParts";
 import { useMusic, type Track } from "../lib/music";
 
 type Row = {
@@ -77,6 +94,8 @@ type Row = {
   at: number;
   owner: boolean;
   roles: string[];
+  /** the circle beside their name */
+  verified: boolean;
   tags: string[];
   avatar: string | null;
   machine: string;
@@ -108,6 +127,7 @@ type MemberRow = {
   online: boolean;
   owner: boolean;
   roles: string[];
+  verified: boolean;
   wearing: { avatar: string | null; effect: string | null; tags: string[] };
 };
 
@@ -411,11 +431,13 @@ function MemberBtn({
   dim?: boolean;
   onOpen: () => void;
 }) {
-  const role = (m.roles ?? [])[0];
-  const t = role ? roleOf(role) : null;
+  const role = [...(m.roles ?? [])]
+    .map((r) => r.toLowerCase())
+    .filter((r) => roleRank(r) < 99)
+    .sort((a, b) => roleRank(a) - roleRank(b))[0];
   /* the rail keeps the same rule as a line: a role, or failing that one thing
      they are wearing — never a row of chips wider than the name */
-  const wornTag = t ? null : (itemsOf(m.wearing?.tags ?? [])[0] ?? null);
+  const wornTag = role ? null : (itemsOf(m.wearing?.tags ?? [])[0] ?? null);
   return (
     <button
       className={`ch-member${dim ? " is-dim" : ""}${m.online ? " is-on" : ""}${
@@ -432,7 +454,7 @@ function MemberBtn({
       <span className="ch-member-txt">
         <b className="ch-member-name" style={nameStyleCss(parseStyle(m.nameStyle))}>
           {m.name || m.user}
-          {m.owner && <BadgeCheck className="ch-verified" aria-label="Owner" />}
+          {(m.owner || m.verified) && <VerifiedMark small />}
           {me && <i className="ch-you">you</i>}
         </b>
         <span className="ch-member-at">@{m.user}</span>
@@ -442,12 +464,8 @@ function MemberBtn({
           <CircleSlash />
         </span>
       )}
-      {!blocked && t && (
-        <span className="tagchip ch-member-tag" title={t.note} style={{ backgroundColor: t.color, color: t.ink }}>
-          {t.name}
-        </span>
-      )}
-      {!blocked && !t && wornTag && <TagChip item={wornTag} />}
+      {!blocked && role && <RoleChip role={role} className="ch-member-tag" />}
+      {!blocked && !role && wornTag && <TagChip item={wornTag} />}
     </button>
   );
 }
@@ -1073,68 +1091,6 @@ function Feed({
   );
 }
 
-/** What a shared track reads as in the room. Text, not an embed: the chat has
- *  one place to put a picture and no place to put a player. */
-function trackLine(t: Track): string {
-  return `♫ ${t.title} — ${t.artist}`;
-}
-
-function MusicRow({
-  track,
-  label,
-  onPick,
-}: {
-  track: Track;
-  label?: string;
-  onPick: (t: Track) => void;
-}) {
-  return (
-    <button className="ch-musicro" onClick={() => onPick(track)} title={trackLine(track)}>
-      <span className="ch-musicro-art">
-        {track.art ? <img src={track.art} alt="" /> : <Music2 />}
-      </span>
-      <span className="ch-musicro-txt">
-        <b>{track.title}</b>
-        <span className="tiny faint">{track.artist}</span>
-      </span>
-      {label && <i className="ch-musicro-tag">{label}</i>}
-      <span className="ch-musicro-add" aria-hidden="true">
-        <Plus />
-      </span>
-    </button>
-  );
-}
-
-function tagIds(): string[] {
-  try {
-    const raw = localStorage.getItem("null:econ");
-    if (!raw) return [];
-    const eq = JSON.parse(raw)?.equipped;
-    if (Array.isArray(eq?.tags)) return eq.tags.filter((t: unknown) => typeof t === "string");
-    return typeof eq?.tag === "string" ? [eq.tag] : [];
-  } catch {
-    return [];
-  }
-}
-
-/** A name's styling travels as the JSON the profile page stores it in. */
-function parseStyle(raw: string): NameStyle {
-  try {
-    const v = JSON.parse(raw || "{}");
-    return typeof v === "object" && v ? (v as NameStyle) : ({} as NameStyle);
-  } catch {
-    return {} as NameStyle;
-  }
-}
-
-/** The id the profile page copies, kept as the same string it has always been:
- *  the first eight hex digits are what the card prints. */
-function memberId(handle: string): string {
-  let h = 0x811c9dc5;
-  for (const c of handle) h = Math.imul(h ^ c.charCodeAt(0), 0x01000193) >>> 0;
-  return h.toString(16).padStart(8, "0");
-}
-
 /* ---------- one line ---------- */
 
 const GROUP_MS = 5 * 60 * 1000;
@@ -1194,14 +1150,14 @@ function Line({
     hour12: true,
   });
   const owner = m.owner || isOwner(m.user);
-  /* admin outranks mod when somebody holds both, which is the order the shelf
-     lists them in */
-  const staffTag = owner
+  /* one chip, the highest role they hold: ADMIN outranks LINKER, and a role
+     from an older list sinks below the current ones rather than winning */
+  const staffRole = owner
     ? null
-    : ((m.roles ?? [])
-        .map((r) => roleOf(r))
-        .filter((t): t is (typeof STAFF_TAGS)[number] => !!t)
-        .sort((a, b) => STAFF_TAGS.indexOf(a) - STAFF_TAGS.indexOf(b))[0] ?? null);
+    : ([...(m.roles ?? [])]
+        .map((r) => r.toLowerCase())
+        .filter((r) => roleRank(r) < 99)
+        .sort((a, b) => roleRank(a) - roleRank(b))[0] ?? null);
   const same = !!prev && prev.user === m.user && prev.bot === m.bot && m.at - prev.at < GROUP_MS;
   const pic = face?.pfp ?? fallbackPic ?? null;
   const avatar = face?.avatar ?? fallbackAvatar ?? null;
@@ -1283,23 +1239,14 @@ function Line({
             <button className="say-name" style={nameStyleCss(style)} onClick={() => onProfile(m.user)}>
               {m.name}
             </button>
-            {owner && <BadgeCheck className="say-verified" aria-label="Owner" />}
+            {(owner || m.verified) && <VerifiedMark small />}
             {owner && (
               <span className="tagchip tagchip--owner" title={OWNER_TAG.note}>
                 <Crown />
                 {OWNER_TAG.name}
               </span>
             )}
-            {staffTag && (
-              <span
-                className="tagchip"
-                title={staffTag.note}
-                style={{ backgroundColor: staffTag.color, color: staffTag.ink }}
-              >
-                <b className="tag-glyph">{staffTag.glyph}</b>
-                {staffTag.name}
-              </span>
-            )}
+            {staffRole && <RoleChip role={staffRole} />}
             {m.bot && <span className="say-badge">bot</span>}
             {/* one chip each: what they are here, and one thing they are
                 wearing. Six chips in a header is a header nobody reads. */}
@@ -1321,7 +1268,7 @@ function Line({
           </span>
         )}
 
-        {m.poll && <Poll poll={m.poll} me={me} onVote={onVote} />}
+        {m.poll && <PollBox poll={m.poll} me={me} onVote={onVote} />}
 
         {(m.reactions?.length ?? 0) > 0 && (
           <span className="say-reacts">
@@ -1343,125 +1290,6 @@ function Line({
         )}
       </div>
     </div>
-  );
-}
-
-/* ---------- a staff vote ----------
-   Two or more little boxes under the message that asked the question. The
-   tally is drawn once you have picked something — until then the boxes are
-   just choices, because seeing which way the room is leaning is not voting.
-   A second tap on your own choice takes it back. */
-function Poll({ poll, me, onVote }: { poll: Poll; me: string; onVote: (option: string) => void }) {
-  const total = totalVotes(poll);
-  const mine = myChoice(poll, me);
-
-  return (
-    <div className="poll">
-      <span className="poll-title">{poll.title}</span>
-      <div className="poll-opts">
-        {poll.options.map((o) => {
-          const n = countOf(poll, o.id);
-          const pct = total ? Math.round((n / total) * 100) : 0;
-          const picked = mine === o.id;
-          return (
-            <button
-              key={o.id}
-              className={`poll-opt${picked ? " is-mine" : ""}${mine ? " is-tallied" : ""}`}
-              onClick={() => onVote(o.id)}
-              title={picked ? "Take your vote back" : `Vote for “${o.text}”`}
-            >
-              {/* the fill is the bar: how much of the room picked this one */}
-              {mine && <span className="poll-fill" style={{ width: `${pct}%` }} aria-hidden="true" />}
-              <span className="poll-txt">{o.text}</span>
-              {mine && <b className="poll-pct">{pct}%</b>}
-              {picked && <Check className="poll-tick" />}
-            </button>
-          );
-        })}
-      </div>
-      <span className="poll-foot tiny faint">
-        {total === 0 ? "No votes yet" : `${total} vote${total === 1 ? "" : "s"}`}
-        {mine ? " · tap yours again to take it back" : " · one vote each"}
-      </span>
-    </div>
-  );
-}
-
-function DeleteBtn({
-  id,
-  by,
-  owner,
-  mine,
-  onGone,
-  onProblem,
-}: {
-  id: string;
-  by: string;
-  owner: boolean;
-  mine: boolean;
-  onGone: () => void;
-  onProblem: (why: string) => void;
-}) {
-  const drop = useMutation(api.chat.drop);
-  const [busy, setBusy] = useState(false);
-  return (
-    <button
-      className="ch-hbtn is-bad"
-      title={mine ? "Delete message" : "Delete this message (staff)"}
-      disabled={busy}
-      onClick={() => {
-        onGone();
-        setBusy(true);
-        drop({ id, by, owner })
-          /* a delete that quietly does nothing is the reason this button was
-             reported broken: the server's answer goes on screen now */
-          .catch((e) => onProblem((e as Error).message.replace(/^.*?Error: /, "")))
-          .finally(() => setBusy(false));
-      }}
-    >
-      <Trash2 />
-    </button>
-  );
-}
-
-/* The stub asks the server for the line it points at. That is one extra query
-   per reply, and a query the deployment may not know about yet — a page that
-   is newer than the server it is talking to. A missing function is a thrown
-   error, a thrown error during render takes the room with it, so the stub has
-   its own wall: worst case it reads "replying to a line it cannot fetch". */
-function ReplyStub({ id, onProfile }: { id: string; onProfile: (u: string) => void }) {
-  return (
-    <Guard what="Reply" fallback={<span className="say-reply faint tiny">replying to a line</span>}>
-      <ReplyTarget id={id} onProfile={onProfile} />
-    </Guard>
-  );
-}
-
-function ReplyTarget({ id, onProfile }: { id: string; onProfile: (u: string) => void }) {
-  const target = useQuery(api.chat.messageById, { id }) as Row | null | undefined;
-  if (!target) return <span className="say-reply faint tiny">replying to a gone message</span>;
-  return (
-    <span className="say-reply tiny">
-      <CornerUpLeft />
-      <button className="linkish" onClick={() => onProfile(target.user)}>
-        {target.name}
-      </button>
-      <span className="say-reply-body">{target.body.slice(0, 90)}</span>
-    </span>
-  );
-}
-
-/** @handle in a body gets the mention tint. Done after the markdown pass so
- *  the words stay readable either way. */
-function Mentions({ body }: { body: string }) {
-  const hits = body.match(/@[a-z0-9._-]{3,20}|@everyone/gi) ?? [];
-  if (!hits.length) return null;
-  return (
-    <span className="say-mentionlist" aria-hidden="true">
-      {hits.slice(0, 4).map((h) => (
-        <em key={h}>{h}</em>
-      ))}
-    </span>
   );
 }
 
@@ -1619,7 +1447,7 @@ function ProfilePopout({
 
           <h3 className="ch-pop-name" style={nameStyleCss(parseStyle(card.nameStyle ?? ""))}>
             {card.name}
-            {card.owner && <BadgeCheck className="ch-verified" aria-label="Owner" />}
+            {(card.owner || card.verified) && <VerifiedMark small />}
             {isBanned && <i className="ch-pop-banned">banned</i>}
           </h3>
 
@@ -1647,16 +1475,9 @@ function ProfilePopout({
                 {OWNER_TAG.name}
               </span>
             )}
-            {(card.roles ?? []).map((r: string) => {
-              const t = roleOf(r);
-              if (!t) return null;
-              return (
-                <span key={r} className="tagchip" title={t.note} style={{ backgroundColor: t.color, color: t.ink }}>
-                  <b className="tag-glyph">{t.glyph}</b>
-                  {t.name}
-                </span>
-              );
-            })}
+            {(card.roles ?? []).map((r: string) => (
+              <RoleChip key={r} role={r} />
+            ))}
             {itemsOf(card.wearing?.tags ?? []).map((t) => (
               <TagChip key={t.id} item={t} />
             ))}
@@ -1719,6 +1540,7 @@ function ProfilePopout({
           <StaffRoles
             user={handle}
             roles={card.roles ?? []}
+            verified={card.verified === true}
             by={me}
             owner={owner}
             note={setNote}
@@ -1727,6 +1549,8 @@ function ProfilePopout({
 
           {!mine && me && (
             <div className="ch-pop-decide">
+              {/* follow them, hand them something, or stop seeing them */}
+              <GiftButton user={handle} me={me} className="btn btn--icon" label="" />
               <button
                 className={`btn ch-pop-follow${following ? "" : " btn--fill"}`}
                 onClick={async () => {
@@ -1836,6 +1660,25 @@ function DmThread({ other, me }: { other: string; me: ReturnType<typeof useAccou
   const blockedNow = useBlocked();
   const visible = (rows ?? []).filter((r) => !blockedNow.includes(r.from.trim().toLowerCase()));
 
+  /* Everything the two of them have passed back and forth, drawn in the same
+     stream as the words. Blocking somebody takes their gifts with them. */
+  const gifts = useGiftRows(me.user);
+  const between = (gifts ?? []).filter(
+    (g) =>
+      ((g.from === handle && g.to === other) || (g.from === other && g.to === handle)) &&
+      !blockedNow.includes(g.from),
+  );
+  const [pop, setPop] = useState<GiftRow | null>(null);
+
+  /* the little pop-up, gifter to giftee: one unopened gift shows itself once,
+     the first time this thread is opened after it arrived */
+  useEffect(() => {
+    const fresh = freshPending(between);
+    if (!fresh) return;
+    markSeen(fresh.id);
+    setPop(fresh);
+  }, [gifts]);
+
   const [draft, setDraft] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const box = useRef<HTMLDivElement>(null);
@@ -1855,13 +1698,22 @@ function DmThread({ other, me }: { other: string; me: ReturnType<typeof useAccou
   return (
     <div className="dm">
       <div className="dm-log" ref={box}>
-        {visible.map((r) => (
-          <p key={r.id} className={`dm-line${r.from === handle ? " is-mine" : ""}`}>
-            {r.image && <img src={r.image} alt="" />}
-            {r.body}
-          </p>
-        ))}
-        {rows && rows.length === 0 && (
+        {[
+          ...visible.map((r) => ({ at: r.at, id: r.id, say: r as typeof r | null, gift: null as GiftRow | null })),
+          ...between.map((g) => ({ at: g.at, id: g.id, say: null, gift: g })),
+        ]
+          .sort((p, q) => p.at - q.at)
+          .map((row) =>
+            row.gift ? (
+              <GiftCard key={row.id} gift={row.gift} me={handle} />
+            ) : (
+              <p key={row.id} className={`dm-line${row.say!.from === handle ? " is-mine" : ""}`}>
+                {row.say!.image && <img src={row.say!.image} alt="" />}
+                {row.say!.body}
+              </p>
+            ),
+          )}
+        {rows && rows.length === 0 && between.length === 0 && (
           <p className="tiny faint dm-hello">No messages yet. Say something.</p>
         )}
         {rows && rows.length > 0 && visible.length !== rows.length && (
@@ -1881,11 +1733,13 @@ function DmThread({ other, me }: { other: string; me: ReturnType<typeof useAccou
             if (e.key === "Enter") send();
           }}
         />
+        <GiftButton user={other} me={me.user} className="ch-icon" label="" />
         <button className="ch-send" onClick={send} disabled={!draft.trim()} title="Send">
           <Send />
         </button>
       </div>
       {err && <p className="form-err tiny">{err}</p>}
+      {pop && <GiftPop gift={pop} me={handle} other={other} onClose={() => setPop(null)} />}
     </div>
   );
 }

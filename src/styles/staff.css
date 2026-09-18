@@ -37,6 +37,37 @@
   font-size: 11px;
   line-height: 1;
 }
+.sr-btn .tag-glyph svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* ---------- a role's icon inside a chip ----------
+   Shop tags carry a typed symbol here; staff roles carry a drawing, so the
+   wrapper needs a size for the svg as well as for the letter. */
+.tagchip .tag-glyph svg {
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.05em;
+}
+
+/* ---------- the verified circle ----------
+   One mark, drawn wherever a name is: the rooms, the rail, both cards. */
+.tag-verified {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 5px;
+  color: #8fb8ff;
+}
+.tag-verified svg {
+  width: 13px;
+  height: 13px;
+}
+.tag-verified--sm svg {
+  width: 12px;
+  height: 12px;
+}
 .sr-note {
   margin: 0;
   line-height: 1.5;

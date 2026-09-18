@@ -1716,7 +1716,7 @@
   margin-top: 7px;
   padding: 11px 12px;
   border: var(--bw) solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--r-3);
   background: color-mix(in srgb, var(--bg-2) 72%, transparent);
   backdrop-filter: blur(8px);
 }
@@ -1738,7 +1738,7 @@
   overflow: hidden;
   padding: 9px 11px;
   border: var(--bw) solid var(--line-2);
-  border-radius: 10px;
+  border-radius: var(--r-2);
   background: color-mix(in srgb, var(--bg-3) 64%, transparent);
   text-align: left;
   transition: border-color 0.14s var(--ease), transform 0.14s var(--ease),

@@ -31,6 +31,8 @@ import {
 
 import { NullFace } from "../lib/brand";
 import { Sheet } from "../components/Sheet";
+import { JamButton } from "../components/JamBox";
+import { useAccount } from "../lib/account";
 import {
   addToPlaylist,
   clock,
@@ -63,6 +65,7 @@ import {
 
 export function Music() {
   const m = useMusic();
+  const me = useAccount();
   const [q, setQ] = useState("");
   const [results, setResults] = useState<Track[]>([]);
   const [note, setNote] = useState<string | null>(null);
@@ -117,6 +120,9 @@ export function Music() {
         <h1 className="lb-title">Music</h1>
         <span className="lb-count tiny faint">
           {m.now ? `playing from ${SOURCES.find((s) => s.id === m.now?.source)?.name}` : "nothing playing"}
+        </span>
+        <span className="mu-top-right">
+          <JamButton me={me.user} />
         </span>
       </div>
 

@@ -14,7 +14,6 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import {
-  BadgeCheck,
   Ban,
   CircleHelp,
   Coins,
@@ -40,12 +39,15 @@ import { AvatarArt, TagChip } from "../lib/art";
 import { NullFace } from "../lib/brand";
 import { Sheet } from "../components/Sheet";
 import { StaffRoles } from "../components/StaffRoles";
+import { GiftButton } from "../components/GiftBox";
+import { RoleChip, VerifiedMark } from "../components/RoleMark";
 import { useAccount } from "../lib/account";
 import { machine } from "../lib/cloud";
-import { roleOf, REPORT_REASONS } from "../lib/staff";
+import { REPORT_REASONS } from "../lib/staff";
 
 type CloudMember = Member & {
   roles: string[];
+  verified: boolean;
   online: boolean;
   views: number;
   banned: boolean;
@@ -84,6 +86,7 @@ function Cloud() {
       wearing: { avatar: r.wearing.avatar, effect: r.wearing.effect, tags: r.wearing.tags },
       owner: r.owner || isOwner(r.user),
       roles: r.roles ?? [],
+      verified: r.verified === true,
       online: r.online,
       views: r.views ?? 0,
       banned: r.banned,
@@ -315,7 +318,7 @@ function Card({ m, onOpen }: { m: CloudMember; onOpen: () => void }) {
               {m.name}
             </span>
             <StaffTags m={m} />
-            {m.owner && <BadgeCheck className="pf-verified" aria-label="Owner" />}
+            {(m.owner || m.verified) && <VerifiedMark />}
           </span>
           <span className="mb-handle">@{m.user}</span>
         </span>
@@ -324,8 +327,9 @@ function Card({ m, onOpen }: { m: CloudMember; onOpen: () => void }) {
   );
 }
 
-/** Only the staff-grade tags show on the board and the card: OWNER, ADMIN,
- *  MOD and the verified tick. Shop tags are a profile thing, not a badge. */
+/** Only the staff-grade tags show on the board and the card: OWNER, the roles
+ *  the owner hands out, and the verified circle. Shop tags are a profile
+ *  thing, not a badge. */
 function StaffTags({ m }: { m: CloudMember }) {
   return (
     <span className="mb-stafftags">
@@ -335,21 +339,9 @@ function StaffTags({ m }: { m: CloudMember }) {
           {OWNER_TAG.name}
         </span>
       )}
-      {(m.roles ?? []).map((r) => {
-        const t = roleOf(r);
-        if (!t) return null;
-        return (
-          <span
-            key={r}
-            className="tagchip"
-            title={t.note}
-            style={{ backgroundColor: t.color, color: t.ink }}
-          >
-            <b className="tag-glyph">{t.glyph}</b>
-            {t.name}
-          </span>
-        );
-      })}
+      {(m.roles ?? []).map((r) => (
+        <RoleChip key={r} role={r} />
+      ))}
     </span>
   );
 }
@@ -439,7 +431,7 @@ function MemberCardFull({
           {m.name}
         </h3>
         <StaffTags m={m} />
-        {m.owner && <BadgeCheck className="pf-verified" aria-label="Owner" />}
+        {(m.owner || m.verified) && <VerifiedMark />}
       </div>
       <div className="mb-profile-handle">
         <span>@{handle}</span>
@@ -490,6 +482,8 @@ function MemberCardFull({
             <UserCheck /> friends — you can DM
           </span>
         )}
+        {/* handing something over is the other thing a card is for */}
+        <GiftButton user={handle} me={me.user} label="Gift" />
         {!mine && (
           <button className="btn btn--sm mb-flag" onClick={() => setReportOpen((v) => !v)} title="Report this member">
             <Flag /> Report
@@ -530,6 +524,7 @@ function MemberCardFull({
       <StaffRoles
         user={handle}
         roles={m.roles ?? []}
+        verified={m.verified === true}
         by={(me.user ?? "").replace(/^@/, "")}
         owner={owner}
         note={setNote}

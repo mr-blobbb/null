@@ -605,6 +605,131 @@ export function playlistOf(id: string): Playlist | undefined {
   return music.get().playlists.find((p) => p.id === id);
 }
 
+/* ============================================================
+   the library that follows you
+   ============================================================
+
+   Favourites and playlists were the last things here that only existed on
+   one machine. They still do — the page reads this store and would play with
+   no network at all — but a copy now lives on the server, under the handle
+   that is signed in, and it is merged rather than overwritten.
+
+   Merged, because two devices both have a right answer and neither is
+   complete: the browser is where the heart was pressed and where the
+   playlist was made, and the server is where the other machine left its
+   half. A playlist that exists in both keeps every track either side had,
+   which is the only rule that never loses a song. */
+
+let syncUser: string | null = null;
+let quiet = false;
+let pending: number | null = null;
+
+function key(user: string): string {
+  return user.trim().replace(/^@/, "").toLowerCase();
+}
+
+/** Everything kept here, as the two lists the server stores. */
+function shelfOf(): { favorites: Track[]; playlists: Playlist[] } {
+  const s = music.get();
+  return { favorites: s.favorites, playlists: s.playlists };
+}
+
+/** Two shelves, one shelf. Favourites by key, playlists by id, and the older
+ *  date wins the name so the title does not flip about between machines. */
+export function mergeShelf(
+  a: { favorites: Track[]; playlists: Playlist[] },
+  b: { favorites: Track[]; playlists: Playlist[] },
+): { favorites: Track[]; playlists: Playlist[] } {
+  const favorites: Track[] = [];
+  for (const t of [...a.favorites, ...b.favorites]) {
+    if (t?.key && !favorites.some((x) => x.key === t.key)) favorites.push(t);
+  }
+
+  const playlists: Playlist[] = [];
+  for (const p of [...a.playlists, ...b.playlists]) {
+    if (!p?.id) continue;
+    const had = playlists.find((x) => x.id === p.id);
+    if (!had) {
+      /* a copy, not the row itself: the two halves get merged into it below */
+      playlists.push({ ...p, tracks: [...(p.tracks ?? [])] });
+      continue;
+    }
+    if (p.at < had.at) had.name = p.name;
+    had.at = Math.min(had.at, p.at);
+    for (const t of p.tracks ?? []) {
+      if (t?.key && !had.tracks.some((x) => x.key === t.key)) had.tracks.push(t);
+    }
+  }
+  return { favorites, playlists };
+}
+
+/** Take the copy down, and put back up whatever the two of them add up to. */
+async function pull(who: string): Promise<void> {
+  const c = cloud();
+  if (!c) return;
+  try {
+    const row = (await c.query(api.social.tunes, { user: who })) as
+      | { favorites: string; playlists: string }
+      | null;
+    const here = shelfOf();
+    if (!row) {
+      await c.mutation(api.social.saveTunes, {
+        user: who,
+        favorites: JSON.stringify(here.favorites),
+        playlists: JSON.stringify(here.playlists),
+      });
+      return;
+    }
+    const theirs = {
+      favorites: (JSON.parse(row.favorites) as Track[]) ?? [],
+      playlists: (JSON.parse(row.playlists) as Playlist[]) ?? [],
+    };
+    const both = mergeShelf(here, theirs);
+    quiet = true;
+    music.set({ favorites: both.favorites, playlists: both.playlists });
+    quiet = false;
+    await c.mutation(api.social.saveTunes, {
+      user: who,
+      favorites: JSON.stringify(both.favorites),
+      playlists: JSON.stringify(both.playlists),
+    });
+  } catch {
+    /* the shelf on this machine is the whole truth when the server is quiet */
+  }
+}
+
+/** Called by the shell: sign in and the library is shared, sign out and it
+ *  stays on this machine. Every later change is pushed on a short delay, so
+ *  pressing the heart ten times is one write. */
+let wired = false;
+
+export function watchLibrary(user: string | null) {
+  const who = user ? key(user) : null;
+  if (who === syncUser) return;
+  syncUser = who;
+  if (!who) return;
+  void pull(who);
+  if (wired) return;
+  wired = true;
+
+  music.subscribe(() => {
+    if (quiet || !syncUser) return;
+    if (pending) window.clearTimeout(pending);
+    pending = window.setTimeout(() => {
+      const s = shelfOf();
+      const c = cloud();
+      if (!c || !syncUser) return;
+      void c
+        .mutation(api.social.saveTunes, {
+          user: syncUser,
+          favorites: JSON.stringify(s.favorites),
+          playlists: JSON.stringify(s.playlists),
+        })
+        .catch(() => undefined);
+    }, 1200);
+  });
+}
+
 /** mm:ss, and an em dash when the length is not known yet. */
 export function clock(seconds: number | undefined): string {
   if (seconds === undefined || !Number.isFinite(seconds) || seconds <= 0) return "—";

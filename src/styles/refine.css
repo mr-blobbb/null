@@ -152,6 +152,30 @@
   background: color-mix(in srgb, var(--bg-2) 82%, transparent);
 }
 
+/* ---------- tidier corners ----------
+   The shape scale itself moved up a notch in tokens.css, and that is most of
+   this pass: every control that takes a radius took a rounder one at once.
+
+   Two things had written their own number instead, so the scale could not
+   reach them. A card is one step rounder than the tokens alone would make it
+   — a card sits on a page, and the page is what it is being shaped against —
+   and a card holding a form gets one step more air inside it. */
+
+.card {
+  border-radius: var(--r-4);
+}
+
+.card--pad {
+  padding: 18px;
+}
+
+/* the top row of a page: a title, a count, and whatever the page hangs off
+   it. It took no radius of its own, so it read as a flat strip against the
+   rounder panels under it. */
+.lb-top {
+  border-radius: var(--r-3);
+}
+
 /* ---------- the chat's three columns, once there is no room for three ----------
    community.css narrows both side columns on the way down. Below 760 the chat
    stacks instead, and the channels take the full width again — so the last

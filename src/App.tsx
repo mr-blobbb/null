@@ -36,6 +36,8 @@ import { publish } from "./lib/members";
 import { PAGES } from "./lib/nav";
 import { activeTab, go, openTab, targetFromHash, useTabs } from "./lib/tabs";
 import { overlayExtensions, useExt } from "./lib/extensions";
+import { useJamWatch } from "./lib/jam";
+import { watchLibrary } from "./lib/music";
 
 const VERSION = "1.0.0";
 const BUILT = "20260917";
@@ -216,6 +218,16 @@ export function App() {
     const id = window.setInterval(send, 60_000);
     return () => window.clearInterval(id);
   }, [me, eco]);
+
+  /* A jam runs from the shell, not from the music page: the point of listening
+     together is that you can wander off to the games and it keeps playing. */
+  useJamWatch(me.user);
+
+  /* And the kept music follows the account rather than the machine: sign in
+     and the shelf is merged, sign out and it stays where it is. */
+  useEffect(() => {
+    watchLibrary(me.user);
+  }, [me.user]);
 
   return (
     <div className="app">

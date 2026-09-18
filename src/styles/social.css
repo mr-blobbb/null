@@ -1,0 +1,250 @@
+/* ============================================================
+   NULL · social.css
+   The two things members do with each other: a gift, and a
+   jam. Both draw on the same glass as everything else.
+   ============================================================ */
+
+/* ---------- sending ---------- */
+
+.gf-say {
+  font-size: 11.5px;
+  color: var(--dim);
+  margin: 0 0 12px;
+  line-height: 1.55;
+}
+
+.gf-picks {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.gf-pick {
+  display: grid;
+  gap: 3px;
+  justify-items: start;
+  text-align: left;
+  padding: 10px 11px;
+  border: var(--bw) solid var(--line);
+  border-radius: var(--r-3);
+  background: var(--glass);
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.16s var(--ease), background 0.16s var(--ease), transform 0.16s var(--ease);
+}
+.gf-pick svg {
+  width: 16px;
+  height: 16px;
+  color: var(--dim);
+}
+.gf-pick b {
+  font-size: 12px;
+  font-weight: 600;
+}
+.gf-pick:hover {
+  border-color: var(--line-2);
+  transform: translateY(-1px);
+}
+.gf-pick.is-on {
+  border-color: var(--ac-1);
+  background: color-mix(in srgb, var(--ac-1) 12%, var(--glass));
+}
+.gf-pick.is-on svg {
+  color: var(--ac-1);
+}
+
+.gf-amount {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.gf-quick {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.gf-foot {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+
+/* ---------- the exchange ---------- */
+
+.gf-card {
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+  padding: 11px 12px;
+  margin: 6px 0;
+  border: var(--bw) solid var(--line);
+  border-radius: var(--r-3);
+  background: var(--glass);
+  backdrop-filter: blur(var(--blur));
+}
+.gf-card.is-waiting {
+  border-color: color-mix(in srgb, var(--ac-1) 45%, var(--line));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ac-1) 18%, transparent);
+}
+.gf-card--flat {
+  background: transparent;
+}
+
+.gf-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--r-2);
+  background: color-mix(in srgb, var(--ac-1) 14%, var(--bg-3));
+  color: var(--ac-1);
+}
+.gf-icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.gf-body {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.gf-what {
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.gf-who,
+.gf-state {
+  font-size: 10.5px;
+}
+.gf-note {
+  margin: 3px 0 0;
+  font-size: 11.5px;
+  color: var(--dim);
+  line-height: 1.5;
+}
+
+.gf-take {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+/* ---------- the pop-up ---------- */
+
+.gf-pop {
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+  text-align: center;
+  padding: 4px 0 2px;
+}
+.gf-pop-from {
+  font-size: 11px;
+}
+.gf-pop-what {
+  font-size: 20px;
+  letter-spacing: -0.02em;
+}
+.gf-pop .gf-foot {
+  justify-content: center;
+  width: 100%;
+}
+
+/* ---------- jams ---------- */
+
+.jm {
+  display: grid;
+  gap: 12px;
+}
+.jm-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.jm-code {
+  font-family: var(--mono);
+  font-size: 20px;
+  letter-spacing: 0.22em;
+  padding: 7px 13px;
+  border-radius: var(--r-2);
+  border: var(--bw) solid var(--line-2);
+  background: var(--glass);
+}
+.jm-say {
+  font-size: 11.5px;
+  color: var(--dim);
+  line-height: 1.55;
+  margin: 0;
+}
+.jm-live {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: var(--r-3);
+  border: var(--bw) solid var(--line);
+  background: var(--glass);
+}
+.jm-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--faint);
+  flex: none;
+}
+.jm-dot.is-on {
+  background: var(--ok);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 22%, transparent);
+}
+.jm-who {
+  font-size: 12px;
+  font-weight: 600;
+}
+.jm-track {
+  font-size: 11px;
+  color: var(--dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.jm-join {
+  display: flex;
+  gap: 8px;
+}
+.jm-join input {
+  flex: 1;
+  text-transform: uppercase;
+  font-family: var(--mono);
+  letter-spacing: 0.14em;
+}
+
+/* the jam button sits at the far end of the music page's title row */
+.mu-top-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* the badge on the music page's jam button, when somebody is listening */
+.mu-jam {
+  position: relative;
+}
+.mu-jam .jm-pip {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--ok);
+  box-shadow: 0 0 0 2px var(--bg);
+}
