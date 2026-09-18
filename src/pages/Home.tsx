@@ -5,7 +5,7 @@
 
    Nothing here moves except the cards, and they stop when you look at them. */
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Gamepad2,
   Globe,
@@ -18,6 +18,7 @@ import {
   ShoppingBag,
   SlidersHorizontal,
   Trash2,
+  Users,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -27,6 +28,9 @@ import { go, openDestination } from "../lib/tabs";
 import { Sheet } from "../components/Sheet";
 import { Tour, tourSeen } from "../components/Tour";
 import { prefs, usePalette } from "../lib/themes";
+import { api } from "../../convex/_generated/api";
+import { useQuery } from "convex/react";
+import { cloudOn } from "../lib/cloud";
 
 /* ---------- the lines ----------
    Every one of these has the same chance. There is no rare message, which
@@ -57,6 +61,7 @@ const LINES = [
   "made in...HTML?",
   "and for you sir?",
   "some things might take a bit to load, sorry :(",
+  "first time using react kinda nervous",
 ];
 
 /* ---------- the shortcuts ---------- */
@@ -274,6 +279,8 @@ export function Home() {
         <QuickLink icon={Grid3x3} label="All Apps" muted onClick={() => setAppsOpen(true)} fixed />
       </div>
 
+      <OnlineCount />
+
       <div className="hm-strip">
         <div className="hm-band">
           {band.map((c, i) => (
@@ -315,6 +322,22 @@ export function Home() {
 
       <AddSheet open={addOpen} onClose={() => setAddOpen(false)} onAdd={(s) => links.set({ list: [...list, s] })} />
     </div>
+  );
+}
+
+/** How many people are on NULL right now. The server counts anyone seen in
+ *  the last three minutes; with no server the count simply does not show,
+ *  because a made-up number would be worse than none. */
+function OnlineCount() {
+  const rows = useQuery(api.members.list, cloudOn() ? {} : "skip") as
+    | { online: boolean }[]
+    | undefined;
+  if (!rows) return null;
+  const online = rows.filter((r) => r.online).length;
+  return (
+    <p className="hm-online tiny faint">
+      <Users /> {online} {online === 1 ? "person" : "people"} online
+    </p>
   );
 }
 

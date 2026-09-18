@@ -78,13 +78,13 @@ const ok = (what: string, fine: boolean) => checks.push([what, fine]);
 
 /* ---------- the rooms, read-only ---------- */
 const chatOut = renderToStaticMarkup(<Chat /> as never);
-ok("chat draws a Rooms sidebar", chatOut.includes("ch-side") && chatOut.includes(">Rooms<"));
+ok("chat draws a Channels sidebar", chatOut.includes("ch-side") && chatOut.includes("Channels"));
 ok("chat lists the stored threads", chatOut.includes("high-scores") && chatOut.includes("general"));
 ok("chat draws the feed", chatOut.includes("ch-feed"));
 ok("a signed-out visitor gets a locked box, not an input", chatOut.includes("ch-locked") && !chatOut.includes("ch-input"));
-ok("signed out, the owner tools stay away", !chatOut.includes("ch-tools"));
+ok("signed out, the owner tools stay away", !chatOut.includes("ch-tool"));
 ok("the bot line is marked as the bot", chatOut.includes("is-bot") && chatOut.includes("say-badge"));
-ok("the bot's markup became real tags", chatOut.includes("<b>mr blob</b>") && chatOut.includes("<br/>"));
+ok("the bot's markup became real tags", chatOut.includes("<b>mr blob</b>") && chatOut.includes("md-p"));
 ok("the owner badge and shop tag both render", chatOut.includes("tagchip--owner") && chatOut.includes("tagchip"));
 ok("the author's picture is in the room", chatOut.includes('<img src="data:image/png;base64,iVBORw0KGgo='));
 ok("and the decoration they wear is drawn over it", chatOut.includes("art art--clip"));
@@ -94,8 +94,8 @@ ok("the room header is there", chatOut.includes("ch-hash") && chatOut.includes("
 /* ---------- the rooms, as the owner ---------- */
 account.set({ user: OWNER, name: OWNER, joined: Date.now() });
 const ownerOut = renderToStaticMarkup(<Chat /> as never);
-ok("signed in, the message box appears", ownerOut.includes("ch-input") && ownerOut.includes("ch-send"));
-ok("the owner gets a Clear button", ownerOut.includes("ch-tools") && ownerOut.includes("Clear this room"));
+ok("signed in, the message box appears", ownerOut.includes("ch-input") && ownerOut.includes("ch-tool"));
+ok("the owner gets a Clear button on a made room", ownerOut.includes("Clear this room"));
 ok("general cannot be deleted from the interface", !ownerOut.includes("Delete this thread"));
 account.set({ user: null });
 

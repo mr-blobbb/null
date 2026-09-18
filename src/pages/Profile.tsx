@@ -59,6 +59,9 @@ import { publish, unpublish } from "../lib/members";
 import { ShareCard } from "../components/ShareCard";
 import { itemsOf, useEcon } from "../lib/econ";
 import { isOwner, OWNER_TAG } from "../lib/owner";
+import { cloud, machine as myMachine } from "../lib/cloud";
+import { useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
 import { entries } from "../lib/catalog";
 import { openTab } from "../lib/tabs";
 import { Sheet } from "../components/Sheet";
@@ -78,6 +81,7 @@ function SignIn() {
   const [user, setUser] = useState("");
   const [pass, setPass] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [ageOk, setAgeOk] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -87,6 +91,10 @@ function SignIn() {
     if (mode === "in") {
       const r = signIn(user, pass);
       if (!r.ok) setError(r.error ?? "No.");
+      return;
+    }
+    if (!ageOk) {
+      setError("You have to be 14 or older to make an account.");
       return;
     }
     setBusy(true);
@@ -136,6 +144,17 @@ function SignIn() {
               placeholder="Confirm Password"
               onChange={(e) => setConfirm(e.target.value)}
             />
+          </label>
+        )}
+
+        {mode === "up" && (
+          <label className="pf-age check">
+            <input
+              type="checkbox"
+              checked={ageOk}
+              onChange={(e) => setAgeOk(e.target.checked)}
+            />
+            I am 14+ years of age
           </label>
         )}
 
@@ -197,6 +216,24 @@ function SignedIn() {
   useEffect(() => {
     void publish(me, eco);
   }, [me, eco]);
+
+  /* Presence lives on the member row too, so the members board and profile
+     cards can draw an online dot that means something. One write on mount and
+     one every minute while the page is open. */
+  const setSeen = useMutation(api.members.setActivity);
+  useEffect(() => {
+    if (!me.user) return;
+    const handle = (me.user as string).replace(/^@/, "");
+    const beat = () =>
+      void setSeen({
+        user: handle,
+        activity: JSON.stringify({ kind: "page", name: "Profile", detail: "" }),
+        visible: me.activityVisible,
+      });
+    beat();
+    const id = window.setInterval(beat, 60_000);
+    return () => window.clearInterval(id);
+  }, [me.user, me.activityVisible, setSeen]);
 
   const startEdit = () => {
     setDraft({ name: me.name, bio: me.bio });
@@ -590,6 +627,8 @@ function AccountCard() {
       <CardGradient />
       <NameStyleRow />
 
+      <ActivityVisibilityRow />
+
       <Row
         title="Log out"
         sub="Sign out of null on this device."
@@ -648,6 +687,42 @@ function Row({
         {note && <span className="pf-row-note tiny faint">{note}</span>}
       </div>
       <div className="pf-row-act">{action}</div>
+    </div>
+  );
+}
+
+/** Activity visibility: who sees your current music, game or page in real
+ *  time on your shared profile card. Stored locally and sent with every
+ *  presence beat, so the server draws the same answer the page does. */
+function ActivityVisibilityRow() {
+  const me = useAccount();
+  const value = me.activityVisible ?? "everyone";
+  const set = (v: "everyone" | "friends" | "nobody") => account.set({ activityVisible: v });
+  return (
+    <div className="pf-row">
+      <div className="pf-row-txt">
+        <b>Activity visibility</b>
+        <span className="pf-row-sub">
+          Who sees your current music, game, or page in real time. This will display on your shared profile.
+        </span>
+      </div>
+      <div className="pf-row-act">
+        <div className="row">
+          {([
+            ["everyone", "Everyone"],
+            ["friends", "Friends"],
+            ["nobody", "Nobody"],
+          ] as const).map(([id, label]) => (
+            <button
+              key={id}
+              className={`seg${value === id ? " is-on" : ""}`}
+              onClick={() => set(id)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

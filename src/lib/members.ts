@@ -15,7 +15,7 @@
 
 import { createStore, useStore } from "./store";
 import { isOwner } from "./owner";
-import { cloud } from "./cloud";
+import { cloud, machine as myMachine } from "./cloud";
 import { api } from "../../convex/_generated/api";
 import type { Account, NameStyle } from "./account";
 import type { Econ } from "./econ";
@@ -108,6 +108,7 @@ export async function publish(me: Account, eco: Econ) {
       tags: card.wearing.tags,
       coins: card.coins,
       owner: card.owner,
+      machine: myMachine,
     });
   } catch {
     /* offline, or the deployment is having a day. The local card stands. */

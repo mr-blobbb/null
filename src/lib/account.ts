@@ -40,6 +40,8 @@ export type Account = {
   lastUserChange: number;
   favorites: string[];
   recent: Recent[];
+  /** who may see what this person is doing right now, on their card */
+  activityVisible: "everyone" | "friends" | "nobody";
 };
 
 export const BANNER_DEFAULT =
@@ -90,6 +92,7 @@ const EMPTY: Account = {
   lastUserChange: 0,
   favorites: [],
   recent: [],
+  activityVisible: "everyone",
 };
 
 export const account = createStore<Account>("account", EMPTY);
