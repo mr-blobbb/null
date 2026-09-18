@@ -86,6 +86,17 @@ export function Player({ kind, id }: { kind: string; id: string }) {
   );
 }
 
+/** A blob has no directory, so `scripts/game.js` inside a copied page has
+ *  nowhere to resolve to. Pointing the page back at the folder it came from
+ *  fixes every relative asset it asks for; the ones that are not in the stash
+ *  are missing either way, which is the stash's business, not ours. */
+function rebased(html: string, file: string): string {
+  const dir = file.slice(0, file.lastIndexOf("/") + 1);
+  const base = `<base href="${dir}">`;
+  if (/<head[^>]*>/i.test(html)) return html.replace(/<head[^>]*>/i, (m) => m + base);
+  return base + html;
+}
+
 /** A discovered game. Frame what allows framing; fetch the rest. */
 function RemoteFrame({ file, name }: { file: string; name: string }) {
   const [blob, setBlob] = useState<string | null>(null);
@@ -101,7 +112,7 @@ function RemoteFrame({ file, name }: { file: string; name: string }) {
         if (!res.ok) throw new Error(`it answered ${res.status}`);
         const kind = res.headers.get("content-type") ?? "text/html";
         const html = await res.text();
-        url = URL.createObjectURL(new Blob([html], { type: kind }));
+        url = URL.createObjectURL(new Blob([rebased(html, file)], { type: kind }));
         if (alive) setBlob(url);
       } catch (e) {
         if (alive) setProblem((e as Error).message);
