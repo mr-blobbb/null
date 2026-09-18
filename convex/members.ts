@@ -15,6 +15,7 @@ import { v } from "convex/values";
 
 import { mutation, query } from "./_generated/server";
 import { screen } from "./filter";
+import { logAction } from "./audit";
 
 const LINGER = 1000 * 60 * 60 * 24 * 400;
 const BUDGET = 900_000;
@@ -95,6 +96,8 @@ export const list = query({
         activityVisible: r.activityVisible ?? "everyone",
         views: r.views ?? 0,
         banned: r.banned === true,
+        /** what they are on, when they agreed to wear the chip */
+        device: r.device ?? null,
       })) as any[];
   },
 });
@@ -152,6 +155,11 @@ export const card = query({
       activity: showActivity,
       views: row.views ?? 0,
       banned: row.banned === true,
+      device: row.device ?? null,
+      /** their standing, so a card can offer the appeal form without asking
+       *  a second question */
+      banReason: row.banReason ?? null,
+      machineBanned: row.machineBanned === true,
     };
   },
 });
@@ -200,6 +208,8 @@ export const put = mutation({
     coins: v.number(),
     owner: v.boolean(),
     machine: v.optional(v.string()),
+    /** what they signed in on, as the chip on their card prints it */
+    device: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const user = args.user.trim().toLowerCase();
@@ -246,6 +256,9 @@ export const put = mutation({
       seen: Date.now(),
       machines,
     };
+    /* a browser that does not know what it is running on keeps the answer it
+       gave last time, rather than being relabelled "unknown" by every write */
+    if (args.device) (row as Record<string, unknown>).device = args.device.slice(0, 40);
     if (hit) {
       await ctx.db.patch(hit._id, { ...row, joined: hit.joined });
       return hit._id;
@@ -278,13 +291,23 @@ export const setRoles = mutation({
     if (!(await isOwnerCheck(ctx, by, claimed))) throw new Error("only the owner can grant roles");
     const row = await memberOf(ctx, user);
     if (!row) throw new Error("no member called that");
-    const had = row.roles ?? [];
+    const had: string[] = row.roles ?? [];
     /* a role from an older list that this person already holds stays: an owner
        granting ADMIN should not silently cost somebody their MOD */
     const clean = [...new Set(roles.map((r) => r.trim().toLowerCase()))].filter(
       (r) => ROLES.includes(r) || had.includes(r),
     );
     await ctx.db.patch(row._id, { roles: clean });
+    const gained = clean.filter((r) => !had.includes(r));
+    const lost = had.filter((r) => !clean.includes(r));
+    await logAction(ctx, {
+      by,
+      action: "roles",
+      user,
+      detail: [gained.length ? `granted ${gained.join(", ")}` : "", lost.length ? `removed ${lost.join(", ")}` : ""]
+        .filter(Boolean)
+        .join("; ") || "no change",
+    });
     return clean;
   },
 });
@@ -298,6 +321,7 @@ export const setVerified = mutation({
     const row = await memberOf(ctx, user);
     if (!row) throw new Error("no member called that");
     await ctx.db.patch(row._id, { verified: on });
+    await logAction(ctx, { by, action: "verified", user, detail: on ? "gave the circle" : "took the circle back" });
     return on;
   },
 });
@@ -342,6 +366,12 @@ export const ban = mutation({
       await ctx.db.insert("bans", { user: row.user, kind, reason: reason.slice(0, 300), by: by.trim().toLowerCase(), at });
       await ctx.db.patch(row._id, { banned: true, banReason: reason.slice(0, 300) });
     }
+    await logAction(ctx, {
+      by,
+      action: "ban",
+      user,
+      detail: `${kind === "machine" ? "browser" : "account"} ban — ${reason.slice(0, 200)}`,
+    });
     return at;
   },
 });
@@ -356,6 +386,7 @@ export const unban = mutation({
       await ctx.db.delete(b._id);
     }
     await ctx.db.patch(row._id, { banned: false, machineBanned: false, banReason: undefined });
+    await logAction(ctx, { by, action: "unban", user, detail: "bans lifted" });
   },
 });
 
@@ -410,6 +441,8 @@ export const handleReport = mutation({
     if (!(await isStaff(ctx, by, claimed))) throw new Error("only staff can handle reports");
     const r = await ctx.db.normalizeId("reports", id as never);
     if (r) await ctx.db.patch(r, { handled: true });
+    const doc = r ? await ctx.db.get(r) : null;
+    if (doc) await logAction(ctx, { by, action: "report-handled", user: doc.user, detail: doc.reason.slice(0, 200) });
   },
 });
 

@@ -52,6 +52,10 @@ export type Account = {
   recent: Recent[];
   /** who may see what this person is doing right now, on their card */
   activityVisible: "everyone" | "friends" | "nobody";
+  /** what this browser is, as src/lib/device.ts reads it. Only ever sent to
+   *  the directory when `deviceVisible` is on */
+  device: string | null;
+  deviceVisible: boolean;
 };
 
 export const BANNER_DEFAULT =
@@ -103,6 +107,8 @@ const EMPTY: Account = {
   favorites: [],
   recent: [],
   activityVisible: "everyone",
+  device: null,
+  deviceVisible: true,
 };
 
 export const account = createStore<Account>("account", EMPTY);

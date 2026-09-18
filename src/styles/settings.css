@@ -293,3 +293,12 @@
 .keyrow:hover {
   background: var(--bg-4);
 }
+
+/* a row of small choices, for settings that are one of four things rather
+   than on or off (the background layer, mostly) */
+.segset {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}

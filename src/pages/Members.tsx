@@ -44,6 +44,7 @@ import { RoleChip, VerifiedMark } from "../components/RoleMark";
 import { useAccount } from "../lib/account";
 import { machine } from "../lib/cloud";
 import { REPORT_REASONS } from "../lib/staff";
+import { AppealQueue, AuditLog } from "../components/Appeals";
 
 type CloudMember = Member & {
   roles: string[];
@@ -94,6 +95,7 @@ function Cloud() {
       activityVisible: r.activityVisible ?? "everyone",
       coins: r.coins,
       seen: 0,
+      device: r.device ?? null,
     }));
     const mine = (local as CloudMember[]).filter((m) => !seen.has(m.user.toLowerCase()));
     return [...remote, ...mine].sort((a, b) => {
@@ -291,6 +293,21 @@ function Board({
         </div>
       )}
 
+      {/* the moderation desk, for staff only. The two panels are gated on the
+          server as well — this only decides whether the page draws them */}
+      {staff && (
+        <>
+          <h2 className="pf-h">Appeals</h2>
+          <section className="card card--pad">
+            <AppealQueue />
+          </section>
+          <h2 className="pf-h">Staff log</h2>
+          <section className="card card--pad">
+            <AuditLog />
+          </section>
+        </>
+      )}
+
       {open && (
         <Sheet open onClose={() => setOpen(null)} width={480} title="">
           <MemberCardFull user={open} me={me} list={list} staff={staff} owner={owner} />
@@ -456,6 +473,8 @@ function MemberCardFull({
           <Coins /> {(m.coins ?? 0).toLocaleString()}
         </span>
         <span className="tiny faint">{m.views ?? 0} views</span>
+        {/* what they signed in on, when they left the chip on */}
+        {m.device && <span className="dev-chip">{m.device}</span>}
         {m.banned && <span className="tagchip" style={{ backgroundColor: "#ff5d5d", color: "#fff" }}>BANNED</span>}
       </div>
 

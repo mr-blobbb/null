@@ -10,6 +10,7 @@ import {
   Clapperboard,
   Compass,
   Gamepad2,
+  Handshake,
   MessageCircle,
   Music,
   Globe,
@@ -42,6 +43,7 @@ export type PageId =
   | "settings"
   | "users"
   | "rich"
+  | "partners"
   | "missing"
   | "player";
 
@@ -181,6 +183,15 @@ export const PAGES: Record<PageId, Page> = {
     blurb: "Everybody who has signed in here, owner first.",
     keywords: "members users people profiles community accounts who joined",
   },
+  partners: {
+    id: "partners",
+    name: "Partners",
+    address: "null://partners",
+    route: "/partners",
+    icon: Handshake,
+    blurb: "Who NULL is built on: the shelves, the engines, and the badges.",
+    keywords: "partners badges credits thanks friends shelves sponsors",
+  },
   rich: {
     id: "rich",
     name: "Richest",
@@ -229,7 +240,15 @@ export const PAGES: Record<PageId, Page> = {
  *  The bottom group is read upward from the last door, so the two that are
  *  about people sit together: members just above the profile. */
 export const RAIL_TOP: PageId[] = ["home", "games", "apps", "ai", "chat", "movies", "music", "shop"];
-export const RAIL_BOTTOM: PageId[] = ["rich", "users", "profile", "changelog", "extensions", "settings"];
+export const RAIL_BOTTOM: PageId[] = [
+  "rich",
+  "users",
+  "partners",
+  "profile",
+  "changelog",
+  "extensions",
+  "settings",
+];
 
 /** Everything the All Apps sheet lists, in reading order. */
 export const ALL_PAGES: PageId[] = [
@@ -244,6 +263,7 @@ export const ALL_PAGES: PageId[] = [
   "shop",
   "rich",
   "users",
+  "partners",
   "profile",
   "changelog",
   "extensions",

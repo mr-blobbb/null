@@ -1,0 +1,100 @@
+/* ============================================================
+   NULL · fonts.css
+   The display faces, served from NULL's own origin.
+
+   These six hundred kilobytes used to come from fonts.googleapis.com and
+   fonts.gstatic.com, which was the wrong shape for this site twice over: a
+   school filter that blocks Google's font hosts takes every custom name on
+   every profile with it, and a page that is supposed to work offline
+   should not go quiet the moment the network does.
+
+   Nine files, latin subset only — the ranges a display name actually uses —
+   so the whole set is a quarter of a megabyte in the build rather than four.
+   Only a profile's own name ever asks for any of it, and the browser will
+   not fetch a face until something on screen needs it.
+
+   The woff2 files live in public/fonts/. Regenerating them means asking
+   Google for the same families with a modern user agent and keeping the
+   latin block of each. */
+
+@font-face {
+  font-family: "Bungee";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/bungee.woff2") format("woff2");
+}
+
+/* one variable file carries the whole 400–700 range */
+@font-face {
+  font-family: "Caveat";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("/fonts/caveat.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Gochi Hand";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/gochi.woff2") format("woff2");
+}
+
+/* Nunito is the rounded face the wordmark and --rounded fall back to */
+@font-face {
+  font-family: "Nunito";
+  font-style: normal;
+  font-weight: 600 800;
+  font-display: swap;
+  src: url("/fonts/nunito.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Pacifico";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/pacifico.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Playfair Display";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/playfair.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Press Start 2P";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/pressstart.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Silkscreen";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/silkscreen.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Space Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/spacemono.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Space Mono";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/spacemono-bold.woff2") format("woff2");
+}

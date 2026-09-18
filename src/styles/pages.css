@@ -88,6 +88,55 @@
   flex-wrap: wrap;
   max-width: 100%;
 }
+/* the row of doors out of NULL. Deliberately smaller and quieter than the
+   shortcuts above it: those are pages, these are other people's sites. */
+.hm-serv {
+  flex: none;
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  max-width: min(100%, 760px);
+}
+.svc {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 11px;
+  border: var(--bw) solid var(--line);
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--bg-2) 72%, transparent);
+  backdrop-filter: blur(9px);
+  color: var(--dim);
+  font-size: 12px;
+  white-space: nowrap;
+  transition: color 0.14s ease, border-color 0.14s ease, background 0.14s ease;
+}
+.svc svg {
+  width: 13px;
+  height: 13px;
+}
+.svc:hover {
+  color: var(--text);
+  border-color: var(--line-2);
+  background: var(--bg-4);
+}
+@media (max-width: 620px) {
+  .hm-serv {
+    gap: 5px;
+    margin-top: 10px;
+    max-width: 100%;
+  }
+  .svc {
+    height: 26px;
+    padding: 0 9px;
+    font-size: 11.5px;
+  }
+}
+
 /* A short window used to drop the band of cards, which meant the one thing on
    the front door that is not a control disappeared on a normal laptop screen
    and only came back in fullscreen. It stays now: everything above it steps

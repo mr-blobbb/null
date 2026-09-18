@@ -9,6 +9,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { Ambient } from "./components/Ambient";
 import { Chrome } from "./components/Chrome";
 import { Rail } from "./components/Rail";
 import { SettingsSheet } from "./components/SettingsSheet";
@@ -19,6 +20,7 @@ import { Proxies } from "./pages/Proxies";
 import { Shop } from "./pages/Shop";
 import { Members } from "./pages/Members";
 import { Richest } from "./pages/Richest";
+import { Partners } from "./pages/Partners";
 import { Ai } from "./pages/Ai";
 import { Chat } from "./pages/Chat";
 import { Music } from "./pages/Music";
@@ -31,8 +33,10 @@ import { applyPalette, applyPerf, prefs, usePalette } from "./lib/themes";
 import { applyCloak, cloakFor } from "./lib/cloak";
 import { useStore } from "./lib/store";
 import { IDLE_MS, tick, useEcon } from "./lib/econ";
-import { useAccount } from "./lib/account";
+import { account, useAccount } from "./lib/account";
 import { publish } from "./lib/members";
+import { detectDevice } from "./lib/device";
+import { usePulse } from "./lib/friends";
 import { PAGES } from "./lib/nav";
 import { activeTab, go, openTab, targetFromHash, useTabs } from "./lib/tabs";
 import { overlayExtensions, useExt } from "./lib/extensions";
@@ -182,6 +186,8 @@ export function App() {
         return <Chat />;
       case "rich":
         return <Richest />;
+      case "partners":
+        return <Partners />;
       case "users":
         return <Members />;
       case "profile":
@@ -207,6 +213,19 @@ export function App() {
   const me = useAccount();
   const eco = useEcon();
   const lastSent = useRef(0);
+
+  /* What this browser is, worked out once and kept on the account. It is only
+     ever shown when the member leaves the chip on, and it is what their card
+     prints instead of "unknown device" — see src/lib/device.ts. */
+  useEffect(() => {
+    if (!me.user) return;
+    const label = detectDevice().label;
+    if (account.get().device !== label) account.set({ device: label });
+  }, [me.user]);
+
+  /* the presence beat: this page says "still me" every forty-five seconds,
+     which is what draws the green dot beside a name */
+  usePulse(me.user);
   useEffect(() => {
     if (!me.user) return;
     const send = () => {
@@ -235,6 +254,8 @@ export function App() {
       <div className="work">
         <Chrome onSettings={() => setSettingsOpen(true)} />
         <div className="view">
+          {/* the fog sits under the dot grid, which sits under the page */}
+          <Ambient />
           <div className="dots" aria-hidden="true" />
           {/* Three pages own the whole window rather than scrolling inside
               it: the front door, the chat rooms and the assistant. The shell

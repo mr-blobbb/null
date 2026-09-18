@@ -168,6 +168,9 @@ function draw(m: any, member: any) {
     bot: m.bot === true,
     image: m.image ?? null,
     replyTo: m.replyTo ?? null,
+    /** the line this one is quoting, kept whole on the row it was quoted
+     *  from, so a deleted original leaves the quote standing */
+    quote: m.quote ?? null,
     reactions: reactsOf(m),
     poll: m.poll ?? null,
     mentions: m.mentions ?? [],
@@ -240,6 +243,12 @@ export const send = mutation({
     thread: v.optional(v.string()),
     image: v.optional(v.string()),
     replyTo: v.optional(v.string()),
+    /** a quotation of another line, as its own copy of the words and the
+     *  name: a quote is a thing you said, so it has to survive the original
+     *  being tidied away */
+    quote: v.optional(
+      v.object({ user: v.string(), name: v.string(), body: v.string(), at: v.number() }),
+    ),
     /** a /vote line the client read out of the body. Only staff may send one,
      *  and the shape is checked here rather than trusted. */
     poll: v.optional(
@@ -303,6 +312,16 @@ export const send = mutation({
       thread: slug,
       image: args.image ? args.image.slice(0, 300_000) : undefined,
       replyTo: args.replyTo ?? undefined,
+      /* screened like any other words, and clipped: a quote of a very long
+         line should be a quotation, not a second copy of it */
+      quote: args.quote
+        ? {
+            user: args.quote.user.slice(0, 24),
+            name: args.quote.name.slice(0, 40),
+            body: screen(args.quote.body, staff).clean.slice(0, 600),
+            at: args.quote.at,
+          }
+        : undefined,
       poll: poll ?? undefined,
       reactions: {},
       reactedBy: [],

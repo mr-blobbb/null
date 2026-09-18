@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { ConvexProvider } from "convex/react";
 
+import "./styles/fonts.css";
 import "./styles/tokens.css";
 import "./styles/shell.css";
 import "./styles/pages.css";
@@ -11,6 +12,9 @@ import "./styles/settings.css";
 import "./styles/browser.css";
 import "./styles/music.css";
 import "./styles/community.css";
+import "./styles/voice.css";
+import "./styles/saves.css";
+import "./styles/account.css";
 /* the owner's staff-role control, which the chat card and the members board
    both wear */
 import "./styles/staff.css";

@@ -55,6 +55,7 @@ function Cloud() {
       owner: r.owner || isOwner(r.user),
       coins: r.coins,
       seen: r.seen,
+      device: r.device ?? null,
     }));
     return [...remote, ...local.filter((m) => !seen.has(m.user.toLowerCase()))];
   }, [rows, local]);

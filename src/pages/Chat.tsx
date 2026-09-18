@@ -26,20 +26,31 @@ import {
   CircleSlash,
   Copy,
   Crown,
+  Eye,
+  EyeOff,
   Film,
   Flag,
   Hash,
+  HeadphoneOff,
+  Headphones,
   Image as ImageIcon,
   Megaphone,
   MessageCircle,
+  Mic,
+  MicOff,
   Music2,
+  PhoneOff,
+  Quote,
   Reply,
   Search,
   Send,
   Smile,
   Trash2,
+  UserCheck,
+  UserMinus,
   UserPlus,
   Users,
+  VenetianMask,
   Volume2,
   X,
 } from "lucide-react";
@@ -85,6 +96,21 @@ import {
   trackLine,
 } from "../components/LineParts";
 import { useMusic, type Track } from "../lib/music";
+/* the voice rooms, the friends list, and the character map: three features
+   that all land in a room, which is why they are wired in here */
+import { useVoice } from "../lib/voice";
+import {
+  acceptFriend,
+  askFriend,
+  declineFriend,
+  dropFriend,
+  isHere,
+  lastSeen,
+  useGraph,
+  useRelation,
+  type Brief,
+} from "../lib/friends";
+import { ob, obscure, readAs, useOb } from "../lib/ob";
 
 type Row = {
   id: string;
@@ -102,6 +128,8 @@ type Row = {
   bot: boolean;
   image: string | null;
   replyTo: string | null;
+  /** a line this one is quoting, with the words kept on the row itself */
+  quote: { user: string; name: string; body: string; at: number } | null;
   reactions: { e: string; by: string[] }[];
   poll: Poll | null;
   mentions: string[];
@@ -208,6 +236,17 @@ function Rooms() {
   const myRow = (members ?? []).find((m) => m.user === handle);
   const staff = iAmOwner || (myRow?.roles?.length ?? 0) > 0;
 
+  /* A voice channel is joined by asking for it, not by opening its tab: the
+     microphone prompt should follow a click, and staying in the room while
+     you wander off to another channel is half of what a voice room is for. */
+  const [voiceWant, setVoiceWant] = useState<string | null>(null);
+  const voice = useVoice(me.user ? { user: handle, name: me.name || handle } : null, voiceWant);
+  const voiceErr = voice.error;
+  useEffect(() => {
+    if (!voiceWant || voice.joined || voice.joining || voiceErr) return;
+    voice.join();
+  }, [voiceWant, voice.joined, voice.joining, voiceErr, voice]);
+
   return (
     <div className="page page--flush ch">
       {/* ---------- channels ---------- */}
@@ -251,6 +290,23 @@ function Rooms() {
           </label>
           {iAmOwner && here && !here.fixed && <ClearRoom slug={here.slug} me={handle} />}
         </header>
+
+        {here?.kind === "voice" && (
+          <VoiceStage
+            slug={here.slug}
+            voice={voice}
+            me={handle}
+            onProfile={setProfileFor}
+            onJoin={(s) => {
+              setSlug(s);
+              setVoiceWant(s);
+            }}
+            onLeave={() => {
+              setVoiceWant(null);
+              voice.leave();
+            }}
+          />
+        )}
 
         <Feed
           slug={here?.slug ?? slug}
@@ -321,6 +377,7 @@ function RoomList({
     >
       <ChannelIcon ch={c} />
       <span>{c.name}</span>
+      {c.kind === "voice" && <VoiceCount slug={c.slug} />}
       {c.gate === "staff" && <i className="ch-lock" title="Staff post here" />}
     </button>
   );
@@ -352,6 +409,120 @@ function RoomList({
       {shelf("social", "Social", <MessageCircle />, social)}
       {made.length > 0 && shelf("made", "Rooms", <Hash />, made)}
     </nav>
+  );
+}
+
+/** How many people are sitting in a voice room, drawn beside its name even
+ *  when you are not in it: the point of a channel list is knowing where
+ *  everybody is. */
+function VoiceCount({ slug }: { slug: string }) {
+  const rows = useQuery(api.voice.roster, { thread: slug }) as { user: string }[] | undefined;
+  if (!rows?.length) return null;
+  return (
+    <i className="ch-voice-n" title={`${rows.length} in the room`}>
+      <Headphones />
+      {rows.length}
+    </i>
+  );
+}
+
+/* ============================================================
+   the voice room
+   ============================================================ */
+
+/** A voice channel, drawn as the thing it is: a row of people, each with a
+ *  ring that lights up when they talk, and four controls.
+ *
+ *  It renders nothing at all when the room is empty and you are not in it,
+ *  because an empty stage is not information. Once anybody is there — or once
+ *  you are — it sits above the room's text. */
+function VoiceStage({
+  slug,
+  voice,
+  onJoin,
+  onLeave,
+  me,
+  onProfile,
+}: {
+  slug: string;
+  voice: ReturnType<typeof useVoice>;
+  onJoin: (slug: string) => void;
+  onLeave: () => void;
+  me: string;
+  onProfile: (user: string) => void;
+}) {
+  const others = voice.peers.filter((p) => p.user !== me);
+  const roomIsLive = voice.joined || others.length > 0;
+
+  return (
+    <div className={`ch-voice${voice.joined ? " is-in" : ""}`}>
+      <div className="ch-voice-head">
+        <Headphones />
+        <b>#{slug}</b>
+        <span className="tiny faint">
+          {voice.joined
+            ? `in the room · ${voice.live} connected${voice.live < others.length ? " — some have not answered" : ""}`
+            : others.length
+              ? `${others.length} listening`
+              : "nobody is in here"}
+        </span>
+        {voice.joined ? (
+          <button className="btn btn--bad btn--sm" onClick={onLeave}>
+            <PhoneOff /> Leave
+          </button>
+        ) : (
+          <button className="btn btn--fill btn--sm" onClick={() => onJoin(slug)} disabled={voice.joining}>
+            <Mic /> {voice.joining ? "Joining…" : "Join voice"}
+          </button>
+        )}
+      </div>
+
+      {roomIsLive && (
+        <div className="ch-voice-row">
+          {(voice.joined ? voice.peers : others).map((p) => {
+            const talking = (voice.level[p.user] ?? 0) > 0.06;
+            return (
+              <button
+                key={p.user}
+                className={`ch-vp${talking ? " is-talking" : ""}${p.user === me ? " is-me" : ""}`}
+                onClick={() => onProfile(p.user)}
+                title={`@${p.user}${p.muted ? " — muted" : ""}${p.deaf ? " — headphones off" : ""}`}
+              >
+                <span className="ch-vp-ring" style={{ opacity: talking ? 1 : 0.15 }} />
+                <span className="ch-vp-name">{p.name || p.user}</span>
+                {p.muted && <i className="ch-vp-mute"><MicOff /></i>}
+                {p.deaf && <i className="ch-vp-mute"><HeadphoneOff /></i>}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {voice.joined && (
+        <div className="ch-voice-ctl">
+          <button
+            className={`ch-tool${voice.muted ? " is-on" : ""}`}
+            title={voice.muted ? "Unmute" : "Mute"}
+            onClick={() => voice.setMuted(!voice.muted)}
+          >
+            {voice.muted ? <MicOff /> : <Mic />}
+          </button>
+          <button
+            className={`ch-tool${voice.deaf ? " is-on" : ""}`}
+            title={voice.deaf ? "Hear the room again" : "Deafen"}
+            onClick={() => voice.setDeaf(!voice.deaf)}
+          >
+            {voice.deaf ? <HeadphoneOff /> : <Headphones />}
+          </button>
+          <span className="tiny faint">
+            Peer to peer, browser to browser. Nothing is recorded, and nothing goes through a
+            server but the handshake.
+          </span>
+        </div>
+      )}
+
+      {voice.error && <p className="ch-voice-why tiny faint">{voice.error}</p>}
+    </div>
   );
 }
 
@@ -402,6 +573,11 @@ function MemberRail({
         <span>Members</span>
         <b className="tiny faint">{all.length}</b>
       </div>
+
+      {/* friends first, because a list of everybody is a list of strangers
+          and the people you actually talk to should not be a search */}
+      <FriendBlock me={me} onOpen={onOpen} />
+
       <div className="ch-mgroup">
         {all.length === 0 ? (
           <p className="ch-empty tiny faint">Nobody has signed in yet.</p>
@@ -415,6 +591,140 @@ function MemberRail({
         )}
       </div>
     </aside>
+  );
+}
+
+/** The friends half of the rail: who is here, who is away, and the requests
+ *  waiting on you. It sits above the directory because a friends list is not
+ *  a filter over the directory — it is a different thing entirely. */
+function FriendBlock({ me, onOpen }: { me: string; onOpen: (user: string) => void }) {
+  const graph = useGraph(me || null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
+  const [who, setWho] = useState("");
+  const here = graph.friends.filter((f) => isHere(f.seen));
+  const away = graph.friends.filter((f) => !isHere(f.seen));
+
+  const ask = async () => {
+    const name = who.trim().replace(/^@/, "").toLowerCase();
+    if (!name || name === me) return;
+    setWho("");
+    setAdding(false);
+    await askFriend(me, name);
+  };
+
+  /* nothing to say, and nobody to say it to: the whole block stays out */
+  if (!graph.friends.length && !graph.incoming.length) return null;
+
+  const act = async (fn: (a: string, b: string) => Promise<unknown>, user: string) => {
+    setBusy(user);
+    await fn(me, user);
+    setBusy(null);
+  };
+
+  const row = (f: Brief) => (
+    <div className="ch-friend" key={f.user}>
+      <button className="ch-friend-open" onClick={() => onOpen(f.user)} title={`@${f.user}`}>
+        <span className="ch-friend-pic">
+          {f.pfp ? <img src={f.pfp} alt="" /> : <NullFace />}
+          <i className={`ch-dot${isHere(f.seen) ? " is-on" : ""}`} aria-hidden="true" />
+        </span>
+        <span className="ch-friend-txt">
+          <b style={nameStyleCss(parseStyle(f.nameStyle))}>{f.name || f.user}</b>
+          <em className="tiny faint">{isHere(f.seen) ? "here now" : lastSeen(f.seen)}</em>
+        </span>
+      </button>
+      <button
+        className="ch-friend-x"
+        title="Unfriend"
+        disabled={busy === f.user}
+        onClick={() => void act(dropFriend, f.user)}
+      >
+        <UserMinus />
+      </button>
+    </div>
+  );
+
+  return (
+    <div className="ch-mgroup ch-fblock">
+      {graph.incoming.length > 0 && (
+        <>
+          <span className="ch-mhead">
+            REQUESTS <b>— {graph.incoming.length}</b>
+          </span>
+          {graph.incoming.map((f) => (
+            <div className="ch-friend is-ask" key={f.user}>
+              <span className="ch-friend-pic">
+                {f.pfp ? <img src={f.pfp} alt="" /> : <NullFace />}
+                <i className="ch-dot" aria-hidden="true" />
+              </span>
+              <span className="ch-friend-txt">
+                <b>{f.name || f.user}</b>
+                <em className="tiny faint">wants to be friends</em>
+              </span>
+              <button
+                className="ch-friend-ok"
+                title="Accept"
+                disabled={busy === f.user}
+                onClick={() => void act(acceptFriend, f.user)}
+              >
+                <UserCheck />
+              </button>
+              <button
+                className="ch-friend-x"
+                title="Not now"
+                disabled={busy === f.user}
+                onClick={() => void act(declineFriend, f.user)}
+              >
+                <X />
+              </button>
+            </div>
+          ))}
+        </>
+      )}
+
+      {graph.friends.length > 0 && (
+        <>
+          <span className="ch-mhead">
+            FRIENDS <b>— {graph.friends.length}</b>
+          </span>
+          {[...here, ...away].map(row)}
+        </>
+      )}
+
+      {graph.outgoing.length > 0 && (
+        <p className="ch-friend-wait tiny faint">
+          {graph.outgoing.length} request{graph.outgoing.length === 1 ? "" : "s"} waiting on somebody
+          else to answer.
+        </p>
+      )}
+
+      {/* asking somebody is by handle, because a handle is what NULL has:
+          there is no address book here to search */}
+      {adding ? (
+        <div className="ac-add">
+          <input
+            className="fld"
+            value={who}
+            spellCheck={false}
+            autoComplete="off"
+            placeholder="@handle"
+            onChange={(e) => setWho(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") void ask();
+              if (e.key === "Escape") setAdding(false);
+            }}
+          />
+          <button className="btn btn--sm" disabled={!who.trim()} onClick={() => void ask()}>
+            <UserPlus />
+          </button>
+        </div>
+      ) : (
+        <button className="ch-friend-add tiny faint" onClick={() => setAdding(true)}>
+          <UserPlus /> Add somebody by @handle
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -519,6 +829,10 @@ function Feed({
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [reply, setReply] = useState<Row | null>(null);
+  /** the line being quoted: a copy of the words, sent with the message, so a
+   *  deleted original does not leave a hole where the quote was */
+  const [quote, setQuote] = useState<Row | null>(null);
+  const mask = useOb();
   const [reactFor, setReactFor] = useState<string | null>(null);
   const [reportFor, setReportFor] = useState<Row | null>(null);
   const [tool, setTool] = useState<null | "gif" | "music" | "emoji">(null);
@@ -637,6 +951,7 @@ function Feed({
     setDraft("");
     setNote(null);
     setReply(null);
+    setQuote(null);
     setReactFor(null);
     setTool(null);
     setGifQ("");
@@ -665,22 +980,28 @@ function Feed({
     setBusy(true);
     setNote(null);
     try {
+      /* the character map, if it is on: what leaves this browser is written in
+         twins, and what the reader sees is decided on their side */
+      const outgoing = mask.send ? obscure(text) : text;
       const res = (await send({
         user: handle,
         name: me.name || handle,
-        body: text,
+        body: outgoing,
         owner: isOwner(me.user),
         tags: tagIds(),
         machine,
         thread: slug,
         image: image ?? undefined,
         replyTo: reply?.id,
+        quote: quote ? { user: quote.user, name: quote.name, body: quote.body, at: quote.at } : undefined,
         poll: vote.poll ?? undefined,
       })) as { caught?: string[] | null } | null;
       setDraft("");
       setImage(null);
       setReply(null);
-      if (res && res.caught?.length) setNote("Some of that was starred out.");
+      setQuote(null);
+      if (mask.send) setNote("Sent through the character map. It reads as letters over here.");
+      else if (res && res.caught?.length) setNote("Some of that was starred out.");
     } catch (e) {
       setNote((e as Error).message.replace(/^.*?Error: /, ""));
     } finally {
@@ -762,6 +1083,7 @@ function Feed({
               reactor={reactFor === m.id}
               onProfile={onProfile}
               onReply={() => setReply(m)}
+              onQuote={() => setQuote(m)}
               onReact={() => setReactFor(reactFor === m.id ? null : m.id)}
               onPickEmoji={(e) => react(m.id, e)}
               onVote={(option) => pick(m.id, option)}
@@ -819,6 +1141,19 @@ function Feed({
           </div>
         )}
 
+        {quote && (
+          <div className="ch-quotebar">
+            <Quote />
+            <span>
+              quoting <b>{quote.name}</b>
+              <i className="ch-quotebar-txt">{quote.body.slice(0, 90)}</i>
+            </span>
+            <button className="ch-icon" onClick={() => setQuote(null)} aria-label="Cancel quote">
+              <X />
+            </button>
+          </div>
+        )}
+
         {/* the line is not sent as text — it becomes the box under the
             message — so say what it turned into before it goes */}
         {vote.poll && (
@@ -862,6 +1197,19 @@ function Feed({
                 >
                   <Smile />
                 </button>
+                {/* the character map: what you send leaves written in twins,
+                    which is a thing to know you are doing */}
+                <button
+                  className={`ch-tool${mask.send ? " is-on" : ""}`}
+                  title={
+                    mask.send
+                      ? "The character map is on: this room receives it in twins"
+                      : "Send through the character map"
+                  }
+                  onClick={() => ob.set({ send: !mask.send })}
+                >
+                  <VenetianMask />
+                </button>
               </div>
 
               <input
@@ -893,7 +1241,9 @@ function Feed({
                 className="ch-input"
                 value={draft}
                 rows={1}
-                placeholder={`Message #${slug}`}
+                placeholder={
+                  mask.send ? `Message #${slug} — through the character map` : `Message #${slug}`
+                }
                 spellCheck={false}
                 autoComplete="off"
                 onChange={(e) => {
@@ -1107,6 +1457,7 @@ function Line({
   reactor,
   onProfile,
   onReply,
+  onQuote,
   onReact,
   onPickEmoji,
   onVote,
@@ -1126,6 +1477,7 @@ function Line({
   reactor: boolean;
   onProfile: (u: string) => void;
   onReply: () => void;
+  onQuote: () => void;
   onReact: () => void;
   onPickEmoji: (emoji: string) => void;
   onVote: (option: string) => void;
@@ -1176,6 +1528,9 @@ function Line({
         </button>
         <button className="ch-hbtn" title="Reply" onClick={onReply}>
           <Reply />
+        </button>
+        <button className="ch-hbtn" title="Quote this" onClick={onQuote}>
+          <Quote />
         </button>
         {!mine && (
           <button className="ch-hbtn" title="Report" onClick={onReport}>
@@ -1257,8 +1612,27 @@ function Line({
 
         {m.replyTo && <ReplyStub id={m.replyTo} onProfile={onProfile} />}
 
+        {m.quote && (
+          <span className="say-quote">
+            <Quote />
+            <span className="say-quote-main">
+              <button className="say-quote-who" onClick={() => onProfile(m.quote!.user)}>
+                {m.quote.name}
+                <i>
+                  {new Date(m.quote.at).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: true,
+                  })}
+                </i>
+              </button>
+              <span className="say-quote-txt">{m.quote.body}</span>
+            </span>
+          </span>
+        )}
+
         <span className={`say-body${m.everyone ? " is-everyone" : ""}`}>
-          <Markdown body={m.body} staff={m.md === "staff"} />
+          <LineBody body={m.body} staff={m.md === "staff"} />
           {m.body.includes("@") && <Mentions body={m.body} />}
         </span>
 
@@ -1290,6 +1664,35 @@ function Line({
         )}
       </div>
     </div>
+  );
+}
+
+/** The words of a line.
+ *
+ *  Usually that is markup and nothing else. When a line arrived through the
+ *  character map it is shown in letters again — the reader asked for that in
+ *  the chat tools, and everybody in the room is reading the same site — with
+ *  one button to see the twins exactly as they came, which is what somebody
+ *  else's page monitor would see. */
+function LineBody({ body, staff }: { body: string; staff: boolean }) {
+  const pref = useOb();
+  const [raw, setRaw] = useState(false);
+  const read = useMemo(() => readAs(body), [body]);
+  const shown = !read.hidden || pref.read === "raw" ? read.body : raw ? body : read.body;
+  return (
+    <>
+      <Markdown body={shown} staff={staff} />
+      {read.hidden && (
+        <button
+          className={`ch-map${raw ? " is-on" : ""}`}
+          title={raw ? "Read it" : "See it the way a page monitor would"}
+          onClick={() => setRaw(!raw)}
+        >
+          {raw ? <EyeOff /> : <Eye />}
+          {raw ? "read it" : "in twins"}
+        </button>
+      )}
+    </>
   );
 }
 

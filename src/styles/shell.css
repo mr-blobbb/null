@@ -525,6 +525,22 @@
   height: 100%;
 }
 
+/* the fog and the drifting specks, drawn on one canvas under the dots. It
+   fades at the very top and bottom so the rail and the tab strip never sit on
+   a bright patch. */
+.ambient {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.9;
+  mask-image: linear-gradient(180deg, transparent 0, #000 12%, #000 88%, transparent 100%);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 12%, #000 88%, transparent 100%);
+}
+[data-perf] .ambient {
+  opacity: 0.55;
+}
+
 /* grid of dots behind everything, static, no lines */
 .dots {
   position: fixed;

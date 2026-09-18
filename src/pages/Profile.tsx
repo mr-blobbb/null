@@ -24,6 +24,7 @@ import {
   LogOut,
   Crown,
   Lock,
+  MonitorSmartphone,
   Palette,
   Share2,
   Pencil,
@@ -67,6 +68,10 @@ import { api } from "../../convex/_generated/api";
 import { entries } from "../lib/catalog";
 import { openTab } from "../lib/tabs";
 import { Sheet } from "../components/Sheet";
+import { FriendsPanel } from "../components/FriendsPanel";
+import { CloudSaves } from "../components/CloudSaves";
+import { AppealBox } from "../components/Appeals";
+import { detectDevice } from "../lib/device";
 
 export function Profile() {
   const me = useAccount();
@@ -347,6 +352,25 @@ function SignedIn() {
             </div>
             <span className="pf-handle">@{me.user}</span>
 
+            {/* what this browser is, and whether the card wears it. It is a
+                chip rather than a fact because half of the questions a games
+                hub gets are "why is this different on mine" */}
+            <div className="dev-row">
+              <span className="dev-chip" title="What this browser reports">
+                <MonitorSmartphone />
+                {me.device || detectDevice().label}
+              </span>
+              <label className="dev-row tiny faint">
+                <input
+                  type="checkbox"
+                  className="switch"
+                  checked={me.deviceVisible}
+                  onChange={(e) => account.set({ deviceVisible: e.target.checked })}
+                />
+                show it on my card
+              </label>
+            </div>
+
             {(owner || tags.length > 0) && (
               <div className="pf-tags">
                 {owner && (
@@ -460,6 +484,23 @@ function SignedIn() {
           ))}
         </div>
       )}
+
+      <h2 className="pf-h">Friends</h2>
+      <section className="card card--pad">
+        <FriendsPanel />
+      </section>
+
+      <h2 className="pf-h">Cloud saves</h2>
+      <section className="card card--pad">
+        {/* the same panel the player floats over a game, with the controls
+            that need a game open left out */}
+        <CloudSaves embedded />
+      </section>
+
+      <h2 className="pf-h">Appeals</h2>
+      <section className="card card--pad">
+        <AppealBox />
+      </section>
 
       <AccountCard />
 

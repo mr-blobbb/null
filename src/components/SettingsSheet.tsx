@@ -78,6 +78,36 @@ export function SettingsSheet({ open, onClose }: { open: boolean; onClose: () =>
               {palette.id === "custom" && <CustomPalette />}
 
               <div className="hair set-hair" />
+              <h3 className="set-h">Background</h3>
+              <p className="set-note">
+                What drifts behind every page, drawn in the palette's own colour. It is
+                NULL's own drawing rather than a library, and it stops when the tab is
+                hidden.
+              </p>
+              <div className="setrow">
+                <span>
+                  <b>Ambience</b>
+                  <em>Fog is the slow wash behind the content. Specks are the drifting dots.</em>
+                </span>
+                <div className="segset">
+                  {([
+                    ["off", "Off"],
+                    ["fog", "Fog"],
+                    ["particles", "Specks"],
+                    ["both", "Both"],
+                  ] as const).map(([id, name]) => (
+                    <button
+                      key={id}
+                      className={`seg${p.ambient === id ? " is-on" : ""}`}
+                      onClick={() => prefs.set({ ambient: id })}
+                    >
+                      {name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="hair set-hair" />
               <h3 className="set-h">Performance</h3>
               <label className="setrow">
                 <span>

@@ -35,6 +35,8 @@ export type Member = {
   coins: number;
   /** when this browser last saw them */
   seen: number;
+  /** what they are on, when they agreed to wear the chip */
+  device: string | null;
 };
 
 export const members = createStore<{ list: Member[] }>("members", { list: [] });
@@ -56,6 +58,7 @@ function cardOf(me: Account, eco: Econ): Member {
     owner: isOwner(me.user),
     coins: eco.coins,
     seen: Date.now(),
+    device: me.deviceVisible ? me.device : null,
   };
 }
 
@@ -73,7 +76,8 @@ function same(a: Member, b: Member): boolean {
     a.nameStyle === b.nameStyle &&
     a.wearing.avatar === b.wearing.avatar &&
     a.wearing.effect === b.wearing.effect &&
-    a.wearing.tags.join() === b.wearing.tags.join()
+    a.wearing.tags.join() === b.wearing.tags.join() &&
+    a.device === b.device
   );
 }
 
@@ -109,6 +113,7 @@ export async function publish(me: Account, eco: Econ) {
       coins: card.coins,
       owner: card.owner,
       machine: myMachine,
+      device: card.device ?? undefined,
     });
   } catch {
     /* offline, or the deployment is having a day. The local card stands. */

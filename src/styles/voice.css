@@ -1,0 +1,142 @@
+/* ============================================================
+   NULL · voice.css
+   The voice room, and the friends block that sits above the directory.
+
+   Both are small, and both were added after the chat stylesheet had already
+   been laid out, so they live in their own file rather than being threaded
+   through community.css: one file per feature is easier to read back than a
+   thousand-line chat stylesheet with four features buried in it.
+   ============================================================ */
+
+.ch-voice {
+  flex: none;
+  margin: 10px 12px 4px;
+  padding: 10px 12px;
+  border: var(--bw) solid var(--line);
+  border-radius: var(--r-3);
+  background: color-mix(in srgb, var(--bg-2) 74%, transparent);
+  backdrop-filter: blur(10px);
+}
+.ch-voice.is-in {
+  border-color: var(--line-2);
+}
+.ch-voice-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ch-voice-head svg {
+  flex: none;
+  width: 15px;
+  height: 15px;
+  color: var(--dim);
+}
+.ch-voice-head b {
+  font-size: 13px;
+  font-weight: 600;
+}
+.ch-voice-head span {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.ch-voice-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+/* one person in the room: a tile with a ring that comes up while they talk.
+   The ring sits behind the name, so nobody's row moves when it lights. */
+.ch-vp {
+  position: relative;
+  min-width: 84px;
+  padding: 9px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  border: var(--bw) solid var(--line);
+  border-radius: var(--r-2);
+  background: var(--bg-3);
+  font-size: 12px;
+  transition: border-color 0.15s var(--ease), background 0.15s var(--ease);
+}
+.ch-vp:hover {
+  border-color: var(--line-2);
+  background: var(--bg-4);
+}
+.ch-vp.is-me {
+  border-color: var(--line-2);
+}
+.ch-vp-ring {
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  box-shadow: 0 0 0 2px var(--ok), 0 0 16px color-mix(in srgb, var(--ok) 40%, transparent);
+  opacity: 0.15;
+  transition: opacity 0.12s linear;
+  pointer-events: none;
+}
+.ch-vp-name {
+  position: relative;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+}
+.ch-vp-mute {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  color: var(--bad);
+}
+.ch-vp-mute svg {
+  width: 12px;
+  height: 12px;
+}
+.ch-voice-ctl {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+.ch-voice-ctl span {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.ch-voice-why {
+  margin-top: 8px;
+  color: var(--warn);
+}
+/* the count beside a voice channel in the sidebar */
+.ch-voice-n {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: auto;
+  color: var(--ok);
+  font-size: 10.5px;
+  font-style: normal;
+  font-weight: 600;
+}
+.ch-voice-n svg {
+  width: 11px;
+  height: 11px;
+}
+
+/* a narrow window: the room stacks, and the friends block stops scrolling */
+@media (max-width: 760px) {
+  .ch-fblock {
+    max-height: none;
+  }
+  .ch-quotebar-txt {
+    display: none;
+  }
+  .ch-voice-head {
+    flex-wrap: wrap;
+  }
+  .ch-voice-head span {
+    flex: 1 1 100%;
+  }
+}

@@ -9,13 +9,19 @@
  */
 
 import type * as ai from "../ai.js";
+import type * as appeals from "../appeals.js";
+import type * as audit from "../audit.js";
 import type * as chat from "../chat.js";
 import type * as filter from "../filter.js";
+import type * as friends from "../friends.js";
 import type * as gifs from "../gifs.js";
 import type * as members from "../members.js";
 import type * as music from "../music.js";
+import type * as presence from "../presence.js";
+import type * as saves from "../saves.js";
 import type * as social from "../social.js";
 import type * as store from "../store.js";
+import type * as voice from "../voice.js";
 
 import type {
   ApiFromModules,
@@ -25,13 +31,19 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   ai: typeof ai;
+  appeals: typeof appeals;
+  audit: typeof audit;
   chat: typeof chat;
   filter: typeof filter;
+  friends: typeof friends;
   gifs: typeof gifs;
   members: typeof members;
   music: typeof music;
+  presence: typeof presence;
+  saves: typeof saves;
   social: typeof social;
   store: typeof store;
+  voice: typeof voice;
 }>;
 
 /**

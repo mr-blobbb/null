@@ -7,16 +7,22 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
+  Clapperboard,
   Gamepad2,
   Globe,
   Grid3x3,
+  History,
   Image as ImageIcon,
+  Library,
   Link2,
+  MonitorPlay,
+  Package,
   Plus,
   Puzzle,
   Search,
   ShoppingBag,
   SlidersHorizontal,
+  Sparkles,
   Trash2,
   Users,
 } from "lucide-react";
@@ -63,6 +69,46 @@ const LINES = [
   "and for you sir?",
   "some things might take a bit to load, sorry :(",
   "first time using react kinda nervous",
+  "i switched to linux (the message repeats until it is true)",
+  "now with a wisp relay of our own",
+  "no ads. never ads.",
+  "the fog behind this page is drawn by hand",
+  "two thousand games and counting",
+  "cloud saves, so the progress follows you",
+  "type : and the emoji picker finds you",
+  "press the panic key. i dare you",
+  "your name can be whatever font you like now",
+  "voice channels work, and nothing is recorded",
+  "there is a hidden shelf. there is always a hidden shelf",
+  "if you can read this, the filter lost",
+  "coins are earned by playing. that is the whole economy",
+  "hello to whoever is up at 3am",
+  "the changelog is the honest one",
+  "rules are in the chat. read them. please",
+  "this line was picked at random. yours might be better",
+  "null is the house, and the house always lags a little",
+];
+
+/* ---------- the services ----------
+   Doors out of NULL, for the things NULL should not pretend to be: a place to
+   watch something, a place to play something that needs a real account, the
+   place the games are actually published. They open in the proxy window like
+   any other address, because every one of them refuses to be framed.
+
+   This is a list of addresses, which is why it lives next to the shortcuts
+   and not in the catalog: the catalog is for things that play here. */
+type Service = { id: string; name: string; url: string; icon: LucideIcon };
+
+const SERVICES: Service[] = [
+  { id: "github", name: "GitHub", url: "https://github.com/", icon: Link2 },
+  { id: "youtube", name: "YouTube", url: "https://www.youtube.com/", icon: Clapperboard },
+  { id: "nowgg", name: "Now.gg", url: "https://now.gg/", icon: Gamepad2 },
+  { id: "geforce", name: "GeForce NOW", url: "https://play.geforcenow.com/", icon: MonitorPlay },
+  { id: "crazygames", name: "CrazyGames", url: "https://www.crazygames.com/", icon: Puzzle },
+  { id: "poki", name: "Poki", url: "https://poki.com/", icon: Sparkles },
+  { id: "itch", name: "itch.io", url: "https://itch.io/", icon: Package },
+  { id: "wayback", name: "Wayback", url: "https://web.archive.org/", icon: History },
+  { id: "archive", name: "Archive", url: "https://archive.org/", icon: Library },
 ];
 
 /* ---------- the shortcuts ---------- */
@@ -278,6 +324,25 @@ export function Home() {
         {/* the two fixed doors sit to the right of the editable ones */}
         <QuickLink icon={Plus} label="Add" muted onClick={() => setAddOpen(true)} fixed />
         <QuickLink icon={Grid3x3} label="All Apps" muted onClick={() => setAppsOpen(true)} fixed />
+      </div>
+
+      {/* one row of doors out: somewhere to watch, somewhere to play, the
+          place the games come from */}
+      <div className="hm-serv" aria-label="Services">
+        {SERVICES.map((s) => {
+          const Icon = s.icon;
+          return (
+            <button
+              key={s.id}
+              className="svc"
+              title={`${s.name} — opens in the proxy window`}
+              onClick={() => openDestination({ url: s.url })}
+            >
+              <Icon />
+              {s.name}
+            </button>
+          );
+        })}
       </div>
 
       <Guard what="the online counter" fallback={null}>

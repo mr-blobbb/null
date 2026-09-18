@@ -36,6 +36,7 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { ArrowLeft, Cloud, Expand, ExternalLink, Gamepad2, RefreshCw, Route, TriangleAlert } from "lucide-react";
 
+import { CloudSaves } from "../components/CloudSaves";
 import { find } from "../lib/catalog";
 import { go } from "../lib/tabs";
 import { trackPlay } from "../lib/econ";
@@ -63,6 +64,8 @@ export function Player({ kind, id }: { kind: string; id: string }) {
   const [nonce, setNonce] = useState(0);
   /** bumped when a player asks for the game by another road than this one */
   const [route, setRoute] = useState(0);
+  /** the save slots, drawn over the game rather than beside it */
+  const [cloud, setCloud] = useState(false);
   const frame = useRef<HTMLIFrameElement>(null);
   const stage = useRef<HTMLDivElement>(null);
 
@@ -112,10 +115,33 @@ export function Player({ kind, id }: { kind: string; id: string }) {
             <Route />
           </button>
         )}
+        {/* the saves of whatever is open, on the account rather than the
+            machine: the same progress at school and at home */}
+        {entry && (
+          <button
+            className={`play-btn${cloud ? " is-on" : ""}`}
+            onClick={() => setCloud((v) => !v)}
+            aria-label="Cloud saves"
+            title="Cloud saves"
+          >
+            <Cloud />
+          </button>
+        )}
         <button className="play-btn" onClick={open} aria-label="Fullscreen" title="Fullscreen">
           <Expand />
         </button>
       </header>
+
+      {cloud && entry && (
+        <aside className="play-cloud">
+          <CloudSaves
+            game={entry.id}
+            name={entry.name}
+            frame={entry.file ? frame : undefined}
+            onRestored={() => setNonce((n) => n + 1)}
+          />
+        </aside>
+      )}
 
       {entry?.warning && !read ? (
         <div className="play-empty">

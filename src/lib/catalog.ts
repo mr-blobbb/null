@@ -46,7 +46,48 @@ export type Entry = {
 
 const GAMES: Entry[] = [];
 
-const APPS: Entry[] = [];
+/* ---------- apps ----------
+   The tools shelf. Every one of these is somebody else's site, opened the way
+   the games are — through the player, which tries a copy, then an inline
+   mount, then a plain frame — so the shelf is a list of things worth having,
+   not a list of things NULL hosts. Nothing here needs a key, an account or an
+   install, which is the only rule an entry has to follow.
+
+   `status` is about the frame and nothing else: "Fine" is a page that
+   happily lives inside one (most of the static ones, and anything on GitHub
+   Pages), "Rough" is a site that may refuse to be framed and is best opened
+   in the proxy window instead. The player's route button walks a Rough one on
+   to the next road, which is usually enough. */
+const APPS: Entry[] = [
+  { id: "cyberchef", name: "CyberChef", kind: "app", file: "https://gchq.github.io/CyberChef/", labels: ["Tools", "Data"], status: "Fine" },
+  { id: "excalidraw", name: "Excalidraw", kind: "app", file: "https://excalidraw.com/", labels: ["Drawing", "Boards"], status: "Fine" },
+  { id: "tldraw", name: "tldraw", kind: "app", file: "https://www.tldraw.com/", labels: ["Drawing", "Boards"], status: "Fine" },
+  { id: "witeboard", name: "Witeboard", kind: "app", file: "https://witeboard.com/", labels: ["Drawing", "Boards"], status: "Rough" },
+  { id: "photopea", name: "Photopea", kind: "app", file: "https://www.photopea.com/", labels: ["Images", "Editing"], status: "Fine" },
+  { id: "squoosh", name: "Squoosh", kind: "app", file: "https://squoosh.app/", labels: ["Images", "Editing"], status: "Fine" },
+  { id: "svgviewer", name: "SVG Viewer", kind: "app", file: "https://www.svgviewer.dev/", labels: ["Images", "Code"], status: "Fine" },
+  { id: "desmos", name: "Desmos", kind: "app", file: "https://www.desmos.com/calculator", labels: ["Maths", "Graphing"], status: "Rough" },
+  { id: "desmos-sci", name: "Desmos Scientific", kind: "app", file: "https://www.desmos.com/scientific", labels: ["Maths", "Calculator"], status: "Rough" },
+  { id: "carbon", name: "Carbon", kind: "app", file: "https://carbon.now.sh/", labels: ["Code", "Screenshots"], status: "Fine" },
+  { id: "codepen", name: "CodePen", kind: "app", file: "https://codepen.io/pen/", labels: ["Code", "Playground"], status: "Rough" },
+  { id: "jsfiddle", name: "JSFiddle", kind: "app", file: "https://jsfiddle.net/", labels: ["Code", "Playground"], status: "Rough" },
+  { id: "jsoncrack", name: "JSON Crack", kind: "app", file: "https://jsoncrack.com/editor", labels: ["Code", "Data"], status: "Fine" },
+  { id: "regex101", name: "Regex101", kind: "app", file: "https://regex101.com/", labels: ["Code", "Text"], status: "Rough" },
+  { id: "dillinger", name: "Dillinger", kind: "app", file: "https://dillinger.io/", labels: ["Writing", "Markdown"], status: "Fine" },
+  { id: "stackedit", name: "StackEdit", kind: "app", file: "https://stackedit.io/app", labels: ["Writing", "Markdown"], status: "Rough" },
+  { id: "notepad", name: "Notepad", kind: "app", file: "https://notepad.js.org/", labels: ["Writing", "Notes"], status: "Fine" },
+  { id: "coolors", name: "Coolors", kind: "app", file: "https://coolors.co/", labels: ["Design", "Colour"], status: "Rough" },
+  { id: "contrast", name: "Contrast Checker", kind: "app", file: "https://colourcontrast.cc/", labels: ["Design", "Colour"], status: "Fine" },
+  { id: "type-scale", name: "Type Scale", kind: "app", file: "https://typescale.com/", labels: ["Design", "Type"], status: "Fine" },
+  { id: "monkeytype", name: "Monkeytype", kind: "app", file: "https://monkeytype.com/", labels: ["Typing", "Games"], status: "Fine" },
+  { id: "radio-garden", name: "Radio Garden", kind: "app", file: "https://radio.garden/", labels: ["Music", "Maps"], status: "Rough" },
+  { id: "photopea-vect", name: "Vector Paint", kind: "app", file: "https://vectorpaint.yaks.co.nz/", labels: ["Drawing", "SVG"], status: "Fine" },
+  { id: "tables", name: "Table Generator", kind: "app", file: "https://www.tablesgenerator.com/", labels: ["Writing", "Tools"], status: "Rough" },
+  { id: "seq", name: "Sequence Diagrams", kind: "app", file: "https://sequencediagram.org/", labels: ["Drawing", "Code"], status: "Fine" },
+  { id: "bpmn", name: "Flowcharts", kind: "app", file: "https://app.diagrams.net/", labels: ["Drawing", "Boards"], status: "Rough" },
+  { id: "tex", name: "TeX Paste", kind: "app", file: "https://texpaste.com/", labels: ["Maths", "Code"], status: "Fine" },
+  { id: "omnicalc", name: "Omni Calculator", kind: "app", file: "https://www.omnicalculator.com/", labels: ["Maths", "Calculator"], status: "Rough" },
+];
 
 const PROXIES: Entry[] = [
   {

@@ -26,6 +26,14 @@ export type PaletteId =
   | "void"
   | "peach"
   | "synthwave"
+  | "slate"
+  | "crimson"
+  | "cobalt"
+  | "sand"
+  | "bubblegum"
+  | "terminal"
+  | "coffee"
+  | "neon"
   | "custom";
 
 export type Palette = {
@@ -52,6 +60,14 @@ export const PALETTES: Palette[] = [
   { id: "void", name: "Void", bg: "#000000", ink: "#8b5cf6", light: false },
   { id: "peach", name: "Peach", bg: "#fbf1ea", ink: "#ef7f4f", light: true },
   { id: "synthwave", name: "Synthwave", bg: "#100722", ink: "#ff5fd2", light: false },
+  { id: "slate", name: "Slate", bg: "#0d1117", ink: "#9db2d0", light: false },
+  { id: "crimson", name: "Crimson", bg: "#140608", ink: "#ff5b6e", light: false },
+  { id: "cobalt", name: "Cobalt", bg: "#050a1f", ink: "#5b8dff", light: false },
+  { id: "sand", name: "Sand", bg: "#f3ece1", ink: "#8a6a3c", light: true },
+  { id: "bubblegum", name: "Bubblegum", bg: "#fdeef5", ink: "#e0578f", light: true },
+  { id: "terminal", name: "Terminal", bg: "#010703", ink: "#3ee07a", light: false },
+  { id: "coffee", name: "Coffee", bg: "#120d0a", ink: "#c99a6b", light: false },
+  { id: "neon", name: "Neon", bg: "#07090a", ink: "#c8ff3d", light: false },
   { id: "custom", name: "Custom", bg: "#0b0b0d", ink: "#c9c9d2", light: false },
 ];
 
@@ -63,8 +79,13 @@ export type CustomColors = {
   line: string;
 };
 
+/** What the background layer draws. "off" keeps the plain dotted grid. */
+export type AmbientMode = "off" | "fog" | "particles" | "both";
+
 export type Prefs = {
   palette: PaletteId;
+  /** the drift behind every page (src/components/Ambient.tsx) */
+  ambient: AmbientMode;
   custom: CustomColors;
   /** "1" is the light performance mode, "ultra" also stops all animation */
   perf: "" | "1" | "ultra";
@@ -90,6 +111,7 @@ export const DEFAULT_CUSTOM: CustomColors = {
 
 export const prefs = createStore<Prefs>("prefs", {
   palette: "null",
+  ambient: "fog",
   custom: DEFAULT_CUSTOM,
   perf: "",
   reduceMotion: false,

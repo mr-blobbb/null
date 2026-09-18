@@ -14,14 +14,10 @@
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
 
-    <!-- the display faces a profile can put its own name in. Loaded only for
-         that; nothing else on the site uses them. -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Bungee&family=Caveat&family=Gochi+Hand&family=Nunito:wght@600;700;800&family=Pacifico&family=Playfair+Display:wght@700&family=Press+Start+2P&family=Silkscreen&family=Space+Mono&display=swap"
-    />
+    <!-- the display faces a profile can put its own name in. They are served
+         from this origin, not from Google: a filter that blocks Google's font
+         hosts would otherwise take every custom name with it. See
+         src/styles/fonts.css. -->
     <script>
       /* Paint the palette before React mounts so a dark theme never flashes
          light. Mirrors src/lib/themes.ts: keep the two in step. */
@@ -31,7 +27,7 @@
           var id = p.palette || "null";
           var root = document.documentElement;
           root.dataset.palette = id;
-          var light = id === "light" || id === "peach";
+          var light = id === "light" || id === "peach" || id === "sand" || id === "bubblegum";
           root.dataset.mode = light ? "light" : "dark";
           root.style.colorScheme = light ? "light" : "dark";
         } catch (e) {}

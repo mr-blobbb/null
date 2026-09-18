@@ -56,6 +56,8 @@ export default defineSchema({
     machines: v.optional(v.array(v.string())),
     /** set when staff decide the browser itself should not come back */
     machineBanned: v.optional(v.boolean()),
+    /** what they signed in on, as the profile chip prints it */
+    device: v.optional(v.string()),
   })
     .index("by_user", ["user"])
     .index("by_role", ["roles"]),
@@ -108,6 +110,11 @@ export default defineSchema({
     everyone: v.optional(v.boolean()),
     /** the kind of markdown the author was allowed: "staff" or "basic" */
     md: v.optional(v.string()),
+    /** a message this line is quoting, kept as its own copy so a deleted
+     *  original does not leave a hole in the conversation */
+    quote: v.optional(
+      v.object({ user: v.string(), name: v.string(), body: v.string(), at: v.number() }),
+    ),
     /** a staff vote riding on the line: the question, the choices, and who
      *  picked what. Votes are a list of { id, by } for the same reason
      *  reactions are: an option id is ASCII, an emoji is not. */
@@ -174,6 +181,89 @@ export default defineSchema({
     .index("by_pair_at", ["a", "b", "at"])
     .index("by_a", ["a"])
     .index("by_b", ["b"]),
+
+  /* ---------- voice ----------
+     A room is not streamed: every browser holds one call to every other
+     browser in it, and these two tables are only the introduction. `voice`
+     is who is in the room and what their microphone is doing; `voiceSignals`
+     is the offers, answers and addresses they hand each other on the way in.
+     Nothing here carries audio. */
+  voice: defineTable({
+    thread: v.string(),
+    user: v.string(),
+    name: v.string(),
+    /** bumped every few seconds, the same way presence is */
+    at: v.number(),
+    muted: v.boolean(),
+    deaf: v.boolean(),
+  })
+    .index("by_thread", ["thread"])
+    .index("by_thread_user", ["thread", "user"]),
+
+  voiceSignals: defineTable({
+    thread: v.string(),
+    /** who wrote it */
+    from: v.string(),
+    /** who it is for */
+    to: v.string(),
+    /** "offer" | "answer" | "ice" | "bye" */
+    kind: v.string(),
+    /** the SDP or the candidate, as JSON */
+    data: v.string(),
+    at: v.number(),
+  }).index("by_to_thread", ["to", "thread"]),
+
+  /* ---------- what members keep ---------- */
+
+  /** one game's save, per slot, on the account rather than the machine: the
+   *  same progress at school and at home. `data` is whatever the game keeps,
+   *  handed back exactly as it was given. */
+  saves: defineTable({
+    user: v.string(),
+    game: v.string(),
+    name: v.string(),
+    slot: v.string(),
+    data: v.string(),
+    /** where it came from, for the label: this browser, or pasted in */
+    from: v.string(),
+    at: v.number(),
+  })
+    .index("by_user", ["user"])
+    .index("by_user_game", ["user", "game"]),
+
+  /* ---------- moderation, the other half ---------- */
+
+  /** an appeal: the punished party's side of the story, and what staff said
+   *  back. Filing one never unlocks anything on its own — a person decides. */
+  appeals: defineTable({
+    user: v.string(),
+    /** "account" or "machine" — what they are appealing */
+    kind: v.string(),
+    body: v.string(),
+    at: v.number(),
+    /** "open" | "granted" | "denied" */
+    status: v.string(),
+    by: v.optional(v.string()),
+    note: v.optional(v.string()),
+    decidedAt: v.optional(v.number()),
+  })
+    .index("by_user", ["user"])
+    .index("by_status", ["status"]),
+
+  /** every staff action worth being able to read back: who did what, to whom,
+   *  and what they said it was for. Append-only, and nothing deletes it. */
+  audit: defineTable({
+    by: v.string(),
+    /** "ban" | "unban" | "roles" | "verified" | "report" | "report-handled"
+     *  | "appeal-decided" | "purge" — a string rather than a union so an
+     *  action added later never fails to write */
+    action: v.string(),
+    user: v.string(),
+    detail: v.string(),
+    at: v.number(),
+  })
+    .index("by_at", ["at"])
+    .index("by_user", ["user"]),
 
   /** who is typing, right now. Rows are cheap and die young. */
   typing: defineTable({
