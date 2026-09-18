@@ -4,17 +4,27 @@
    library fills itself instead of being typed in by hand.
 
    Three sources, in order of quality:
+     ubg-py/seraph     the Ultimate Game Stash itself — ~500 folders, each with
+                       an index.html, an icon in images/thumbnails and a genre.
+                       Its server is gone, but its files are still hosted, so
+                       these games really play
      truffled.lol      a manifest with names, playable URLs and thumbnails;
                        every game is meant to be iframed, so entries point
                        straight at it
      gn-math/html      ~850 single-file games; names come from each page's
                        <title>, icons from the gn-math/covers repo, ranked by
                        the jsDelivr download stats so the popular ones land
-                       first
-     ubg-py/the-game-stash  one folder per game on raw.githubusercontent,
-                       which serves HTML as text/plain — those entries are
-                       marked remote and the player fetches the page into a
-                       blob before framing it
+                       first. Their pages point their own assets at a CDN that
+                       still has most of them, so this ranks below the two
+                       above
+     ubg-py/the-game-stash  the same library kept by hand in one repo; folded
+                       into the UGS row above, because it is the same shelf
+
+   Every entry's `file` is put through framable() before it is written out.
+   Both GitHub and jsDelivr hand HTML over as text/plain with nosniff, and a
+   browser will not run a page it has been told is text — the mirror below
+   sends it as text/html and lets the frame have it. Icons stay where they are,
+   because an image is an image whatever the header says.
 
    The output is a generated file. Edit nothing in it by hand: run this
    script again.
@@ -28,6 +38,8 @@ const OUT = "src/lib/discovered.ts";
 const GN_TOP = 300; // how many gn-math candidates to try, ranked by downloads
 
 const TRUFFLED = "https://truffled.lol";
+const SERAPH_INDEX = "https://raw.githubusercontent.com/ubg-py/seraph/main/games/index.html";
+const SERAPH_CDN = "https://cdn.jsdelivr.net/gh/ubg-py/seraph@main/";
 const UGS_API = "https://api.github.com/repos/ubg-py/the-game-stash/contents/";
 const UGS_RAW = "https://raw.githubusercontent.com/ubg-py/the-game-stash/main/";
 const GN_API = "https://api.github.com/repos/gn-math/html/contents/";
@@ -60,10 +72,73 @@ async function exists(url) {
   }
 }
 
+/** A URL a frame will actually run.
+ *
+ *  raw.githubusercontent serves everything as text/plain with nosniff, and
+ *  jsDelivr does the same to .html on purpose — it is not a website host. A
+ *  blob bridge can rescue one page, but not the scripts inside it: those come
+ *  back as text too, and a browser refuses to execute a script it was told is
+ *  text. raw.githack is the same repo over a header that says html for html
+ *  and javascript for javascript, which is the whole fix. */
+function framable(url) {
+  const gh = /^https:\/\/raw\.githubusercontent\.com\/([^/]+)\/([^/]+)\/([^/]+)\/(.+)$/.exec(url);
+  if (gh) return `https://raw.githack.com/${gh[1]}/${gh[2]}/${gh[3]}/${gh[4]}`;
+  const jd = /^https:\/\/cdn\.jsdelivr\.net\/gh\/([^@]+)@([^/]+)\/(.+)$/.exec(url);
+  if (jd) return `https://raw.githack.com/${jd[1]}/${jd[2]}/${jd[3]}`;
+  return url;
+}
+
 const slug = (s) =>
   s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 48) || "game";
 const norm = (s) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
 const tidy = (s) => s.replace(/,\s*Webport$/i, "").trim();
+
+/* ---------- seraph: the Ultimate Game Stash, one index page for all of it ----------
+   Their own listing carries everything worth having — the folder, the name, the
+   icon and the genre — so this is one fetch rather than five hundred. jsDelivr
+   serves the repo even though the site itself is offline, and it serves each
+   kind of file with the content type a browser needs. */
+
+async function seraph() {
+  const html = await text(SERAPH_INDEX);
+  const out = [];
+  /* one row of their listing: the folder, the icon it paints behind itself,
+     the genre it files itself under, and the name it shows */
+  const rx =
+    /href="([a-z0-9_-]+)\/index\.html"[\s\S]{0,400}?url\('\.\.\/images\/thumbnails\/([^']+)'\)[^>]*?data-genre="([^"]*)"[\s\S]{0,300}?<h2>([^<]+)<\/h2>/gi;
+  let m;
+  while ((m = rx.exec(html))) {
+    const [, folder, icon, genre, raw] = m;
+    const name = tidy(decode(raw));
+    if (name.length < 2) continue;
+    out.push({
+      id: `sr-${slug(folder)}`,
+      name,
+      kind: "game",
+      file: framable(`${SERAPH_CDN}games/${folder}/index.html`),
+      thumb: `${SERAPH_CDN}images/thumbnails/${icon}`,
+      labels: ["UGS", ...(genre ? [title(genre)] : [])],
+    });
+  }
+  return out;
+}
+
+/** The listing writes its names as plain text between tags. */
+function decode(s) {
+  return s
+    .replace(/&amp;/g, "&")
+    .replace(/&#39;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** "arcade" -> "Arcade", for the genre label. */
+function title(s) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
 
 /* ---------- truffled.lol: manifest with thumbnails, made for iframes ---------- */
 
@@ -109,8 +184,10 @@ async function stash() {
       id: `ugs-${slug(d.name)}`,
       name: d.name,
       kind: "game",
-      file: UGS_RAW + `${encodeURIComponent(d.name)}/${encodeURIComponent(main.name)}`.replace(/%2F/gi, "/"),
-      labels: ["Game Stash"],
+      file: framable(
+        UGS_RAW + `${encodeURIComponent(d.name)}/${encodeURIComponent(main.name)}`.replace(/%2F/gi, "/"),
+      ),
+      labels: ["UGS"],
     });
   }
   return out;
@@ -142,7 +219,7 @@ async function gnmath() {
       id: `gn-${slug(id)}`,
       name: title,
       kind: "game",
-      file: GN_RAW + f.name.slice(1),
+      file: framable(GN_RAW + f.name.slice(1)),
       thumb: (await exists(cover)) ? cover : undefined,
       labels: ["GN-Math"],
     });
@@ -152,7 +229,10 @@ async function gnmath() {
 
 /* ---------- merge: first source wins on a name clash ---------- */
 
+/* seraph first: it is the largest set whose files still resolve, and the first
+   source to claim a name keeps it */
 const sources = [
+  ["seraph", seraph],
   ["truffled", truffled],
   ["gn-math", gnmath],
   ["game-stash", stash],

@@ -38,6 +38,21 @@ const HUMAN = {
   bot: false,
 };
 
+/* a line answering another one, so the reply stub is exercised too */
+const REPLY = {
+  id: "m2",
+  user: "quill",
+  name: "quill",
+  body: "answering that one",
+  at: Date.now() - 10_000,
+  owner: false,
+  tags: [],
+  machine: "xyz",
+  bot: false,
+  replyTo: "b1",
+  reactions: [{ e: "🔥", by: ["mrblob", "quill"] }],
+};
+
 /* what the room asks the directory for: the faces of the people in it */
 const PICS = [{ user: "mrblob", pfp: "data:image/png;base64,iVBORw0KGgo=", avatar: "chroma" }];
 
@@ -144,7 +159,9 @@ mock.module("convex/react", () => ({
       case "members:reports":
         return { open: 0, total: 0, reasons: [] };
       case "chat:recent":
-        return [BOT, HUMAN];
+        return [BOT, HUMAN, REPLY];
+      case "chat:messageById":
+        return BOT;
       case "chat:threads":
         return rooms;
       case "chat:typists":
@@ -186,6 +203,11 @@ ok("signed out, the owner tools stay away", !chatOut.includes("ch-tool"));
 ok("the bot line is marked as the bot", chatOut.includes("is-bot") && chatOut.includes("say-badge"));
 ok("the bot's markup became real tags", chatOut.includes("<b>mr blob</b>") && chatOut.includes("md-p"));
 ok("the owner badge and shop tag both render", chatOut.includes("tagchip--owner") && chatOut.includes("tagchip"));
+/* one chip for who they are, one for what they wear: the pile of tags that
+   used to sit in the header pushed the names out of the way */
+ok("a line wears one tag, not a pile", !chatOut.includes("say-more"));
+ok("a reply draws the line it answers", chatOut.includes("say-reply") && chatOut.includes("coins ......."));
+ok("a reaction is drawn with its count", chatOut.includes("say-react") && chatOut.includes("🔥"));
 ok("the author's picture is in the room", chatOut.includes('<img src="data:image/png;base64,iVBORw0KGgo='));
 ok("and the decoration they wear is drawn over it", chatOut.includes("art art--clip"));
 ok("only the person with a picture gets one", (chatOut.match(/<img /g) ?? []).length === 1);

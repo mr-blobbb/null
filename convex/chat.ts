@@ -166,18 +166,50 @@ function draw(m: any, member: any) {
     bot: m.bot === true,
     image: m.image ?? null,
     replyTo: m.replyTo ?? null,
-    reactions: m.reactions ?? {},
+    reactions: reactsOf(m),
     mentions: m.mentions ?? [],
     everyone: m.everyone === true,
     md: m.md ?? "basic",
   };
 }
 
+/* `normalizeId` turns a string from a client into an id this table will
+   accept, and it is *not* the row. Every handler here used to read fields off
+   its answer — `m.user`, `m._id` — which is why a reply pointed at a row of
+   nothing and a reaction tried to patch `undefined`. Validate with it, then
+   fetch the document with the id it hands back. */
+
+/** What everyone has thrown on a line, as a list of `{ e, by }`.
+ *
+ *  This started as `{ "🔥": 3 }` and could not be saved: Convex allows only
+ *  plain ASCII in a document's *field names*, and an emoji is not ASCII, so
+ *  every reaction failed with "Field name 🔥 has invalid character". Values may
+ *  be anything at all, so the emoji moved from the key into a value, and the
+ *  people who picked it moved in beside it. A row written before the change
+ *  still carries its old `{ emoji: count }` map, which is read here so old
+ *  lines keep their counts — the names behind them are simply unknown. */
+function reactsOf(m: any): { e: string; by: string[] }[] {
+  if (Array.isArray(m.reacts)) {
+    return m.reacts.map((r: any) => ({ e: String(r.e), by: [...(r.by ?? [])] }));
+  }
+  const old = m.reactions;
+  if (!old || typeof old !== "object") return [];
+  return Object.entries(old as Record<string, number>).map(([e, n]) => ({
+    e,
+    by: new Array(Math.max(0, Number(n) || 0)).fill("?"),
+  }));
+}
+async function messageOf(ctx: any, id: string): Promise<any | null> {
+  const key = await ctx.db.normalizeId("messages", id as never);
+  if (!key) return null;
+  return (await ctx.db.get(key)) ?? null;
+}
+
 /** What a reply points at: one line, so the client can draw the stub. */
 export const messageById = query({
   args: { id: v.string() },
   handler: async (ctx, { id }) => {
-    const m: any = await ctx.db.normalizeId("messages", id as never);
+    const m = await messageOf(ctx, id);
     if (!m) return null;
     const member = await memberOf(ctx, m.user);
     return draw(m, member);
@@ -259,6 +291,7 @@ export const send = mutation({
       replyTo: args.replyTo ?? undefined,
       reactions: {},
       reactedBy: [],
+      reacts: [],
       mentions,
       everyone,
       md: staff ? "staff" : "basic",
@@ -295,36 +328,38 @@ export const send = mutation({
 
 /* ---------- reactions ---------- */
 
-/** One tap adds your emoji, a second takes it back. `reactedBy` holds who put
- *  each one on, so a reaction is a set, not a number someone can inflate. */
+/** One tap adds your emoji, a second takes it back. Each emoji carries the
+ *  list of who put it there, so a reaction is a set, not a number anyone can
+ *  inflate by tapping twice. */
 export const react = mutation({
   args: { id: v.string(), emoji: v.string(), by: v.string(), machine: v.string(), owner: v.boolean() },
   handler: async (ctx, { id, emoji, by, machine }) => {
-    const m: any = await ctx.db.normalizeId("messages", id as never);
-    if (!m) throw new Error("that message is gone");
+    const key = id ? await ctx.db.normalizeId("messages", id as never) : null;
+    const m = key ? await ctx.db.get(key) : null;
+    if (!m || !key) throw new Error("that message is gone");
 
     const row = await memberOf(ctx, by);
     if (row?.banned) throw new Error("This account is banned.");
     const mb = await ctx.db.query("bans").withIndex("by_machine", (q: any) => q.eq("machine", machine)).first();
     if (mb) throw new Error("This browser is banned.");
 
-    const key = [...emoji].slice(0, 8).join("");
-    if (!key) return;
-    const reactions: Record<string, number> = { ...(m.reactions ?? {}) };
-    const reactedBy: string[] = m.reactedBy ?? [];
-    const me = by.trim().toLowerCase();
-    const mine = reactedBy.indexOf(`${me}:${key}`);
+    const glyph = [...emoji].slice(0, 8).join("");
+    if (!glyph) return;
 
-    if (mine >= 0) {
-      /* taking it back */
-      reactedBy.splice(mine, 1);
-      reactions[key] = (reactions[key] ?? 1) - 1;
-      if (reactions[key] <= 0) delete reactions[key];
+    const list = reactsOf(m);
+    const me = by.trim().toLowerCase();
+    const hit = list.find((r) => r.e === glyph);
+
+    if (hit) {
+      const at = hit.by.indexOf(me);
+      if (at >= 0) hit.by.splice(at, 1); /* taking it back */
+      else hit.by.push(me);
+      if (!hit.by.length) list.splice(list.indexOf(hit), 1);
     } else {
-      reactedBy.push(`${me}:${key}`);
-      reactions[key] = (reactions[key] ?? 0) + 1;
+      list.push({ e: glyph, by: [me] });
     }
-    await ctx.db.patch(m._id, { reactions, reactedBy: reactedBy.slice(-80) });
+
+    await ctx.db.patch(key, { reacts: list.slice(0, 24) });
   },
 });
 
@@ -333,13 +368,15 @@ export const react = mutation({
 export const drop = mutation({
   args: { id: v.string(), by: v.string(), owner: v.boolean() },
   handler: async (ctx, { id, by, owner }) => {
-    const m: any = await ctx.db.normalizeId("messages", id as never);
-    if (!m) return;
+    const key = id ? await ctx.db.normalizeId("messages", id as never) : null;
+    const m = key ? await ctx.db.get(key) : null;
+    if (!key || !m) return;
     const me = by.trim().toLowerCase();
     const staff = await staffOf(ctx, me, owner);
     /* your own words, or staff tidying the room */
     if (m.user.toLowerCase() !== me && !staff) throw new Error("that is not your message");
-    await ctx.db.delete(m._id);
+    await ctx.db.delete(key);
+    return true;
   },
 });
 

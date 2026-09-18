@@ -7,12 +7,14 @@
    what makes playing the way you earn.
 
    Two kinds of file end up in the frame. A local path is framed as it is. An
-   https URL is a discovered game, and it gets one of two roads: a site that
-   allows framing (truffled.lol and friends) is framed directly, while raw
-   GitHub serves pages as text/plain — no browser will run one in a frame —
-   so the page is fetched here and handed to the frame as a blob. The blob is
-   always labelled text/html: taking the label from the response is how a
-   stashed game ends up rendered as its own source code. */
+   https URL is a discovered game, and it normally goes straight in — the
+   discovery script already points each stash at a mirror that serves html as
+   html. The two rescue roads are for everything else: a host that is slow or
+   resetting the connection gets a few seconds, then the page is fetched here
+   and handed over as a blob, and a host that only serves text/plain (raw
+   GitHub) skips straight to that. The blob is always labelled text/html:
+   taking the label from the response is how a stashed game ends up rendered
+   as its own source code. */
 
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, Expand, ExternalLink, Gamepad2, RefreshCw } from "lucide-react";
@@ -24,6 +26,12 @@ import { trackPlay } from "../lib/econ";
 /** raw.githubusercontent serves everything as text/plain, which browsers
  *  refuse to run; those pages must be fetched and re-served as a blob. */
 const NEEDS_BLOB = /raw\.githubusercontent\.com|gist\.githubusercontent\.com/;
+
+/** How long a frame gets to show something before the copy is tried instead.
+ *  A host that resets the connection never fires `load`, so this is the only
+ *  way to notice — and pointing at a site that resets it is exactly what a
+ *  visitor reports as "the connection was reset". */
+const GRACE = 3500;
 
 const isRemote = (file?: string) => !!file && /^https?:\/\//i.test(file);
 
@@ -122,14 +130,25 @@ function rebased(html: string, file: string): string {
   return base + html;
 }
 
-/** A discovered game. Frame what allows framing; fetch the rest. */
+/** A discovered game: framed if it can be, copied over if it cannot. */
 function RemoteFrame({ file, name }: { file: string; name: string }) {
+  const mustCopy = NEEDS_BLOB.test(file);
+  const [road, setRoad] = useState<"frame" | "copy">(mustCopy ? "copy" : "frame");
   const [blob, setBlob] = useState<string | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
+  const [live, setLive] = useState(false);
   const [attempt, setAttempt] = useState(0);
 
+  /* the frame road has to prove itself: nothing loaded in a few seconds, and
+     the copy is tried. Anything already drawn stays drawn. */
   useEffect(() => {
-    if (!NEEDS_BLOB.test(file)) return;
+    if (road !== "frame" || live) return;
+    const t = setTimeout(() => setRoad("copy"), GRACE);
+    return () => clearTimeout(t);
+  }, [road, live, attempt]);
+
+  useEffect(() => {
+    if (road !== "copy") return;
     let url: string | null = null;
     let alive = true;
     setProblem(null);
@@ -150,16 +169,27 @@ function RemoteFrame({ file, name }: { file: string; name: string }) {
       alive = false;
       if (url) URL.revokeObjectURL(url);
     };
-  }, [file, attempt]);
+  }, [road, file, attempt]);
+
+  const again = () => {
+    setProblem(null);
+    setBlob(null);
+    setLive(false);
+    setRoad(mustCopy ? "copy" : "frame");
+    setAttempt((n) => n + 1);
+  };
 
   if (problem) {
     return (
       <div className="play-empty">
         <Gamepad2 />
         <h2>{name} would not load</h2>
-        <p>The stash it lives on refused the request ({problem}). It may still open on its own.</p>
+        <p>
+          The stash it lives on would not hand the page over ({problem}). Some hosts only answer
+          their own players, and their games still open on their own site.
+        </p>
         <div className="play-empty-row">
-          <button className="btn" onClick={() => setAttempt((n) => n + 1)}>
+          <button className="btn" onClick={again}>
             <RefreshCw /> Try again
           </button>
           <a className="btn btn--fill" href={file} target="_blank" rel="noreferrer noopener">
@@ -170,18 +200,29 @@ function RemoteFrame({ file, name }: { file: string; name: string }) {
     );
   }
 
-  if (NEEDS_BLOB.test(file)) {
-    if (!blob) {
-      return (
-        <div className="play-empty">
-          <Gamepad2 />
-          <h2>Fetching {name}…</h2>
-          <p>It lives on a stash that serves pages as text, so NULL is copying it over first.</p>
-        </div>
-      );
-    }
-    return <iframe className="play-frame" src={blob} title={name} allow="fullscreen; gamepad; autoplay" sandbox="allow-scripts allow-same-origin allow-popups allow-forms" />;
+  if (road === "copy" && !blob) {
+    return (
+      <div className="play-empty">
+        <Gamepad2 />
+        <h2>Fetching {name}…</h2>
+        <p>It lives on a stash that serves pages as text, so NULL is copying it over first.</p>
+      </div>
+    );
   }
 
-  return <iframe className="play-frame" src={file} title={name} allow="fullscreen; gamepad; autoplay" />;
+  return (
+    <iframe
+      key={road === "copy" ? `copy-${attempt}` : "frame"}
+      className="play-frame"
+      src={road === "copy" ? (blob as string) : file}
+      title={name}
+      onLoad={() => setLive(true)}
+      referrerPolicy="no-referrer"
+      allow="fullscreen; gamepad; autoplay"
+      /* a copied page came from a stranger and inherits this origin, so it is
+         sandboxed without allow-same-origin: its own storage, its own files,
+         no way to read anything of NULL's. */
+      sandbox={road === "copy" ? "allow-scripts allow-popups allow-forms allow-pointer-lock allow-modals" : undefined}
+    />
+  );
 }

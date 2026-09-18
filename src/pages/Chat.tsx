@@ -59,7 +59,7 @@ import { AvatarArt, TagChip } from "../lib/art";
 import { screen } from "../lib/filter";
 import { Markdown } from "../lib/md";
 import { go } from "../lib/tabs";
-import { REPORT_REASONS, roleOf } from "../lib/staff";
+import { REPORT_REASONS, roleOf, STAFF_TAGS } from "../lib/staff";
 import { NullFace } from "../lib/brand";
 import { Sheet } from "../components/Sheet";
 import { useMusic, type Track } from "../lib/music";
@@ -78,7 +78,7 @@ type Row = {
   bot: boolean;
   image: string | null;
   replyTo: string | null;
-  reactions: Record<string, number>;
+  reactions: { e: string; by: string[] }[];
   mentions: string[];
   everyone: boolean;
   md: string;
@@ -146,7 +146,12 @@ export function Chat() {
     );
   }
   return (
-    <Guard what="Chat" fallback={(err) => <CloudDown what="Chat" key={err.message} />}>
+    /* the card says what actually went wrong: an outage is the deployment,
+       anything else is this page, and the two are worth telling apart */
+    <Guard
+      what="Chat"
+      fallback={(err) => <CloudDown what="Chat" err={err} key={err.message} />}
+    >
       <Rooms />
     </Guard>
   );
@@ -396,6 +401,9 @@ function MemberBtn({
 }) {
   const role = (m.roles ?? [])[0];
   const t = role ? roleOf(role) : null;
+  /* the rail keeps the same rule as a line: a role, or failing that one thing
+     they are wearing — never a row of chips wider than the name */
+  const wornTag = t ? null : (itemsOf(m.wearing?.tags ?? [])[0] ?? null);
   return (
     <button
       className={`ch-member${dim ? " is-dim" : ""}${m.online ? " is-on" : ""}${
@@ -422,11 +430,12 @@ function MemberBtn({
           <CircleSlash />
         </span>
       )}
-      {t && !blocked && (
+      {!blocked && t && (
         <span className="tagchip ch-member-tag" title={t.note} style={{ backgroundColor: t.color, color: t.ink }}>
           {t.name}
         </span>
       )}
+      {!blocked && !t && wornTag && <TagChip item={wornTag} />}
     </button>
   );
 }
@@ -992,12 +1001,24 @@ function Line({
   me: string;
 }) {
   const tags = itemsOf(m.tags);
+  /* Two chips and no more: the staff role, and one thing they are wearing.
+     Six chips in a header is a header nobody reads, and which tag was bought
+     matters less than who is talking. */
+  const worn = tags[0] ?? null;
   const time = new Date(m.at).toLocaleTimeString([], {
     hour: "2-digit",
     minute: "2-digit",
     hour12: true,
   });
   const owner = m.owner || isOwner(m.user);
+  /* admin outranks mod when somebody holds both, which is the order the shelf
+     lists them in */
+  const staffTag = owner
+    ? null
+    : ((m.roles ?? [])
+        .map((r) => roleOf(r))
+        .filter((t): t is (typeof STAFF_TAGS)[number] => !!t)
+        .sort((a, b) => STAFF_TAGS.indexOf(a) - STAFF_TAGS.indexOf(b))[0] ?? null);
   const same = !!prev && prev.user === m.user && prev.bot === m.bot && m.at - prev.at < GROUP_MS;
   const pic = face?.pfp ?? fallbackPic ?? null;
   const avatar = face?.avatar ?? fallbackAvatar ?? null;
@@ -1068,22 +1089,20 @@ function Line({
                 {OWNER_TAG.name}
               </span>
             )}
-            {m.roles
-              ?.filter((r) => r !== "owner")
-              .map((r) => {
-                const t = roleOf(r);
-                if (!t) return null;
-                return (
-                  <span key={r} className="tagchip" title={t.note} style={{ backgroundColor: t.color, color: t.ink }}>
-                    <b className="tag-glyph">{t.glyph}</b>
-                    {t.name}
-                  </span>
-                );
-              })}
+            {staffTag && (
+              <span
+                className="tagchip"
+                title={staffTag.note}
+                style={{ backgroundColor: staffTag.color, color: staffTag.ink }}
+              >
+                <b className="tag-glyph">{staffTag.glyph}</b>
+                {staffTag.name}
+              </span>
+            )}
             {m.bot && <span className="say-badge">bot</span>}
-            {tags.map((t) => (
-              <TagChip key={t.id} item={t} />
-            ))}
+            {/* one chip each: what they are here, and one thing they are
+                wearing. Six chips in a header is a header nobody reads. */}
+            {worn && <TagChip item={worn} />}
             <span className="say-at">{time}</span>
           </span>
         )}
@@ -1101,11 +1120,16 @@ function Line({
           </span>
         )}
 
-        {Object.keys(m.reactions ?? {}).length > 0 && (
+        {(m.reactions?.length ?? 0) > 0 && (
           <span className="say-reacts">
-            {Object.entries(m.reactions).map(([e, n]) => (
-              <button key={e} className="say-react" onClick={() => onPickEmoji(e)} title={e}>
-                {e} <b>{n}</b>
+            {m.reactions.map((r) => (
+              <button
+                key={r.e}
+                className={`say-react${r.by.includes(me) ? " is-mine" : ""}`}
+                onClick={() => onPickEmoji(r.e)}
+                title={r.by.filter(Boolean).join(", ") || r.e}
+              >
+                {r.e} <b>{r.by.length}</b>
               </button>
             ))}
           </span>
@@ -1156,7 +1180,20 @@ function DeleteBtn({
   );
 }
 
+/* The stub asks the server for the line it points at. That is one extra query
+   per reply, and a query the deployment may not know about yet — a page that
+   is newer than the server it is talking to. A missing function is a thrown
+   error, a thrown error during render takes the room with it, so the stub has
+   its own wall: worst case it reads "replying to a line it cannot fetch". */
 function ReplyStub({ id, onProfile }: { id: string; onProfile: (u: string) => void }) {
+  return (
+    <Guard what="Reply" fallback={<span className="say-reply faint tiny">replying to a line</span>}>
+      <ReplyTarget id={id} onProfile={onProfile} />
+    </Guard>
+  );
+}
+
+function ReplyTarget({ id, onProfile }: { id: string; onProfile: (u: string) => void }) {
   const target = useQuery(api.chat.messageById, { id }) as Row | null | undefined;
   if (!target) return <span className="say-reply faint tiny">replying to a gone message</span>;
   return (

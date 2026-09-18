@@ -42,8 +42,14 @@ export function useOutage(): boolean {
   return useSyncExternalStore(subscribeOutage, outageOn, outageOn);
 }
 
-/** The fallback body for a Guard around a cloud page. */
-export function CloudDown({ what }: { what: string }) {
+/** The fallback body for a Guard around a cloud page.
+ *
+ *  `err` is the error the Guard caught. When the server itself is fine, that
+ *  error is a bug in this page, and saying "the server could not be reached"
+ *  about a bug sends everybody looking in the wrong place — so the real line
+ *  goes on screen in small print. That is how a missing function, an old
+ *  deployment or a bad argument gets reported instead of guessed at. */
+export function CloudDown({ what, err }: { what: string; err?: Error }) {
   const outage = useOutage();
   return (
     <div className="page">
@@ -58,12 +64,19 @@ export function CloudDown({ what }: { what: string }) {
             stuff — coins, profile, favorites — is untouched, and this comes back the moment the
             deployment is topped up.
           </p>
+        ) : err?.message ? (
+          <p>
+            The shared side of {what} could not be drawn just now. That is a fault on this side,
+            not an outage, and the line below is what it was. Everything stored on this browser
+            still works.
+          </p>
         ) : (
           <p>
             The server could not be reached just now, so the shared side of {what} is offline.
             Everything stored on this browser still works.
           </p>
         )}
+        {!outage && err?.message && <p className="tiny faint">{err.message}</p>}
         <button className="btn" onClick={() => location.reload()}>
           <RefreshCw /> Retry
         </button>

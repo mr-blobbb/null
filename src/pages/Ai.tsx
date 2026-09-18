@@ -61,7 +61,7 @@ export function Ai() {
     );
   }
   return (
-    <Guard what="AI" fallback={(err) => <CloudDown what="AI" key={err.message} />}>
+    <Guard what="AI" fallback={(err) => <CloudDown what="AI" err={err} key={err.message} />}>
       <Desk />
     </Guard>
   );

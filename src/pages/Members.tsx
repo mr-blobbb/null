@@ -55,7 +55,10 @@ type CloudMember = Member & {
 export function Members() {
   if (!cloudOn()) return <Local why="NULL has no server reachable from this build" />;
   return (
-    <Guard what="Members" fallback={(err) => <CloudDown what="Members" key={err.message} />}>
+    <Guard
+      what="Members"
+      fallback={(err) => <CloudDown what="Members" err={err} key={err.message} />}
+    >
       <Cloud />
     </Guard>
   );

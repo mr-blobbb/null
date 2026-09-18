@@ -96,6 +96,9 @@ export default defineSchema({
     reactions: v.optional(v.any()),
     /** who typed each emoji, so a second tap takes a reaction back */
     reactedBy: v.optional(v.array(v.string())),
+    /** the reactions as a list: the emoji as a value, never as a field name,
+     *  because Convex only allows ASCII in those and an emoji is not ASCII */
+    reacts: v.optional(v.array(v.object({ e: v.string(), by: v.array(v.string()) }))),
     /** handles the line @mentions, which is what the bell is for */
     mentions: v.optional(v.array(v.string())),
     /** true when the author pinged everyone and was allowed to */

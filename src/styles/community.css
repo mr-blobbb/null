@@ -1695,6 +1695,14 @@
   font-size: 10.5px;
   font-variant-numeric: tabular-nums;
 }
+/* yours, so you can see at a glance what you have already thrown */
+.say-react.is-mine {
+  border-color: var(--line-2);
+  background: var(--bg-3);
+}
+.say-react.is-mine b {
+  color: var(--ink);
+}
 .say-react:hover {
   border-color: var(--line-2);
   background: var(--bg-3);
@@ -1913,6 +1921,16 @@
   object-fit: contain;
   border: var(--bw) solid var(--line);
   border-radius: var(--r-2);
+}
+
+/* a rail row keeps its chips to the height of the row, whether it is a staff
+   role or something bought on the shelf */
+.ch-member .tagchip {
+  flex: none;
+  height: 17px;
+  padding: 0 6px;
+  font-size: 9px;
+  letter-spacing: 0.06em;
 }
 
 /* ---------- follow, or stop seeing them ----------

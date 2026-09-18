@@ -15,8 +15,14 @@
 
 import { ConvexReactClient } from "convex/react";
 
-/** Written by `convex dev`. Keep in step with the deployment. */
-const BACKEND = "https://healthy-axolotl-994.convex.cloud";
+/** The deployment `convex dev` pushes to, for builds where no address was set.
+ *
+ *  It has to be this one: NULL's old deployment ran out of credits and was
+ *  switched off by Convex, and against a switched-off deployment every query
+ *  and every mutation fails with the same "usage limit" error — which reads
+ *  on the site as if the chat were broken. This is the name the dev process
+ *  prints when it deploys; keep the two in step. */
+const BACKEND = "https://flexible-woodpecker-201.convex.cloud";
 
 function findUrl(): string | null {
   const env = import.meta.env as Record<string, string | undefined>;

@@ -28,7 +28,10 @@ const SHOWN = 5;
 export function Richest() {
   if (!cloudOn()) return <Local why="this build has no server reachable" />;
   return (
-    <Guard what="Richest" fallback={(err) => <CloudDown what="Richest" key={err.message} />}>
+    <Guard
+      what="Richest"
+      fallback={(err) => <CloudDown what="Richest" err={err} key={err.message} />}
+    >
       <Cloud />
     </Guard>
   );
