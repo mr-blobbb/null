@@ -22,7 +22,9 @@ import { useMutation, useQuery } from "convex/react";
 import {
   BadgeCheck,
   Bot,
+  Check,
   ChevronDown,
+  CircleSlash,
   Copy,
   CornerUpLeft,
   Crown,
@@ -39,6 +41,7 @@ import {
   Smile,
   Speaker,
   Trash2,
+  UserPlus,
   Users,
   Volume2,
   X,
@@ -51,6 +54,7 @@ import { CloudDown } from "../lib/outage";
 import { useAccount, nameStyleCss, type NameStyle } from "../lib/account";
 import { isOwner, OWNER_TAG } from "../lib/owner";
 import { itemsOf, useEcon } from "../lib/econ";
+import { toggleBlock, useBlocked } from "../lib/members";
 import { AvatarArt, TagChip } from "../lib/art";
 import { screen } from "../lib/filter";
 import { Markdown } from "../lib/md";
@@ -327,6 +331,7 @@ function MemberRail({
   me: string;
   onOpen: (user: string) => void;
 }) {
+  const blockedNow = useBlocked();
   const all = members ?? [];
   const owner = all.filter((m) => m.owner);
   const staff = all.filter((m) => !m.owner && (m.roles?.length ?? 0) > 0);
@@ -340,10 +345,16 @@ function MemberRail({
     <>
       <span className={`ch-mhead${dim ? " is-dim" : ""}`}>
         {label} <b>— {rows.length}</b>
-      </span>
-      {rows.map((m) => (
-        <MemberBtn key={m.user} m={m} me={m.user === me} dim={dim} onOpen={() => onOpen(m.user)} />
-      ))}
+      </span>        {rows.map((m) => (
+          <MemberBtn
+            key={m.user}
+            m={m}
+            me={m.user === me}
+            blocked={blockedNow.includes(m.user)}
+            dim={dim}
+            onOpen={() => onOpen(m.user)}
+          />
+        ))}
     </>
   );
 
@@ -373,11 +384,13 @@ function MemberRail({
 function MemberBtn({
   m,
   me,
+  blocked,
   dim,
   onOpen,
 }: {
   m: MemberRow;
   me: boolean;
+  blocked?: boolean;
   dim?: boolean;
   onOpen: () => void;
 }) {
@@ -385,9 +398,11 @@ function MemberBtn({
   const t = role ? roleOf(role) : null;
   return (
     <button
-      className={`ch-member${dim ? " is-dim" : ""}${m.online ? " is-on" : ""}`}
+      className={`ch-member${dim ? " is-dim" : ""}${m.online ? " is-on" : ""}${
+        blocked ? " is-blocked" : ""
+      }`}
       onClick={onOpen}
-      title={`@${m.user}`}
+      title={blocked ? `@${m.user} — blocked. Their lines are hidden here.` : `@${m.user}`}
     >
       <span className="ch-member-pic">
         {m.pfp ? <img src={m.pfp} alt="" /> : <NullFace />}
@@ -402,7 +417,12 @@ function MemberBtn({
         </b>
         <span className="ch-member-at">@{m.user}</span>
       </span>
-      {t && (
+      {blocked && (
+        <span className="ch-member-blocked" title="Blocked">
+          <CircleSlash />
+        </span>
+      )}
+      {t && !blocked && (
         <span className="tagchip ch-member-tag" title={t.note} style={{ backgroundColor: t.color, color: t.ink }}>
           {t.name}
         </span>
@@ -434,6 +454,8 @@ function Feed({
   const me = useAccount();
   const eco = useEcon();
   const mus = useMusic();
+  /* the people this browser is ignoring. Their lines never reach the feed. */
+  const blockedNow = useBlocked();
 
   const authors = useMemo(
     () => [...new Set((posts ?? []).map((m) => m.user.trim().toLowerCase()))].filter(Boolean).sort(),
@@ -501,13 +523,18 @@ function Feed({
     before.current = 0;
   }, [slug]);
 
-  const filtered = useMemo(() => {
-    if (!search.trim()) return posts;
+  /* what actually gets drawn: blocked authors dropped first, then the search
+     run over what is left. The count of what was dropped is kept, because a
+     room that silently loses messages is a room you cannot trust. */
+  const shown = useMemo(() => {
+    const all = posts ?? [];
+    const keep = all.filter((m) => !blockedNow.includes(m.user.trim().toLowerCase()));
     const needle = search.trim().toLowerCase();
-    return (posts ?? []).filter(
-      (m) => m.body.toLowerCase().includes(needle) || m.name.toLowerCase().includes(needle),
-    );
-  }, [posts, search]);
+    const list = needle
+      ? keep.filter((m) => m.body.toLowerCase().includes(needle) || m.name.toLowerCase().includes(needle))
+      : keep;
+    return { list, hidden: all.length - keep.length };
+  }, [posts, search, blockedNow]);
 
   async function post() {
     const text = said.clean.trim();
@@ -570,12 +597,18 @@ function Feed({
             )}
           </p>
         )}
-        {filtered?.length === 0 && posts && posts.length > 0 && search && (
+        {shown.hidden > 0 && (
+          <p className="ch-blockednote tiny faint">
+            <CircleSlash /> {shown.hidden} message{shown.hidden === 1 ? "" : "s"} from someone you
+            blocked {shown.hidden === 1 ? "is" : "are"} hidden here.
+          </p>
+        )}
+        {shown.list.length === 0 && posts && posts.length > 0 && search && (
           <p className="ch-empty muted">
             Nothing in #{slug} matches “{search}”.
           </p>
         )}
-        {filtered?.map((m, i) => {
+        {shown.list.map((m, i) => {
           const who = m.user.trim().toLowerCase();
           const own = who === handle;
           const face = faces.get(who);
@@ -584,7 +617,7 @@ function Feed({
               key={m.id}
               m={m}
               mine={own}
-              prev={filtered[i - 1]}
+              prev={shown.list[i - 1]}
               face={face}
               fallbackPic={own ? me.pfp : null}
               fallbackAvatar={own ? eco.equipped.avatar : null}
@@ -1327,6 +1360,9 @@ function ProfilePopout({
   const [why, setWhy] = useState("");
   const [reporting, setReporting] = useState(false);
   const [banned, setBanned] = useState<boolean | null>(null);
+  /* the local ignore list, read through the store so the rest of the room
+     reacts the moment it changes */
+  const blockedNow = useBlocked();
 
   useEffect(() => {
     if (card && me && card.user !== me) void countView({ user: card.user, by: me });
@@ -1337,6 +1373,7 @@ function ProfilePopout({
 
   const handle = card.user;
   const mine = me === handle;
+  const ignored = blockedNow.includes(handle);
   const following = graph?.following.includes(handle) ?? false;
   const isBanned = banned ?? card.banned === true;
   const openFlags = flags?.open ?? 0;
@@ -1393,32 +1430,17 @@ function ProfilePopout({
               <i className={`ch-dot ch-dot--big${card.online ? " is-on" : ""}`} />
             </span>
 
-            <div className="ch-pop-actions">
-              {!mine && me && (
-                <>
-                  <button
-                    className="btn btn--sm"
-                    title={`Send @${handle} a direct message`}
-                    onClick={() => onDm(handle)}
-                  >
-                    Message
-                  </button>
-                  <button
-                    className="btn btn--sm btn--fill"
-                    onClick={async () => {
-                      try {
-                        await doFollow({ by: me, user: handle, on: !following });
-                        setNote(following ? "Unfollowed." : "Followed.");
-                      } catch (e) {
-                        setNote((e as Error).message.replace(/^.*?Error: /, ""));
-                      }
-                    }}
-                  >
-                    {following ? "Unfollow" : "Add friend"}
-                  </button>
-                </>
-              )}
-            </div>
+            {!mine && me && !ignored && (
+              <div className="ch-pop-actions">
+                <button
+                  className="btn btn--sm"
+                  title={`Send @${handle} a direct message`}
+                  onClick={() => onDm(handle)}
+                >
+                  Message
+                </button>
+              </div>
+            )}
           </div>
 
           <h3 className="ch-pop-name" style={nameStyleCss(parseStyle(card.nameStyle ?? ""))}>
@@ -1516,6 +1538,41 @@ function ProfilePopout({
             </div>
           )}
 
+          {/* the two things you can decide about a person: follow them, or
+              stop seeing them */}
+          {!mine && me && (
+            <div className="ch-pop-decide">
+              <button
+                className={`btn ch-pop-follow${following ? "" : " btn--fill"}`}
+                onClick={async () => {
+                  try {
+                    await doFollow({ by: me, user: handle, on: !following });
+                    setNote(following ? "Unfollowed." : "Followed.");
+                  } catch (e) {
+                    setNote((e as Error).message.replace(/^.*?Error: /, ""));
+                  }
+                }}
+              >
+                {following ? <><Check /> Following</> : <><UserPlus /> Follow</>}
+              </button>
+              <button
+                className={`btn btn--icon ch-pop-block${ignored ? " is-on" : ""}`}
+                title={ignored ? `Stop ignoring @${handle}` : `Block @${handle} — their lines stop showing here`}
+                aria-pressed={ignored}
+                onClick={() => {
+                  const now = toggleBlock(handle);
+                  setNote(
+                    now
+                      ? "Blocked. Their lines and their side of a DM are hidden on this browser."
+                      : "Unblocked.",
+                  );
+                }}
+              >
+                <CircleSlash />
+              </button>
+            </div>
+          )}
+
           <div className="ch-pop-foot">
             {!mine && me && !reporting && (
               <button className="btn btn--sm btn--icon" title="Report" onClick={() => setReporting(true)}>
@@ -1589,6 +1646,10 @@ function DmThread({ other, me }: { other: string; me: ReturnType<typeof useAccou
     | { id: string; body: string; at: number; from: string; image: string | null }[]
     | undefined;
   const doSend = useMutation(api.members.dmSend);
+  /* blocking somebody hides their half of the conversation, which is the only
+     half this browser can honestly refuse to show */
+  const blockedNow = useBlocked();
+  const visible = (rows ?? []).filter((r) => !blockedNow.includes(r.from.trim().toLowerCase()));
 
   const [draft, setDraft] = useState("");
   const [err, setErr] = useState<string | null>(null);
@@ -1609,7 +1670,7 @@ function DmThread({ other, me }: { other: string; me: ReturnType<typeof useAccou
   return (
     <div className="dm">
       <div className="dm-log" ref={box}>
-        {(rows ?? []).map((r) => (
+        {visible.map((r) => (
           <p key={r.id} className={`dm-line${r.from === handle ? " is-mine" : ""}`}>
             {r.image && <img src={r.image} alt="" />}
             {r.body}
@@ -1617,6 +1678,11 @@ function DmThread({ other, me }: { other: string; me: ReturnType<typeof useAccou
         ))}
         {rows && rows.length === 0 && (
           <p className="tiny faint dm-hello">No messages yet. Say something.</p>
+        )}
+        {rows && rows.length > 0 && visible.length !== rows.length && (
+          <p className="tiny faint dm-hello">
+            <CircleSlash /> {rows.length - visible.length} hidden — you blocked @{other}.
+          </p>
         )}
       </div>
       <div className="dm-box">

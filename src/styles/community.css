@@ -1914,6 +1914,87 @@
   border: var(--bw) solid var(--line);
   border-radius: var(--r-2);
 }
+
+/* ---------- follow, or stop seeing them ----------
+   The two decisions sit together at the bottom of a profile card: the filled
+   one is what most people came to do, and the circle with a slash through it
+   is the way out of a conversation you did not ask for. */
+
+.ch-pop-decide {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+.ch-pop-follow {
+  flex: 1 1 auto;
+  justify-content: center;
+}
+.ch-pop-follow svg {
+  width: 14px;
+  height: 14px;
+}
+.ch-pop-block {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-2);
+  color: var(--dim);
+}
+.ch-pop-block:hover {
+  color: var(--bad);
+  border-color: color-mix(in srgb, var(--bad) 55%, var(--line));
+}
+.ch-pop-block.is-on {
+  color: var(--bad);
+  border-color: color-mix(in srgb, var(--bad) 60%, var(--line));
+  background: color-mix(in srgb, var(--bad) 14%, transparent);
+}
+.ch-pop-block svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* a line about what is not being shown, rather than silence */
+.ch-blockednote {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  align-self: center;
+  margin: 2px 0 6px;
+  padding: 4px 10px;
+  border: var(--bw) solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg-2) 70%, transparent);
+}
+.ch-blockednote svg {
+  flex: none;
+  width: 12px;
+  height: 12px;
+}
+.ch-member-blocked {
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: var(--bad);
+}
+.ch-member-blocked svg {
+  width: 13px;
+  height: 13px;
+}
+.ch-member.is-blocked .ch-member-pic {
+  opacity: 0.5;
+}
+.ch-member.is-blocked .ch-member-name {
+  color: var(--faint);
+}
+.dm-hello svg {
+  width: 12px;
+  height: 12px;
+  vertical-align: -1px;
+}
 .ch-emojigrid {
   display: grid;
   grid-template-columns: repeat(10, 1fr);

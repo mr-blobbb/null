@@ -191,6 +191,25 @@ ok("and the decoration they wear is drawn over it", chatOut.includes("art art--c
 ok("only the person with a picture gets one", (chatOut.match(/<img /g) ?? []).length === 1);
 ok("the room header is there", chatOut.includes("ch-hash") && chatOut.includes("everything at once"));
 
+/* ---------- ignoring somebody ----------
+   Blocking is local and it is honest about that, so what gets tested is the
+   part that is real: this browser stops drawing their lines, and says how
+   many it is not showing instead of going quiet. */
+const { toggleBlock, isBlocked } = await import("./src/lib/members");
+ok("a handle is remembered as blocked, whatever case it wears", (() => {
+  toggleBlock("MrBlob");
+  const yes = isBlocked("@mrblob") && isBlocked("MRBLOB");
+  return yes;
+})());
+const blockedOut = renderToStaticMarkup(<Chat /> as never);
+ok("a blocked author's line is not drawn", !blockedOut.includes("morning"));
+ok("and the room says so rather than going quiet", blockedOut.includes("ch-blockednote"));
+ok("the rail marks them", blockedOut.includes("ch-member-blocked"));
+ok("unblocking forgets, and the line comes back", (() => {
+  const off = !toggleBlock("mrblob") && !isBlocked("mrblob");
+  return off && renderToStaticMarkup(<Chat /> as never).includes("morning");
+})());
+
 /* ---------- the rooms, as the owner ---------- */
 account.set({ user: OWNER, name: OWNER, joined: Date.now() });
 const ownerOut = renderToStaticMarkup(<Chat /> as never);

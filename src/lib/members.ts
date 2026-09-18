@@ -140,3 +140,37 @@ export function forget(user: string) {
   const list = s.list.filter((m) => m.user.toLowerCase() !== user.toLowerCase());
   if (list.length !== s.list.length) members.set({ list });
 }
+
+/* ---------- blocked ----------
+   Ignoring somebody is local, and it is honest about being local: their words
+   are already in the room and every machine has them, so the one thing that
+   can refuse to draw them is this browser. What it does is real all the same —
+   their lines are dropped from the feed, their side of a direct message
+   disappears, and the card stops offering to write to them. */
+
+const blocks = createStore<{ list: string[] }>("blocked", { list: [] });
+
+/** Handles are lowercased, because that is how everyone else here keys people. */
+function keyOf(user: string | null | undefined): string {
+  return (user ?? "").replace(/^@/, "").trim().toLowerCase();
+}
+
+export function isBlocked(user: string | null | undefined): boolean {
+  const key = keyOf(user);
+  return !!key && blocks.get().list.includes(key);
+}
+
+/** Returns the state it was left in: true now means blocked. */
+export function toggleBlock(user: string): boolean {
+  const key = keyOf(user);
+  if (!key) return false;
+  const list = blocks.get().list;
+  const next = list.includes(key) ? list.filter((u) => u !== key) : [...list, key];
+  blocks.set({ list: next });
+  return next.includes(key);
+}
+
+/** React hook: the handles this browser is ignoring. */
+export function useBlocked(): string[] {
+  return useStore(blocks).list;
+}
