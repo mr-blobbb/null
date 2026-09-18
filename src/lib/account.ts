@@ -407,11 +407,10 @@ export function signOut() {
  *  Every other account on the device is left alone. */
 export function deleteAccount() {
   const k = keyOf(account.get().handle || account.get().user || "");
-  if (k) {
-    const all = { ...book.get() };
-    delete all[k];
-    book.set(all);
-  }
+  /* `del`, not a copy with the key left out: the store merges a patch into
+     what is already there, so the missing key simply came back and the
+     account stayed deletable and stayed on the sign-in card */
+  if (k) book.del(k);
   setTab("");
   account.set({ ...EMPTY, joined: Date.now() });
 }
@@ -457,11 +456,9 @@ export function changeUser(user: string): { ok: boolean; error?: string } {
   const from = keyOf(s.handle || s.user || "");
   account.set({ user, handle: user, lastUserChange: Date.now() });
   setTab(user);
-  if (from && from !== keyOf(user)) {
-    const all = { ...book.get() };
-    delete all[from];
-    book.set(all);
-  }
+  /* the same merge would leave the old handle behind as a ghost record that
+     still had a password on it */
+  if (from && from !== keyOf(user)) book.del(from);
   return { ok: true };
 }
 

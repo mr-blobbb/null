@@ -13,6 +13,11 @@ export type Store<T extends object> = {
   key: string;
   get: () => T;
   set: (patch: Patch<T>) => T;
+  /** Take one key out. `set` merges, which means a key left out of a patch is
+   *  kept — so a record copied, minus a key, puts that key straight back and
+   *  nothing is ever actually removed. Deleting a member account needs a real
+   *  removal, which is what this is. */
+  del: (key: keyof T) => T;
   subscribe: (fn: () => void) => () => void;
   reset: () => void;
 };
@@ -52,6 +57,12 @@ export function createStore<T extends object>(key: string, initial: T): Store<T>
     set(patch) {
       const part = typeof patch === "function" ? patch(state) : patch;
       write({ ...state, ...part });
+      return state;
+    },
+    del(key) {
+      const next = { ...state };
+      delete next[key];
+      write(next);
       return state;
     },
     subscribe(fn) {

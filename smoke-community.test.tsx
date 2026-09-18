@@ -473,6 +473,42 @@ ok("a second account does not disturb the first", (() => {
 })());
 signOut();
 
+/* ---------- deleting one ----------
+   The complaint was exact again: the account stayed on the sign-in card and
+   the password still opened it. The cause was the store: `set` merges a patch
+   into what is there, so a record copied with one key left out put that key
+   straight back and nothing was ever really removed. */
+const { deleteAccount, knownAccounts, changeUser } = await import("./src/lib/account");
+const { createStore } = await import("./src/lib/store");
+ok("the store can take a key out", (() => {
+  const scratch = createStore<Record<string, number>>("scratch", { a: 1, b: 2 });
+  scratch.del("a");
+  return !("a" in scratch.get()) && scratch.get().b === 2;
+})());
+ok("while a plain patch still merges", (() => {
+  const scratch = createStore<Record<string, number>>("scratch2", { a: 1, b: 2 });
+  scratch.set({ b: 5 });
+  return scratch.get().a === 1 && scratch.get().b === 5;
+})());
+ok("deleting an account takes it off this browser", (() => {
+  signIn("secondone", "pass");
+  deleteAccount();
+  const gone = !knownAccounts().some((a) => a.handle === "secondone");
+  return gone && account.get().user === null;
+})());
+ok("and the password no longer opens it", signIn("secondone", "pass").ok === false);
+ok("the other account on the device is untouched", (() => {
+  const kept = knownAccounts().find((a) => a.handle === "namecheck");
+  return !!kept && kept.name === "abc" && signIn("namecheck", "pass").ok === true;
+})());
+ok("renaming does not leave the old handle behind as a ghost", (() => {
+  account.set({ lastUserChange: 0 });
+  const r = changeUser("renamedone");
+  const handles = knownAccounts().map((a) => a.handle);
+  return r.ok === true && handles.includes("renamedone") && !handles.includes("namecheck");
+})());
+signOut();
+
 let bad = 0;
 for (const [what, fine] of checks) {
   if (!fine) bad++;
