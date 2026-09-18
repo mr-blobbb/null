@@ -18,7 +18,7 @@
    one before it ever stores a word. */
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useAction, useMutation, useQuery } from "convex/react";
 import {
   BadgeCheck,
   Bot,
@@ -39,7 +39,6 @@ import {
   Search,
   Send,
   Smile,
-  Speaker,
   Trash2,
   UserPlus,
   Users,
@@ -61,8 +60,10 @@ import { screen } from "../lib/filter";
 import { Markdown } from "../lib/md";
 import { go } from "../lib/tabs";
 import { REPORT_REASONS, roleOf, STAFF_TAGS } from "../lib/staff";
+import { emojiOf, REACTIONS, suggest } from "../lib/emoji";
 import { NullFace } from "../lib/brand";
 import { Sheet } from "../components/Sheet";
+import { EmojiPicker } from "../components/EmojiPicker";
 import { useMusic, type Track } from "../lib/music";
 
 type Row = {
@@ -109,6 +110,10 @@ type MemberRow = {
 
 type Face = { pfp: string | null; avatar: string | null; nameStyle: string };
 
+/** One result from the GIF search. What a message stores is `full` — a URL,
+ *  never the file. */
+type Gif = { id: string; full: string; thumb: string; w: number; h: number; title: string };
+
 type Flags = {
   open: number;
   total: number;
@@ -122,10 +127,10 @@ const INFO_SHELF = ["announcements", "updates", "links", "staff-shitpost"];
 const SOCIAL_SHELF = ["general", "member-shitpost", "advertise", "share-links", "general-voice"];
 
 /** The sidebar is drawn from the same table the server enforces: the Info
- *  shelves read as shelves, the voice room reads with a speaker. */
+ *  shelves read as announcements, the voice room reads with a speaker. */
 function ChannelIcon({ ch }: { ch: Channel }) {
   if (ch.kind === "voice") return <Volume2 />;
-  if (ch.gate === "staff") return <Speaker />;
+  if (ch.gate === "staff") return <span className="ch-bull">📢</span>;
   return <Hash />;
 }
 
@@ -163,7 +168,9 @@ function Rooms() {
   const me = useAccount();
   const channels = useQuery(api.chat.threads) as Channel[] | undefined;
   const members = useQuery(api.members.list) as MemberRow[] | undefined;
-  const [slug, setSlug] = useState("general");
+  /* the front door of the community is the rules, not the busiest room: what
+     NULL expects of you should be the first thing the page shows */
+  const [slug, setSlug] = useState("rules");
   const [profileFor, setProfileFor] = useState<string | null>(null);
   const [dmWith, setDmWith] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -223,7 +230,7 @@ function Rooms() {
         </header>
 
         <Feed
-          slug={here?.slug ?? "general"}
+          slug={here?.slug ?? slug}
           channels={channels}
           staff={staff}
           search={search}
@@ -318,7 +325,7 @@ function RoomList({
   return (
     <nav className="ch-list" aria-label="Channels">
       {rules && <div className="ch-shelf ch-shelf--solo">{room(rules)}</div>}
-      {shelf("info", "Info", <Speaker />, info)}
+      {shelf("info", "Info", <span className="ch-bull">📢</span>, info)}
       {shelf("social", "Social", <MessageCircle />, social)}
       {made.length > 0 && shelf("made", "Rooms", <Hash />, made)}
     </nav>
@@ -494,14 +501,90 @@ function Feed({
   const [reactFor, setReactFor] = useState<string | null>(null);
   const [reportFor, setReportFor] = useState<Row | null>(null);
   const [tool, setTool] = useState<null | "gif" | "music" | "emoji">(null);
-  const [gifUrl, setGifUrl] = useState("");
   const feed = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  /* gifs are searched on the deployment, not pasted in as a URL — the key
+     cannot live in a page bundle, so the page asks and gets URLs back */
+  const findGifs = useAction(api.gifs.find);
+  const gifReady = useQuery(api.gifs.ready);
+  const [gifQ, setGifQ] = useState("");
+  const [gifs, setGifs] = useState<Gif[]>([]);
+  const [gifNote, setGifNote] = useState<string | null>(null);
+  const [gifBusy, setGifBusy] = useState(false);
+
+  /* `:fir` is half of `:fire:`. Where the caret is decides whether that is
+     happening at all, so the selection is tracked, not the whole draft. */
+  const [caret, setCaret] = useState(0);
+  const [pickAt, setPickAt] = useState(0);
+  const [shut, setShut] = useState("");
 
   /* a /vote line is read out of the draft before anything else looks at it:
      the poll is content, the line itself is not */
   const vote = useMemo(() => (staff ? parseVote(draft) : { body: draft, poll: null }), [draft, staff]);
   const said = useMemo(() => screen(vote.body, staff), [vote.body, staff]);
+
+  /* the word being named at the caret, and what it could become. Anything but
+     a colon right after a space is somebody quoting, not naming. */
+  const naming = useMemo(() => {
+    const before = draft.slice(0, Math.max(0, Math.min(caret, draft.length)));
+    const hit = /(^|\s):([a-z0-9_+-]{1,24})$/i.exec(before);
+    if (!hit || hit[2] === shut) return null;
+    const list = suggest(hit[2], 6);
+    if (!list.length) return null;
+    return { start: before.length - hit[2].length - 1, q: hit[2], list };
+  }, [draft, caret, shut]);
+  const pickIdx = naming ? Math.min(pickAt, naming.list.length - 1) : 0;
+  /* a new letter is a new list, so the highlight goes back to the top */
+  useEffect(() => setPickAt(0), [naming?.q]);
+
+  /* trending when the panel opens, then whatever is typed, a beat after the
+     typing stops */
+  useEffect(() => {
+    if (tool !== "gif" || gifReady === false) return;
+    let live = true;
+    setGifBusy(true);
+    const id = window.setTimeout(() => {
+      findGifs({ q: gifQ })
+        .then((res) => {
+          if (!live) return;
+          /* an old deployment, or a body that will not parse, must not take
+             the panel down with it */
+          setGifs(Array.isArray(res?.gifs) ? (res.gifs as Gif[]) : []);
+          setGifNote(res?.error ?? null);
+        })
+        .catch((e) => live && setGifNote((e as Error).message.replace(/^.*?Error: /, "")))
+        .finally(() => live && setGifBusy(false));
+    }, gifQ ? 320 : 0);
+    return () => {
+      live = false;
+      window.clearTimeout(id);
+    };
+  }, [tool, gifQ, gifReady, findGifs]);
+
+  /** Put a glyph where the caret is, and leave the caret after it. Somebody
+   *  writing a sentence wants the emoji in the sentence, not at the end. */
+  const insertAt = (text: string) => {
+    const at = Math.max(0, Math.min(caret, draft.length));
+    const next = at + text.length;
+    setDraft(draft.slice(0, at) + text + draft.slice(at));
+    setCaret(next);
+    requestAnimationFrame(() => inputRef.current?.setSelectionRange(next, next));
+  };
+
+  /** Swap the half-typed name for its glyph, and put the caret after it. */
+  const takeEmoji = (name: string) => {
+    const glyph = emojiOf(name);
+    if (!glyph || !naming) return;
+    const at = naming.start + glyph.length;
+    setDraft(draft.slice(0, naming.start) + glyph + draft.slice(caret));
+    setCaret(at);
+    setPickAt(0);
+    /* the caret has to move in the box as well, or the next colon lands
+       wherever the browser last left it */
+    requestAnimationFrame(() => inputRef.current?.setSelectionRange(at, at));
+  };
 
   /* typing: tell the room, once every few seconds while keys are moving */
   const doTyping = useMutation(api.chat.typing);
@@ -535,6 +618,10 @@ function Feed({
     setReply(null);
     setReactFor(null);
     setTool(null);
+    setGifQ("");
+    setGifNote(null);
+    setCaret(0);
+    setShut("");
     before.current = 0;
   }, [slug]);
 
@@ -679,6 +766,26 @@ function Feed({
       <div className="ch-box">
         {(tool || reactFor) && <div className="ch-scrim" onMouseDown={closeTools} role="presentation" />}
 
+        {/* the names that fit what is being typed. Tab or Return takes the
+            highlighted one, the arrows walk the list, Escape drops it. */}
+        {naming && (
+          <div className="ch-suggest" role="listbox">
+            {naming.list.map((s, i) => (
+              <button
+                key={s.name}
+                className={`ch-suggest-row${i === pickIdx ? " is-on" : ""}`}
+                role="option"
+                aria-selected={i === pickIdx}
+                onMouseEnter={() => setPickAt(i)}
+                onClick={() => takeEmoji(s.name)}
+              >
+                <span className="ch-suggest-e">{s.e}</span>
+                <span className="ch-suggest-n">:{s.name}:</span>
+              </button>
+            ))}
+          </div>
+        )}
+
         {reply && (
           <div className="ch-replybar">
             <Reply />
@@ -715,7 +822,7 @@ function Feed({
                 </button>
                 <button
                   className={`ch-tool${tool === "gif" ? " is-on" : ""}`}
-                  title="Add a GIF by link"
+                  title="Add a GIF"
                   onClick={() => setTool(tool === "gif" ? null : "gif")}
                 >
                   <Film />
@@ -761,14 +868,43 @@ function Feed({
               />
 
               <textarea
+                ref={inputRef}
                 className="ch-input"
                 value={draft}
                 rows={1}
                 placeholder={`Message #${slug}`}
                 spellCheck={false}
                 autoComplete="off"
-                onChange={(e) => setDraft(e.target.value)}
+                onChange={(e) => {
+                  setDraft(e.target.value);
+                  setCaret(e.target.selectionStart);
+                }}
+                onSelect={(e) => setCaret(e.currentTarget.selectionStart)}
                 onKeyDown={(e) => {
+                  /* while a name is half-typed the arrows walk the suggestions
+                     rather than the text, which is what every chat does */
+                  if (naming) {
+                    if (e.key === "ArrowDown") {
+                      e.preventDefault();
+                      setPickAt((i) => (i + 1) % naming.list.length);
+                      return;
+                    }
+                    if (e.key === "ArrowUp") {
+                      e.preventDefault();
+                      setPickAt((i) => (i - 1 + naming.list.length) % naming.list.length);
+                      return;
+                    }
+                    if (e.key === "Tab" || e.key === "Enter") {
+                      e.preventDefault();
+                      takeEmoji(naming.list[pickIdx].name);
+                      return;
+                    }
+                    if (e.key === "Escape") {
+                      e.preventDefault();
+                      setShut(naming.q);
+                      return;
+                    }
+                  }
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
                     void post();
@@ -788,46 +924,62 @@ function Feed({
 
             {tool === "emoji" && (
               <div className="ch-toolpop ch-toolpop--emoji">
-                <span className="ch-toolpop-head tiny faint">Emoji</span>
-                <div className="ch-emojigrid">
-                  {EMOJI.map((e) => (
-                    <button key={e} className="ch-emojibtn" onClick={() => setDraft((d) => d + e)}>
-                      {e}
-                    </button>
-                  ))}
-                </div>
+                <EmojiPicker
+                  onPick={(e) => {
+                    insertAt(e);
+                    setShut("");
+                  }}
+                />
               </div>
             )}
 
             {tool === "gif" && (
-              <div className="ch-toolpop">
-                <span className="ch-toolpop-head tiny faint">A GIF, by link</span>
-                <p className="tiny faint">
-                  Paste the address of a GIF — NULL stores the link, not the file, so nothing is
-                  copied twice.
-                </p>
-                <div className="ch-toolpop-row">
-                  <input
-                    className="fld"
-                    value={gifUrl}
-                    spellCheck={false}
-                    placeholder="https://…/something.gif"
-                    onChange={(e) => setGifUrl(e.target.value)}
-                  />
-                  <button
-                    className="btn btn--sm btn--fill"
-                    disabled={!/^https?:\/\/.+/i.test(gifUrl.trim())}
-                    onClick={() => {
-                      setImage(gifUrl.trim());
-                      setGifUrl("");
-                      setTool(null);
-                    }}
-                  >
-                    Add
-                  </button>
-                </div>
-                {gifUrl && /^https?:\/\/.+/i.test(gifUrl) && (
-                  <img className="ch-toolpop-prev" src={gifUrl} alt="" />
+              <div className="ch-toolpop ch-toolpop--gif">
+                <span className="ch-toolpop-head tiny faint">GIFs</span>
+                {gifReady === false ? (
+                  <p className="tiny faint">
+                    A GIF search needs a key. Add <code>GIPHY_API_KEY</code> to this deployment's
+                    environment and the shelf fills itself in.
+                  </p>
+                ) : (
+                  <>
+                    <label className="ch-gif-find">
+                      <Search />
+                      <input
+                        value={gifQ}
+                        spellCheck={false}
+                        autoComplete="off"
+                        placeholder="Search GIFs"
+                        aria-label="Search GIFs"
+                        onChange={(e) => setGifQ(e.target.value)}
+                      />
+                      {gifQ && (
+                        <button className="emopick-x" onClick={() => setGifQ("")} aria-label="Clear">
+                          <X />
+                        </button>
+                      )}
+                    </label>
+                    {gifNote && <p className="tiny faint">{gifNote}</p>}
+                    <div className="ch-gifgrid">
+                      {gifs.map((g) => (
+                        <button
+                          key={g.id}
+                          className="ch-gif"
+                          title={g.title || "Send this one"}
+                          onClick={() => {
+                            setImage(g.full);
+                            closeTools();
+                          }}
+                        >
+                          <img src={g.thumb} alt={g.title} loading="lazy" decoding="async" />
+                        </button>
+                      ))}
+                    </div>
+                    {gifBusy && <p className="tiny faint">Looking…</p>}
+                    {!gifs.length && !gifBusy && !gifNote && (
+                      <p className="tiny faint">Nothing matched that.</p>
+                    )}
+                  </>
                 )}
               </div>
             )}
@@ -886,7 +1038,7 @@ function Feed({
           </>
         ) : signedIn ? (
           <div className="ch-locked">
-            <Speaker />
+            <span className="ch-bull ch-bull--big">📢</span>
             <span>You don't have permission to post in #{slug}. Only staff can post them.</span>
           </div>
         ) : (
@@ -949,13 +1101,6 @@ function MusicRow({
     </button>
   );
 }
-
-/* One row of the pickers. The first ten are what a message's own bar offers,
-   because a reaction bar that needs scrolling is a reaction bar nobody uses. */
-const EMOJI = [
-  "😂", "🔥", "💀", "😭", "👀", "❤️", "👍", "🤡", "🙏", "💯",
-  "🎉", "😎", "🤔", "🫡", "😤", "🥶", "🗿", "✨", "😴", "🥲",
-];
 
 function tagIds(): string[] {
   try {
@@ -1030,6 +1175,11 @@ function Line({
   onProblem: (why: string) => void;
   me: string;
 }) {
+  const [more, setMore] = useState(false);
+  /* the pad is only open while the bar it belongs to is */
+  useEffect(() => {
+    if (!reactor) setMore(false);
+  }, [reactor]);
   const tags = itemsOf(m.tags);
   /* Two chips and no more: the staff role, and one thing they are wearing.
      Six chips in a header is a header nobody reads, and which tag was bought
@@ -1089,11 +1239,29 @@ function Line({
 
       {reactor && (
         <div className="ch-reactor">
-          {EMOJI.slice(0, 10).map((e) => (
+          {REACTIONS.map((e) => (
             <button key={e} className="ch-reactor-btn" onClick={() => onPickEmoji(e)}>
               {e}
             </button>
           ))}
+          {/* anything else, for the one emoji nobody keeps on a bar */}
+          <button
+            className={`ch-reactor-btn${more ? " is-on" : ""}`}
+            title="Any emoji"
+            onClick={() => setMore(!more)}
+          >
+            <Smile />
+          </button>
+          {more && (
+            <div className="ch-reactor-pop">
+              <EmojiPicker
+                onPick={(e) => {
+                  setMore(false);
+                  onPickEmoji(e);
+                }}
+              />
+            </div>
+          )}
         </div>
       )}
 

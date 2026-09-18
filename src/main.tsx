@@ -11,6 +11,9 @@ import "./styles/settings.css";
 import "./styles/browser.css";
 import "./styles/music.css";
 import "./styles/community.css";
+/* what the chat composer grew: the emoji pad, the gif shelf, the names under a
+   colon — all of it chat, so it sits right after the rooms and overrides them */
+import "./styles/emoji.css";
 /* what the markdown renderer produces, wherever it is used */
 import "./styles/markdown.css";
 /* imported last: the quiet pass, which overrides a few wrote-in sizes */

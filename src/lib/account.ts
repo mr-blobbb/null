@@ -340,10 +340,15 @@ type CloudCard = {
   wearing?: { avatar: string | null; effect: string | null; tags: string[] };
 };
 
-let pulled = "";
-
 /** Lay the cloud card over this browser's. Called after a successful sign-in
- *  (and after the owner unlock), never throws. */
+ *  (and after the owner unlock), never throws.
+ *
+ *  The directory holds the truth, so most fields come down as they are — but
+ *  the display name is the exception, because its default *is* the handle.
+ *  A card that was published before somebody renamed themselves still says
+ *  "@them" in that field, and laying that over a name they chose turned a
+ *  rename into a reset every time they logged back in. A local name that is
+ *  neither empty nor the handle was typed on purpose, and it stands. */
 export async function restoreCard(user: string): Promise<void> {
   const key = user.replace(/^@/, "").trim().toLowerCase();
   if (!key) return;
@@ -355,12 +360,18 @@ export async function restoreCard(user: string): Promise<void> {
     const card = (await c.query(api.members.card, { user: key })) as CloudCard | null;
     if (!card) return;
 
-    pulled = key;
+    const mine = account.get();
+    const handle = keyOf(mine.handle || mine.user || "");
+    const typed = (mine.name ?? "").trim();
     const patch: Record<string, unknown> = {};
-    if (card.name && card.name.trim()) patch.name = card.name.trim().slice(0, 40);
+    if (card.name && card.name.trim() && (!typed || keyOf(typed) === handle)) {
+      patch.name = card.name.trim().slice(0, 40);
+    }
     if (typeof card.bio === "string") patch.bio = card.bio.slice(0, 400);
     if (typeof card.banner === "string" && card.banner) patch.banner = card.banner;
-    if (card.pfp !== undefined) patch.pfp = card.pfp ?? null;
+    /* the same rule for the picture: a card that carries none does not get to
+       take away one that is on this browser already */
+    if (card.pfp) patch.pfp = card.pfp;
     if (typeof card.nameStyle === "string" && card.nameStyle) {
       try {
         const style = JSON.parse(card.nameStyle);

@@ -243,7 +243,14 @@ ok(
 ok("the author's picture is in the room", chatOut.includes('<img src="data:image/png;base64,iVBORw0KGgo='));
 ok("and the decoration they wear is drawn over it", chatOut.includes("art art--clip"));
 ok("only the person with a picture gets one", (chatOut.match(/<img /g) ?? []).length === 1);
-ok("the room header is there", chatOut.includes("ch-hash") && chatOut.includes("everything at once"));
+ok("the room header is there", chatOut.includes("ch-hash") && chatOut.includes("the rules"));
+/* the front door of the community is what it expects of you, not the busiest
+   room: the rules are the room a fresh visitor lands in */
+ok(
+  "chat opens on the rules",
+  chatOut.includes("#rules") && /class="ch-room is-on"[\s\S]{0,160}?<span>rules<\/span>/.test(chatOut),
+);
+ok("the announcement rooms read with a megaphone", chatOut.includes('class="ch-bull"') && chatOut.includes("📢"));
 
 /* ---------- ignoring somebody ----------
    Blocking is local and it is honest about that, so what gets tested is the
@@ -404,6 +411,67 @@ ok("the assistant is listed in All Apps", ALL_PAGES.includes("ai") && !!PAGES.ai
 ok("the assistant has an internal address", PAGES.ai.address === "null://ai");
 ok("every relay is a websocket", RELAYS.every((r) => r.url.startsWith("wss://")));
 ok("a live relay is tried first", RELAYS[0].url === "wss://anura.pro/");
+
+/* ---------- emojis ----------
+   Three things were asked for at once and each has a fact behind it: the bar
+   carries the list, `:name` is a lookup, and the pad shows the shelves. */
+const { REACTIONS, suggest, emojiOf, nameOf: emojiName, GROUPS } = await import("./src/lib/emoji");
+const { EmojiPicker } = await import("./src/components/EmojiPicker");
+const ON_THE_BAR = [
+  "👍", "👎", "❤️", "🔥", "🎉", "💯", "😂", "🤣", "💀", "😮",
+  "🤔", "👀", "🤯", "😢", "😭", "🙏", "🥀", "✅", "❌",
+];
+ok("the reaction bar carries every emoji it was asked for", ON_THE_BAR.every((e) => REACTIONS.includes(e)));
+ok(":fire: is fire, however it is typed", emojiOf(":fire:") === "🔥" && emojiOf("FIRE") === "🔥");
+ok("a half-typed name offers the ones that start with it", suggest("fi")[0]?.name === "fire");
+ok("and the ones that merely contain it come after", suggest("lap").some((s) => s.name === "clap"));
+ok("a glyph can be named back, for the tooltip", emojiName("💀") === "skull");
+ok("nothing is offered for a word nobody used", suggest("zzzz").length === 0);
+ok("every shelf is stocked", GROUPS.length >= 8 && GROUPS.every((g) => g.list.length > 20));
+ok("and no shelf carries a blank", GROUPS.every((g) => g.list.every((e) => e.trim().length > 0)));
+ok("the pad is reachable from the composer", ownerOut.includes("ch-tools"));
+const pad = renderToStaticMarkup(<EmojiPicker onPick={() => {}} /> as never);
+ok("the pad has a search box", pad.includes("emopick-find") && pad.includes("Search emoji"));
+ok(
+  "and a tab for every shelf",
+  (pad.match(/class="emopick-tab[ "]/g) ?? []).length === GROUPS.length + 1,
+);
+ok("opening on what was used last, which is nothing yet", pad.includes("emopick-none"));
+
+/* ---------- coming back to an account ----------
+   The complaint was exact: log out, log back in, and a name somebody chose
+   came back as their handle. What is checked is the part that is real on one
+   machine — the account book keeps the name whole — because the half that
+   pulls the cloud card is a no-op with no server to ask. */
+const { signUp, signIn, signOut } = await import("./src/lib/account");
+ok("an account keeps its name through a log out and back in", (() => {
+  signUp("namecheck", "pass", "pass");
+  account.set({ name: "abc" });
+  signOut();
+  const back = signIn("namecheck", "pass");
+  return back.ok === true && account.get().name === "abc";
+})());
+ok("it keeps the name style and the picture with it", (() => {
+  account.set({ nameStyle: { ...account.get().nameStyle, c1: "#8badf0", glow: true } });
+  signOut();
+  signIn("namecheck", "pass");
+  const me = account.get();
+  return me.nameStyle.c1 === "#8badf0" && me.nameStyle.glow === true;
+})());
+ok("and signing up with a handle already here is signing back in", (() => {
+  signOut();
+  const again = signUp("namecheck", "pass", "pass");
+  return again.ok === true && account.get().name === "abc";
+})());
+ok("a second account does not disturb the first", (() => {
+  signOut();
+  signUp("secondone", "pass", "pass");
+  const mine = account.get().name === "secondone";
+  signOut();
+  signIn("namecheck", "pass");
+  return mine && account.get().name === "abc";
+})());
+signOut();
 
 let bad = 0;
 for (const [what, fine] of checks) {

@@ -1,0 +1,291 @@
+/* NULL · emoji.css
+   Everything the composer grew at once: the pad behind the smiley, the shelf
+   behind the film, the small list of names that fits what is half-typed after
+   a colon, and the announcement glyph the channel list now uses.
+
+   Imported straight after community.css, because all of it is chat: the rules
+   here are later, so they win where they overlap, and nothing outside the
+   rooms has to know they exist. */
+
+/* ---------- the announcement glyph ----------
+   A drawing cannot be an emoji, so the emoji is set in type at the size the
+   other channel icons are drawn. */
+.ch-bull {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  font-size: 13px;
+  line-height: 1;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+}
+.ch-bull--big {
+  width: auto;
+  font-size: 15px;
+}
+.ch-hash .ch-bull {
+  font-size: 14px;
+}
+.ch-shelf-h .ch-bull {
+  font-size: 13px;
+}
+
+/* ---------- the names under a colon ----------
+   Narrow, because it holds a glyph and two words, and it sits above the box it
+   is typing into rather than over the room. */
+.ch-suggest {
+  position: absolute;
+  left: 12px;
+  bottom: calc(100% - 4px);
+  z-index: 40;
+  width: min(268px, calc(100% - 24px));
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 5px;
+  border: var(--bw) solid var(--line-2);
+  border-radius: var(--r-3);
+  background: var(--bg-2);
+  box-shadow: 0 28px 64px -30px #000;
+  animation: sheet-in 0.14s var(--ease);
+}
+.ch-suggest-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 5px 7px;
+  border-radius: var(--r-1);
+  text-align: left;
+  color: var(--dim);
+  transition: background 0.12s var(--ease), color 0.12s var(--ease);
+}
+.ch-suggest-row.is-on {
+  background: var(--bg-4);
+  color: var(--text);
+}
+.ch-suggest-e {
+  flex: none;
+  width: 20px;
+  font-size: 15px;
+  line-height: 1;
+  text-align: center;
+}
+.ch-suggest-n {
+  font-family: ui-monospace, "Space Mono", monospace;
+  font-size: 11.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- the reaction bar ----------
+   It carries the whole fixed list now, so it wraps onto three rows instead of
+   running off the edge of the line. */
+.ch-reactor {
+  flex-wrap: wrap;
+  width: 244px;
+}
+.ch-reactor-btn svg {
+  width: 14px;
+  height: 14px;
+}
+.ch-reactor-btn.is-on {
+  background: var(--bg-4);
+}
+.ch-reactor-pop {
+  flex: 1 1 100%;
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: var(--bw) solid var(--line);
+}
+.ch-reactor-pop .emopick {
+  width: 100%;
+}
+
+/* ---------- the pad ---------- */
+.ch-toolpop--emoji {
+  width: auto;
+  right: auto;
+}
+.emopick {
+  width: 256px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.emopick-find {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 30px;
+  padding: 0 9px;
+  border: var(--bw) solid var(--line);
+  border-radius: var(--r-2);
+  background: color-mix(in srgb, var(--bg-2) 68%, transparent);
+  transition: border-color 0.16s var(--ease), background 0.16s var(--ease);
+}
+.emopick-find:focus-within {
+  border-color: var(--line-2);
+  background: var(--bg-3);
+}
+.emopick-find > svg {
+  flex: none;
+  width: 13px;
+  height: 13px;
+  color: var(--faint);
+}
+.emopick-find input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 12.5px;
+}
+.emopick-find input:focus {
+  outline: none;
+}
+.emopick-find input::placeholder {
+  color: var(--faint);
+}
+.emopick-x {
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: var(--faint);
+}
+.emopick-x:hover {
+  color: var(--text);
+}
+.emopick-x svg {
+  width: 13px;
+  height: 13px;
+}
+.emopick-tabs {
+  display: flex;
+  gap: 3px;
+}
+.emopick-tab {
+  flex: 1 1 0;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-1);
+  font-size: 14px;
+  line-height: 1;
+  transition: background 0.12s var(--ease);
+}
+.emopick-tab:hover {
+  background: var(--bg-3);
+}
+.emopick-tab.is-on {
+  background: var(--bg-4);
+}
+.emopick-body {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 2px;
+  max-height: 196px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.emopick-none {
+  margin: 0;
+  padding: 10px 2px;
+  line-height: 1.5;
+}
+/* square, or nearly: a shelf of 8 columns at this width is 32 a cell, and a
+   glyph in a 26-tall button wears the shelf unevenly */
+.emopick-body .ch-emojibtn,
+.ch-reactor-pop .ch-emojibtn {
+  height: 30px;
+}
+
+/* ---------- the gif shelf ---------- */
+.ch-gif-find {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 32px;
+  padding: 0 10px;
+  border: var(--bw) solid var(--line);
+  border-radius: var(--r-2);
+  background: color-mix(in srgb, var(--bg-2) 68%, transparent);
+  transition: border-color 0.16s var(--ease), background 0.16s var(--ease);
+}
+.ch-gif-find:focus-within {
+  border-color: var(--line-2);
+  background: var(--bg-3);
+}
+.ch-gif-find > svg {
+  flex: none;
+  width: 13px;
+  height: 13px;
+  color: var(--faint);
+}
+.ch-gif-find input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 12.5px;
+}
+.ch-gif-find input:focus {
+  outline: none;
+}
+.ch-gif-find input::placeholder {
+  color: var(--faint);
+}
+.ch-gifgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 6px;
+  max-height: 214px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.ch-gif {
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 1;
+  border: var(--bw) solid var(--line);
+  border-radius: var(--r-2);
+  background: var(--bg-3);
+  transition: border-color 0.14s var(--ease), transform 0.14s var(--ease);
+}
+.ch-gif:hover {
+  border-color: var(--line-2);
+  transform: translateY(-1px);
+}
+.ch-gif img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ---------- narrow windows ---------- */
+@media (max-width: 760px) {
+  .ch-toolpop--emoji {
+    width: auto;
+    right: 12px;
+  }
+  .emopick {
+    width: 100%;
+  }
+  .emopick-body {
+    grid-template-columns: repeat(8, 1fr);
+  }
+  .ch-reactor {
+    width: 212px;
+  }
+  .ch-suggest {
+    left: 8px;
+    right: 8px;
+    width: auto;
+  }
+}

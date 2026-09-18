@@ -14,6 +14,7 @@
 import { v } from "convex/values";
 
 import { mutation, query } from "./_generated/server";
+import { screen } from "./filter";
 
 const LINGER = 1000 * 60 * 60 * 24 * 400;
 const BUDGET = 900_000;
@@ -504,7 +505,10 @@ export const dmSend = mutation({
     const onMe = newest.filter((r) => r.from === a && r.at > Date.now() - 4000).length;
     if (onMe >= 5) throw new Error("slow down a moment");
 
-    const said = (await import("./filter")).screen(body);
+    /* the import is static and at the top: Convex does not run dynamic
+       imports, and `await import("./filter")` failed every DM with
+       "dynamic module import unsupported" before it ever screened a word */
+    const said = screen(body);
     if (!said.clean.trim() && !image) throw new Error("say something first");
 
     await ctx.db.insert("dms", {

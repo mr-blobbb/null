@@ -11,6 +11,7 @@
 import type * as ai from "../ai.js";
 import type * as chat from "../chat.js";
 import type * as filter from "../filter.js";
+import type * as gifs from "../gifs.js";
 import type * as members from "../members.js";
 import type * as music from "../music.js";
 import type * as store from "../store.js";
@@ -25,6 +26,7 @@ declare const fullApi: ApiFromModules<{
   ai: typeof ai;
   chat: typeof chat;
   filter: typeof filter;
+  gifs: typeof gifs;
   members: typeof members;
   music: typeof music;
   store: typeof store;

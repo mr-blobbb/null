@@ -2104,11 +2104,6 @@
   height: 12px;
   vertical-align: -1px;
 }
-.ch-emojigrid {
-  display: grid;
-  grid-template-columns: repeat(10, 1fr);
-  gap: 2px;
-}
 .ch-emojibtn {
   height: 26px;
   display: grid;
