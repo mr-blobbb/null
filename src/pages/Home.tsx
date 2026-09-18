@@ -31,6 +31,7 @@ import { prefs, usePalette } from "../lib/themes";
 import { api } from "../../convex/_generated/api";
 import { useQuery } from "convex/react";
 import { cloudOn } from "../lib/cloud";
+import { Guard } from "../components/Guard";
 
 /* ---------- the lines ----------
    Every one of these has the same chance. There is no rare message, which
@@ -279,7 +280,9 @@ export function Home() {
         <QuickLink icon={Grid3x3} label="All Apps" muted onClick={() => setAppsOpen(true)} fixed />
       </div>
 
-      <OnlineCount />
+      <Guard what="the online counter" fallback={null}>
+        <OnlineCount />
+      </Guard>
 
       <div className="hm-strip">
         <div className="hm-band">
@@ -332,6 +335,8 @@ function OnlineCount() {
   const rows = useQuery(api.members.list, cloudOn() ? {} : "skip") as
     | { online: boolean }[]
     | undefined;
+  /* a throwing query unmounts whatever drew it, so it gets its own small
+     Guard and the homepage keeps its other counters */
   if (!rows) return null;
   const online = rows.filter((r) => r.online).length;
   return (

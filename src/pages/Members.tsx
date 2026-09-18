@@ -30,6 +30,7 @@ import {
 
 import { api } from "../../convex/_generated/api";
 import { Guard } from "../components/Guard";
+import { CloudDown } from "../lib/outage";
 import { useMembers, type Member } from "../lib/members";
 import { cloudOn } from "../lib/cloud";
 import { isOwner, OWNER_TAG } from "../lib/owner";
@@ -54,7 +55,7 @@ type CloudMember = Member & {
 export function Members() {
   if (!cloudOn()) return <Local why="NULL has no server reachable from this build" />;
   return (
-    <Guard what="the member list" fallback={<Local why="the server could not be reached just now" />}>
+    <Guard what="Members" fallback={(err) => <CloudDown what="Members" key={err.message} />}>
       <Cloud />
     </Guard>
   );
@@ -391,7 +392,9 @@ function MemberCardFull({
   /* one view per open, and never your own */
   useMemo(() => {
     if (m && me.user && m.user !== (me.user as string).replace(/^@/, "").toLowerCase()) {
-      void countView({ user: m.user, by: (me.user as string).replace(/^@/, "") });
+      countView({ user: m.user, by: (me.user as string).replace(/^@/, "") }).catch(() => {
+        /* the count is decoration; a dead server must not unmount the card */
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [m?.user]);

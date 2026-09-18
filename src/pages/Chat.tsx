@@ -37,6 +37,7 @@ import {
 import { api } from "../../convex/_generated/api";
 import { Guard } from "../components/Guard";
 import { cloud, cloudOn, machine } from "../lib/cloud";
+import { CloudDown } from "../lib/outage";
 import { useAccount, nameStyleCss } from "../lib/account";
 import { isOwner, OWNER_TAG } from "../lib/owner";
 import { itemsOf, useEcon } from "../lib/econ";
@@ -113,7 +114,7 @@ export function Chat() {
     );
   }
   return (
-    <Guard what="the chat rooms">
+    <Guard what="Chat" fallback={(err) => <CloudDown what="Chat" key={err.message} />}>
       <Rooms />
     </Guard>
   );

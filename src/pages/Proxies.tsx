@@ -470,8 +470,8 @@ function Shelf({ relay }: { relay: string }) {
               <b>{e.name}</b>
               <em>{e.url?.replace(/^https?:\/\//, "").replace(/\/$/, "")}</em>
             </span>
-            <span className={`px-status${e.status === "All Good" ? "" : " is-warn"}`}>
-              {e.status === "All Good" ? <Lock /> : <TriangleAlert />}
+            <span className={`px-status${e.status === "Fine" ? "" : " is-warn"}`}>
+              {e.status === "Fine" ? <Lock /> : <TriangleAlert />}
               {e.status}
             </span>
           </button>

@@ -23,6 +23,7 @@ import { api } from "../../convex/_generated/api";
 import { Guard } from "../components/Guard";
 import { askModel, BUILT_IN_MODEL, builtInReady, type Said as Turn } from "../lib/ai";
 import { cloudOn, machine } from "../lib/cloud";
+import { CloudDown } from "../lib/outage";
 import { createStore, useStore } from "../lib/store";
 import { Rich } from "../lib/rich";
 
@@ -60,7 +61,7 @@ export function Ai() {
     );
   }
   return (
-    <Guard what="the assistant">
+    <Guard what="AI" fallback={(err) => <CloudDown what="AI" key={err.message} />}>
       <Desk />
     </Guard>
   );
@@ -68,14 +69,21 @@ export function Ai() {
 
 function Desk() {
   const lines = useStore(ai).lines;
+  /* useAction hands back nothing when the provider is missing; the page then
+     runs on the built-in road, which is exactly what that road is for */
   const ask = useAction(api.ai.ask);
   const status = useAction(api.ai.status);
+  const canAsk = typeof ask === "function" && typeof status === "function";
 
   /* asked once on mount: whether a key exists is not something that changes
      while the page is open */
   const [said, setSaid] = useState<Said | null>(null);
   useEffect(() => {
     let alive = true;
+    if (!status) {
+      setSaid({ ready: false, provider: null });
+      return;
+    }
     status({})
       .then((r) => alive && setSaid(r as Said))
       .catch(() => alive && setSaid({ ready: false, provider: null }));
@@ -119,7 +127,7 @@ function Desk() {
 
     try {
       let answer: { ok: true; text: string } | { ok: false; reason: string };
-      if (said?.ready) {
+      if (said?.ready && canAsk) {
         try {
           const res = await ask({ messages: turns });
           answer = res.ok ? { ok: true, text: res.text } : { ok: false, reason: res.reason };

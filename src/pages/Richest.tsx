@@ -14,6 +14,7 @@ import { Coins, Trophy } from "lucide-react";
 
 import { api } from "../../convex/_generated/api";
 import { Guard } from "../components/Guard";
+import { CloudDown } from "../lib/outage";
 import { useMembers, type Member } from "../lib/members";
 import { cloudOn } from "../lib/cloud";
 import { isOwner } from "../lib/owner";
@@ -27,7 +28,7 @@ const SHOWN = 5;
 export function Richest() {
   if (!cloudOn()) return <Local why="this build has no server reachable" />;
   return (
-    <Guard what="the leaderboard" fallback={<Local why="the server could not be reached just now" />}>
+    <Guard what="Richest" fallback={(err) => <CloudDown what="Richest" key={err.message} />}>
       <Cloud />
     </Guard>
   );

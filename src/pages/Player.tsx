@@ -4,14 +4,27 @@
    fullscreen, and back to the library.
 
    While this page is the active tab the coin clock counts for it, which is
-   what makes playing the way you earn. */
+   what makes playing the way you earn.
+
+   Two kinds of file end up in the frame. A local path is framed as it is. An
+   https URL is a discovered game, and it gets one of two roads: a site that
+   allows framing (truffled.lol and friends) is framed directly, while raw
+   GitHub serves pages as text/plain — no browser will run one in a frame —
+   so the page is fetched here and handed to the frame as a blob. If even the
+   fetch is refused, the bar says so and the offer is a real tab. */
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Expand, Gamepad2, RefreshCw } from "lucide-react";
+import { ArrowLeft, Expand, ExternalLink, Gamepad2, RefreshCw } from "lucide-react";
 
 import { find } from "../lib/catalog";
 import { go } from "../lib/tabs";
 import { trackPlay } from "../lib/econ";
+
+/** raw.githubusercontent serves everything as text/plain, which browsers
+ *  refuse to run; those pages must be fetched and re-served as a blob. */
+const NEEDS_BLOB = /raw\.githubusercontent\.com|gist\.githubusercontent\.com/;
+
+const isRemote = (file?: string) => !!file && /^https?:\/\//i.test(file);
 
 export function Player({ kind, id }: { kind: string; id: string }) {
   const entry = find(kind as "game" | "app", id);
@@ -25,7 +38,7 @@ export function Player({ kind, id }: { kind: string; id: string }) {
   const open = () => {
     const f = frame.current;
     if (!f) return;
-    const doc = f.contentDocument;
+    const doc = f.contentDocument; // same-origin only; a remote game refuses
     if (doc?.documentElement?.requestFullscreen) doc.documentElement.requestFullscreen();
     else f.requestFullscreen?.();
   };
@@ -50,14 +63,11 @@ export function Player({ kind, id }: { kind: string; id: string }) {
       </header>
 
       {entry?.file ? (
-        <iframe
-          key={nonce}
-          ref={frame}
-          className="play-frame"
-          src={entry.file}
-          title={entry.name}
-          allow="fullscreen; gamepad; autoplay"
-        />
+        isRemote(entry.file) ? (
+          <RemoteFrame key={nonce} file={entry.file} name={entry.name} />
+        ) : (
+          <iframe className="play-frame" src={entry.file} title={entry.name} allow="fullscreen; gamepad; autoplay" />
+        )
       ) : (
         <div className="play-empty">
           <Gamepad2 />
@@ -74,4 +84,60 @@ export function Player({ kind, id }: { kind: string; id: string }) {
       )}
     </div>
   );
+}
+
+/** A discovered game. Frame what allows framing; fetch the rest. */
+function RemoteFrame({ file, name }: { file: string; name: string }) {
+  const [blob, setBlob] = useState<string | null>(null);
+  const [problem, setProblem] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!NEEDS_BLOB.test(file)) return;
+    let url: string | null = null;
+    let alive = true;
+    (async () => {
+      try {
+        const res = await fetch(file);
+        if (!res.ok) throw new Error(`it answered ${res.status}`);
+        const kind = res.headers.get("content-type") ?? "text/html";
+        const html = await res.text();
+        url = URL.createObjectURL(new Blob([html], { type: kind }));
+        if (alive) setBlob(url);
+      } catch (e) {
+        if (alive) setProblem((e as Error).message);
+      }
+    })();
+    return () => {
+      alive = false;
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [file]);
+
+  if (problem) {
+    return (
+      <div className="play-empty">
+        <Gamepad2 />
+        <h2>{name} would not load</h2>
+        <p>The stash it lives on refused the request ({problem}). It may still open on its own.</p>
+        <a className="btn btn--fill" href={file} target="_blank" rel="noreferrer noopener">
+          <ExternalLink /> Open in a real tab
+        </a>
+      </div>
+    );
+  }
+
+  if (NEEDS_BLOB.test(file)) {
+    if (!blob) {
+      return (
+        <div className="play-empty">
+          <Gamepad2 />
+          <h2>Fetching {name}…</h2>
+          <p>It lives on a stash that serves pages as text, so NULL is copying it over first.</p>
+        </div>
+      );
+    }
+    return <iframe className="play-frame" src={blob} title={name} allow="fullscreen; gamepad; autoplay" sandbox="allow-scripts allow-same-origin allow-popups allow-forms" />;
+  }
+
+  return <iframe className="play-frame" src={file} title={name} allow="fullscreen; gamepad; autoplay" />;
 }
