@@ -135,28 +135,28 @@ export async function sendGift(opts: {
 
 /** Can this side part with `what`? Checked before anything is written, so a
  *  half that cannot be paid is refused rather than half-done. */
-function canPart(with: string, amount: number): string | null {
+function canPart(what: string, amount: number): string | null {
   const s = econ.get();
-  if (with === "coins") {
+  if (what === "coins") {
     if (s.coins < amount) return `You have ${s.coins.toLocaleString()} coins, not ${amount.toLocaleString()}.`;
     return null;
   }
-  if (!s.owned.includes(with)) return `You no longer have ${describeGift({ gives: with, amount: 0 })}.`;
+  if (!s.owned.includes(what)) return `You no longer have ${describeGift({ gives: what, amount: 0 })}.`;
   return null;
 }
 
 /** Take `what` out of this browser's shelf. */
-function partWith(with: string, amount: number) {
+function partWith(what: string, amount: number) {
   const s = econ.get();
-  if (with === "coins") econ.set({ coins: s.coins - amount, spent: s.spent + amount });
-  else econ.set({ owned: s.owned.filter((id) => id !== with) });
+  if (what === "coins") econ.set({ coins: s.coins - amount, spent: s.spent + amount });
+  else econ.set({ owned: s.owned.filter((id) => id !== what) });
 }
 
 /** Put `what` into this browser's shelf. */
-function receive(with: string, amount: number) {
+function receive(what: string, amount: number) {
   const s = econ.get();
-  if (with === "coins") econ.set({ coins: s.coins + amount, earned: s.earned + amount });
-  else if (!s.owned.includes(with)) econ.set({ owned: [...s.owned, with] });
+  if (what === "coins") econ.set({ coins: s.coins + amount, earned: s.earned + amount });
+  else if (!s.owned.includes(what)) econ.set({ owned: [...s.owned, what] });
 }
 
 /** Say yes to an offer. Nothing changes hands yet. */

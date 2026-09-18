@@ -241,7 +241,16 @@ function shelfNote(i: ShopItem): string {
 
 /* ---------- the exchange, drawn ---------- */
 
-export function GiftCard({ gift, me, compact = false }: { gift: GiftRow; me: string }) {
+export function GiftCard({
+  gift,
+  me,
+  compact = false,
+}: {
+  gift: GiftRow;
+  me: string;
+  /** true when the card sits in a dense list rather than on its own */
+  compact?: boolean;
+}) {
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const trade = isTrade(gift);

@@ -738,6 +738,14 @@ kbd {
   color: var(--dim);
   font-size: 13.5px;
 }
+/* the shelf runs on past the edge of the page, so the last card is a door
+   rather than the end of the list */
+.lb-more {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 18px auto 4px;
+}
 .lb-empty code {
   font-family: var(--mono);
   font-size: 12px;

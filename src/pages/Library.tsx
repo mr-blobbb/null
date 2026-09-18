@@ -5,9 +5,14 @@
 
    A tile is a square, the artwork, and the name. No description, no tags on
    the card: the categories are still searchable, they are just not printed
-   at you. Without artwork a tile falls back to a plain square and a glyph. */
+   at you. Without artwork a tile falls back to a plain square and a glyph.
 
-import { useMemo, useState } from "react";
+   The shelf is thousands of games now, and a few thousand tiles is a few
+   thousand images: the page draws the first screenful and the rest arrive
+   when they are asked for. Narrowing the search resets that, so a filtered
+   shelf is never a shelf you have to ask twice for. */
+
+import { useEffect, useMemo, useState } from "react";
 import {
   Dices,
   Gamepad2,
@@ -20,6 +25,9 @@ import { browse, entries, sources, SORTS, type Entry, type Kind, type SortId } f
 import { toggleFavorite, pushRecent, useAccount } from "../lib/account";
 import { openTab } from "../lib/tabs";
 import { trackPlay } from "../lib/econ";
+
+/** How many tiles are drawn before the rest wait to be asked for. */
+const SCREEN = 120;
 
 const WORD: Record<Kind, { title: string; one: string; many: string; ph: string; icon: typeof Gamepad2 }> = {
   game: { title: "Games", one: "game", many: "games", ph: "Search Games", icon: Gamepad2 },
@@ -35,6 +43,7 @@ export function Library({ kind }: { kind: Kind }) {
   const [source, setSource] = useState("");
   const [onlyFavs, setOnlyFavs] = useState(false);
   const [seed, setSeed] = useState(1);
+  const [drawn, setDrawn] = useState(SCREEN);
 
   const all = entries(kind);
   const from = useMemo(() => sources(kind), [kind]);
@@ -50,6 +59,11 @@ export function Library({ kind }: { kind: Kind }) {
     [kind, q, sort, seed, source, onlyFavs, me.favorites],
   );
 
+  /* anything that changes what is on the shelf puts the shelf back to one
+     screenful */
+  useEffect(() => setDrawn(SCREEN), [kind, q, sort, source, onlyFavs, seed]);
+
+  const page = shown.slice(0, drawn);
   const favCount = me.favorites.filter((id) => all.some((e) => e.id === id)).length;
 
   const launch = (e: Entry) => {
@@ -154,17 +168,25 @@ export function Library({ kind }: { kind: Kind }) {
           )}
         </div>
       ) : (
-        <div className="lb-grid">
-          {shown.map((e) => (
-            <Tile
-              key={e.id}
-              entry={e}
-              icon={word.icon}
-              fav={me.favorites.includes(e.id)}
-              onOpen={() => launch(e)}
-            />
-          ))}
-        </div>
+        <>
+          <div className="lb-grid">
+            {page.map((e) => (
+              <Tile
+                key={e.id}
+                entry={e}
+                icon={word.icon}
+                fav={me.favorites.includes(e.id)}
+                onOpen={() => launch(e)}
+              />
+            ))}
+          </div>
+          {shown.length > page.length && (
+            <button className="btn lb-more" onClick={() => setDrawn((n) => n + SCREEN)}>
+              Show {Math.min(SCREEN, shown.length - page.length)} more
+              <span className="tiny faint"> {shown.length - page.length} still waiting</span>
+            </button>
+          )}
+        </>
       )}
     </div>
   );

@@ -146,10 +146,30 @@ which is the size it was made for. Downloading one paints the same card onto
 a canvas — banner, the clip's current frame screened over it, picture, name,
 tags and bio — and hands back a PNG. Nothing is uploaded.
 
+**The shelf fills itself.** `bun scripts/discover-games.mjs` reads the four
+gmshelf shelves — seraph, truffled, the Chicken King's Vault and the Ultimate
+Game Stash — and rewrites `src/lib/discovered.ts`: over two thousand games, with
+artwork matched by name out of each shelf's covers folder and genres from the
+old UGS listing. Every address in it is mirrored through raw.githack, and that is
+the whole reason the games run: it is the one host that hands html back as html.
+jsDelivr calls it `text/plain`, ckv is past jsDelivr's package limit, and a
+browser will not run a page it has been told is text — which is what "this page
+is blocked by Chrome" is. Nothing is fetched at runtime; the shelf is a file in
+the repo, rebuilt when the script runs.
+
+**A game opens in a document.** The player tries the frame road first for a stash
+that serves html and does not refuse framing, because a game's scripts expect a
+real document — a shadow root has no `getElementById` for them to find their own
+canvas with. Then the copy road (the page fetched, given a base, handed to a
+frame as a blob, which no host can refuse), and the inline road last. The frames
+carry `allow="pointer-lock"` because an fps game cannot capture the mouse
+without it.
+
 ## Adding things
 
 * **A game or app** — the files, plus one entry in `src/lib/catalog.ts`. See
   `games/README.txt`.
+* **The whole shelf** — `bun scripts/discover-games.mjs` (see above).
 * **A proxy** — one entry in the same file, with a `url` instead of a `file`.
   See `proxies/README.txt`.
 * **An extension** — one entry in `src/lib/extensions.ts`. It declares where
