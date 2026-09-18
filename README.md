@@ -1,7 +1,8 @@
 # NULL
 
 A flat, fast hub for games, apps, proxies and tools. One window, a thin rail,
-a Chrome-shaped tab strip, and sixteen palettes that re-ink the whole site.
+a Chrome-shaped tab strip, and twenty-three palettes (plus your own) that
+re-ink the whole site.
 
 Rebuilt from scratch in **React + TypeScript** on **Vite**. Nothing of the old
 vanilla build is left: no static HTML pages, no second copy of React, no icon
@@ -27,37 +28,65 @@ src/main.tsx          entry: stylesheets in, <App /> out
 src/App.tsx           the shell: palette, coin clock, which page the tab shows
 src/lib/
   store.ts            one localStorage store + useSyncExternalStore, used by all
-  themes.ts           the sixteen palettes, and the custom one
+  themes.ts           the palettes, the shape scale, and the custom one
   nav.ts              every destination, its null:// address and its icon
   tabs.ts             the tab model: back/forward stacks, the address bar
-  catalog.ts          the library: games, apps, proxies
+  catalog.ts          the library: games, apps, cloud titles, the shelves
+  discovered.ts       the generated shelf — do not hand-edit, see the script
   econ.ts             coins, the shop, gift codes
   account.ts          the local account and profile card
   owner.ts            the one handle that owns the site: scrambled, reserved
-  members.ts          everyone this browser has seen sign in
+  members.ts          the directory: everyone who has signed in, anywhere
+  cloud.ts            is there a server behind this build, and its client
+  friends.ts          the friend graph, and the presence beat
+  gift.ts             sending somebody coins, or a thing you own
+  jam.ts              listening together, watched from the shell
+  voice.ts            the voice channel: peer to peer, no media server
+  saves.ts            cloud saves, for both kinds of game
+  vote.ts             the staff poll, read out of a message
+  ob.ts               the twin map, off by default
+  device.ts           "Chrome · Windows" in one line, off by default
+  emoji.ts            the short reaction row, the names, the search
+  music.ts            the catalogue, the queue, the kept shelf
   extensions.ts       the add-on registry
-  art.tsx             the animated artwork the shop sells
+  browser.ts relay.ts the two roads a proxied address can take
+  crx.ts chromeext.ts a Chrome extension: its archive, and its APIs
+  art.tsx brand.tsx   the artwork the shop sells, and the wordmark
   card.ts             the share card, painted to a canvas for a PNG
 src/components/
   Rail.tsx            the 56px spine
-  Chrome.tsx          the tab strip and the toolbar
+  Chrome.tsx          the tab strip, the toolbar, the mini player
+  Ambient.tsx         the fog and the specks, drawn by hand on one canvas
   Sheet.tsx           the one popup shape, with the heavy blur
   SettingsSheet.tsx   settings, over whatever page you are on
-  CommandPalette.tsx  the site search
+  Guard.tsx           the boundary that turns a throw into a card
+  StaffRoles.tsx      the role marks, and the owner's picker
+  FriendsPanel.tsx    the friends list, on the account page
+  CloudSaves.tsx      the save slots, in the player and on a profile
+  Appeals.tsx         the appeal queue and the staff log
+  WebStore.tsx        adding a Chrome extension from a .crx
+  EmojiPicker.tsx     the pad, and the names under a colon
 src/pages/            one file per page
 src/styles/
-  tokens.css          fonts, the shape scale, and all sixteen palettes
+  fonts.css           the eight display faces, as files
+  tokens.css          the palettes, the shape scale
   shell.css           rail, tab strip, toolbar, page frame
   pages.css           home, library, proxies, changelog, extensions, player, 404
+  community.css       the rooms, the members board, the directory
+  voice.css saves.css the channel, and the save slots
+  emoji.css           the composer's pad, shelf and names
+  social.css          gifts and jams
+  staff.css           roles, the picker, the badge colours
   shop.css            the counters, the shelves, and every animation
   profile.css         the sign-in card, the player card, the account list
   settings.css        the settings popup
+  refine.css          the quiet pass, imported last: it overrides sizes
 ```
 
 ## How it is put together
 
-**Palettes are variables.** `tokens.css` declares the same nine values sixteen
-times over. Switching a theme writes one attribute on `<html>`, so no
+**Palettes are variables.** `tokens.css` declares the same nine values once per
+palette. Switching a theme writes one attribute on `<html>`, so no
 component knows a theme changed. The custom palette writes five inline
 variables instead of using a block.
 
@@ -71,9 +100,14 @@ hidden or the keyboard and mouse have been still for ninety seconds. The
 whole rule is `tick()` in `econ.ts`.
 
 **The account is local.** A handle, a salted digest of the password, and the
-card. There is no server, so there is no reset flow and no email field.
-Deleting the account asks for the password and then wipes the browser copy.
-One handle is reserved for the person who owns NULL: `owner.ts` holds it
+card. There is no reset flow and no email field, because there is no mailbox
+to send one to: the password never leaves the browser, and the directory on
+the server holds the handle and the card, not the digest. Several accounts
+can live on one device — the list is a list, not a slot — so signing out of
+one leaves the others where they were and two tabs can be two people.
+Deleting one removes it from the device and from the directory, which is what
+makes it a deletion rather than a logout. One handle is reserved for the
+person who owns NULL: `owner.ts` holds it
 scrambled and the password only as a digest, signing up or renaming to it is
 refused, and signing in with it takes the whole shop shelf for free plus the
 OWNER tag, which is not on the shelf at all. It is an obfuscated check, not a
@@ -187,6 +221,70 @@ those titles are streamed by a service that holds the licence and brokers every
 session. A card for one says so and hands over to the service (`catalog.ts`,
 `CLOUD_SITE`), which is the honest shape for it: an invented embed URL would
 only be a broken tile with extra steps.
+
+**A voice channel has no server, so it has a shape.** There is no media
+server anywhere in NULL: each person in the room holds one peer connection to
+every other person in the room, and the only thing that goes through the
+backend is the introduction — an offer, an answer, and a few addresses, all
+discarded once read (`convex/voice.ts`). Two people is one connection, four is
+six, eight is twenty-eight, and the room says so rather than quietly sounding
+bad. The audio never touches NULL's disk, which is the same sentence as
+"nothing here can record you".
+
+**Two kinds of save, two ways in.** `src/lib/saves.ts` knows where a save
+comes from, and it is two answers because the library is two things. A game
+NULL copied into a frame runs as a document this page can reach, so its
+storage is simply read and written. A game on somebody else's origin cannot be
+read at all — that is what an origin is for — so those cards ask for the save
+the honest way: paste it, or drop in the file the game exported. What lands on
+the account is text NULL never looks inside, which is why it works for a game
+nobody has heard of yet.
+
+**A friendship is two follows pointing at each other.** `friends.ts` keeps no
+separate friend table, so there is nothing to go stale: the graph is the
+follows, and a mutual pair is a friendship. Presence rides on the same module
+— this browser says "still me" every forty-five seconds and anybody whose last
+word was inside the server's online window gets a green dot. It is a two-field
+write rather than a whole member card, which is what makes it cheap enough to
+leave running.
+
+**An appeal is read by a person.** `Appeals.tsx` holds both ends of a
+punishment: the queue a member writes into, long-form and about anything, and
+the log staff read. Nothing unlocks itself. Granting an appeal lifts the ban
+in the *same write* as the decision, so there is never a moment where the
+paperwork says yes and the door is still shut, and the log is append-only on
+the server, which is the only thing that makes a log worth reading.
+
+**A quote carries the words, not a pointer at them.** A reply copies what it
+is replying to. A deleted original therefore leaves a readable conversation
+rather than a hole where the quote used to be, and the copy is what the filter
+and the room both see.
+
+**One substitution, and what it is for.** Every printable ASCII character has
+a twin 19,936 code points above it, so `a` is written as `一` and `~` as `一`+
+126. `ob.ts` does that and nothing else. It is not encryption and does not
+pretend to be — it is for saying something in a room where a machine is
+reading the page over your shoulder. A monitor looking for words sees Chinese;
+anybody in NULL who knows the map sees the sentence. It is off by default, it
+is never applied to a message you did not switch it on for, and the person you
+are talking to reads it decoded, because they are on the same site. What it
+changes is what the words look like to something that is *not* in the room.
+
+**Badges are drawn, never fetched.** The partner wall reads whoever holds the
+PARTNER role out of the directory, so the page cannot go stale, and draws each
+badge in code from the handle — a shape, a pair of colours taken from the
+name, the initials. A partner who joins tomorrow has a badge without anybody
+designing one, and a filter that refuses images cannot take the wall away.
+
+**The background is one canvas, or it is a still frame.** `Ambient.tsx` draws
+the fog and the specks itself: nothing is fetched and nothing is a library.
+The loop stops the moment the tab is hidden, and the performance and motion
+switches both mean the same thing — draw it once and leave it alone. A
+background that costs frames is a background that has to go.
+
+**Nothing is advertised.** There are no adverts on NULL, no ad slots, no
+sponsored tiles and no placeholder for one to arrive in. It is a rule, not a
+roadmap item, and the front door says so in as many words.
 
 ## Adding things
 

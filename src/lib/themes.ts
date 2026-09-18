@@ -1,5 +1,5 @@
 /* NULL · themes.ts
-   The sixteen palettes. Each one re-inks the page through the CSS variables
+   The twenty-three palettes. Each one re-inks the page through the CSS variables
    declared in src/styles/tokens.css, so switching a theme never needs a
    component to know it happened.
 

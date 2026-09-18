@@ -197,7 +197,7 @@ const CARDS: Card[] = [
     avatar: "example.com/f.png",
     name: "void",
     role: "Theme collector",
-    text: "Sixteen palettes and a custom one. I have changed mine four times today.",
+    text: "Twenty-three palettes and a custom one. I have changed mine four times today.",
     lorem: "Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit.",
   },
   {
