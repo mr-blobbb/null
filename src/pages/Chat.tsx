@@ -32,6 +32,7 @@ import {
   Flag,
   Hash,
   Image as ImageIcon,
+  Megaphone,
   MessageCircle,
   Music2,
   Plus,
@@ -59,11 +60,13 @@ import { AvatarArt, TagChip } from "../lib/art";
 import { screen } from "../lib/filter";
 import { Markdown } from "../lib/md";
 import { go } from "../lib/tabs";
-import { REPORT_REASONS, roleOf, STAFF_TAGS } from "../lib/staff";
+import { roleOf, STAFF_TAGS } from "../lib/staff";
 import { emojiOf, REACTIONS, suggest } from "../lib/emoji";
 import { NullFace } from "../lib/brand";
 import { Sheet } from "../components/Sheet";
 import { EmojiPicker } from "../components/EmojiPicker";
+import { StaffRoles } from "../components/StaffRoles";
+import { ReportBox } from "../components/ReportBox";
 import { useMusic, type Track } from "../lib/music";
 
 type Row = {
@@ -126,11 +129,11 @@ type Flags = {
 const INFO_SHELF = ["announcements", "updates", "links", "staff-shitpost"];
 const SOCIAL_SHELF = ["general", "member-shitpost", "advertise", "share-links", "general-voice"];
 
-/** The sidebar is drawn from the same table the server enforces: the Info
- *  shelves read as announcements, the voice room reads with a speaker. */
+/** The sidebar is drawn from the same table the server enforces: the
+ *  announcement rooms read with a loudspeaker, a voice room with a speaker. */
 function ChannelIcon({ ch }: { ch: Channel }) {
   if (ch.kind === "voice") return <Volume2 />;
-  if (ch.gate === "staff") return <span className="ch-bull">📢</span>;
+  if (ch.gate === "staff") return <Megaphone />;
   return <Hash />;
 }
 
@@ -325,7 +328,7 @@ function RoomList({
   return (
     <nav className="ch-list" aria-label="Channels">
       {rules && <div className="ch-shelf ch-shelf--solo">{room(rules)}</div>}
-      {shelf("info", "Info", <span className="ch-bull">📢</span>, info)}
+      {shelf("info", "Info", <Megaphone />, info)}
       {shelf("social", "Social", <MessageCircle />, social)}
       {made.length > 0 && shelf("made", "Rooms", <Hash />, made)}
     </nav>
@@ -1038,7 +1041,7 @@ function Feed({
           </>
         ) : signedIn ? (
           <div className="ch-locked">
-            <span className="ch-bull ch-bull--big">📢</span>
+            <Megaphone />
             <span>You don't have permission to post in #{slug}. Only staff can post them.</span>
           </div>
         ) : (
@@ -1490,113 +1493,6 @@ function ClearRoom({ slug, me }: { slug: string; me: string }) {
    reporting a line
    ============================================================ */
 
-function ReportBox({
-  row,
-  me,
-  signedIn,
-  onClose,
-}: {
-  row: Row;
-  me: string;
-  signedIn: boolean;
-  onClose: () => void;
-}) {
-  const doReport = useMutation(api.members.report);
-  const [why, setWhy] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [done, setDone] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
-
-  const send = async () => {
-    if (!why.trim() || busy) return;
-    if (!signedIn) {
-      setErr("Sign in first — a report with no name is a report nobody can ask about.");
-      return;
-    }
-    setBusy(true);
-    try {
-      await doReport({ user: row.user, by: me, reason: why.trim(), message: row.id });
-      setDone(true);
-    } catch (e) {
-      setErr((e as Error).message.replace(/^.*?Error: /, ""));
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  return (
-    <div className="ch-veil" onMouseDown={onClose} role="presentation">
-      <div className="ch-modal" onMouseDown={(e) => e.stopPropagation()} role="dialog" aria-label="Report a message">
-        <div className="ch-modal-head">
-          <Flag className="ch-modal-flag" />
-          <b>Report {row.name}</b>
-          <button className="ch-icon" onClick={onClose} aria-label="Close">
-            <X />
-          </button>
-        </div>
-
-        {done ? (
-          <>
-            <p className="ch-modal-line">
-              Thank you — that is with the staff now. They will read it, and the flag stays on
-              @{row.user} until one of them has.
-            </p>
-            <div className="ch-modal-foot">
-              <button className="btn btn--fill" onClick={onClose}>
-                Done
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
-            <p className="ch-modal-line tiny faint">
-              A person reads this, so say what happened in your own words.
-            </p>
-
-            <div className="ch-quote">
-              <b>{row.name}</b>
-              <span>{row.body.slice(0, 220) || (row.image ? "a picture" : "")}</span>
-            </div>
-
-            <div className="ch-why">
-              {REPORT_REASONS.map((r) => (
-                <button
-                  key={r}
-                  className={`chip${why === r ? " is-on" : ""}`}
-                  onClick={() => setWhy(r === "Something else" ? "" : r)}
-                >
-                  {r}
-                </button>
-              ))}
-            </div>
-
-            <textarea
-              className="ch-whybox fld"
-              rows={4}
-              value={why}
-              spellCheck={false}
-              placeholder="What happened? Be specific — which message, and why it matters."
-              onChange={(e) => setWhy(e.target.value.slice(0, 400))}
-            />
-
-            {err && <p className="form-err tiny">{err}</p>}
-
-            <div className="ch-modal-foot">
-              <span className="tiny faint ch-modal-count">{why.length}/400</span>
-              <button className="btn" onClick={onClose}>
-                Cancel
-              </button>
-              <button className="btn btn--fill" disabled={!why.trim() || busy} onClick={() => void send()}>
-                <Flag /> Send report
-              </button>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
 /* ============================================================
    the profile card
    ============================================================ */
@@ -1818,6 +1714,17 @@ function ProfilePopout({
 
           {/* the two things you can decide about a person: follow them, or
               stop seeing them */}
+          {/* the owner, deciding whether this person is staff. It sits above
+              the social buttons because it is the bigger decision. */}
+          <StaffRoles
+            user={handle}
+            roles={card.roles ?? []}
+            by={me}
+            owner={owner}
+            note={setNote}
+            mine={mine}
+          />
+
           {!mine && me && (
             <div className="ch-pop-decide">
               <button

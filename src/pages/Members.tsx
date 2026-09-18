@@ -39,6 +39,7 @@ import { itemsOf } from "../lib/econ";
 import { AvatarArt, TagChip } from "../lib/art";
 import { NullFace } from "../lib/brand";
 import { Sheet } from "../components/Sheet";
+import { StaffRoles } from "../components/StaffRoles";
 import { useAccount } from "../lib/account";
 import { machine } from "../lib/cloud";
 import { roleOf, REPORT_REASONS } from "../lib/staff";
@@ -380,7 +381,6 @@ function MemberCardFull({
   const doReport = useMutation(api.members.report);
   const doBan = useMutation(api.members.ban);
   const doUnban = useMutation(api.members.unban);
-  const doRoles = useMutation(api.members.setRoles);
   const countView = useMutation(api.members.view);
 
   const m = view ?? list.find((x) => x.user.toLowerCase() === user.toLowerCase());
@@ -525,27 +525,22 @@ function MemberCardFull({
         </div>
       )}
 
+      {/* the owner, deciding who is staff. One control, shared with the card
+          that opens over the chat rooms, so the answer is the same in both. */}
+      <StaffRoles
+        user={handle}
+        roles={m.roles ?? []}
+        by={(me.user ?? "").replace(/^@/, "")}
+        owner={owner}
+        note={setNote}
+        mine={!!mine}
+      />
+
       {staff && !mine && (
         <div className="mb-modtools">
           <span className="tiny faint">
             <ShieldCheck /> staff tools
           </span>
-          {owner && (
-            <button
-              className="btn btn--sm"
-              onClick={async () => {
-                try {
-                  const next = m.roles?.includes("mod") ? [] : ["mod"];
-                  await doRoles({ by: (me.user as string).replace(/^@/, ""), claimed: owner, user: handle, roles: next });
-                  setNote(next.length ? "Given MOD." : "Role removed.");
-                } catch (e) {
-                  setNote((e as Error).message.replace(/^.*?Error: /, ""));
-                }
-              }}
-            >
-              {m.roles?.includes("mod") ? "Remove MOD" : "Grant MOD"}
-            </button>
-          )}
           {m.banned ? (
             <button
               className="btn btn--sm"

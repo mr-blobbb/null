@@ -246,11 +246,12 @@ ok("only the person with a picture gets one", (chatOut.match(/<img /g) ?? []).le
 ok("the room header is there", chatOut.includes("ch-hash") && chatOut.includes("the rules"));
 /* the front door of the community is what it expects of you, not the busiest
    room: the rules are the room a fresh visitor lands in */
-ok(
-  "chat opens on the rules",
-  chatOut.includes("#rules") && /class="ch-room is-on"[\s\S]{0,160}?<span>rules<\/span>/.test(chatOut),
-);
-ok("the announcement rooms read with a megaphone", chatOut.includes('class="ch-bull"') && chatOut.includes("📢"));
+/* only the header prepends a # to the room name, so the # is the proof that
+   the page opened on the rules rather than listing them in the sidebar */
+ok("chat opens on the rules", chatOut.includes("#rules") && !chatOut.includes("#general"));
+/* a loudspeaker drawing, not a megaphone emoji: the sidebar icons are all
+   drawings and an emoji in the middle of them reads as a different site */
+ok("the announcement rooms read with a loudspeaker", chatOut.includes("lucide-megaphone") && !chatOut.includes("📢"));
 
 /* ---------- ignoring somebody ----------
    Blocking is local and it is honest about that, so what gets tested is the
@@ -508,6 +509,45 @@ ok("renaming does not leave the old handle behind as a ghost", (() => {
   return r.ok === true && handles.includes("renamedone") && !handles.includes("namecheck");
 })());
 signOut();
+
+/* ---------- making somebody staff ----------
+   One control, worn by the card over the chat rooms and the full card on the
+   members board. The server re-checks the claim, so what is tested here is
+   that the owner is offered it and nobody else is. */
+const { StaffRoles } = await import("./src/components/StaffRoles");
+const { ReportBox } = await import("./src/components/ReportBox");
+const rolesOut = renderToStaticMarkup(
+  <StaffRoles user="quietmod" roles={["mod"]} by="therealmrblob" owner note={() => {}} /> as never,
+);
+ok("the owner is offered both staff tags", rolesOut.includes("Make ADMIN") && rolesOut.includes("MOD — take back"));
+ok("and it says what a role means", rolesOut.includes("staff roles") && rolesOut.includes("see reports"));
+ok(
+  "their own card never offers it",
+  renderToStaticMarkup(
+    <StaffRoles user="mrblob" roles={[]} by="mrblob" owner mine note={() => {}} /> as never,
+  ) === "",
+);
+ok(
+  "nobody who is not the owner sees it",
+  renderToStaticMarkup(<StaffRoles user="mrblob" roles={[]} by="someone" owner={false} note={() => {}} /> as never) ===
+    "",
+);
+const chatSrc = fs.readFileSync("src/pages/Chat.tsx", "utf8");
+const membersSrc = fs.readFileSync("src/pages/Members.tsx", "utf8");
+ok("the chat card carries it", chatSrc.includes("<StaffRoles"));
+ok("so does the members board", membersSrc.includes("<StaffRoles"));
+
+/* the report card moved to its own component; it still has to ask properly */
+const reportOut = renderToStaticMarkup(
+  <ReportBox
+    row={{ id: "m1", user: "mrblob", name: "mr blob", body: "morning", image: null }}
+    me="quietmod"
+    signedIn
+    onClose={() => {}}
+  /> as never,
+);
+ok("the report card asks for a reason", reportOut.includes("ch-why") && reportOut.includes("Harassment"));
+ok("and counts the words nobody enjoys writing", reportOut.includes("/400") && reportOut.includes("Send report"));
 
 let bad = 0;
 for (const [what, fine] of checks) {

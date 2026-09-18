@@ -1,35 +1,11 @@
 /* NULL · emoji.css
    Everything the composer grew at once: the pad behind the smiley, the shelf
-   behind the film, the small list of names that fits what is half-typed after
-   a colon, and the announcement glyph the channel list now uses.
+   behind the film, and the small list of names that fits what is half-typed
+   after a colon.
 
    Imported straight after community.css, because all of it is chat: the rules
    here are later, so they win where they overlap, and nothing outside the
    rooms has to know they exist. */
-
-/* ---------- the announcement glyph ----------
-   A drawing cannot be an emoji, so the emoji is set in type at the size the
-   other channel icons are drawn. */
-.ch-bull {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 14px;
-  font-size: 13px;
-  line-height: 1;
-  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
-}
-.ch-bull--big {
-  width: auto;
-  font-size: 15px;
-}
-.ch-hash .ch-bull {
-  font-size: 14px;
-}
-.ch-shelf-h .ch-bull {
-  font-size: 13px;
-}
 
 /* ---------- the names under a colon ----------
    Narrow, because it holds a glyph and two words, and it sits above the box it

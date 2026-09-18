@@ -11,6 +11,9 @@ import "./styles/settings.css";
 import "./styles/browser.css";
 import "./styles/music.css";
 import "./styles/community.css";
+/* the owner's staff-role control, which the chat card and the members board
+   both wear */
+import "./styles/staff.css";
 /* what the chat composer grew: the emoji pad, the gif shelf, the names under a
    colon — all of it chat, so it sits right after the rooms and overrides them */
 import "./styles/emoji.css";
