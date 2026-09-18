@@ -597,6 +597,8 @@ function Feed({
               onPickEmoji={(e) => react(m.id, e)}
               onReport={() => setReportFor(m)}
               onDelete={() => setReactFor(null)}
+              onProblem={setNote}
+              me={handle}
             />
           );
         })}
@@ -935,6 +937,8 @@ function Line({
   onPickEmoji,
   onReport,
   onDelete,
+  onProblem,
+  me,
 }: {
   m: Row;
   mine: boolean;
@@ -951,6 +955,8 @@ function Line({
   onPickEmoji: (emoji: string) => void;
   onReport: () => void;
   onDelete: () => void;
+  onProblem: (why: string) => void;
+  me: string;
 }) {
   const tags = itemsOf(m.tags);
   const time = new Date(m.at).toLocaleTimeString([], {
@@ -983,7 +989,18 @@ function Line({
             <Flag />
           </button>
         )}
-        {mine && <DeleteBtn id={m.id} by={m.user} onGone={onDelete} />}
+        {/* staff can take down anyone's line, which is the whole point of
+            having staff. Your own words are always yours to remove. */}
+        {(mine || staff) && (
+          <DeleteBtn
+            id={m.id}
+            by={me}
+            owner={staff}
+            onGone={onDelete}
+            onProblem={onProblem}
+            mine={mine}
+          />
+        )}
       </div>
 
       {reactor && (
@@ -1069,16 +1086,36 @@ function Line({
   );
 }
 
-function DeleteBtn({ id, by, onGone }: { id: string; by: string; onGone: () => void }) {
+function DeleteBtn({
+  id,
+  by,
+  owner,
+  mine,
+  onGone,
+  onProblem,
+}: {
+  id: string;
+  by: string;
+  owner: boolean;
+  mine: boolean;
+  onGone: () => void;
+  onProblem: (why: string) => void;
+}) {
   const drop = useMutation(api.chat.drop);
-  const me = useAccount();
+  const [busy, setBusy] = useState(false);
   return (
     <button
       className="ch-hbtn is-bad"
-      title="Delete message"
+      title={mine ? "Delete message" : "Delete this message (staff)"}
+      disabled={busy}
       onClick={() => {
         onGone();
-        void drop({ id, by, owner: isOwner(me.user) }).catch(() => {});
+        setBusy(true);
+        drop({ id, by, owner })
+          /* a delete that quietly does nothing is the reason this button was
+             reported broken: the server's answer goes on screen now */
+          .catch((e) => onProblem((e as Error).message.replace(/^.*?Error: /, "")))
+          .finally(() => setBusy(false));
       }}
     >
       <Trash2 />
@@ -1301,7 +1338,6 @@ function ProfilePopout({
   const handle = card.user;
   const mine = me === handle;
   const following = graph?.following.includes(handle) ?? false;
-  const friend = !!graph?.friends.includes(handle);
   const isBanned = banned ?? card.banned === true;
   const openFlags = flags?.open ?? 0;
 
@@ -1362,8 +1398,7 @@ function ProfilePopout({
                 <>
                   <button
                     className="btn btn--sm"
-                    disabled={!friend}
-                    title={friend ? "Send a direct message" : "Friends can DM each other"}
+                    title={`Send @${handle} a direct message`}
                     onClick={() => onDm(handle)}
                   >
                     Message

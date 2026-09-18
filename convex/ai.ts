@@ -21,17 +21,24 @@ import { v } from "convex/values";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
-/** What the assistant is told it is. Short, because a long prompt is a bill.
- *  The same words are in src/lib/ai.ts — the two roads must answer the same
- *  way, and a prompt that only exists on one of them is a tell. */
+/** What the assistant is told it is. The same words are in src/lib/ai.ts — the
+ *  two roads must answer the same way, and a prompt that only exists on one of
+ *  them is a tell. Long answers are the point: the page renders markdown, so
+ *  the model is told to use it and to keep going past the first paragraph. */
 const SYSTEM = `You are Null Bot, a general-purpose chat assistant that happens to live inside NULL, a small dark browser-app hub its owner made. You are not a manual for that site and you are not a company: you are an assistant. Whatever anyone asks, answer it.
 
 How to answer:
-- Be useful first. Answer the question, then stop. Two or three sentences unless the question needs more.
-- Plain words. No corporate padding, no "As an AI language model", no repeating the question back.
-- Match the room: casual questions get casual answers. Code, lists and steps when they help, light formatting otherwise.
+- Write a full answer. Several paragraphs, or a section per part of the question. Never a one-liner when the question has substance to it, and never a summary of an answer you did not give.
+- Structure it with markdown: a short opening line, then ## and ### headings, bulleted or numbered lists, bold for the thing that matters, tables when you compare, fenced code blocks with the language named. The page renders all of it.
+- Give the reasoning, not only the verdict. Say why, name the trade-off, and mention the case where the obvious answer is wrong.
+- Be concrete: real numbers, real names, real commands, a worked example. If you are unsure of a fact, say which part you are unsure about instead of leaving it out.
+- Plain words. No corporate padding, no "As an AI language model", no repeating the question back, no apologising for existing.
 - If you do not know, say so. Never invent facts, numbers or sources.
-- If someone asks where something is in NULL, answer briefly and move on. Do not steer the conversation back to the site.`;
+- If someone asks where something is in NULL, answer it plainly in a line or two, then get back to the question. Do not steer the conversation to the site.`;
+
+/** Enough room for a real answer. The cap exists so one question cannot turn
+ *  into an essay nobody reads, not to keep answers short. */
+const MAX_TOKENS = 2500;
 
 type Wire = {
   name: string;
@@ -119,13 +126,14 @@ export const ask = action({
       };
     }
 
-    /* the client's history, trimmed: last dozen turns and no message longer
-       than a few thousand characters, because a runaway prompt is a bill */
+    /* the client's history, trimmed: last eight turns, and a longer leash on
+       each than before, because the answers themselves got longer and a
+       cut-off reply makes the next question incoherent */
     const history: Msg[] = args.messages
-      .slice(-12)
+      .slice(-8)
       .map((m) => ({
         role: m.role === "assistant" ? ("assistant" as const) : ("user" as const),
-        content: String(m.content).slice(0, 4000),
+        content: String(m.content).slice(0, 6000),
       }))
       .filter((m) => m.content.trim());
 
@@ -150,7 +158,7 @@ async function call(
       headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
       body: JSON.stringify({
         model,
-        max_tokens: 700,
+        max_tokens: MAX_TOKENS,
         messages: [{ role: "system", content: SYSTEM }, ...history],
       }),
     });
@@ -172,7 +180,7 @@ async function call(
         "x-api-key": key,
         "anthropic-version": "2023-06-01",
       },
-      body: JSON.stringify({ model, max_tokens: 700, system: SYSTEM, messages: history }),
+      body: JSON.stringify({ model, max_tokens: MAX_TOKENS, system: SYSTEM, messages: history }),
     });
     const body = (await res.json()) as {
       content?: { text?: string }[];
@@ -196,7 +204,7 @@ async function call(
           role: m.role === "assistant" ? "model" : "user",
           parts: [{ text: m.content }],
         })),
-        generationConfig: { maxOutputTokens: 700 },
+        generationConfig: { maxOutputTokens: MAX_TOKENS },
       }),
     },
   );

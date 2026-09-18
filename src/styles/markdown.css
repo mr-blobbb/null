@@ -1,0 +1,172 @@
+/* ============================================================
+   NULL · markdown.css
+   What src/lib/md.tsx produces, drawn.
+
+   The renderer has always turned a body into headings, lists, quotes, code
+   fences and tables — the chat rooms and the assistant both post through it.
+   Nothing had ever been told what those elements should look like, so a reply
+   with a heading in it arrived as one run-on line and a code fence arrived as
+   three backticks. This is that missing half.
+
+   It lives in its own file because it belongs to the renderer rather than to
+   either page: anywhere markdown appears, this is what it looks like.
+   ============================================================ */
+
+.md-p {
+  display: block;
+}
+.md-p + .md-p {
+  margin-top: 7px;
+}
+
+.md-h {
+  display: block;
+  margin: 13px 0 5px;
+  font-weight: 660;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+.md-h:first-child {
+  margin-top: 3px;
+}
+.md-h1 {
+  font-size: 15px;
+}
+.md-h2 {
+  font-size: 14px;
+}
+.md-h3 {
+  font-size: 13.5px;
+  color: var(--dim);
+}
+
+.md-quote {
+  display: block;
+  margin: 7px 0;
+  padding: 3px 0 3px 12px;
+  border-left: 2px solid var(--line-2);
+  color: var(--dim);
+  font-style: italic;
+}
+
+/* a list is a row per item: a dot or a number, then the words */
+.md-li {
+  display: flex;
+  gap: 8px;
+  margin: 3px 0;
+}
+.md-li > i {
+  flex: none;
+  width: 4px;
+  height: 4px;
+  margin-top: 8px;
+  border-radius: 50%;
+  background: var(--faint);
+}
+.md-li > b {
+  flex: none;
+  min-width: 17px;
+  color: var(--dim);
+  font-weight: 620;
+  font-variant-numeric: tabular-nums;
+}
+.md-li > span {
+  min-width: 0;
+}
+
+/* code scrolls sideways rather than wrapping: a wrapped line of code is a
+   line you cannot copy correctly */
+.md-pre {
+  display: block;
+  margin: 9px 0;
+  padding: 11px 13px;
+  border: var(--bw) solid var(--line);
+  border-radius: var(--r-2);
+  background: var(--bg);
+  color: var(--dim);
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.65;
+  white-space: pre;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+/* a fence that named its language gets the brighter edge */
+.md-pre--lang {
+  border-color: var(--line-2);
+}
+
+.md-spoiler {
+  display: inline;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 3px;
+  background: var(--bg-4);
+  color: transparent;
+  text-shadow: 0 0 9px color-mix(in srgb, var(--text) 75%, transparent);
+  cursor: pointer;
+  transition: color 0.16s var(--ease);
+}
+.md-spoiler.is-open {
+  background: var(--bg-3);
+  color: var(--text);
+  text-shadow: none;
+}
+
+/* ---------- tables ----------
+   The assistant is told to compare with one, so it has to hold up: the
+   header sticks out, the rows alternate, and a wide table scrolls inside its
+   own frame instead of stretching the message column. */
+
+.md-table-wrap {
+  display: block;
+  margin: 10px 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.md-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 12.5px;
+}
+.md-table th,
+.md-table td {
+  padding: 6px 10px;
+  border: var(--bw) solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+.md-table th {
+  background: var(--bg-3);
+  font-weight: 620;
+  white-space: nowrap;
+}
+.md-table tr:nth-child(even) td {
+  background: color-mix(in srgb, var(--bg-3) 45%, transparent);
+}
+
+/* ---------- links ---------- */
+
+.say-body a,
+.ai-say-body a {
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--line-2);
+}
+.say-body a:hover,
+.ai-say-body a:hover {
+  text-decoration-color: var(--ac-1);
+}
+
+/* ---------- an answer is longer than a message ---------- */
+
+.ai-say-body .md-h {
+  margin-top: 16px;
+}
+.ai-say-body .md-p {
+  line-height: 1.68;
+}
+.ai-say-body .md-table-wrap {
+  margin: 12px -2px;
+}

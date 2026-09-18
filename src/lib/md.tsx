@@ -67,7 +67,25 @@ function Spoiler({ text }: { text: string }) {
 
 /* ---------- block ---------- */
 
-type Line = { kind: "p" | "h1" | "h2" | "h3" | "quote" | "ul" | "ol" | "code"; text: string; n?: number };
+type Line =
+  | { kind: "p" | "h1" | "h2" | "h3" | "quote" | "ul" | "ol" | "code"; text: string; n?: number; lang?: string }
+  | { kind: "table"; head: string[]; rows: string[][] };
+
+/** A fence line, with or without a language on it. ```` ```python ```` has
+ *  always been the way a person writes a code block, and a parser that only
+ *  understands a bare fence prints the fence at them. */
+const FENCE = /^\s*```(\S+)?\s*$/;
+
+/** The `|---|---|` line under a table's header. */
+const RULE = /^\s*\|?[\s:|-]*-[\s:|-]*\|?\s*$/;
+
+function cells(line: string): string[] {
+  return line
+    .replace(/^\s*\|/, "")
+    .replace(/\|\s*$/, "")
+    .split("|")
+    .map((c) => c.trim());
+}
 
 function blocks(body: string): Line[] {
   const lines = body.split("\n");
@@ -79,9 +97,19 @@ function blocks(body: string): Line[] {
     const h = line.match(/^(#{1,3})\s+(.*)$/);
     const olm = line.match(/^(\d+)\.\s+(.*)$/);
     const ulm = line.match(/^[-*]\s+(.*)$/);
+    const fence = line.match(FENCE);
     if (h) {
       ol = 0;
       out.push({ kind: `h${h[1].length}` as "h1", text: h[2] });
+      continue;
+    }
+    if (fence) {
+      /* everything to the closing fence is one block, verbatim */
+      ol = 0;
+      const code: string[] = [];
+      i++;
+      while (i < lines.length && !FENCE.test(lines[i])) code.push(lines[i++]);
+      out.push({ kind: "code", text: code.join("\n"), lang: fence[1] });
       continue;
     }
     if (olm) {
@@ -90,20 +118,23 @@ function blocks(body: string): Line[] {
       continue;
     }
     ol = 0;
+    /* a table is a row of cells with a rule under it, and everything after it
+       that still holds a pipe */
+    if (line.includes("|") && lines[i + 1] && RULE.test(lines[i + 1])) {
+      const head = cells(line);
+      const rows: string[][] = [];
+      let j = i + 2;
+      while (j < lines.length && lines[j].includes("|") && lines[j].trim()) rows.push(cells(lines[j++]));
+      i = j - 1;
+      out.push({ kind: "table", head, rows });
+      continue;
+    }
     if (ulm) {
       out.push({ kind: "ul", text: ulm[1] });
       continue;
     }
     if (line.startsWith("> ")) {
       out.push({ kind: "quote", text: line.slice(2) });
-      continue;
-    }
-    if (line === "```") {
-      /* the code fence: everything until the next fence is one block */
-      const body2: string[] = [];
-      i++;
-      while (i < lines.length && lines[i] !== "```") body2.push(lines[i++]);
-      out.push({ kind: "code", text: body2.join("\n") });
       continue;
     }
     if (line.trim()) out.push({ kind: "p", text: line });
@@ -121,9 +152,32 @@ export function Markdown({ body, staff = false, member = false }: { body: string
       {items.map((l, i) => {
         if (l.kind === "code")
           return (
-            <pre key={i} className="md-pre">
+            <pre key={i} className={`md-pre${l.lang ? " md-pre--lang" : ""}`}>
               {l.text}
             </pre>
+          );
+        if (l.kind === "table")
+          return (
+            <span key={i} className="md-table-wrap">
+              <table className="md-table">
+                <thead>
+                  <tr>
+                    {l.head.map((c, j) => (
+                      <th key={j}>{inline(c, allow, `t${i}h${j}`)}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {l.rows.map((row, j) => (
+                    <tr key={j}>
+                      {row.map((c, k) => (
+                        <td key={k}>{inline(c, allow, `t${i}r${j}c${k}`)}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </span>
           );
         if (l.kind === "h1") return <h4 key={i} className="md-h md-h1">{inline(l.text, allow, `l${i}`)}</h4>;
         if (l.kind === "h2") return <h5 key={i} className="md-h md-h2">{inline(l.text, allow, `l${i}`)}</h5>;
@@ -152,5 +206,5 @@ export function Markdown({ body, staff = false, member = false }: { body: string
 /** Does this body use markup a member is not allowed? The composer greys the
  *  hint when it does, rather than silently stripping it. */
 export function usesStaffMd(body: string): boolean {
-  return /#{1,3}\s|```|~~|\|\||\[[^\]]+\]\(|^>\s|^\s*[-*]\s/m.test(body);
+  return /#{1,3}\s|```|~~|\|\||\[[^\]]+\]\(|^>\s|^\s*[-*]\s|^\s*\|.*\|/m.test(body);
 }

@@ -11,6 +11,8 @@ import "./styles/settings.css";
 import "./styles/browser.css";
 import "./styles/music.css";
 import "./styles/community.css";
+/* what the markdown renderer produces, wherever it is used */
+import "./styles/markdown.css";
 /* imported last: the quiet pass, which overrides a few wrote-in sizes */
 import "./styles/refine.css";
 

@@ -1,7 +1,7 @@
 /* NULL · Player.tsx
-   The window a game or an app opens in. Full width, no page chrome, one
-   small bar on top with the name and the controls that matter: reload,
-   fullscreen, and back to the library.
+   The window a game or an app opens in. The whole page is the game, and the
+   three controls that matter — back, reload, fullscreen — float over the
+   corner as one small pill so the frame gets everything else.
 
    While this page is the active tab the coin clock counts for it, which is
    what makes playing the way you earn.
@@ -10,8 +10,9 @@
    https URL is a discovered game, and it gets one of two roads: a site that
    allows framing (truffled.lol and friends) is framed directly, while raw
    GitHub serves pages as text/plain — no browser will run one in a frame —
-   so the page is fetched here and handed to the frame as a blob. If even the
-   fetch is refused, the bar says so and the offer is a real tab. */
+   so the page is fetched here and handed to the frame as a blob. The blob is
+   always labelled text/html: taking the label from the response is how a
+   stashed game ends up rendered as its own source code. */
 
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, Expand, ExternalLink, Gamepad2, RefreshCw } from "lucide-react";
@@ -45,19 +46,22 @@ export function Player({ kind, id }: { kind: string; id: string }) {
 
   return (
     <div className="play">
-      <header className="play-bar">
-        <button className="bar-btn" onClick={() => go({ page: kind === "app" ? "apps" : "games" })} aria-label="Back">
+      {/* the only chrome on the page: three controls in a pill that floats over
+          the frame. The name lives in the tooltips, because the game is what
+          the page is for. */}
+      <header className="play-pill" title={entry ? `${entry.name}\n${entry.file ?? id}` : undefined}>
+        <button
+          className="play-btn"
+          onClick={() => go({ page: kind === "app" ? "apps" : "games" })}
+          aria-label="Back to the library"
+          title={`Back to ${kind === "app" ? "apps" : "games"}`}
+        >
           <ArrowLeft />
         </button>
-        <span className="play-name">
-          <Gamepad2 />
-          {entry?.name ?? "Nothing loaded"}
-        </span>
-        <span className="play-host mono tiny faint">{entry?.file ?? id}</span>
-        <button className="bar-btn" onClick={() => setNonce((n) => n + 1)} aria-label="Reload" title="Reload">
+        <button className="play-btn" onClick={() => setNonce((n) => n + 1)} aria-label="Reload" title="Reload">
           <RefreshCw />
         </button>
-        <button className="bar-btn" onClick={open} aria-label="Fullscreen" title="Fullscreen">
+        <button className="play-btn" onClick={open} aria-label="Fullscreen" title="Fullscreen">
           <Expand />
         </button>
       </header>
@@ -86,11 +90,32 @@ export function Player({ kind, id }: { kind: string; id: string }) {
   );
 }
 
+/** Fetch a stashed page, with one retry. Raw GitHub answers 429 when a page
+ *  asks it for a dozen files at once, and a game that needs clicking twice is
+ *  a game that looks broken the first time. */
+async function grab(url: string): Promise<string> {
+  for (let go = 0; ; go++) {
+    const res = await fetch(url);
+    if (res.ok) return res.text();
+    if (go === 0 && (res.status === 429 || res.status >= 500)) {
+      await new Promise((r) => setTimeout(r, 700));
+      continue;
+    }
+    throw new Error(`it answered ${res.status}`);
+  }
+}
+
 /** A blob has no directory, so `scripts/game.js` inside a copied page has
  *  nowhere to resolve to. Pointing the page back at the folder it came from
  *  fixes every relative asset it asks for; the ones that are not in the stash
- *  are missing either way, which is the stash's business, not ours. */
+ *  are missing either way, which is the stash's business, not ours.
+ *
+ *  A page that names a base of its own is left completely alone. Several of
+ *  the stashes point theirs at a CDN that really does hold their files, and
+ *  the *first* base wins — so ours would override the one that works and turn
+ *  a game that played into one that cannot find its own scripts. */
 function rebased(html: string, file: string): string {
+  if (/<base\s/i.test(html)) return html;
   const dir = file.slice(0, file.lastIndexOf("/") + 1);
   const base = `<base href="${dir}">`;
   if (/<head[^>]*>/i.test(html)) return html.replace(/<head[^>]*>/i, (m) => m + base);
@@ -101,18 +126,21 @@ function rebased(html: string, file: string): string {
 function RemoteFrame({ file, name }: { file: string; name: string }) {
   const [blob, setBlob] = useState<string | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     if (!NEEDS_BLOB.test(file)) return;
     let url: string | null = null;
     let alive = true;
+    setProblem(null);
     (async () => {
       try {
-        const res = await fetch(file);
-        if (!res.ok) throw new Error(`it answered ${res.status}`);
-        const kind = res.headers.get("content-type") ?? "text/html";
-        const html = await res.text();
-        url = URL.createObjectURL(new Blob([rebased(html, file)], { type: kind }));
+        const html = await grab(file);
+        /* The frame runs what the blob's type says it is, and a raw GitHub
+           URL says text/plain — which is a browser faithfully printing the
+           page's source at you. The type is ours to choose, so it is always
+           html, whatever the stash labels its own files. */
+        url = URL.createObjectURL(new Blob([rebased(html, file)], { type: "text/html;charset=utf-8" }));
         if (alive) setBlob(url);
       } catch (e) {
         if (alive) setProblem((e as Error).message);
@@ -122,7 +150,7 @@ function RemoteFrame({ file, name }: { file: string; name: string }) {
       alive = false;
       if (url) URL.revokeObjectURL(url);
     };
-  }, [file]);
+  }, [file, attempt]);
 
   if (problem) {
     return (
@@ -130,9 +158,14 @@ function RemoteFrame({ file, name }: { file: string; name: string }) {
         <Gamepad2 />
         <h2>{name} would not load</h2>
         <p>The stash it lives on refused the request ({problem}). It may still open on its own.</p>
-        <a className="btn btn--fill" href={file} target="_blank" rel="noreferrer noopener">
-          <ExternalLink /> Open in a real tab
-        </a>
+        <div className="play-empty-row">
+          <button className="btn" onClick={() => setAttempt((n) => n + 1)}>
+            <RefreshCw /> Try again
+          </button>
+          <a className="btn btn--fill" href={file} target="_blank" rel="noreferrer noopener">
+            <ExternalLink /> Open in a real tab
+          </a>
+        </div>
       </div>
     );
   }

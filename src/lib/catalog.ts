@@ -87,6 +87,23 @@ export function find(kind: Kind, id: string): Entry | undefined {
   return LIBRARY[kind].find((e) => e.id === id);
 }
 
+/** Where each entry came from, for the source dropdown: a discovered game
+ *  carries the stash it was pulled from as its first label, and anything this
+ *  repo serves itself answers to NULL. "Remote" is not a source, it is a note
+ *  about how the card loads, so it is left out. */
+const NOT_A_SOURCE = new Set(["Remote"]);
+
+export function sources(kind: Kind): { id: string; count: number }[] {
+  const tally = new Map<string, number>();
+  LIBRARY[kind].forEach((e) => {
+    const from = e.labels.find((l) => !NOT_A_SOURCE.has(l)) ?? "NULL";
+    tally.set(from, (tally.get(from) ?? 0) + 1);
+  });
+  return [...tally.entries()]
+    .map(([id, count]) => ({ id, count }))
+    .sort((a, b) => b.count - a.count || a.id.localeCompare(b.id));
+}
+
 /** Every category in one kind, alphabetical, for the filters row. */
 export function categories(kind: Kind): string[] {
   const seen = new Set<string>();
@@ -115,7 +132,7 @@ export const SORTS: { id: SortId; name: string }[] = [
  *  which is why categories are searchable without being printed on a card. */
 export function browse(
   kind: Kind,
-  opts: { q?: string; sort?: SortId; onlyIds?: string[]; seed?: number },
+  opts: { q?: string; sort?: SortId; onlyIds?: string[]; seed?: number; source?: string },
 ): Entry[] {
   const q = (opts.q ?? "").trim().toLowerCase();
   const sort = opts.sort ?? "az";
@@ -124,6 +141,9 @@ export function browse(
   if (opts.onlyIds) {
     const set = new Set(opts.onlyIds);
     list = list.filter((e) => set.has(e.id));
+  }
+  if (opts.source) {
+    list = list.filter((e) => (e.labels.find((l) => !NOT_A_SOURCE.has(l)) ?? "NULL") === opts.source);
   }
   if (q) {
     list = list.filter(

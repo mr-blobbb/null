@@ -25,7 +25,7 @@ import { askModel, BUILT_IN_MODEL, builtInReady, type Said as Turn } from "../li
 import { cloudOn, machine } from "../lib/cloud";
 import { CloudDown } from "../lib/outage";
 import { createStore, useStore } from "../lib/store";
-import { Rich } from "../lib/rich";
+import { Markdown } from "../lib/md";
 
 type Line = { id: string; who: "you" | "ai"; body: string; at: number };
 type Said = { ready: boolean; provider: string | null };
@@ -200,8 +200,9 @@ npx convex env set OPENAI_API_KEY <your key>`}
               </span>
               <h2>Ask me anything</h2>
               <p className="faint">
-                Not a guide to this site — just a chatbot. Code, homework, writing, dinner,
-                whatever. It can be wrong, and it says so when it does not know.
+                Not a guide to this site — just a chatbot, and a thorough one. Code, homework,
+                writing, dinner, whatever, with the working shown. It can be wrong, and it
+                says so when it does not know.
               </p>
               <div className="ai-ideas">
                 {IDEAS.map((idea) => (
@@ -221,8 +222,10 @@ npx convex env set OPENAI_API_KEY <your key>`}
           {lines.map((l) => (
             <div key={l.id} className={`ai-say is-${l.who}`}>
               <span className="ai-pic">{l.who === "you" ? <UserRound /> : <Bot />}</span>
+              {/* the assistant is told to answer in markdown, so the feed
+                  renders the whole set: headings, lists, code, quotes, links */}
               <div className="ai-say-body">
-                <Rich body={l.body} />
+                <Markdown body={l.body} staff />
               </div>
             </div>
           ))}

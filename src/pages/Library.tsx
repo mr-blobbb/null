@@ -16,7 +16,7 @@ import {
   Star,
 } from "lucide-react";
 
-import { browse, entries, SORTS, type Entry, type Kind, type SortId } from "../lib/catalog";
+import { browse, entries, sources, SORTS, type Entry, type Kind, type SortId } from "../lib/catalog";
 import { toggleFavorite, pushRecent, useAccount } from "../lib/account";
 import { openTab } from "../lib/tabs";
 import { trackPlay } from "../lib/econ";
@@ -32,19 +32,22 @@ export function Library({ kind }: { kind: Kind }) {
   const me = useAccount();
   const [q, setQ] = useState("");
   const [sort, setSort] = useState<SortId>("az");
+  const [source, setSource] = useState("");
   const [onlyFavs, setOnlyFavs] = useState(false);
   const [seed, setSeed] = useState(1);
 
   const all = entries(kind);
+  const from = useMemo(() => sources(kind), [kind]);
   const shown = useMemo(
     () =>
       browse(kind, {
         q,
         sort,
         seed,
+        source: source || undefined,
         onlyIds: onlyFavs ? me.favorites : undefined,
       }),
-    [kind, q, sort, seed, onlyFavs, me.favorites],
+    [kind, q, sort, seed, source, onlyFavs, me.favorites],
   );
 
   const favCount = me.favorites.filter((id) => all.some((e) => e.id === id)).length;
@@ -79,17 +82,37 @@ export function Library({ kind }: { kind: Kind }) {
           ))}
         </select>
 
+        {/* the shelf is assembled from several stashes, so it can be read one
+            stash at a time */}
+        {from.length > 1 && (
+          <select
+            className="lb-sort"
+            value={source}
+            aria-label="Source"
+            onChange={(e) => setSource(e.target.value)}
+          >
+            <option value="">Every source</option>
+            {from.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.id} ({s.count})
+              </option>
+            ))}
+          </select>
+        )}
+
         <button
           className="lb-random"
           onClick={() => {
-            if (!all.length) return;
+            /* Random picks from what is on screen: a surprise out of another
+               stash than the one being looked at is not a surprise */
+            if (!shown.length) return;
             if (sort === "random") {
               setSeed(Math.floor(Math.random() * 9999) + 1);
               return;
             }
-            launch(all[Math.floor(Math.random() * all.length)]);
+            launch(shown[Math.floor(Math.random() * shown.length)]);
           }}
-          disabled={!all.length}
+          disabled={!shown.length}
         >
           <Dices /> Random
         </button>
@@ -119,6 +142,10 @@ export function Library({ kind }: { kind: Kind }) {
           ) : q ? (
             <p>
               No {word.many} matching “{q}”.
+            </p>
+          ) : source ? (
+            <p>
+              Nothing from {source} here yet.
             </p>
           ) : (
             <p>
@@ -154,11 +181,24 @@ function Tile({
   fav: boolean;
   onOpen: () => void;
 }) {
+  /* Artwork comes from someone else's stash, so it is allowed to be missing.
+     A card that has lost its picture falls back to the plain square it would
+     have had without one, rather than the browser's broken-image glyph. */
+  const [art, setArt] = useState(true);
   return (
     <div className="tile">
       <button className="tile-btn" onClick={onOpen} title={entry.name}>
-        {entry.thumb ? (
-          <img src={entry.thumb} alt="" loading="lazy" />
+        {entry.thumb && art ? (
+          <img
+            src={entry.thumb}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            /* no referrer: a stash that hotlink-checks would otherwise refuse
+               every icon this shelf asks it for */
+            referrerPolicy="no-referrer"
+            onError={() => setArt(false)}
+          />
         ) : (
           <span className="tile-blank">
             <Icon />

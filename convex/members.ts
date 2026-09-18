@@ -479,6 +479,10 @@ export const dmList = query({
 
 /** A DM is between friends. That is the whole rule, and it is why the follow
  *  graph exists at all. */
+/* Direct messages used to need a mutual follow. They do not any more: asking
+   somebody a question should not require a friendship first, and the person on
+   the other end is a stranger only until they answer. Bans and the spam wall
+   still apply, which is what the rule was actually protecting against. */
 export const dmSend = mutation({
   args: { by: v.string(), to: v.string(), body: v.string(), image: v.optional(v.string()), machine: v.string() },
   handler: async (ctx, { by, to, body, image, machine }) => {
@@ -488,13 +492,21 @@ export const dmSend = mutation({
     const why = await bannedCheck(ctx, a, machine);
     if (why) throw new Error(why);
 
-    const following = await ctx.db.query("follows").withIndex("by_pair", (q) => q.eq("a", b).eq("b", a)).first();
-    const back = await ctx.db.query("follows").withIndex("by_pair", (q) => q.eq("a", a).eq("b", b)).first();
-    if (!following || !back) throw new Error("You can only DM friends — you follow each other.");
+    const [x, y] = dmPair(a, b);
+
+    /* the same four-second wall the rooms use, so opening a DM is not a way
+       around it. Counted on this conversation's own rows, newest first. */
+    const newest = await ctx.db
+      .query("dms")
+      .withIndex("by_pair_at", (q) => q.eq("a", x).eq("b", y))
+      .order("desc")
+      .take(12);
+    const onMe = newest.filter((r) => r.from === a && r.at > Date.now() - 4000).length;
+    if (onMe >= 5) throw new Error("slow down a moment");
 
     const said = (await import("./filter")).screen(body);
     if (!said.clean.trim() && !image) throw new Error("say something first");
-    const [x, y] = dmPair(a, b);
+
     await ctx.db.insert("dms", {
       a: x,
       b: y,

@@ -167,6 +167,7 @@ const { Chat } = await import("./src/pages/Chat");
 const { Ai } = await import("./src/pages/Ai");
 const { Tour } = await import("./src/components/Tour");
 const { Rich, parse } = await import("./src/lib/rich");
+const { Markdown } = await import("./src/lib/md");
 const { RAIL_TOP, ALL_PAGES, PAGES } = await import("./src/lib/nav");
 const { RELAYS } = await import("./src/lib/browser");
 const { account } = await import("./src/lib/account");
@@ -244,6 +245,29 @@ ok("newlines become breaks", parse("a\nb").filter((p) => p.kind === "br").length
 ok("a stray asterisk stays literal", parse("5 * 3").every((p) => p.kind === "text"));
 const rich = renderToStaticMarkup(<Rich body={"**a** and `b`"} /> as never);
 ok("Rich renders both", rich.includes("<b>a</b>") && rich.includes("<code>b</code>"));
+
+/* ---------- the markdown the assistant answers in ----------
+   The model is told to use headings, fences and tables, so all three have to
+expected arrive as elements rather than as the syntax that asked for them. */
+const md = renderToStaticMarkup(
+  (
+    <Markdown
+      staff
+      body={
+        "## Head\n\npapers\n\n- one\n- two\n\n```js\nconst a = 1;\n```\n\n| a | b |\n| --- | --- |\n| 1 | 2 |"
+      }
+    />
+  ) as never,
+);
+ok("a heading arrives as a heading", md.includes("md-h2") && md.includes("Head") && !md.includes("##"));
+ok("a fence arrives as one code block", md.includes("md-pre") && md.includes("const a = 1;") && !md.includes("```"));
+ok("a language on the fence is kept", md.includes("md-pre--lang"));
+ok("a list arrives as a list", md.includes("md-li--ul") && md.includes("one") && !md.includes("- one"));
+ok(
+  "a table arrives as a table",
+  md.includes("md-table") && md.includes("<th><span>a</span></th>") && md.includes("<td><span>1</span></td>"),
+);
+ok("and its header rule is not printed at anyone", !md.includes("---"));
 
 /* ---------- the stylesheets ----------
    A declaration that sits outside any rule is a typo that does nothing at all,
