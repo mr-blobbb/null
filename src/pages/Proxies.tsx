@@ -21,7 +21,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
-  Check,
   Globe,
   Loader,
   Lock,
@@ -32,19 +31,29 @@ import {
 } from "lucide-react";
 
 import { entries } from "../lib/catalog";
-import { destinationFor, ENGINES, type EngineId, type PageId } from "../lib/nav";
+import { destinationFor, type PageId } from "../lib/nav";
 import { prefs } from "../lib/themes";
 import { useStore } from "../lib/store";
-import { clientFor, ping, proxied, RELAYS, restart, start } from "../lib/browser";
+import { clientFor, proxied, restart, start } from "../lib/browser";
 import { prepare, read } from "../lib/relay";
 import { activeTab, go, openDestination, openTab, useTabs } from "../lib/tabs";
 
 /** `back` is where the escape hatch leads: a site typed into the address bar
- *  came from the proxy shelf, the movies page came from the front door. */
-export function Proxies({ url, back = "proxies" }: { url?: string; back?: PageId }) {
+ *  came from the proxy shelf, the movies page came from the front door.
+ *  `onOpenSettings` opens the sheet on the Browser pane, which is where the
+ *  relay and the engine now live. */
+export function Proxies({
+  url,
+  back = "proxies",
+  onOpenSettings,
+}: {
+  url?: string;
+  back?: PageId;
+  onOpenSettings?: () => void;
+}) {
   const p = useStore(prefs);
   if (url) return <Browser url={url} relay={p.relay} back={back} />;
-  return <Shelf relay={p.relay} />;
+  return <Shelf onOpenSettings={onOpenSettings} />;
 }
 
 /* ============================================================
@@ -389,37 +398,7 @@ function Browser({ url, relay, back }: { url: string; relay: string; back: PageI
 /* ============================================================
    the shelf
    ============================================================ */
-/** One bare handshake, so a dead relay can be told apart from a broken
- *  browser before anything else is suspected. */
-function RelayCheck({ relay }: { relay: string }) {
-  const [state, setState] = useState<"idle" | "busy" | "ok" | "bad">("idle");
-  const [says, setSays] = useState("");
-
-  return (
-    <div className="px-check">
-      <button
-        className="btn btn--sm"
-        disabled={state === "busy"}
-        onClick={async () => {
-          setState("busy");
-          setSays("knocking…");
-          const r = await ping(relay);
-          setState(r.ok ? "ok" : "bad");
-          setSays(r.ok ? `answered in ${r.ms} ms` : `nothing there — ${r.reason}`);
-        }}
-      >
-        <RotateCw /> Check the relay
-      </button>
-      {state !== "idle" && (
-        <span className={`px-check-say${state === "bad" ? " is-bad" : state === "ok" ? " is-ok" : ""}`}>
-          {says}
-        </span>
-      )}
-    </div>
-  );
-}
-
-function Shelf({ relay }: { relay: string }) {
+function Shelf({ onOpenSettings }: { onOpenSettings?: () => void }) {
   const p = useStore(prefs);
   const list = entries("proxy");
   const [draft, setDraft] = useState("");
@@ -457,91 +436,37 @@ function Shelf({ relay }: { relay: string }) {
       </form>
 
       <div className="lb-grid">
-        {list.map((e) => (
-          <button
-            key={e.id}
-            className="px-card"
-            onClick={() => openTab({ page: "proxies", arg: { url: e.url ?? "" } })}
-          >
-            <span className="px-card-icon">
-              <Globe />
-            </span>
-            <span className="px-card-body">
-              <b>{e.name}</b>
-              <em>{e.url?.replace(/^https?:\/\//, "").replace(/\/$/, "")}</em>
-            </span>
-            <span className={`px-status${e.status === "Fine" ? "" : " is-warn"}`}>
-              {e.status === "Fine" ? <Lock /> : <TriangleAlert />}
-              {e.status}
-            </span>
-          </button>
-        ))}
-      </div>
-
-      <div className="card card--pad px-settings">
-        <h3 className="set-h">The browser</h3>
-        <p className="set-note">
-          Every address opens inside NULL through Ultraviolet, which fetches it over the relay
-          below. A relay is a WebSocket server, so it cannot be hosted on a static page: point
-          this at one you run, or use the public one it ships with.
-        </p>
-        <div className="px-fields">
-          <label className="form-row">
-            <span>Wisp relay (tried first)</span>
-            <input
-              className="fld"
-              value={p.relay}
-              spellCheck={false}
-              onChange={(e) => {
-                restart();
-                prefs.set({ relay: e.target.value });
-              }}
-            />
-          </label>
-          <div className="px-relays">
-            {RELAYS.map((r) => (
+        {list.length
+          ? list.map((e) => (
               <button
-                key={r.url}
-                className={`btn btn--sm${p.relay === r.url ? " btn--fill" : ""}`}
-                title={r.note}
-                onClick={() => {
-                  restart();
-                  prefs.set({ relay: r.url });
-                }}
+                key={e.id}
+                className="px-card"
+                onClick={() => openTab({ page: "proxies", arg: { url: e.url ?? "" } })}
               >
-                {p.relay === r.url ? <Check /> : null}
-                {r.name}
+                <span className="px-card-icon">
+                  <Globe />
+                </span>
+                <span className="px-card-body">
+                  <b>{e.name}</b>
+                  <em>{e.url?.replace(/^https?:\/\//, "").replace(/\/$/, "")}</em>
+                </span>
+                <span className={`px-status${e.status === "Fine" ? "" : " is-warn"}`}>
+                  {e.status === "Fine" ? <Lock /> : <TriangleAlert />}
+                  {e.status}
+                </span>
               </button>
-            ))}
-          </div>
-          <p className="tiny faint">
-            Whichever you pick is tried first; the others are tried after it, in this order, so
-            one public relay going quiet does not take the browser with it. If a page still
-            will not load, it is usually this list — and a relay of your own goes in the box
-            above.
-          </p>
-          <label className="form-row">
-            <span>Search engine</span>
-            <select
-              className="fld"
-              value={p.searchEngine}
-              onChange={(e) => prefs.set({ searchEngine: e.target.value as EngineId })}
-            >
-              {ENGINES.map((e) => (
-                <option key={e.id} value={e.id}>
-                  {e.name}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-        <RelayCheck relay={p.relay} />
-
-        <p className="tiny faint px-note">
-          Brave is the default. What you type in an address box becomes a page, an address, or a
-          search on this engine — in that order.
-        </p>
+            ))
+          : null}
       </div>
+
+      <p className="tiny faint px-note">
+        The relay, the engine the address bar searches with, and the rest of the browser's
+        plumbing live in{" "}
+        <button className="linkish" onClick={() => onOpenSettings?.()}>
+          Settings → Browser
+        </button>
+        .
+      </p>
     </div>
   );
 }

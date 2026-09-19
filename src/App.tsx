@@ -12,7 +12,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Ambient } from "./components/Ambient";
 import { Chrome } from "./components/Chrome";
 import { Rail } from "./components/Rail";
-import { SettingsSheet } from "./components/SettingsSheet";
+import { SettingsSheet, type SettingsTab } from "./components/SettingsSheet";
 import { NotFound } from "./pages/NotFound";
 import { Home } from "./pages/Home";
 import { Library } from "./pages/Library";
@@ -52,6 +52,11 @@ export function App() {
   const tab = activeTab(state);
 
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsTab, setSettingsTab] = useState<SettingsTab>("appearance");
+  const openSettings = (tab: SettingsTab = "appearance") => {
+    setSettingsTab(tab);
+    setSettingsOpen(true);
+  };
   const [ms, setMs] = useState(0);
   const [milestone, setMilestone] = useState<string | null>(null);
 
@@ -173,9 +178,9 @@ export function App() {
       case "movies":
         /* aether.cx refuses to be framed (`x-frame-options: DENY`), so the
            movies door is the rewritten window like any other address */
-        return <Proxies url={PAGES.movies.loads} back="home" />;
+        return <Proxies url={PAGES.movies.loads} back="home" onOpenSettings={() => openSettings("browser")} />;
       case "proxies":
-        return <Proxies url={t.arg?.url} />;
+        return <Proxies url={t.arg?.url} onOpenSettings={() => openSettings("browser")} />;
       case "shop":
         return <Shop onOpenSettings={() => setSettingsOpen(true)} />;
       case "music":
@@ -292,7 +297,11 @@ export function App() {
 
       <OverlayExts coins={coins} />
 
-      <SettingsSheet open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <SettingsSheet
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        initial={settingsTab}
+      />
     </div>
   );
 }

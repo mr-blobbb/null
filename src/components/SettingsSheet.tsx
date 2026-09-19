@@ -1,15 +1,17 @@
 /* NULL · SettingsSheet.tsx
    Settings is not a page. It opens over whatever is already on screen, so
-   changing a theme never loses your place. Four tabs down the side:
-   Appearance, Cloak, Data, and the paperwork. */
+   changing a theme never loses your place. Five tabs down the side:
+   Appearance, the cloak, the browser, Data, and the paperwork. */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Check,
   Database,
   EyeOff,
   FileText,
+  Globe,
   Palette,
+  Radio,
   RotateCcw,
   ShieldCheck,
   Sparkles,
@@ -24,11 +26,27 @@ import { CLOAKS, pick, SMART_ID } from "../lib/cloak";
 import { replayTour } from "./Tour";
 import { econ, resetEcon } from "../lib/econ";
 import { account } from "../lib/account";
+import { ENGINES, type EngineId } from "../lib/nav";
+import { ping, RELAYS, restart } from "../lib/browser";
 
-type Tab = "appearance" | "cloak" | "data" | "legal";
+type Tab = "appearance" | "cloak" | "browser" | "data" | "legal";
+export type SettingsTab = Tab;
 
-export function SettingsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const [tab, setTab] = useState<Tab>("appearance");
+export function SettingsSheet({
+  open,
+  onClose,
+  initial = "appearance",
+}: {
+  open: boolean;
+  onClose: () => void;
+  /** the tab the sheet shows when it opens, so a page can send you straight
+   *  to the pane it is about */
+  initial?: SettingsTab;
+}) {
+  const [tab, setTab] = useState<Tab>(initial);
+  useEffect(() => {
+    if (open) setTab(initial);
+  }, [open, initial]);
   const palette = usePalette();
   const p = useStore(prefs);
 
@@ -41,6 +59,9 @@ export function SettingsSheet({ open, onClose }: { open: boolean; onClose: () =>
           </button>
           <button className={`setnav-btn${tab === "cloak" ? " is-on" : ""}`} onClick={() => setTab("cloak")}>
             <EyeOff /> Tab cloak
+          </button>
+          <button className={`setnav-btn${tab === "browser" ? " is-on" : ""}`} onClick={() => setTab("browser")}>
+            <Globe /> Browser
           </button>
           <button className={`setnav-btn${tab === "data" ? " is-on" : ""}`} onClick={() => setTab("data")}>
             <Database /> Data
@@ -173,6 +194,8 @@ export function SettingsSheet({ open, onClose }: { open: boolean; onClose: () =>
           )}
 
           {tab === "cloak" && <CloakPane />}
+
+          {tab === "browser" && <BrowserPane />}
 
           {tab === "data" && (
             <>
@@ -339,6 +362,98 @@ function CloakPane() {
           ? "The cloak is off, so the panic key is what turns it on in a hurry."
           : `A press would give you “${chosen.title}”.`}
       </p>
+    </>
+  );
+}
+
+/* ---------- the browser pane ----------
+   The plumbing of the fullscreen browser: which relay pages are fetched
+   through, which engine an address box searches with, and a way to find out
+   whether the relay is answering at all. */
+function BrowserPane() {
+  const p = useStore(prefs);
+  const [state, setState] = useState<"idle" | "busy" | "ok" | "bad">("idle");
+  const [says, setSays] = useState("");
+
+  return (
+    <>
+      <h3 className="set-h">The browser</h3>
+      <p className="set-note">
+        Every address typed into the bar opens inside NULL through Ultraviolet, which fetches it
+        over the relay below. A relay is a WebSocket server, so it cannot be hosted on a static
+        page: point this at one you run, or use the public one NULL ships with.
+      </p>
+
+      <label className="form-row">
+        <span>Wisp relay (tried first)</span>
+        <input
+          className="fld"
+          value={p.relay}
+          spellCheck={false}
+          onChange={(e) => {
+            restart();
+            prefs.set({ relay: e.target.value });
+          }}
+        />
+      </label>
+
+      <div className="px-relays">
+        {RELAYS.map((r) => (
+          <button
+            key={r.url}
+            className={`btn btn--sm${p.relay === r.url ? " btn--fill" : ""}`}
+            title={r.note}
+            onClick={() => {
+              restart();
+              prefs.set({ relay: r.url });
+            }}
+          >
+            {p.relay === r.url ? <Check /> : null}
+            {r.name}
+          </button>
+        ))}
+      </div>
+      <p className="tiny faint">
+        Whichever you pick is tried first; the others are tried after it, in this order, so one
+        public relay going quiet does not take the browser with it.
+      </p>
+
+      <div className="setrow setrow--actions">
+        <button
+          className="btn btn--sm"
+          disabled={state === "busy"}
+          onClick={async () => {
+            setState("busy");
+            setSays("knocking…");
+            const r = await ping(p.relay);
+            setState(r.ok ? "ok" : "bad");
+            setSays(r.ok ? `answered in ${r.ms} ms` : `nothing there — ${r.reason}`);
+          }}
+        >
+          <Radio /> Check the relay
+        </button>
+        {state !== "idle" && (
+          <span className={`tiny${state === "bad" ? " form-err" : " faint"}`}>{says}</span>
+        )}
+      </div>
+
+      <div className="hair set-hair" />
+      <h3 className="set-h">Search engine</h3>
+      <p className="set-note">
+        What an address box does with words rather than addresses. Brave is what the site ships
+        with; what you type becomes a page, an address, or a search on this engine — in that order.
+      </p>
+      <div className="segset">
+        {ENGINES.map((e) => (
+          <button
+            key={e.id}
+            className={`seg${p.searchEngine === e.id ? " is-on" : ""}`}
+            onClick={() => prefs.set({ searchEngine: e.id as EngineId })}
+          >
+            {e.name}
+          </button>
+        ))}
+      </div>
     </>
   );
 }
