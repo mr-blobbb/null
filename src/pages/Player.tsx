@@ -40,7 +40,7 @@ import { CloudSaves } from "../components/CloudSaves";
 import { find } from "../lib/catalog";
 import { go } from "../lib/tabs";
 import { trackPlay } from "../lib/econ";
-import { AS_TEXT, baseOf, mountInline, readPage, rebased } from "../lib/rungame";
+import { AS_TEXT, baseOf, mountInline, readPage, rebased, withShim } from "../lib/rungame";
 
 /** How long a frame gets to show something before the next road is tried. A
  *  host that resets the connection never fires `load`, so this is the only way
@@ -408,7 +408,11 @@ function CopiedFrame({
       try {
         const html = await readPage(file);
         if (!alive) return;
-        url = URL.createObjectURL(new Blob([rebased(html, file)], { type: "text/html;charset=utf-8" }));
+        /* the storage shim goes in ahead of the page: a sandboxed copy has no
+           origin, so `localStorage` throws on first touch, and a game that
+           reads its save on boot threw before it drew — the black and white
+           screens. The shim answers instead, in memory. */
+        url = URL.createObjectURL(new Blob([withShim(rebased(html, file))], { type: "text/html;charset=utf-8" }));
         setBlob(url);
       } catch (e) {
         if (alive) onFail((e as Error).message);

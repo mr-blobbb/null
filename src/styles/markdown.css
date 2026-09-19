@@ -1,5 +1,28 @@
 /* ============================================================
    NULL · markdown.css
+   Custom emoji and stickers render inline as pictures; everything below is
+   the ordinary rules the files already carried.
+   ============================================================ */
+
+/* a custom emoji rides the text line at word height */
+.md-pack {
+  display: inline-block;
+  width: 1.35em;
+  height: 1.35em;
+  vertical-align: -0.28em;
+  margin: 0 0.06em;
+}
+
+/* a sticker is the message, so it stands on its own line at a readable size */
+.md-sticker {
+  display: block;
+  max-width: 148px;
+  max-height: 148px;
+  margin: 4px 0;
+}
+
+/* ============================================================
+   the rest of the sheet
    What src/lib/md.tsx produces, drawn.
 
    The renderer has always turned a body into headings, lists, quotes, code

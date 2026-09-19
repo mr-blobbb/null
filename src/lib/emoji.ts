@@ -19,8 +19,8 @@ export type { EmojiGroup } from "./emoji-set";
 /* The reaction bar's own list, in the order it is drawn. Short enough to read
    across in one glance, which is the whole point of a reaction bar. */
 export const REACTIONS = [
-  "👍", "👎", "❤️", "🔥", "🎉", "💯", "😂", "🤣", "💀", "😮",
-  "🤔", "👀", "🤯", "😢", "😭", "🙏", "🥀", "✅", "❌",
+  "👍", "👎", "❤️", "💔", "🔥", "🎉", "💯", "😂", "🤣", "💀", "😮",
+  "🙄", "🤔", "👀", "🤯", "😢", "😭", "🙏", "🥀", "✅", "❌",
 ];
 
 /* ---------- names ----------

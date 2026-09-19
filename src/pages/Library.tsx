@@ -204,6 +204,7 @@ function Tile({
   fav: boolean;
   onOpen: () => void;
 }) {
+  const kind = entry.kind;
   return (
     <div className="tile">
       <button className="tile-btn" onClick={onOpen} title={entry.name}>
@@ -218,7 +219,11 @@ function Tile({
       >
         <Star />
       </button>
-      <span className="tile-name">{entry.name}</span>
+      {/* the name is not printed on a game card — the square and the star are
+         the whole tile. It is still on the button's tooltip and still what a
+         search matches. Apps keep their label; a tools shelf without labels
+         is a shelf of icons nobody can tell apart. */}
+      {kind !== "game" && <span className="tile-name">{entry.name}</span>}
     </div>
   );
 }

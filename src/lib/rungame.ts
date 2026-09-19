@@ -209,3 +209,177 @@ export function rebased(html: string, file: string): string {
  *  their URL renders the page's own source code. raw GitHub is the one the
  *  library runs into: it labels every file text/plain with nosniff. */
 export const AS_TEXT = /raw\.githubusercontent\.com|gist\.githubusercontent\.com/;
+
+/* ---------- the storage shim ----------
+   The copy road sandboxes the game's frame, and a sandboxed frame is an
+   opaque origin: `localStorage` throws the moment it is *touched*, and
+   `indexedDB.open` throws the moment it is called. Half the games on the
+   shelf read a save key on their first line — which made them throw before
+   they drew, and left the player staring at a black or white page.
+
+   So the copy is handed a stand-in: an in-memory store that answers the
+   whole Web Storage surface (item events included, which save screens
+   listen for), and a small Indexed Database for the games that ask for one.
+   Memory instead of disk — progress lasts as long as the page does, which
+   is the trade for a page that draws at all.
+
+   One string, no interpolation, and nothing inside it may use a backtick —
+   the same rule the relay's own shim lives by. */
+const SHIM = `(function(){
+  var mem = {};
+  function shelf() {
+    return {
+      getItem: function (k) { k = String(k); return Object.prototype.hasOwnProperty.call(mem, k) ? mem[k] : null; },
+      setItem: function (k, v) { mem[String(k)] = String(v); },
+      removeItem: function (k) { delete mem[String(k)]; },
+      clear: function () { mem = {}; },
+      key: function (i) { return Object.keys(mem)[i] || null; }
+    };
+  }
+  function fits(store) {
+    try { store.setItem("__null__", "1"); store.removeItem("__null__"); return true; } catch (e) { return false; }
+  }
+  if (!fits(window.localStorage)) {
+    try { Object.defineProperty(window, "localStorage", { value: shelf(), configurable: true }); } catch (e) {}
+  }
+  if (!fits(window.sessionStorage)) {
+    try { Object.defineProperty(window, "sessionStorage", { value: shelf(), configurable: true }); } catch (e) {}
+  }
+
+  function idbWorks() {
+    try {
+      var probe = indexedDB.open("__null_probe__");
+      try { indexedDB.deleteDatabase("__null_probe__"); } catch (e) {}
+      return !!probe;
+    } catch (e) {
+      return false;
+    }
+  }
+  if (!idbWorks()) {
+    var DBS = {};
+    function fresh() {
+      var r = {
+        result: undefined, error: null, readyState: "pending", source: null, transaction: null,
+        onsuccess: null, onerror: null, onupgradeneeded: null, _h: {}
+      };
+      r.addEventListener = function (k, fn) { (r._h[k] = r._h[k] || []).push(fn); };
+      r._fire = function (kind, extra) {
+        r.readyState = "done";
+        var ev = { type: kind, target: r, currentTarget: r };
+        if (extra) for (var k in extra) ev[k] = extra[k];
+        var odd = r["on" + kind];
+        if (typeof odd === "function") { try { odd.call(r, ev); } catch (e) {} }
+        (r._h[kind] || []).forEach(function (fn) { try { fn.call(r, ev); } catch (e) {} });
+      };
+      return r;
+    }
+    function order(meta) {
+      return Object.keys(meta.rows).map(function (k) {
+        return (String(Number(k)) === k && k !== "") ? Number(k) : k;
+      }).sort(function (a, b) { return a < b ? -1 : a > b ? 1 : 0; });
+    }
+    function run(t, work) {
+      var r = fresh();
+      setTimeout(function () {
+        try { r.result = work(); r._fire("success"); }
+        catch (e) { r.error = e; r._fire("error"); }
+      }, 0);
+      return r;
+    }
+    function store(meta) {
+      var s = {
+        name: meta.name, keyPath: meta.keyPath, autoIncrement: meta.auto,
+        indexNames: Object.keys(meta.index)
+      };
+      s.put = function (v, given) {
+        return run(null, function () {
+          var k = given !== undefined && given !== null ? given : (meta.keyPath && v != null ? v[meta.keyPath] : undefined);
+          if (k === undefined || k === null) { if (!meta.auto) throw new Error("no key"); k = meta.next++; }
+          meta.rows[String(k)] = v; return k;
+        });
+      };
+      s.add = s.put;
+      s.get = function (k) { return run(null, function () { return meta.rows[String(k)]; }); };
+      s.getAll = function () { return run(null, function () { return order(meta).map(function (k) { return meta.rows[String(k)]; }); }); };
+      s.getAllKeys = function () { return run(null, function () { return order(meta); }); };
+      s.count = function () { return run(null, function () { return order(meta).length; }); };
+      s.delete = function (k) { return run(null, function () { delete meta.rows[String(k)]; }); };
+      s.clear = function () { return run(null, function () { meta.rows = {}; }); };
+      s.createIndex = function (n, kp) { meta.index[n] = { name: n, keyPath: kp }; s.indexNames = Object.keys(meta.index); return meta.index[n]; };
+      s.index = function (n) {
+        var ix = meta.index[n];
+        if (!ix) throw new Error("no index named " + n);
+        return {
+          name: n,
+          getAll: function (v) { return run(null, function () { return order(meta).filter(function (k) { var row = meta.rows[String(k)]; return row && row[ix.keyPath] === v; }).map(function (k) { return meta.rows[String(k)]; }); }); },
+          get: function (v) { return this.getAll(v); },
+          count: function () { return run(null, function () { return 0; }); }
+        };
+      };
+      s.openCursor = function () { return run(null, function () { return null; }); };
+      s.openKeyCursor = s.openCursor;
+      return s;
+    }
+    var factory = {
+      open: function (name, version) {
+        var r = fresh();
+        var found = DBS[String(name)];
+        var old = found ? found.version : 0;
+        var wanted = version || old || 1;
+        var db = found || {
+          name: String(name), version: wanted, _stores: {}, onversionchange: null,
+          close: function () {},
+          createObjectStore: function (n, opt) {
+            opt = opt || {};
+            var meta = { name: n, keyPath: opt.keyPath === undefined ? null : opt.keyPath, auto: !!opt.autoIncrement, index: {}, rows: {}, next: 1 };
+            db._stores[n] = meta;
+            db.objectStoreNames = Object.keys(db._stores);
+            return store(meta);
+          },
+          deleteObjectStore: function (n) { delete db._stores[n]; db.objectStoreNames = Object.keys(db._stores); },
+          transaction: function (names) {
+            var t = { db: db, mode: "readonly", objectStoreNames: [].concat(names), oncomplete: null, onerror: null, onabort: null, _h: {} };
+            t.addEventListener = function (k, fn) { (t._h[k] = t._h[k] || []).push(fn); };
+            t.objectStore = function (n) {
+              if (!db._stores[n]) throw new Error("no object store named " + n);
+              return store(db._stores[n]);
+            };
+            t.abort = function () {};
+            setTimeout(function () { t._fire2 = 1; (t._h["complete"] || []).forEach(function (fn) { try { fn.call(t, { type: "complete" }); } catch (e) {} }); if (typeof t.oncomplete === "function") try { t.oncomplete({ type: "complete" }); } catch (e) {} }, 0);
+            return t;
+          }
+        };
+        db._fire2 = 0;
+        db.objectStoreNames = Object.keys(db._stores);
+        DBS[String(name)] = db;
+        db.version = wanted;
+        r.result = db;
+        setTimeout(function () {
+          if (wanted > old) r._fire("upgradeneeded", { oldVersion: old, newVersion: wanted });
+          r._fire("success");
+        }, 0);
+        return r;
+      },
+      deleteDatabase: function (name) {
+        var r = fresh();
+        delete DBS[String(name)];
+        r.result = undefined;
+        setTimeout(function () { r._fire("success"); }, 0);
+        return r;
+      },
+      databases: function () {
+        return Promise.resolve(Object.keys(DBS).map(function (n) { return { name: n, version: DBS[n].version }; }));
+      },
+      cmp: function (a, b) { return a < b ? -1 : a > b ? 1 : 0; }
+    };
+    try { Object.defineProperty(window, "indexedDB", { value: factory, configurable: true }); } catch (e) {}
+  }
+})()`;
+
+/** The shim goes in ahead of everything: it is what makes a sandboxed copy
+ *  of a game draw instead of throwing on its first line. */
+export function withShim(html: string): string {
+  const tag = `<script data-null="storage">${SHIM}</script>`;
+  if (/<head[^>]*>/i.test(html)) return html.replace(/<head[^>]*>/i, (m) => m + tag);
+  return tag + html;
+}

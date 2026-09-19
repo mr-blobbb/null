@@ -76,18 +76,19 @@ async function qobuzFile(id: number, appId: string): Promise<{ url: string | nul
   return { url: null, sample: false };
 }
 
-async function qobuz(q: string, key: string) {
+async function qobuz(q: string, key: string, offset = 0) {
   const appId = key || process.env.QOBUZ_APP_ID || "";
   if (!appId) throw new Error("Qobuz needs its app id (Settings → Music, or QOBUZ_APP_ID on the deployment)");
   const body = await getJson<{ tracks?: { items?: QobuzTrack[] } }>(
-    `https://www.qobuz.com/api.json/0.2/catalog/search?query=${encodeURIComponent(q)}&limit=20&app_id=${encodeURIComponent(appId)}`,
+    `https://www.qobuz.com/api.json/0.2/catalog/search?query=${encodeURIComponent(q)}&limit=20&offset=${offset}&app_id=${encodeURIComponent(appId)}`,
   );
   const items = body.tracks?.items ?? [];
   const tracks: Track[] = [];
-  let sampled = 0;
   for (const t of items) {
     const file = await qobuzFile(t.id, appId);
-    if (file.sample) sampled++;
+    /* a sample is not the song: it is dropped here so the page never has to
+       know the difference */
+    if (file.sample || !file.url) continue;
     tracks.push({
       key: `qobuz:${t.id}`,
       id: String(t.id),
@@ -103,9 +104,7 @@ async function qobuz(q: string, key: string) {
   }
   return {
     tracks,
-    note: sampled
-      ? "Qobuz answered with previews: full and lossless playback needs a subscriber token, which a plain app id is not."
-      : null,
+    note: null,
   };
 }
 
@@ -136,15 +135,20 @@ async function scStream(t: SCTrack, clientId: string): Promise<string | null> {
   }
 }
 
-async function soundcloud(q: string, key: string) {
+async function soundcloud(q: string, key: string, offset = 0) {
   const clientId = key || process.env.SOUNDCLOUD_CLIENT_ID || "";
   if (!clientId) throw new Error("SoundCloud needs its client id (Settings → Music, or SOUNDCLOUD_CLIENT_ID)");
   const body = await getJson<{ collection?: SCTrack[] }>(
-    `https://api-v2.soundcloud.com/search/tracks?q=${encodeURIComponent(q)}&client_id=${encodeURIComponent(clientId)}&limit=20&app_locale=en`,
+    `https://api-v2.soundcloud.com/search/tracks?q=${encodeURIComponent(q)}&client_id=${encodeURIComponent(clientId)}&limit=20&offset=${offset}&app_locale=en`,
   );
   const items = body.collection ?? [];
   const tracks: Track[] = [];
   for (const t of items) {
+    /* a policy of SNIP is a thirty-second slice, and BLOCK is nothing:
+       neither is a song, so neither becomes a row */
+    if (t.policy === "SNIP" || t.policy === "BLOCK") continue;
+    const audio = await scStream(t, clientId);
+    if (!audio) continue;
     tracks.push({
       key: `soundcloud:${t.id}`,
       id: String(t.id),
@@ -153,9 +157,9 @@ async function soundcloud(q: string, key: string) {
       artist: t.user?.username ?? "Unknown artist",
       album: "",
       art: t.artwork_url ? t.artwork_url.replace("-large", "-t500x500") : null,
-      audio: await scStream(t, clientId),
+      audio,
       seconds: Math.round((t.duration ?? 0) / 1000),
-      explicit: t.policy === "SNIP" || t.policy === "BLOCK",
+      explicit: false,
     });
   }
   return { tracks, note: null };
@@ -201,14 +205,15 @@ async function ytmusic(q: string, key: string) {
 /* ---------- the door ---------- */
 
 export const search = action({
-  args: { source: v.string(), q: v.string(), key: v.optional(v.string()) },
+  args: { source: v.string(), q: v.string(), key: v.optional(v.string()), offset: v.optional(v.number()) },
   handler: async (_ctx, args) => {
     const q = (args.q ?? "").trim();
     if (!q) return { tracks: [], note: null };
     const key = (args.key ?? "").trim();
+    const offset = Math.max(0, Math.floor(args.offset ?? 0));
     try {
-      if (args.source === "qobuz") return await qobuz(q, key);
-      if (args.source === "soundcloud") return await soundcloud(q, key);
+      if (args.source === "qobuz") return await qobuz(q, key, offset);
+      if (args.source === "soundcloud") return await soundcloud(q, key, offset);
       if (args.source === "ytmusic") return await ytmusic(q, key);
       return { tracks: [], note: `NULL has no server route for ${args.source}.` };
     } catch (e) {

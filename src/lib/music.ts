@@ -1,30 +1,36 @@
 /* NULL · music.ts
    The music engine: what plays, what is queued, what has been kept.
 
-   NULL does not load the shops. It asks them for tracks and plays the stream
-   they hand back, which is why nothing here embeds a site.
+   One rule above everything: a row here is the whole song. Every source that
+   could only offer a thirty-second slice of somebody's track has been taken
+   off the panel — a grid of previews is a slower way of not listening.
 
-   The source that matters is Audius, and it is the default for one reason:
-   it is the only catalogue here that answers a browser directly AND hands
-   back the whole track. Its API sends `access-control-allow-origin: *`, it
-   needs no key of any kind, and its stream endpoint 302s to the real file —
-   which an <audio> element is allowed to follow cross-origin without CORS,
-   because media is not a fetch. That is the difference between a player and
-   a sample player.
+   So a search asks the catalogues that answer a browser directly, want no
+   key of any kind, and hand back complete files, and it asks all of them at
+   once:
 
-   The other three are wired to the backend instead. A browser can only call
-   a service that sends CORS headers, and none of them do: SoundCloud's API
-   answers 401 to a browser, Qobuz wants an app id and still sends no
-   allow-origin, and YouTube Music has no unauthenticated API at all. Fill in
-   a key and the Convex action asks on your behalf. Qobuz without a
-   subscriber token still only hands back previews, which the page admits.
-   Apple's index is the last resort: real audio, thirty seconds each. */
+   · Audius — the whole streamed catalogue, full tracks, its stream endpoint
+     302s to the real file, which an <audio> element may follow cross-origin
+     because media is not a fetch. It sends `access-control-allow-origin: *`.
+   · the Internet Archive — live shows, radio plays, classical, netlabels,
+     records nobody else kept, all full MP3s, also CORS-open, and one of the
+     few hosts a school filter usually leaves alone.
+
+   Two more join in when the deployment has been given keys: SoundCloud and
+   Qobuz cannot be called from a browser at all, so the backend asks them —
+   and only their full-length rows are kept, the gated and sample ones are
+   dropped before the grid ever sees them.
+
+   Results are pages: page 0 is the first screenful from every catalogue,
+   page 1 the next, and so on, which is what the More button under the grid
+   asks for. NULL does not load the shops. It asks them for tracks and plays
+   the stream they hand back, which is why nothing here embeds a site. */
 
 import { cloud } from "./cloud";
 import { api } from "../../convex/_generated/api";
 import { createStore, useStore } from "./store";
 
-export type SourceId = "audius" | "archive" | "qobuz" | "soundcloud" | "ytmusic" | "keyless";
+export type SourceId = "audius" | "archive" | "soundcloud" | "qobuz";
 
 export type Track = {
   /** source:id, which is what a playlist stores */
@@ -35,8 +41,8 @@ export type Track = {
   artist: string;
   album: string;
   art: string | null;
-  /** the stream. Without one the row is searchable but silent. */
-  audio: string | null;
+  /** the stream. Without one the row is not shown — a silent tile is not a song. */
+  audio: string;
   seconds: number;
   explicit: boolean;
 };
@@ -48,61 +54,25 @@ export type Playlist = {
   tracks: Track[];
 };
 
-export const SOURCES: {
-  id: SourceId;
-  name: string;
-  /** what the source is for, printed under the picker */
-  note: string;
-  /** the name of the key it wants, or null when it needs none */
-  keyLabel: string | null;
-  placeholder: string;
-}[] = [
+/** What the keyed sources are called, for the row that explains them. */
+export const SERVER_SOURCES: { id: SourceId; name: string; keyLabel: string; placeholder: string; env: string }[] = [
   {
-    id: "audius",
-    name: "Audius",
-    note: "Full tracks, no key, no server — the catalogue NULL plays out of the box. Every row here is the whole song.",
-    keyLabel: null,
-    placeholder: "",
-  },
-  {
-    id: "archive",
-    name: "Internet Archive",
-    note: "Everything the Archive holds that is music, in full: live shows, radio plays, classical, netlabels, records nobody else kept. No key and no server — and archive.org is one of the few hosts a school filter usually leaves alone, which is the other half of why it is here.",
-    keyLabel: null,
-    placeholder: "",
+    id: "soundcloud",
+    name: "SoundCloud",
+    keyLabel: "client id",
+    placeholder: "your-soundcloud-client-id",
+    env: "SOUNDCLOUD_CLIENT_ID",
   },
   {
     id: "qobuz",
     name: "Qobuz",
-    note: "Lossless catalogue. Ask for format 27 and it answers with FLAC when the key is a subscriber's; a plain app id is only entitled to previews, and the page says so when it gets one. The id can be typed here or set once as QOBUZ_APP_ID on the deployment.",
     keyLabel: "app id",
     placeholder: "your-qobuz-app-id",
-  },
-  {
-    id: "soundcloud",
-    name: "SoundCloud",
-    note: "Everything anyone has uploaded, in full. It needs a client id — type it here or set SOUNDCLOUD_CLIENT_ID on the deployment.",
-    keyLabel: "client id",
-    placeholder: "your-soundcloud-client-id",
-  },
-  {
-    id: "ytmusic",
-    name: "YouTube Music",
-    note: "Search works with a key (here, or YOUTUBE_API_KEY on the deployment), but YouTube hands back no audio stream, so its rows play nowhere — the page says so rather than leaving a silent button.",
-    keyLabel: "api key",
-    placeholder: "your-youtube-data-api-key",
-  },
-  {
-    id: "keyless",
-    name: "Apple previews",
-    note: "No key needed, but Apple only gives thirty seconds of each track, so this one is a fallback rather than a source. Audius is where the full songs are.",
-    keyLabel: null,
-    placeholder: "",
+    env: "QOBUZ_APP_ID",
   },
 ];
 
 export type Music = {
-  source: SourceId;
   keys: Partial<Record<SourceId, string>>;
   favorites: Track[];
   playlists: Playlist[];
@@ -124,7 +94,6 @@ export type Music = {
 };
 
 const EMPTY: Music = {
-  source: "audius",
   keys: {},
   favorites: [],
   playlists: [],
@@ -148,29 +117,32 @@ export function useMusic(): Music {
   return useStore(music);
 }
 
-/* Anyone who used NULL before Audius was here is still pointing at Qobuz with
-   no key, which is exactly the thirty-second previews they complained about.
-   Only that exact combination is moved, so a key someone typed or a source
-   they chose on purpose is left alone. */
-(function migrateSource() {
+/* ---------- old shelves, tidied on the way in ----------
+
+   Rows kept before the previews were taken off the page still point at
+   thirty-second files. They are dropped here, once: a library that says
+   "full songs only" does not keep a hidden shelf of the other kind. Saved
+   tracks from sources that no longer exist come back the same way. */
+(function tidyShelf() {
   const s = music.get();
-  if (s.source === "qobuz" && !s.keys.qobuz) music.set({ source: "audius" });
+  const real = (t: Track | undefined): t is Track => !!t?.key && !!t.audio && !/mzstatic|itunes\.apple\.com/.test(t.audio);
+  const favorites = s.favorites.filter(real);
+  const recent = s.recent.filter(real);
+  const queue = s.queue.filter(real);
+  const playlists = s.playlists.map((p) => ({ ...p, tracks: (p.tracks ?? []).filter(real) }));
+  if (
+    favorites.length !== s.favorites.length ||
+    recent.length !== s.recent.length ||
+    queue.length !== s.queue.length ||
+    playlists.some((p, i) => p.tracks.length !== s.playlists[i]?.tracks.length)
+  ) {
+    music.set({ favorites, recent, queue, playlists });
+  }
 })();
 
 /* ============================================================
-   the catalogue
+   the catalogues
    ============================================================ */
-
-type ITunesTrack = {
-  trackId: number;
-  trackName: string;
-  artistName: string;
-  collectionName?: string;
-  artworkUrl100?: string;
-  previewUrl?: string;
-  trackTimeMillis?: number;
-  trackExplicitness?: string;
-};
 
 /* ---------- Audius ----------
    Two nodes, because a discovery node is run by whoever feels like it. The
@@ -180,6 +152,8 @@ const NODES = ["https://discoveryprovider.audius.co", "https://api.audius.co"];
 /* Audius asks apps to identify themselves. It is not a key: it is a name, and
    it is the whole of the registration. */
 const APP = "null-hub";
+/** How many rows one page of the grid takes from Audius. */
+const AUDIUS_PAGE = 24;
 
 type AudiusTrack = {
   id?: string;
@@ -223,10 +197,10 @@ function hostOf(url: string): string {
 
 /** One node, one query. `null` means the node could not be asked at all, which
  *  is a different thing from a node that answered with nothing. */
-async function askNode(node: string, term: string): Promise<AudiusTrack[] | null> {
+async function askNode(node: string, term: string, offset: number): Promise<AudiusTrack[] | null> {
   try {
     const res = await fetch(
-      `${node}/v1/tracks/search?query=${encodeURIComponent(term)}&app_name=${APP}&limit=25`,
+      `${node}/v1/tracks/search?query=${encodeURIComponent(term)}&app_name=${APP}&limit=${AUDIUS_PAGE}&offset=${offset}`,
     );
     if (!res.ok) return null;
     const body = (await res.json()) as { data?: AudiusTrack[] };
@@ -254,22 +228,21 @@ function rowOf(node: string, t: AudiusTrack): Track {
   };
 }
 
-/** Search Audius and build the stream URL for every row. */
-async function searchAudius(term: string): Promise<Reach> {
+/** Search Audius — one page of it. Gated tracks come back unstreamable and a
+ *  silent tile is worse than no tile, so they never become rows. */
+async function searchAudius(term: string, page: number): Promise<Reach> {
   const notes: string[] = [];
   let answered = false;
   let gated = false;
 
   for (const q of attempts(term)) {
     for (const node of NODES) {
-      const rows = await askNode(node, q);
+      const rows = await askNode(node, q, page * AUDIUS_PAGE);
       if (rows === null) {
         notes.push(`the node at ${hostOf(node)} did not answer`);
         continue;
       }
       answered = true;
-      /* gated tracks come back unstreamable, and a silent row is worse than
-         no row — but if that is all there is, say so rather than "nothing" */
       const playable = rows.filter((t) => t.id && t.is_streamable !== false);
       if (playable.length) {
         return { tracks: playable.map((t) => rowOf(node, t)), how: "ok", detail: q };
@@ -283,62 +256,46 @@ async function searchAudius(term: string): Promise<Reach> {
   return { tracks: [], how: "none", detail: term };
 }
 
-/** Apple's public search index, the fallback: it sends
- *  `access-control-allow-origin: *` and hands back a real 30-second stream
- *  per track. */
-async function searchKeyless(q: string): Promise<Track[]> {
-  const url = `https://itunes.apple.com/search?media=music&entity=song&limit=25&term=${encodeURIComponent(q)}`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`the catalogue answered ${res.status}`);
-  const body = (await res.json()) as { results?: ITunesTrack[] };
-  return (body.results ?? []).map((t) => ({
-    key: `keyless:${t.trackId}`,
-    id: String(t.trackId),
-    source: "keyless" as const,
-    title: t.trackName,
-    artist: t.artistName,
-    album: t.collectionName ?? "",
-    art: t.artworkUrl100 ? t.artworkUrl100.replace("100x100bb", "600x600bb") : null,
-    audio: t.previewUrl ?? null,
-    seconds: Math.round((t.trackTimeMillis ?? 0) / 1000),
-    explicit: t.trackExplicitness === "explicit",
-  }));
-}
-
 /* ---------- the Internet Archive ----------
-   The one other catalogue that answers a browser directly, hands back whole
-   tracks rather than thirty seconds of one, and wants nothing in return but a
-   query. It is a *collection* rather than a shelf: one item is a show, an
-   album or a series, and its tracks are the files inside it. So a search
-   finds the items and then asks the best of them what is in them, which is why
-   this is the only source here that makes more than one request per search. */
+   The other catalogue that answers a browser directly and hands back whole
+   tracks. It is a *collection* rather than a shelf: one item is a show, an
+   album or a series, and its tracks are the files inside it. So a page of
+   the grid is built out of the items the search found, best-downloaded
+   first, which is why this is the only catalogue here that makes more than
+   one request per page. */
 const ARC = "https://archive.org";
-/** How many items a search opens, and how many tracks are taken from each. */
-const ARC_ITEMS = 8;
-const ARC_TRACKS = 8;
+/** How many items a page opens, and how many tracks are taken from each. */
+const ARC_ITEMS = 6;
+const ARC_TRACKS = 6;
 
 /** "07 - Basin Street Blues.mp3" -> "Basin Street Blues" */
 function trackName(file: string): string {
-  return file
-    .replace(/\.[a-z0-9]+$/i, "")
-    .replace(/^\s*(\(?\d{1,3}\)?)\s*[-.)]?\s*/, "")
-    .replace(/_/g, " ")
-    .trim() || file;
+  return (
+    file
+      .replace(/\.[a-z0-9]+$/i, "")
+      .replace(/^\s*(\(?\d{1,3}\)?)\s*[-.)]?\s*/, "")
+      .replace(/_/g, " ")
+      .trim() || file
+  );
 }
 
-async function searchArchive(term: string): Promise<Track[]> {
+/** A page of Archive items, as raw search rows. */
+type ArcDoc = { identifier: string; title?: string; creator?: string | string[] };
+
+async function archiveItems(term: string, page: number): Promise<ArcDoc[]> {
   const q = `${term} AND mediatype:(audio) AND format:("VBR MP3")`;
   const url =
     `${ARC}/advancedsearch.php?q=${encodeURIComponent(q)}` +
-    "&fl%5B%5D=identifier&fl%5B%5D=title&fl%5B%5D=creator&fl%5B%5D=year" +
-    `&rows=${ARC_ITEMS}&page=1&output=json&sort%5B%5D=downloads+desc`;
-  const found = (await (await fetch(url)).json()) as {
-    response?: { docs?: { identifier: string; title?: string; creator?: string | string[]; year?: string }[] };
-  };
+    "&fl%5B%5D=identifier&fl%5B%5D=title&fl%5B%5D=creator" +
+    `&rows=${ARC_ITEMS}&page=${page + 1}&output=json&sort%5B%5D=downloads+desc`;
+  const found = (await (await fetch(url)).json()) as { response?: { docs?: ArcDoc[] } };
+  return found.response?.docs ?? [];
+}
 
-  const items = found.response?.docs ?? [];
-  /* asked together rather than one after the other: eight items in series is
-     eight round trips before the first row appears */
+async function searchArchive(term: string, page: number): Promise<Track[]> {
+  const items = await archiveItems(term, page);
+  /* asked together rather than one after the other: six items in series is
+     six round trips before the first row appears */
   const opened = await Promise.all(
     items.map(async (item) => {
       try {
@@ -379,105 +336,67 @@ async function searchArchive(term: string): Promise<Track[]> {
   return rows;
 }
 
-/* The three named sources need a key *and* a server: their APIs do not answer
-   a browser at all. Until the backend is told a key, asking one of them
-   searches the keyless catalogue instead, and says so. */
-const NEEDS_SERVER: SourceId[] = ["qobuz", "soundcloud", "ytmusic"];
+/* ---------- the keyed sources ----------
+   Their APIs do not answer a browser, so the backend asks. The action drops
+   previews and gated tracks on its side; the page keeps only rows that
+   arrived with a stream, which by then is every row. */
+const KEYED: SourceId[] = ["soundcloud", "qobuz"];
+
+async function searchServer(source: SourceId, q: string, page: number, key: string): Promise<Track[]> {
+  const c = cloud();
+  if (!c) return [];
+  const out = (await c.action(api.music.search, { source, q, key, offset: page * 20 })) as {
+    tracks?: Track[];
+  };
+  return (out.tracks ?? []).filter((t) => !!t.audio);
+}
+
+/* ============================================================
+   one search, every catalogue, one grid
+   ============================================================ */
 
 export type Found = { tracks: Track[]; note: string | null };
 
-export async function search(q: string, source: SourceId): Promise<Found> {
+/** Two rows are the same song when the words match. The catalogue order is
+ *  the preference order, so the first copy found is the one kept. */
+function sameSong(a: Track, b: Track): boolean {
+  const norm = (s: string) => s.toLowerCase().replace(/\(.*?\)|\[.*?\]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+  return norm(a.title) === norm(b.title) && norm(a.artist) === norm(b.artist);
+}
+
+/** Page `page` of the merged results for `q`. Both keyless catalogues are
+ *  asked at once, and the keyed ones join the same race when the deployment
+ *  has a key for them — the grid is one list, not four. */
+export async function search(q: string, page: number, server: boolean): Promise<Found> {
   const term = q.trim();
   if (!term) return { tracks: [], note: null };
 
-  /* Audius first and directly: no server sits in this path, so it works on a
-     static deploy with no configuration at all. If it has nothing that plays,
-     the previews catalogue catches the fall, and the note says which of the
-     two things happened instead of blaming the node for both. */
-  if (source === "audius") {
-    const reach = await searchAudius(term);
-    if (reach.tracks.length) return { tracks: reach.tracks, note: null };
-
-    const previews = "These are Apple previews, so they stop at thirty seconds.";
-    const note =
-      reach.how === "gated"
-        ? `Every match Audius has for “${reach.detail}” is gated, so none of them will play. ${previews}`
-        : reach.how === "none"
-          ? `Audius has nothing for “${reach.detail}”. ${previews}`
-          : `Audius could not be reached (${reach.detail}). ${previews}`;
-
-    try {
-      return { tracks: await searchKeyless(term), note };
-    } catch {
-      return { tracks: [], note };
+  const keys = music.get().keys;
+  const jobs: Promise<Track[]>[] = [
+    searchAudius(term, page).then((r) => r.tracks, () => []),
+    searchArchive(term, page).catch(() => []),
+  ];
+  if (server) {
+    for (const s of KEYED) {
+      const key = keys[s] ?? "";
+      jobs.push(searchServer(s, term, page, key).catch(() => []));
     }
   }
 
-  if (source === "archive") {
-    try {
-      const rows = await searchArchive(term);
-      return {
-        tracks: rows,
-        note: rows.length ? null : `The Internet Archive has nothing playable filed under “${term}”.`,
-      };
-    } catch (e) {
-      const rows = await searchKeyless(term);
-      return {
-        tracks: rows,
-        note: `The Archive could not be asked (${(e as Error).message}). These are Apple previews, and they play.`,
-      };
+  const settled = await Promise.allSettled(jobs);
+  const merged: Track[] = [];
+  for (const r of settled) {
+    if (r.status !== "fulfilled") continue;
+    for (const t of r.value) {
+      if (!merged.some((x) => sameSong(x, t))) merged.push(t);
     }
   }
 
-  if (NEEDS_SERVER.includes(source)) {
-    const named = SOURCES.find((s) => s.id === source);
-    const key = music.get().keys[source] ?? "";
-    /* The server is asked either way: a key typed on this page is one way in,
-       but the deployment's own environment is the better one, and only the
-       action can read it. An empty key means "use whatever the deployment
-       has", not "do not ask". */
-    try {
-      const found = await searchServer(source, term, key);
-      if (found.tracks.length || found.note === null) {
-        return { tracks: found.tracks, note: found.note ?? (found.tracks.length ? null : `${named?.name} had nothing for that.`) };
-      }
-      throw new Error(found.note);
-    } catch (e) {
-      const why = (e as Error).message;
-      const tracks = await searchKeyless(term);
-      return {
-        tracks,
-        note: `${named?.name} could not be asked (${why}). These are keyless results, and they play.`,
-      };
-    }
-  }
-
-  return { tracks: await searchKeyless(term), note: null };
-}
-
-/** Ask the source itself, through the action that can reach it. A browser
- *  cannot make these calls — the catalogues send no CORS headers — which is
- *  the whole reason there is a server. `convex/music.ts` does the work and
- *  returns the tracks plus, when something is only half-possible (a preview
- *  instead of a full track, or a catalogue with no stream to hand back), a
- *  sentence saying which.
- *
- *  This used to POST to a made-up `/api/action` path, which 404s, so every
- *  keyed source quietly fell through to Apple previews no matter what key was
- *  set. The Convex client is the way to reach an action; there is no second
- *  way and there never was. */
-async function searchServer(
-  source: SourceId,
-  q: string,
-  key: string,
-): Promise<{ tracks: Track[]; note: string | null }> {
-  const c = cloud();
-  if (!c) throw new Error("no backend is configured for this build");
-  const out = (await c.action(api.music.search, { source, q, key })) as {
-    tracks?: Track[];
-    note?: string | null;
+  if (merged.length) return { tracks: merged, note: null };
+  return {
+    tracks: [],
+    note: `Nothing full-length came back for “${term}”. The whole catalogue was asked, not just part of it.`,
   };
-  return { tracks: out.tracks ?? [], note: out.note ?? null };
 }
 
 /* ============================================================
@@ -500,7 +419,7 @@ function audio(): HTMLAudioElement {
     const t = music.get().now;
     music.set({
       playing: false,
-      problem: t ? `${t.title} would not stream. Paid and DRM tracks do this.` : null,
+      problem: t ? `${t.title} would not stream. The file may have moved; try the next one.` : null,
     });
   });
   el = a;
@@ -529,12 +448,6 @@ export function play(track: Track, list?: Track[]) {
 
 function load(track: Track) {
   const a = audio();
-  if (!track.audio) {
-    a.pause();
-    a.removeAttribute("src");
-    music.set({ playing: false, problem: `${track.title} came back without a stream, so there is nothing to play.` });
-    return;
-  }
   a.src = track.audio;
   a.play().catch(() => music.set({ playing: false }));
 }
@@ -636,10 +549,6 @@ export function enqueue(track: Track) {
 export function clearQueue() {
   music.set({ queue: [], order: [], index: -1, now: null, playing: false, at: 0, duration: 0 });
   audio().pause();
-}
-
-export function setSource(source: SourceId) {
-  music.set({ source });
 }
 
 export function setKey(source: SourceId, key: string) {

@@ -172,6 +172,26 @@
   padding: 10px 2px;
   line-height: 1.5;
 }
+/* stickers sit two across in the same shelf height as the emoji grid */
+.emopick-body--stickers {
+  grid-template-columns: repeat(4, 1fr);
+}
+.emopick-sticker {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  padding: 5px;
+  border-radius: var(--r-1);
+  transition: background 0.14s var(--ease);
+}
+.emopick-sticker:hover {
+  background: var(--bg-3);
+}
+.emopick-sticker img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
 /* square, or nearly: a shelf of 8 columns at this width is 32 a cell, and a
    glyph in a 26-tall button wears the shelf unevenly */
 .emopick-body .ch-emojibtn,
@@ -242,6 +262,37 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+/* stickers are transparent, so they are shown whole rather than cropped,
+   on a checker that reads as "no background" rather than as a hole */
+.ch-gif.is-sticker {
+  border-color: var(--line);
+}
+.ch-gif.is-sticker img {
+  object-fit: contain;
+  padding: 6px;
+  background:
+    repeating-conic-gradient(var(--bg-4, var(--bg-3)) 0% 25%, var(--bg-2) 0% 50%) 50% / 12px 12px;
+}
+.ch-giftabs {
+  display: flex;
+  gap: 4px;
+}
+.ch-giftab {
+  padding: 4px 11px;
+  border: var(--bw) solid var(--line);
+  border-radius: 99px;
+  color: var(--faint);
+  font-size: 11.5px;
+  transition: color 0.14s var(--ease), border-color 0.14s var(--ease);
+}
+.ch-giftab:hover {
+  color: var(--text);
+}
+.ch-giftab.is-on {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--ac-1) 50%, var(--line-2));
+  background: var(--bg-3);
 }
 
 /* ---------- narrow windows ---------- */

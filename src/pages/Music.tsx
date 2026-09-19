@@ -1,16 +1,18 @@
 /* NULL · Music.tsx
-   The player. A shop is never loaded: NULL asks a catalogue for tracks and
-   plays the stream it hands back, which is why nothing on this page is an
-   embed.
+   The player. Every search asks all of the catalogues at once and draws one
+   grid of the answers — big square sleeves, the name and the artist under
+   each one, an E on the corner when the song is marked explicit.
 
-   Four columns of the same thing, really — what is playing, what you looked
-   for, what you kept, and what is queued — laid out so the transport is
-   always within reach of the list you are reading. */
+   Every tile here is the whole song. The catalogues that could only offer a
+   thirty-second slice were taken off the panel rather than labelled, so
+   there is no badge to read: if it is on the grid, it plays to the end.
+
+   Around the grid: the transport, what you kept, the queue, and the
+   playlists, laid out so the transport is always within reach of the list
+   you are reading. */
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  BadgeCheck,
-  Coins,
   Heart,
   ListMusic,
   Music as MusicIcon,
@@ -29,7 +31,6 @@ import {
   X,
 } from "lucide-react";
 
-import { NullFace } from "../lib/brand";
 import { Sheet } from "../components/Sheet";
 import { JamButton } from "../components/JamBox";
 import { useAccount } from "../lib/account";
@@ -38,7 +39,6 @@ import {
   clock,
   clearQueue,
   deletePlaylist,
-  enqueue,
   isFavorite,
   jumpTo,
   music,
@@ -51,15 +51,13 @@ import {
   setKey,
   setRepeat,
   setShuffle,
-  setSource,
   setVolume,
-  SOURCES,
+  SERVER_SOURCES,
   step,
   toggle,
   toggleFavorite,
   useMusic,
   type Playlist,
-  type SourceId,
   type Track,
 } from "../lib/music";
 
@@ -67,28 +65,42 @@ export function Music() {
   const m = useMusic();
   const me = useAccount();
   const [q, setQ] = useState("");
+  /** what the grid is showing, merged across the catalogues */
   const [results, setResults] = useState<Track[]>([]);
+  const [pages, setPages] = useState(0);
+  const [end, setEnd] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [sheet, setSheet] = useState<Playlist | null>(null);
   const [menuFor, setMenuFor] = useState<string | null>(null);
   const field = useRef<HTMLInputElement>(null);
+  /** the keyed sources join in once their key is here */
+  const keyed = SERVER_SOURCES.some((s) => (m.keys[s.id] ?? "").trim());
 
-  const source = SOURCES.find((s) => s.id === m.source) ?? SOURCES[0];
-
-  const run = async (term: string) => {
-    if (!term.trim()) return;
+  const ask = async (term: string, page: number) => {
     setBusy(true);
-    setNote(null);
     try {
-      const found = await search(term, m.source);
-      setResults(found.tracks);
-      setNote(found.note);
+      const found = await search(term, page, keyed);
+      setPages(page + 1);
+      setEnd(found.tracks.length === 0);
+      setNote(page === 0 ? found.note : null);
+      setResults((prev) => {
+        if (page === 0) return found.tracks;
+        const keys = new Set(prev.map((t) => t.key));
+        return [...prev, ...found.tracks.filter((t) => !keys.has(t.key))];
+      });
     } catch (e) {
-      setResults([]);
       setNote(`${(e as Error).message}.`);
+      setEnd(true);
     }
     setBusy(false);
+  };
+
+  const run = (term: string) => {
+    if (!term.trim()) return;
+    setResults([]);
+    setEnd(false);
+    void ask(term, 0);
   };
 
   /* space plays and pauses, arrows move, as long as nobody is typing */
@@ -119,7 +131,7 @@ export function Music() {
       <div className="lb-top">
         <h1 className="lb-title">Music</h1>
         <span className="lb-count tiny faint">
-          {m.now ? `playing from ${SOURCES.find((s) => s.id === m.now?.source)?.name}` : "nothing playing"}
+          {m.now ? m.now.title : "full songs only — no previews, ever"}
         </span>
         <span className="mu-top-right">
           <JamButton me={me.user} />
@@ -129,7 +141,7 @@ export function Music() {
       {/* ---------- now playing ---------- */}
       <section className="mu-hero">
         <span className="mu-art">
-          {m.now?.art ? <img src={m.now.art} alt="" /> : <NullFace />}
+          {m.now?.art ? <img src={m.now.art} alt="" /> : <MusicIcon />}
         </span>
 
         <div className="mu-hero-txt">
@@ -138,7 +150,7 @@ export function Music() {
             {m.now ? m.now.title : "Nothing yet"}
             {m.now?.explicit && <i className="mu-e" title="Explicit">E</i>}
           </span>
-          <span className="mu-artist">{m.now ? m.now.artist : "Search for something below"}</span>
+          <span className="mu-artist">{m.now ? m.now.artist : "Search below — every catalogue is asked at once"}</span>
           {m.now?.album && <span className="mu-album">{m.now.album}</span>}
           {m.problem && <span className="mu-problem">{m.problem}</span>}
         </div>
@@ -215,27 +227,13 @@ export function Music() {
         />
       </section>
 
-      {/* ---------- the sources ---------- */}
-      <div className="mu-sources">
-        {SOURCES.map((s) => (
-          <button
-            key={s.id}
-            className={`mu-source${s.id === m.source ? " is-on" : ""}`}
-            onClick={() => setSource(s.id)}
-          >
-            {s.name}
-          </button>
-        ))}
-      </div>
-      <p className="tiny faint mu-note">{source.note}</p>
-
-      {/* ---------- search ---------- */}
+      {/* ---------- search: one box, every catalogue ---------- */}
       <form
         className="hm-search mu-find"
         role="search"
         onSubmit={(e) => {
           e.preventDefault();
-          void run(q);
+          run(q);
         }}
       >
         <Search />
@@ -244,14 +242,18 @@ export function Music() {
           value={q}
           spellCheck={false}
           autoComplete="off"
-          placeholder={`Search ${source.name}`}
-          aria-label={`Search ${source.name}`}
+          placeholder="Search every catalogue at once"
+          aria-label="Search music"
           onChange={(e) => setQ(e.target.value)}
         />
         <button className="btn btn--sm" type="submit" disabled={busy}>
           {busy ? "Looking…" : "Search"}
         </button>
       </form>
+      <p className="tiny faint mu-note">
+        Audius and the Internet Archive are always searched. SoundCloud and Qobuz join when their key is set
+        below. Every result is the complete track.
+      </p>
 
       {note && <p className="mu-notice">{note}</p>}
 
@@ -260,20 +262,27 @@ export function Music() {
           <h2 className="mu-h">
             Results <b>{results.length}</b>
           </h2>
-          <List tracks={results} menuFor={menuFor} setMenuFor={setMenuFor} playList={results} />
+          <Grid tracks={results} menuFor={menuFor} setMenuFor={setMenuFor} playList={results} />
+          {!end && (
+            <button className="btn lb-more" disabled={busy} onClick={() => void ask(q, pages)}>
+              {busy ? "Looking…" : `More — page ${pages + 1}`}
+              <span className="tiny faint"> every catalogue is asked again</span>
+            </button>
+          )}
+          {end && !busy && <p className="tiny faint mu-endnote">That is every match the catalogues had.</p>}
         </>
       )}
 
-      {menuFor && <AddMenu trackKey={menuFor} onClose={() => setMenuFor(null)} />}
+      {menuFor && <AddMenu trackKey={menuFor} results={results} onClose={() => setMenuFor(null)} />}
 
       {/* ---------- kept ---------- */}
       <h2 className="mu-h">
         Favourites <b>{m.favorites.length}</b>
       </h2>
       {m.favorites.length === 0 ? (
-        <p className="mu-blank">Nothing kept yet — the heart on any row saves it here.</p>
+        <p className="mu-blank">Nothing kept yet — the heart on any tile saves it here.</p>
       ) : (
-        <List tracks={m.favorites} menuFor={menuFor} setMenuFor={setMenuFor} playList={m.favorites} />
+        <Grid tracks={m.favorites} menuFor={menuFor} setMenuFor={setMenuFor} playList={m.favorites} />
       )}
 
       <h2 className="mu-h">
@@ -290,9 +299,7 @@ export function Music() {
         </button>
       </h2>
       {m.playlists.length === 0 ? (
-        <p className="mu-blank">
-          No playlists yet. Make one, then use the + on any row to fill it.
-        </p>
+        <p className="mu-blank">No playlists yet. Make one, then use the + on any tile to fill it.</p>
       ) : (
         <div className="mu-plgrid">
           {m.playlists.map((p) => (
@@ -346,20 +353,19 @@ export function Music() {
           <h2 className="mu-h">
             Recently played <b>{m.recent.length}</b>
           </h2>
-          <List tracks={m.recent.slice(0, 12)} menuFor={menuFor} setMenuFor={setMenuFor} playList={m.recent} />
+          <Grid tracks={m.recent.slice(0, 18)} menuFor={menuFor} setMenuFor={setMenuFor} playList={m.recent} />
         </>
       )}
 
-      {/* ---------- the keys ---------- */}
+      {/* ---------- the optional keys ---------- */}
       <section className="card card--pad mu-keys">
-        <h3 className="set-h">Where the music comes from</h3>
+        <h3 className="set-h">Widen the catalogue</h3>
         <p className="set-note">
-          Keyless results play here and now. The other three are asked first once their key
-          is set — a browser cannot call them directly, so the key goes to the backend, which
-          makes the call. {kept > 0 && `You have kept ${kept} ${kept === 1 ? "track" : "tracks"}.`}
+          Audius and the Internet Archive need nothing and are always on. These two are asked through
+          the backend once a key is here — {kept > 0 && `you have kept ${kept} ${kept === 1 ? "track" : "tracks"}.`}
         </p>
         <div className="mu-keygrid">
-          {SOURCES.filter((s) => s.keyLabel).map((s) => (
+          {SERVER_SOURCES.map((s) => (
             <label className="form-row" key={s.id}>
               <span>
                 {s.name} · {s.keyLabel}
@@ -374,6 +380,9 @@ export function Music() {
             </label>
           ))}
         </div>
+        <p className="tiny faint">
+          Or set {SERVER_SOURCES.map((s) => s.env).join(" and ")} on the deployment and every visitor gets them.
+        </p>
       </section>
 
       <Sheet
@@ -390,9 +399,9 @@ export function Music() {
 }
 
 /* ============================================================
-   a list of tracks
+   the grid: big squares, name and artist underneath
    ============================================================ */
-function List({
+function Grid({
   tracks,
   menuFor,
   setMenuFor,
@@ -404,54 +413,53 @@ function List({
   playList: Track[];
 }) {
   return (
-    <div className="mu-list">
+    <div className="mu-grid">
       {tracks.map((t) => (
-        <div className="mu-row" key={t.key}>
-          <button className="mu-row-main" onClick={() => play(t, playList)} title={`Play ${t.title}`}>
-            <span className="mu-art sm">{t.art ? <img src={t.art} alt="" /> : <MusicIcon />}</span>
-            <span className="mu-row-txt">
-              <span className="mu-row-title">
-                {t.title}
-                {t.explicit && <i className="mu-e" title="Explicit">E</i>}
+        <div className="mu-tile" key={t.key}>
+          <button className="mu-tile-btn" onClick={() => play(t, playList)} title={`Play ${t.title}`}>
+            {t.art ? (
+              <img src={t.art} alt="" loading="lazy" decoding="async" />
+            ) : (
+              <span className="mu-tile-none">
+                <MusicIcon />
               </span>
-              <span className="mu-row-sub">
-                {t.artist}
-                {t.album ? ` · ${t.album}` : ""}
-              </span>
+            )}
+            {t.explicit && (
+              <i className="mu-e mu-tile-e" title="Explicit">
+                E
+              </i>
+            )}
+            <span className="mu-tile-play">
+              <Play />
             </span>
-            <span className="mu-row-len mono">{clock(t.seconds)}</span>
-          </button>
-
-          <button
-            className={`mu-icon${isFavorite(t.key) ? " is-on" : ""}`}
-            onClick={() => toggleFavorite(t)}
-            aria-label="Favourite"
-            title="Favourite"
-          >
-            <Heart />
           </button>
           <button
-            className="mu-icon"
+            className={`mu-tile-add${menuFor === t.key ? " is-on" : ""}`}
             onClick={() => setMenuFor(menuFor === t.key ? null : t.key)}
             aria-label="Add to playlist"
             title="Add to playlist"
           >
             <Plus />
           </button>
-          <button className="mu-icon" onClick={() => enqueue(t)} aria-label="Queue" title="Add to queue">
-            <ListMusic />
-          </button>
+          <span className="mu-tile-name" title={t.title}>
+            {t.title}
+          </span>
+          <span className="mu-tile-artist" title={t.artist}>
+            {t.artist}
+          </span>
         </div>
       ))}
     </div>
   );
 }
 
-/** The little menu of playlists a row's + opens. */
-function AddMenu({ trackKey, onClose }: { trackKey: string; onClose: () => void }) {
+/** The little menu of playlists a tile's + opens. The tile that opened it
+ *  may only exist in the last search, so the results list is carried in too
+ *  — a track that was never played is still addable. */
+function AddMenu({ trackKey, results, onClose }: { trackKey: string; results: Track[]; onClose: () => void }) {
   const m = useMusic();
   const track =
-    [...m.favorites, ...m.recent, ...m.queue].find((t) => t.key === trackKey) ?? null;
+    [...m.favorites, ...m.recent, ...m.queue, ...results].find((t) => t.key === trackKey) ?? null;
   const [name, setName] = useState("");
 
   return (
@@ -550,39 +558,29 @@ function PlaylistSheet({ id, onGone }: { id: string; onGone: () => void }) {
       </div>
 
       {list.tracks.length === 0 ? (
-        <p className="mu-blank">Empty so far. Use the + on any row to drop a track in.</p>
+        <p className="mu-blank">Empty so far. Use the + on any tile to drop a track in.</p>
       ) : (
-        <div className="mu-list">
+        <div className="mu-grid mu-grid--sheet">
           {list.tracks.map((t) => (
-            <div className="mu-row" key={t.key}>
-              <button className="mu-row-main" onClick={() => play(t, list.tracks)}>
-                <span className="mu-art sm">{t.art ? <img src={t.art} alt="" /> : <MusicIcon />}</span>
-                <span className="mu-row-txt">
-                  <span className="mu-row-title">
-                    {t.title}
-                    {t.explicit && <i className="mu-e">E</i>}
-                  </span>
-                  <span className="mu-row-sub">{t.artist}</span>
-                </span>
-                <span className="mu-row-len mono">{clock(t.seconds)}</span>
+            <div className="mu-tile" key={t.key}>
+              <button className="mu-tile-btn" onClick={() => play(t, list.tracks)} title={`Play ${t.title}`}>
+                {t.art ? <img src={t.art} alt="" /> : <MusicIcon />}
+                {t.explicit && <i className="mu-e mu-tile-e">E</i>}
               </button>
               <button
-                className="mu-icon"
+                className="mu-tile-add"
                 onClick={() => removeFromPlaylist(id, t.key)}
                 aria-label="Remove from this playlist"
                 title="Remove"
               >
                 <X />
               </button>
+              <span className="mu-tile-name">{t.title}</span>
+              <span className="mu-tile-artist">{t.artist}</span>
             </div>
           ))}
         </div>
       )}
-
-      <p className="tiny faint">
-        <BadgeCheck /> Kept in this browser, like everything else on NULL.{" "}
-        <Coins /> {list.tracks.length} tracks.
-      </p>
     </div>
   );
 }

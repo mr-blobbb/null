@@ -7,6 +7,7 @@
    address becomes a tab; every other target is an internal null:// page. */
 
 import { createStore, useStore } from "./store";
+import { siteName } from "./favicon";
 import { PAGES, type Destination, type PageId } from "./nav";
 
 export type Target = { page: PageId; arg?: Record<string, string> };
@@ -62,13 +63,9 @@ export function activeTab(s?: TabsState): Tab {
 /** What a tab's title bar and address bar show. */
 export function describe(t: Target): { title: string; address: string; secure: boolean } {
   if (t.page === "proxies" && t.arg?.url) {
-    let host = t.arg.url;
-    try {
-      host = new URL(t.arg.url).hostname.replace(/^www\./, "");
-    } catch {
-      /* leave the raw string */
-    }
-    return { title: host || "Site", address: t.arg.url, secure: t.arg.url.startsWith("https://") };
+    /* the site's own name, not its hostname: a tab reads like the site it
+       carries rather than like a filing system */
+    return { title: siteName(t.arg.url) || "Site", address: t.arg.url, secure: t.arg.url.startsWith("https://") };
   }
   if (t.page === "player" && t.arg?.title) {
     return {

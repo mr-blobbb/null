@@ -70,6 +70,7 @@ import { Markdown } from "../lib/md";
 import { go } from "../lib/tabs";
 import { roleRank } from "../lib/staff";
 import { emojiOf, REACTIONS, suggest } from "../lib/emoji";
+import { packOf, stickerOf, suggestPacks, STICKERS } from "../lib/packs";
 import { NullFace } from "../lib/brand";
 import { Sheet } from "../components/Sheet";
 import { EmojiPicker } from "../components/EmojiPicker";
@@ -841,10 +842,13 @@ function Feed({
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   /* gifs are searched on the deployment, not pasted in as a URL — the key
-     cannot live in a page bundle, so the page asks and gets URLs back */
+     cannot live in a page bundle, so the page asks and gets URLs back.
+     Stickers share the shelf: same panel, transparent GIFs. */
   const findGifs = useAction(api.gifs.find);
+  const findStickers = useAction(api.gifs.stickers);
   const gifReady = useQuery(api.gifs.ready);
   const [gifQ, setGifQ] = useState("");
+  const [stickered, setStickered] = useState(false);
   const [gifs, setGifs] = useState<Gif[]>([]);
   const [gifNote, setGifNote] = useState<string | null>(null);
   const [gifBusy, setGifBusy] = useState(false);
@@ -861,14 +865,17 @@ function Feed({
   const said = useMemo(() => screen(vote.body, staff), [vote.body, staff]);
 
   /* the word being named at the caret, and what it could become. Anything but
-     a colon right after a space is somebody quoting, not naming. */
+     a colon right after a space is somebody quoting, not naming. The pack
+     names join the platform suggestions, so :fire: and :st-sad: both land. */
   const naming = useMemo(() => {
     const before = draft.slice(0, Math.max(0, Math.min(caret, draft.length)));
     const hit = /(^|\s):([a-z0-9_+-]{1,24})$/i.exec(before);
     if (!hit || hit[2] === shut) return null;
     const list = suggest(hit[2], 6);
-    if (!list.length) return null;
-    return { start: before.length - hit[2].length - 1, q: hit[2], list };
+    const packed = suggestPacks(hit[2], 4).map((p) => ({ name: p.token, e: p.label }));
+    const both = [...list, ...packed.filter((p) => !list.some((x) => x.name === p.name))];
+    if (!both.length) return null;
+    return { start: before.length - hit[2].length - 1, q: hit[2], list: both };
   }, [draft, caret, shut]);
   const pickIdx = naming ? Math.min(pickAt, naming.list.length - 1) : 0;
   /* a new letter is a new list, so the highlight goes back to the top */
@@ -881,7 +888,7 @@ function Feed({
     let live = true;
     setGifBusy(true);
     const id = window.setTimeout(() => {
-      findGifs({ q: gifQ })
+      (stickered ? findStickers({ q: gifQ }) : findGifs({ q: gifQ }))
         .then((res) => {
           if (!live) return;
           /* an old deployment, or a body that will not parse, must not take
@@ -896,7 +903,7 @@ function Feed({
       live = false;
       window.clearTimeout(id);
     };
-  }, [tool, gifQ, gifReady, findGifs]);
+  }, [tool, gifQ, gifReady, stickered, findGifs, findStickers]);
 
   /** Put a glyph where the caret is, and leave the caret after it. Somebody
    *  writing a sentence wants the emoji in the sentence, not at the end. */
@@ -908,10 +915,15 @@ function Feed({
     requestAnimationFrame(() => inputRef.current?.setSelectionRange(next, next));
   };
 
-  /** Swap the half-typed name for its glyph, and put the caret after it. */
+  /** Swap the half-typed name for what it names: a sticker keeps its token
+   *  (the room renders `:st-sad:` as the sticker), a name becomes its glyph
+   *  or its Twemoji picture — the glyph, because the picker and the menu
+   *  both speak in characters and the markdown turns it into the picture. */
   const takeEmoji = (name: string) => {
-    const glyph = emojiOf(name);
-    if (!glyph || !naming) return;
+    if (!naming) return;
+    const sticker = stickerOf(name);
+    const glyph = sticker ? `:${name}:` : emojiOf(name) ?? packOf(name) ?? "";
+    if (!glyph) return;
     const at = naming.start + glyph.length;
     setDraft(draft.slice(0, naming.start) + glyph + draft.slice(caret));
     setCaret(at);
@@ -1306,22 +1318,29 @@ function Feed({
 
             {tool === "gif" && (
               <div className="ch-toolpop ch-toolpop--gif">
-                <span className="ch-toolpop-head tiny faint">GIFs</span>
+                <span className="ch-toolpop-head tiny faint">
+                  {stickered ? "Stickers" : "GIFs"}
+                </span>
                 {gifReady === false ? (
-                  <p className="tiny faint">
-                    A GIF search needs a key. Add <code>GIPHY_API_KEY</code> to this deployment's
-                    environment and the shelf fills itself in.
-                  </p>
+                  <p className="tiny faint">GIF search is having a moment. Try again in a minute.</p>
                 ) : (
                   <>
+                    <div className="ch-giftabs">
+                      <button className={`ch-giftab${!stickered ? " is-on" : ""}`} onClick={() => setStickered(false)}>
+                        GIFs
+                      </button>
+                      <button className={`ch-giftab${stickered ? " is-on" : ""}`} onClick={() => setStickered(true)}>
+                        Stickers
+                      </button>
+                    </div>
                     <label className="ch-gif-find">
                       <Search />
                       <input
                         value={gifQ}
                         spellCheck={false}
                         autoComplete="off"
-                        placeholder="Search GIFs"
-                        aria-label="Search GIFs"
+                        placeholder={stickered ? "Search stickers" : "Search GIFs"}
+                        aria-label={stickered ? "Search stickers" : "Search GIFs"}
                         onChange={(e) => setGifQ(e.target.value)}
                       />
                       {gifQ && (
@@ -1335,7 +1354,7 @@ function Feed({
                       {gifs.map((g) => (
                         <button
                           key={g.id}
-                          className="ch-gif"
+                          className={`ch-gif${stickered ? " is-sticker" : ""}`}
                           title={g.title || "Send this one"}
                           onClick={() => {
                             setImage(g.full);
@@ -1568,7 +1587,10 @@ function Line({
           </button>
           {more && (
             <div className="ch-reactor-pop">
+              {/* a reaction stores a character, not a token, so the pad is
+                  asked for plain glyphs only */}
               <EmojiPicker
+                plain
                 onPick={(e) => {
                   setMore(false);
                   onPickEmoji(e);
@@ -1681,7 +1703,7 @@ function LineBody({ body, staff }: { body: string; staff: boolean }) {
   const shown = !read.hidden || pref.read === "raw" ? read.body : raw ? body : read.body;
   return (
     <>
-      <Markdown body={shown} staff={staff} />
+      <Markdown body={shown} staff={staff} packs />
       {read.hidden && (
         <button
           className={`ch-map${raw ? " is-on" : ""}`}

@@ -1,19 +1,30 @@
 /* NULL · gifs.ts
    The GIF shelf behind the composer's film button.
 
-   An API key cannot live in a page bundle, so the search happens here and the
-   browser only ever sees a list of URLs. The key is read from the deployment's
-   environment: set GIPHY_API_KEY (GIF_API_KEY is accepted too, for the name
-   the first version used) in the Convex dashboard. Until it is set the page
-   says so plainly instead of showing an empty grid and a spinner. */
+   The shelf works on every deployment with nothing set at all: the search
+   goes out with Giphy's public beta key, which is what Giphy's own docs hand
+   to tinkerers and what every open-source GIF picker ships with. It is
+   rate-limited rather than secret, so it is not treated as one — it lives
+   here in the open, and a deployment that wants its own quota puts
+   GIPHY_API_KEY (or GIF_API_KEY, for the name the first version used) in the
+   environment, and that key is used instead.
+
+   An API key cannot live in a page bundle, so the search happens here and
+   the browser only ever sees a list of URLs. Until now a deployment with no
+   key said so instead of showing a shelf; with the public key the shelf
+   fills itself in, and the `ready` flag exists so an old client can still
+   ask whether searching is possible at all. */
 
 import { v } from "convex/values";
 
 import { action, query } from "./_generated/server";
 
-const KEY = () => (process.env.GIPHY_API_KEY || process.env.GIF_API_KEY || "").trim();
+/** The deployment's own key first, then the public beta key, which is what
+ *  makes the shelf work with nothing configured. */
+const PUBLIC_KEY = "GlVGYHkr3WSBnllca54iNt0yFbjz7L65";
+const KEY = () => (process.env.GIPHY_API_KEY || process.env.GIF_API_KEY || PUBLIC_KEY).trim();
 
-/** Whether this deployment can search at all, so the panel can say why not. */
+/** Whether this deployment can search at all, so an old panel can say why not. */
 export const ready = query({
   args: {},
   handler: async () => !!KEY(),
@@ -52,7 +63,7 @@ function shape(rows: any[]): Shot[] {
 }
 
 async function ask(path: string, params: Record<string, string>) {
-  const url = new URL(`https://api.giphy.com/v1/gifs/${path}`);
+  const url = new URL(`https://api.giphy.com/v1/${path}`);
   url.searchParams.set("api_key", KEY());
   url.searchParams.set("rating", "pg-13");
   url.searchParams.set("limit", "30");
@@ -76,7 +87,18 @@ export const find = action({
       return { gifs: [] as Shot[], error: "No GIF key on this deployment — add GIPHY_API_KEY to search." };
     }
     const query = q.trim();
-    if (!query) return await ask("trending", {});
-    return await ask("search", { q: query });
+    if (!query) return await ask("gifs/trending", {});
+    return await ask("gifs/search", { q: query });
+  },
+});
+
+/** Stickers: transparent GIFs, the same engine with a different shelf. */
+export const stickers = action({
+  args: { q: v.string() },
+  handler: async (_ctx, { q }) => {
+    if (!KEY()) return { gifs: [] as Shot[], error: null };
+    const query = q.trim();
+    if (!query) return await ask("stickers/trending", {});
+    return await ask("stickers/search", { q: query });
   },
 });

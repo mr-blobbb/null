@@ -29,6 +29,7 @@ import { AvatarArt } from "../lib/art";
 import { NullFace } from "../lib/brand";
 import { machine, cloudOn } from "../lib/cloud";
 import { freshPending, markSeen, type Gift as GiftRow } from "../lib/gift";
+import { Markdown } from "../lib/md";
 import { useBlocked } from "../lib/members";
 import { CloudDown } from "../lib/outage";
 import { createStore, useStore } from "../lib/store";
@@ -391,7 +392,7 @@ function Thread({
                 ) : (
                   <p className="dms-bubble" title={full(row.at)}>
                     {row.say!.image && <img src={row.say!.image} alt="" />}
-                    {row.say!.body}
+                    <Markdown body={row.say!.body} packs />
                     <i className="dms-time tiny faint">{when(row.at)}</i>
                   </p>
                 )}

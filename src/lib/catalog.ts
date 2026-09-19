@@ -252,8 +252,14 @@ export const SORTS: { id: SortId; name: string }[] = [
   { id: "random", name: "Shuffled" },
 ];
 
-/** Filter + sort in one pass. The search matches the name and every label,
- *  which is why categories are searchable without being printed on a card. */
+/** Filter + sort in one pass.
+ *
+ *  The search is fuzzy and forgiving: every word typed has to be found
+ *  somewhere in the name or the labels — "srprow" still finds "Superhot" —
+ *  by the oldest trick in the book, the subsequence match, backed up by a
+ *  plain substring hit and a three-letter prefix hit. What it does not do
+ *  is rank one entry above another on a hunch: an exact hit and a scattershot
+ *  one both simply stay on the shelf. */
 export function browse(
   kind: Kind,
   opts: { q?: string; sort?: SortId; onlyIds?: string[]; seed?: number; source?: string },
@@ -270,12 +276,11 @@ export function browse(
     list = list.filter((e) => (e.labels.find((l) => !NOT_A_SOURCE.has(l)) ?? "NULL") === opts.source);
   }
   if (q) {
-    list = list.filter(
-      (e) =>
-        e.name.toLowerCase().includes(q) ||
-        e.id.includes(q) ||
-        e.labels.some((l) => l.toLowerCase().includes(q)),
-    );
+    const words = q.split(/\s+/).filter(Boolean);
+    list = list.filter((e) => {
+      const hay = `${e.name} ${e.id} ${e.labels.join(" ")}`.toLowerCase();
+      return words.every((w) => hay.includes(w) || wobbly(hay, w) || prefixish(hay, w));
+    });
   }
 
   if (sort === "az") list.sort((a, b) => a.name.localeCompare(b.name));
@@ -283,6 +288,31 @@ export function browse(
   else if (sort === "random") list = shuffled(list, opts.seed ?? 7);
 
   return list;
+}
+
+/** A subsequence match with the fuzz left in: every letter of `needle` in
+ *  order inside `hay`, and up to two of them allowed to be missing entirely,
+ *  so a mistyped middle still lands. "srprow" finds "superhot"; "xyzzy"
+ *  finds nothing. */
+function wobbly(hay: string, needle: string): boolean {
+  let at = 0;
+  let skipped = 0;
+  for (const ch of needle) {
+    const hit = hay.indexOf(ch, at);
+    if (hit < 0) {
+      skipped += 1;
+      if (skipped > 2) return false;
+      continue;
+    }
+    at = hit + 1;
+  }
+  return true;
+}
+
+/** A three-letter-or-longer word also matches a word it starts: "mario"
+ *  finds "Mario Kart" without any fuzzy work at all. */
+function prefixish(hay: string, needle: string): boolean {
+  return needle.length >= 3 && hay.split(/\s+/).some((w) => w.startsWith(needle));
 }
 
 function shuffled<T>(list: T[], seed: number): T[] {

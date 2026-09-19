@@ -25,6 +25,7 @@ import {
   X,
 } from "lucide-react";
 
+import { faviconOf } from "../lib/favicon";
 import { destinationFor, PAGES } from "../lib/nav";
 import { useStore } from "../lib/store";
 import { prefs } from "../lib/themes";
@@ -103,7 +104,8 @@ export function Chrome({ onSettings }: { onSettings: () => void }) {
         {state.tabs.map((t) => {
           const d = describe(t.now);
           const Page = PAGES[t.now.page];
-          const Icon = t.now.page === "proxies" && t.now.arg?.url ? Globe : Page.icon;
+          const isSite = t.now.page === "proxies" && !!t.now.arg?.url;
+          const Icon = isSite ? Globe : Page.icon;
           return (
             <div
               key={t.id}
@@ -134,7 +136,23 @@ export function Chrome({ onSettings }: { onSettings: () => void }) {
                 setOver(null);
               }}
             >
-              <Icon />
+              {isSite ? (
+                /* the site's own icon, over the globe: a favicon that will
+                   not load hides itself and the globe shows through */
+                <span className="tab-fav">
+                  <Globe />
+                  <img
+                    src={faviconOf(t.now.arg?.url ?? "")}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    referrerPolicy="no-referrer"
+                    onError={(e) => e.currentTarget.remove()}
+                  />
+                </span>
+              ) : (
+                <Icon />
+              )}
               <span className="tab-name">{d.title}</span>
               <button
                 className="tab-x"
