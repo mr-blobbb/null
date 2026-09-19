@@ -92,6 +92,9 @@ export type Prefs = {
   reduceMotion: boolean;
   /** the relay the fullscreen browser fetches through */
   relay: string;
+  /** the cloud gaming service cloud titles stream from (src/lib/catalog.ts).
+   *  Empty means the default the shelf ships with. */
+  cloudBroker: string;
   /** what the address box searches with when what you typed is not an address */
   searchEngine: EngineId;
   showMeta: boolean;
@@ -116,6 +119,7 @@ export const prefs = createStore<Prefs>("prefs", {
   perf: "",
   reduceMotion: false,
   relay: "wss://anura.pro/",
+  cloudBroker: "",
   searchEngine: "brave",
   showMeta: true,
   cloak: "off",

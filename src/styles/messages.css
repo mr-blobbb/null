@@ -348,6 +348,35 @@
   font-style: normal;
   line-height: 1.2;
 }
+/* take a line back: rides the bubble's corner, appears with the bubble's
+   hover like the chat's own gutter does */
+.dms-del {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-1);
+  color: var(--faint);
+  opacity: 0;
+  transition: opacity 0.12s var(--ease), color 0.12s var(--ease);
+}
+.dms-del svg {
+  width: 12px;
+  height: 12px;
+}
+.dms-bubble {
+  position: relative;
+}
+.dms-line:hover .dms-del,
+.dms-del:focus-visible {
+  opacity: 1;
+}
+.dms-del:hover {
+  color: var(--bad);
+}
 .dms-start {
   align-self: center;
   text-align: center;

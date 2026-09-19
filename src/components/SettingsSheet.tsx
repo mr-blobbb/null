@@ -438,6 +438,28 @@ function BrowserPane() {
       </div>
 
       <div className="hair set-hair" />
+      <h3 className="set-h">Cloud gaming service</h3>
+      <p className="set-note">
+        The service cloud titles on the shelf stream from. NULL opens its player page in the game
+        window; the stream plays right there. The default is the one the shelf ships with — point
+        this at another if you run one.
+      </p>
+      <label className="form-row">
+        <span>Service address</span>
+        <input
+          className="fld"
+          value={p.cloudBroker}
+          spellCheck={false}
+          placeholder="https://cherrion.top/"
+          onChange={(e) => prefs.set({ cloudBroker: e.target.value })}
+        />
+      </label>
+      <p className="tiny faint">
+        Empty uses the default. A game card is where this takes effect — a title queued here
+        streams from the service you named.
+      </p>
+
+      <div className="hair set-hair" />
       <h3 className="set-h">Search engine</h3>
       <p className="set-note">
         What an address box does with words rather than addresses. Brave is what the site ships

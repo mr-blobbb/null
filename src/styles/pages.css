@@ -1238,6 +1238,17 @@ kbd {
   text-align: center;
   padding: 40px;
 }
+/* the loading state while a cloud session negotiates: drawn OVER the frame,
+   not beside it, so the moment the stream draws the veil is simply taken
+   away and nothing reflows */
+.play-empty--veil {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
 .play-empty svg {
   width: 34px;
   height: 34px;

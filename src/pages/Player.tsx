@@ -105,7 +105,7 @@ export function Player({ kind, id }: { kind: string; id: string }) {
             that came back empty looks exactly like a game that is slow. One
             button to walk the game onto the next road is worth more than any
             amount of guessing here. */}
-        {entry?.file && isRemote(entry.file) && (
+        {entry?.url && !entry?.file && (
           <button
             className="play-btn"
             onClick={() => setRoute((n) => n + 1)}
@@ -159,7 +159,22 @@ export function Player({ kind, id }: { kind: string; id: string }) {
         </div>
       ) : entry?.file ? (
         isRemote(entry.file) ? (
-          <RemoteGame key={nonce} file={entry.file} name={entry.name} frame={frame} route={route} />
+          entry.url ? (
+            /* a cloud title: the file is the service's player page, which NULL
+               frames like any other game. The `url` beside it is the same
+               service in a real tab — the honest place to go when the stream
+               refuses to be framed, which is what the route button does. */
+            <CloudGame
+              key={nonce}
+              file={entry.file}
+              url={entry.url}
+              name={entry.name}
+              frame={frame}
+              route={route}
+            />
+          ) : (
+            <RemoteGame key={nonce} file={entry.file} name={entry.name} frame={frame} route={route} />
+          )
         ) : (
           <iframe
             ref={frame}
@@ -448,6 +463,99 @@ function CopiedFrame({
          no way to read anything of NULL's. */
       sandbox="allow-scripts allow-popups allow-forms allow-pointer-lock allow-modals"
     />
+  );
+}
+
+/* ---------- the cloud road ----------
+   A cloud title has no files to copy: what plays is the service's own player
+   page, which negotiates the session and draws the stream. So there is one
+   road — frame the page — and a plain frame at that, no sandbox and no
+   blob: a WebRTC player needs its own origin, its workers and its storage
+   to talk to the signalling server.
+
+   The grace clock still runs. If the page draws nothing — a service that
+   refuses frames, or one that is down — the frame is swapped for the card
+   that offers the service in a real tab, which is the honest fallback the
+   `url` field on the entry is there for. */
+function CloudGame({
+  file,
+  url,
+  name,
+  frame,
+  route,
+}: {
+  file: string;
+  url: string;
+  name: string;
+  frame: RefObject<HTMLIFrameElement | null>;
+  route: number;
+}) {
+  const [live, setLive] = useState(false);
+  /* bumped by the grace clock: past it, the offer to open the service replaces the frame */
+  const [cold, setCold] = useState(false);
+
+  /* asked for by hand: wrap round, same as the remote roads do */
+  useEffect(() => {
+    if (!route) return;
+    setCold(false);
+    setLive(false);
+  }, [route]);
+
+  useEffect(() => {
+    if (live || cold) return;
+    const t = setTimeout(() => setCold(true), GRACE * 2);
+    return () => clearTimeout(t);
+  }, [live, cold]);
+
+  if (cold) {
+    return (
+      <div className="play-empty">
+        <Cloud />
+        <h2>{name} could not start</h2>
+        <p>
+          The cloud service did not answer inside the frame — it may be busy, down, or refusing to be
+          framed. Sessions are served in turns, so trying again in a moment is sometimes all it needs.
+        </p>
+        <div className="play-empty-row">
+          <button
+            className="btn"
+            onClick={() => {
+              setCold(false);
+              setLive(false);
+            }}
+          >
+            <RefreshCw /> Try again
+          </button>
+          <a className="btn btn--fill" href={url} target="_blank" rel="noreferrer noopener">
+            <ExternalLink /> Open the cloud service
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {!live && (
+        <div className="play-empty play-empty--veil">
+          <Cloud />
+          <h2>Waking {name}…</h2>
+          <p>The cloud service is finding a machine and putting your game on it. This takes a moment.</p>
+        </div>
+      )}
+      <iframe
+        key={`${file}#${route}`}
+        ref={frame}
+        className="play-frame"
+        src={file}
+        title={name}
+        onLoad={() => setLive(true)}
+        referrerPolicy="no-referrer"
+        /* gamepad, pointer-lock and autoplay are the ones a streamed game
+           actually needs; the service's own page asks for the mic itself */
+        allow="fullscreen; gamepad; autoplay; pointer-lock"
+      />
+    </>
   );
 }
 

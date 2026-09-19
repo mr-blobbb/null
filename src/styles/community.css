@@ -164,6 +164,45 @@
   border-right: var(--bw) solid var(--line);
   background: var(--bg-2);
 }
+/* the two-shelf switch: rooms, or the people you write to. Segmented, so
+   the sidebar never holds two lists' worth of headers. */
+.ch-side-seg {
+  display: flex;
+  gap: 3px;
+  padding: 3px;
+  border: var(--bw) solid var(--line);
+  border-radius: var(--r-2);
+  background: var(--bg-2);
+}
+.ch-side-segbtn {
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: var(--r-1);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--dim);
+  transition: background 0.14s var(--ease), color 0.14s var(--ease);
+}
+.ch-side-segbtn svg {
+  width: 13px;
+  height: 13px;
+}
+.ch-side-segbtn:hover {
+  color: var(--text);
+}
+.ch-side-segbtn.is-on {
+  background: var(--bg-4);
+  color: var(--text);
+}
+.ch-side-segbtn:disabled {
+  opacity: 0.45;
+}
+
 .ch-side-head {
   display: flex;
   align-items: center;
@@ -328,7 +367,9 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 14px 14px 20px;
+  /* the left padding is the action gutter: the box of buttons a hover
+     reveals lives there, left of even the pictures */
+  padding: 14px 14px 20px 48px;
   scrollbar-width: thin;
 }
 
@@ -350,9 +391,9 @@
   padding: 4px 8px;
   border-radius: var(--r-2);
 }
-.say:hover {
-  background: var(--bg-2);
-}
+/* no hover wash: the row keeps the page's own background. The actions live
+   in the gutter to the left (see .ch-bar), so the line does not need to
+   change colour to say it is being looked at. */
 .say.is-grouped {
   padding-top: 0;
 }
@@ -362,15 +403,15 @@
 
 .say-pic {
   flex: none;
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   display: grid;
   place-items: center;
   border: var(--bw) solid var(--line);
   border-radius: 50%;
   background: var(--bg-3);
   color: var(--dim);
-  font-size: 12.5px;
+  font-size: 15px;
   font-weight: 620;
   /* the picture is a circle and a decoration is drawn around it, so this has
      to be the thing they are positioned against — and isolated, because a
@@ -383,8 +424,8 @@
 /* the mark in an empty frame, and nothing else: a decoration's own svg is
    sized by its own rule, and must not be shrunk to a glyph */
 .say-pic > svg {
-  width: 15px;
-  height: 15px;
+  width: 18px;
+  height: 18px;
 }
 .say-pic img {
   width: 100%;
@@ -1572,41 +1613,43 @@
 }
 
 /* ---------- a line ----------
-   The hover bar rides the top edge of the line, so the actions are above the
-   thing they act on. Nothing about a message moves until the pointer is on
-   it, which is what keeps a busy room quiet. */
+   The actions are not over the message and not under it: they sit in a
+   little box in the gutter, to the left of even the picture. The line itself
+   never changes colour, and nothing about it moves until the pointer is on
+   it — which is what keeps a busy room quiet. */
 
 .say {
   position: relative;
 }
 .ch-bar {
   position: absolute;
-  top: -9px;
-  right: 10px;
+  top: 50%;
+  left: -40px;
+  transform: translateY(-50%) translateX(6px);
   z-index: 6;
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 1px;
   padding: 2px;
   border: var(--bw) solid var(--line-2);
   border-radius: var(--r-2);
-  background: color-mix(in srgb, var(--bg-2) 90%, transparent);
+  background: color-mix(in srgb, var(--bg-2) 92%, transparent);
   backdrop-filter: blur(14px) saturate(130%);
   -webkit-backdrop-filter: blur(14px) saturate(130%);
   box-shadow: 0 14px 32px -20px #000;
   opacity: 0;
-  transform: translateY(3px);
   pointer-events: none;
   transition: opacity 0.14s var(--ease), transform 0.14s var(--ease);
 }
 .say:hover .ch-bar,
 .say:focus-within .ch-bar {
   opacity: 1;
-  transform: none;
+  transform: translateY(-50%) translateX(0);
   pointer-events: auto;
 }
 .ch-hbtn {
-  width: 26px;
+  width: 24px;
   height: 24px;
   display: grid;
   place-items: center;

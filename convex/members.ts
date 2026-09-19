@@ -578,3 +578,36 @@ export const dmSend = mutation({
     });
   },
 });
+
+/** Delete one line of a DM. Only the person who said it can take it back —
+ *  the other half of the conversation is not yours to erase. The row is
+ *  removed outright rather than marked, because a message you deleted should
+ *  not still be on the server for another device to find. */
+export const dmRemove = mutation({
+  args: { id: v.id("dms"), by: v.string() },
+  handler: async (ctx, { id, by }) => {
+    const row = await ctx.db.get(id);
+    if (!row) return;
+    if (row.from !== by.trim().toLowerCase()) throw new Error("only your own lines can be removed");
+    await ctx.db.delete(id);
+  },
+});
+
+/** Delete a whole conversation. Either party may, and it takes the gifts out
+ *  of nothing — gifts are their own table. Every row goes, on both ends at
+ *  once: the thread is one set of rows on the server, not two copies. */
+export const dmClear = mutation({
+  args: { me: v.string(), other: v.string() },
+  handler: async (ctx, { me, other }) => {
+    const a = me.trim().toLowerCase();
+    const b = other.trim().toLowerCase();
+    if (!a || !b) throw new Error("which conversation?");
+    const [x, y] = dmPair(a, b);
+    const rows = await ctx.db
+      .query("dms")
+      .withIndex("by_pair_at", (q) => q.eq("a", x).eq("b", y))
+      .collect();
+    for (const r of rows) await ctx.db.delete(r._id);
+    return rows.length;
+  },
+});

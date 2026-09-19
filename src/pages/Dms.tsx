@@ -17,7 +17,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
-import { CircleSlash, MessagesSquare, Search, Send, X } from "lucide-react";
+import { CircleSlash, MessagesSquare, Search, Send, Trash2, X } from "lucide-react";
 
 import { api } from "../../convex/_generated/api";
 import { Guard } from "../components/Guard";
@@ -87,36 +87,15 @@ export function Dms() {
 function Inbox() {
   const me = useAccount();
   const handle = (me.user ?? "").replace(/^@/, "").toLowerCase();
-  const threads = useQuery(api.members.dmList, handle ? { me: handle } : "skip") as
-    | Thread[]
-    | undefined;
   const people = useQuery(api.members.list) as Person[] | undefined;
 
   const [open, setOpen] = useState<string | null>(null);
-  const [find, setFind] = useState("");
-  const seen = useStore(opened).at;
 
   const who = useMemo(() => {
     const map = new Map<string, Person>();
     for (const p of people ?? []) map.set(p.user.toLowerCase(), p);
     return map;
   }, [people]);
-
-  const nameOf = (user: string) => who.get(user.toLowerCase())?.name || user;
-
-  const rows = threads ?? [];
-  const q = find.trim().toLowerCase().replace(/^@/, "");
-  const matches = (user: string) =>
-    !q || user.toLowerCase().includes(q) || nameOf(user).toLowerCase().includes(q);
-
-  const shown = rows.filter((t) => matches(t.other));
-  /* anybody you have no thread with, which is what starting one means */
-  const started = q
-    ? (people ?? [])
-        .filter((p) => p.user.toLowerCase() !== handle && matches(p.user))
-        .filter((p) => !rows.some((t) => t.other.toLowerCase() === p.user.toLowerCase()))
-        .slice(0, 5)
-    : [];
 
   if (!handle) {
     return (
@@ -151,85 +130,7 @@ function Inbox() {
           <span>Messages</span>
         </div>
 
-        <label className="dms-find">
-          <Search />
-          <input
-            value={find}
-            spellCheck={false}
-            placeholder="Find or start a conversation"
-            aria-label="Find or start a conversation"
-            onChange={(e) => setFind(e.target.value)}
-          />
-          {find && (
-            <button className="dms-find-x" onClick={() => setFind("")} aria-label="Clear">
-              <X />
-            </button>
-          )}
-        </label>
-
-        <div className="dms-list">
-          {started.length > 0 && (
-            <>
-              <span className="dms-label tiny faint">Start something</span>
-              {started.map((p) => (
-                <button
-                  key={p.user}
-                  className="dms-row"
-                  onClick={() => {
-                    setOpen(p.user.toLowerCase());
-                    setFind("");
-                  }}
-                >
-                  <Pic person={p} small />
-                  <span className="dms-txt">
-                    <b>{p.name || p.user}</b>
-                    <em>@{p.user}</em>
-                  </span>
-                  <span className="dms-meta">
-                    <i>write</i>
-                  </span>
-                </button>
-              ))}
-            </>
-          )}
-
-          {shown.length > 0 && started.length > 0 && (
-            <span className="dms-label tiny faint">Already talking</span>
-          )}
-
-          {shown.map((t) => {
-            const person = who.get(t.other.toLowerCase());
-            const unread = t.at > (seen[t.other.toLowerCase()] ?? 0);
-            return (
-              <button
-                key={t.other}
-                className={`dms-row${open === t.other ? " is-on" : ""}${unread ? " is-new" : ""}`}
-                onClick={() => setOpen(t.other)}
-              >
-                <Pic person={person} user={t.other} small />
-                <span className="dms-txt">
-                  <b style={styleOf(person)}>
-                    {person?.name || t.other}
-                    {person?.verified && <VerifiedMark small />}
-                  </b>
-                  <em>{t.last}</em>
-                </span>
-                <span className="dms-meta">
-                  <i>{when(t.at)}</i>
-                  {unread && <span className="dms-new" title="Not read yet" />}
-                </span>
-              </button>
-            );
-          })}
-
-          {shown.length === 0 && started.length === 0 && (
-            <p className="dms-none tiny faint">
-              {q
-                ? "Nobody by that name, and no conversation with them. The member list has everybody who has signed in."
-                : "No conversations yet. Type a name above and the first message is the hard one."}
-            </p>
-          )}
-        </div>
+        <DmRail me={handle} active={open} onOpen={setOpen} />
 
         <p className="dms-side-foot tiny faint">
           <CircleSlash /> Blocking somebody hides their half of every thread, here and in the chat.
@@ -250,11 +151,7 @@ function Inbox() {
           <div className="dms-empty">
             <NullFace />
             <h3>Pick a conversation</h3>
-            <p className="faint tiny">
-              {rows.length
-                ? "Everything you have going is on the left, newest first."
-                : "Nobody yet. Find somebody in the box on the left, or in the member list."}
-            </p>
+            <p className="faint tiny">Find somebody in the box on the left, or in the member list.</p>
             <button className="btn btn--sm" onClick={() => go({ page: "users" })}>
               The member list
             </button>
@@ -266,8 +163,168 @@ function Inbox() {
 }
 
 /* ============================================================
+   the conversation rail
+   ============================================================
+
+   Everything you are talking to, newest first, plus the box that starts
+   something new. It asks the server for its own rows, which is what makes it
+   safe to draw inside the chat page as well as here: nothing is passed in
+   but the account it belongs to. */
+
+function DmRail({
+  me,
+  active,
+  onOpen,
+}: {
+  me: string;
+  active: string | null;
+  onOpen: (user: string) => void;
+}) {
+  const threads = useQuery(api.members.dmList, me ? { me } : "skip") as Thread[] | undefined;
+  const people = useQuery(api.members.list) as Person[] | undefined;
+  const [find, setFind] = useState("");
+  const seen = useStore(opened).at;
+
+  const who = useMemo(() => {
+    const map = new Map<string, Person>();
+    for (const p of people ?? []) map.set(p.user.toLowerCase(), p);
+    return map;
+  }, [people]);
+
+  const nameOf = (user: string) => who.get(user.toLowerCase())?.name || user;
+  const rows = threads ?? [];
+  const q = find.trim().toLowerCase().replace(/^@/, "");
+  const matches = (user: string) =>
+    !q || user.toLowerCase().includes(q) || nameOf(user).toLowerCase().includes(q);
+
+  const shown = rows.filter((t) => matches(t.other));
+  /* anybody you have no thread with, which is what starting one means */
+  const started = q
+    ? (people ?? [])
+        .filter((p) => p.user.toLowerCase() !== me && matches(p.user))
+        .filter((p) => !rows.some((t) => t.other.toLowerCase() === p.user.toLowerCase()))
+        .slice(0, 5)
+    : [];
+
+  return (
+    <>
+      <label className="dms-find">
+        <Search />
+        <input
+          value={find}
+          spellCheck={false}
+          placeholder="Find or start a conversation"
+          aria-label="Find or start a conversation"
+          onChange={(e) => setFind(e.target.value)}
+        />
+        {find && (
+          <button className="dms-find-x" onClick={() => setFind("")} aria-label="Clear">
+            <X />
+          </button>
+        )}
+      </label>
+
+      <div className="dms-list">
+        {started.length > 0 && (
+          <>
+            <span className="dms-label tiny faint">Start something</span>
+            {started.map((p) => (
+              <button
+                key={p.user}
+                className="dms-row"
+                onClick={() => {
+                  onOpen(p.user.toLowerCase());
+                  setFind("");
+                }}
+              >
+                <Pic person={p} small />
+                <span className="dms-txt">
+                  <b>{p.name || p.user}</b>
+                  <em>@{p.user}</em>
+                </span>
+                <span className="dms-meta">
+                  <i>write</i>
+                </span>
+              </button>
+            ))}
+          </>
+        )}
+
+        {shown.length > 0 && started.length > 0 && (
+          <span className="dms-label tiny faint">Already talking</span>
+        )}
+
+        {shown.map((t) => {
+          const person = who.get(t.other.toLowerCase());
+          const unread = t.at > (seen[t.other.toLowerCase()] ?? 0);
+          return (
+            <button
+              key={t.other}
+              className={`dms-row${active === t.other ? " is-on" : ""}${unread ? " is-new" : ""}`}
+              onClick={() => onOpen(t.other)}
+            >
+              <Pic person={person} user={t.other} small />
+              <span className="dms-txt">
+                <b style={styleOf(person)}>
+                  {person?.name || t.other}
+                  {person?.verified && <VerifiedMark small />}
+                </b>
+                <em>{t.last}</em>
+              </span>
+              <span className="dms-meta">
+                <i>{when(t.at)}</i>
+                {unread && <span className="dms-new" title="Not read yet" />}
+              </span>
+            </button>
+          );
+        })}
+
+        {shown.length === 0 && started.length === 0 && (
+          <p className="dms-none tiny faint">
+            {q
+              ? "Nobody by that name, and no conversation with them. The member list has everybody who has signed in."
+              : "No conversations yet. Type a name above and the first message is the hard one."}
+          </p>
+        )}
+      </div>
+    </>
+  );
+}
+
+/* ============================================================
    one conversation
    ============================================================ */
+
+/** The conversation panel, exported for the chat page: there it takes the
+ *  place of the channel feed when the page is switched to DMS, so a DM and a
+ *  room read the same way. */
+export function DmPanel({
+  other,
+  me,
+  onBack,
+}: {
+  other: string;
+  me: ReturnType<typeof useAccount>;
+  onBack?: () => void;
+}) {
+  const people = useQuery(api.members.list) as Person[] | undefined;
+  const person = (people ?? []).find((p) => p.user.toLowerCase() === other.toLowerCase());
+  return <Thread other={other} me={me} person={person} onClose={onBack ?? (() => {})} />;
+}
+
+/** The conversation rail, exported for the chat page's sidebar: the same list
+ *  this page keeps, fed by its own subscriptions. */
+export function DmRailExport({
+  me,
+  active,
+  onOpen,
+}: {
+  me: string;
+  active: string | null;
+  onOpen: (user: string) => void;
+}) {
+  return <DmRail me={me} active={active} onOpen={onOpen} />;
+}
 
 function Thread({
   other,
@@ -285,6 +342,8 @@ function Thread({
     | { id: string; body: string; at: number; from: string; image: string | null }[]
     | undefined;
   const doSend = useMutation(api.members.dmSend);
+  const doRemove = useMutation(api.members.dmRemove);
+  const doClear = useMutation(api.members.dmClear);
   const blocked = useBlocked();
   const visible = (rows ?? []).filter((r) => !blocked.includes(r.from.trim().toLowerCase()));
 
@@ -330,6 +389,35 @@ function Thread({
       .catch((e) => setErr((e as Error).message.replace(/^.*?Error: /, "")));
   };
 
+  /* taking a line back: the server checks whose it was, and the subscription
+     does the rest — every device watching this thread loses the row at once */
+  const remove = (id: string) => {
+    setErr(null);
+    void doRemove({ id: id as never, by: handle }).catch((e) =>
+      setErr((e as Error).message.replace(/^.*?Error: /, "")),
+    );
+  };
+
+  /* the whole conversation, gone from the server: both ends, every device.
+     Asked twice, because a thread with years in it is not something a
+     mis-click should be able to take. */
+  const [sure, setSure] = useState(false);
+  useEffect(() => {
+    if (!sure) return;
+    const t = setTimeout(() => setSure(false), 4000);
+    return () => clearTimeout(t);
+  }, [sure]);
+  const clearAll = () => {
+    if (!sure) {
+      setSure(true);
+      return;
+    }
+    setErr(null);
+    void doClear({ me: handle, other })
+      .then(() => setSure(false))
+      .catch((e) => setErr((e as Error).message.replace(/^.*?Error: /, "")));
+  };
+
   /* words and exchanges, oldest first, with the day written once where the
      day changes — the same thing every messaging app does, for the same
      reason: a timestamp on every line is noise */
@@ -367,6 +455,18 @@ function Thread({
         </div>
         <div className="dms-head-actions">
           <GiftButton user={other} me={me.user} className="btn btn--sm" label="Gift" />
+          <button
+            className={`btn btn--sm${sure ? " btn--bad" : ""}`}
+            onClick={clearAll}
+            title={
+              sure
+                ? "Press again — this deletes the whole thread for both of you"
+                : "Delete the whole conversation"
+            }
+          >
+            <Trash2 />
+            {sure ? "Sure?" : ""}
+          </button>
           <button className="btn btn--sm" onClick={onClose} title="Close this conversation">
             <X />
           </button>
@@ -393,6 +493,16 @@ function Thread({
                   <p className="dms-bubble" title={full(row.at)}>
                     {row.say!.image && <img src={row.say!.image} alt="" />}
                     <Markdown body={row.say!.body} packs />
+                    {row.say!.from === handle && (
+                      <button
+                        className="dms-del"
+                        title="Delete this message"
+                        aria-label="Delete this message"
+                        onClick={() => remove(row.say!.id)}
+                      >
+                        <Trash2 />
+                      </button>
+                    )}
                     <i className="dms-time tiny faint">{when(row.at)}</i>
                   </p>
                 )}

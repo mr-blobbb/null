@@ -36,6 +36,7 @@ import {
   Image as ImageIcon,
   Megaphone,
   MessageCircle,
+  MessagesSquare,
   Mic,
   MicOff,
   Music2,
@@ -57,6 +58,7 @@ import {
 
 import { api } from "../../convex/_generated/api";
 import { Guard } from "../components/Guard";
+import { DmPanel, DmRailExport } from "./Dms";
 import { cloudOn, machine } from "../lib/cloud";
 import { CloudDown } from "../lib/outage";
 import { useAccount, nameStyleCss, type NameStyle } from "../lib/account";
@@ -226,6 +228,11 @@ function Rooms() {
   const [profileFor, setProfileFor] = useState<string | null>(null);
   const [dmWith, setDmWith] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  /* the sidebar has two shelves: the rooms, and the people you write to.
+     The page remembers which one you left it on. */
+  const [side, setSide] = useState<"channels" | "dms">("channels");
+  const handle = (me.user ?? "").replace(/^@/, "").toLowerCase();
+  const [dmOpen, setDmOpen] = useState<string | null>(null);
 
   const here = useMemo(
     () => (channels ?? []).find((c) => c.slug === slug) ?? (channels ?? [])[0],
@@ -233,7 +240,6 @@ function Rooms() {
   );
 
   const iAmOwner = isOwner(me.user);
-  const handle = (me.user ?? "").replace(/^@/, "").toLowerCase();
   const myRow = (members ?? []).find((m) => m.user === handle);
   const staff = iAmOwner || (myRow?.roles?.length ?? 0) > 0;
 
@@ -250,18 +256,46 @@ function Rooms() {
 
   return (
     <div className="page page--flush ch">
-      {/* ---------- channels ---------- */}
+      {/* ---------- channels, or the DM list ---------- */}
       <aside className="ch-side">
-        <div className="ch-side-head">
-          <MessageCircle />
-          <span>Channels</span>
+        <div className="ch-side-seg" role="tablist" aria-label="Sidebar">
+          <button
+            className={`ch-side-segbtn${side === "channels" ? " is-on" : ""}`}
+            role="tab"
+            aria-selected={side === "channels"}
+            onClick={() => setSide("channels")}
+          >
+            <MessageCircle />
+            Channels
+          </button>
+          <button
+            className={`ch-side-segbtn${side === "dms" ? " is-on" : ""}`}
+            role="tab"
+            aria-selected={side === "dms"}
+            onClick={() => setSide("dms")}
+            disabled={!me.user}
+            title={me.user ? undefined : "Sign in to send messages"}
+          >
+            <MessagesSquare />
+            DMS
+          </button>
         </div>
 
-        <RoomList channels={channels} current={here?.slug ?? slug} onPick={setSlug} />
-
-        <p className="ch-side-foot tiny faint">
-          <Bot /> Type <code>$help</code> in any room and Null Bot answers.
-        </p>
+        {side === "channels" ? (
+          <>
+            <RoomList channels={channels} current={here?.slug ?? slug} onPick={setSlug} />
+            <p className="ch-side-foot tiny faint">
+              <Bot /> Type <code>$help</code> in any room and Null Bot answers.
+            </p>
+          </>
+        ) : (
+          <>
+            <DmRailExport me={handle} active={dmOpen} onOpen={setDmOpen} />
+            <p className="ch-side-foot tiny faint">
+              <CircleSlash /> Blocking somebody hides their half of every thread.
+            </p>
+          </>
+        )}
       </aside>
 
       {/* ---------- the room ---------- */}
@@ -309,13 +343,25 @@ function Rooms() {
           />
         )}
 
-        <Feed
-          slug={here?.slug ?? slug}
-          channels={channels}
-          staff={staff}
-          search={search}
-          onProfile={setProfileFor}
-        />
+        {side === "dms" && me.user ? (
+          dmOpen ? (
+            <DmPanel other={dmOpen} me={me} onBack={() => setDmOpen(null)} />
+          ) : (
+            <div className="dms-empty">
+              <MessagesSquare />
+              <h3>Pick a conversation</h3>
+              <p className="faint tiny">Everything you have going is on the left, newest first.</p>
+            </div>
+          )
+        ) : (
+          <Feed
+            slug={here?.slug ?? slug}
+            channels={channels}
+            staff={staff}
+            search={search}
+            onProfile={setProfileFor}
+          />
+        )}
       </section>
 
       {/* ---------- members ---------- */}

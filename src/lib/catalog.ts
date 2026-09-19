@@ -16,15 +16,40 @@
    player frames the first kind directly and bridges the second (see
    Player.tsx). `thumb` is optional artwork, same deal. */
 
+/* ---------- the cloud catalogue ----------
+   Where cloud titles are played from. The shelf's list of keys comes from
+   stratus-api, and the service that actually streams a session is separate —
+   anybody can run one (see that repo's api folder), so the player page inside
+   the service is what a cloud entry opens. NULL frames that page the way it
+   frames a game, and the stream plays in place.
+
+   The default service is the one the shelf's authors run. If it is quiet,
+   Settings → Browser takes the address of another.
+
+   A cloud row carries BOTH fields, on purpose: `file` is the framed stream,
+   and `url` is the same service in a real tab, for when a stream refuses a
+   frame and the player's route button needs somewhere honest to send it. */
 import { CLOUD, ROWS } from "./discovered";
+import { prefs } from "./themes";
 
 export type Kind = "game" | "app" | "proxy";
 
-/** Where the cloud shelf belongs. Those titles are not files anywhere: they are
- *  streamed by a service that holds the licence and brokers each session, so
- *  the card can name them and say where they live, and that is honest — a
- *  made-up embed URL would only be a broken tile with extra steps. */
 export const CLOUD_SITE = "https://cherrion.top/";
+
+/** The service in use right now: the setting when there is one, the default
+ *  when there is not. Read through a function rather than at import time so
+ *  a change in Settings takes effect on the next card that opens. */
+export function cloudSite(): string {
+  const broker = prefs.get().cloudBroker.trim();
+  return broker || CLOUD_SITE;
+}
+
+/** The address a cloud title is played at: the service's own player page,
+ *  keyed by the service's key for that title. */
+export function cloudPlayUrl(key: string): string {
+  const base = cloudSite().replace(/\/+$/, "");
+  return `${base}/play?game=${encodeURIComponent(key)}`;
+}
 
 export type Entry = {
   id: string;
@@ -47,46 +72,54 @@ export type Entry = {
 const GAMES: Entry[] = [];
 
 /* ---------- apps ----------
-   The tools shelf. Every one of these is somebody else's site, opened the way
-   the games are — through the player, which tries a copy, then an inline
-   mount, then a plain frame — so the shelf is a list of things worth having,
-   not a list of things NULL hosts. Nothing here needs a key, an account or an
-   install, which is the only rule an entry has to follow.
+   The apps shelf is the web's own front doors: the sites people are actually
+   going to open on a school machine. Every one of these is somebody else's
+   site, opened the way the games are — through the player, which tries a
+   copy, then an inline mount, then a plain frame — so the shelf is a list of
+   places, not a list of widgets.
 
    `status` is about the frame and nothing else: "Fine" is a page that
    happily lives inside one (most of the static ones, and anything on GitHub
    Pages), "Rough" is a site that may refuse to be framed and is best opened
-   in the proxy window instead. The player's route button walks a Rough one on
-   to the next road, which is usually enough. */
+   through the proxy window instead. The player's route button walks a Rough
+   one on to the next road, which is usually enough. */
 const APPS: Entry[] = [
-  { id: "cyberchef", name: "CyberChef", kind: "app", file: "https://gchq.github.io/CyberChef/", labels: ["Tools", "Data"], status: "Fine" },
-  { id: "excalidraw", name: "Excalidraw", kind: "app", file: "https://excalidraw.com/", labels: ["Drawing", "Boards"], status: "Fine" },
-  { id: "tldraw", name: "tldraw", kind: "app", file: "https://www.tldraw.com/", labels: ["Drawing", "Boards"], status: "Fine" },
-  { id: "witeboard", name: "Witeboard", kind: "app", file: "https://witeboard.com/", labels: ["Drawing", "Boards"], status: "Rough" },
-  { id: "photopea", name: "Photopea", kind: "app", file: "https://www.photopea.com/", labels: ["Images", "Editing"], status: "Fine" },
-  { id: "squoosh", name: "Squoosh", kind: "app", file: "https://squoosh.app/", labels: ["Images", "Editing"], status: "Fine" },
-  { id: "svgviewer", name: "SVG Viewer", kind: "app", file: "https://www.svgviewer.dev/", labels: ["Images", "Code"], status: "Fine" },
-  { id: "desmos", name: "Desmos", kind: "app", file: "https://www.desmos.com/calculator", labels: ["Maths", "Graphing"], status: "Rough" },
-  { id: "desmos-sci", name: "Desmos Scientific", kind: "app", file: "https://www.desmos.com/scientific", labels: ["Maths", "Calculator"], status: "Rough" },
-  { id: "carbon", name: "Carbon", kind: "app", file: "https://carbon.now.sh/", labels: ["Code", "Screenshots"], status: "Fine" },
-  { id: "codepen", name: "CodePen", kind: "app", file: "https://codepen.io/pen/", labels: ["Code", "Playground"], status: "Rough" },
-  { id: "jsfiddle", name: "JSFiddle", kind: "app", file: "https://jsfiddle.net/", labels: ["Code", "Playground"], status: "Rough" },
-  { id: "jsoncrack", name: "JSON Crack", kind: "app", file: "https://jsoncrack.com/editor", labels: ["Code", "Data"], status: "Fine" },
-  { id: "regex101", name: "Regex101", kind: "app", file: "https://regex101.com/", labels: ["Code", "Text"], status: "Rough" },
-  { id: "dillinger", name: "Dillinger", kind: "app", file: "https://dillinger.io/", labels: ["Writing", "Markdown"], status: "Fine" },
-  { id: "stackedit", name: "StackEdit", kind: "app", file: "https://stackedit.io/app", labels: ["Writing", "Markdown"], status: "Rough" },
-  { id: "notepad", name: "Notepad", kind: "app", file: "https://notepad.js.org/", labels: ["Writing", "Notes"], status: "Fine" },
-  { id: "coolors", name: "Coolors", kind: "app", file: "https://coolors.co/", labels: ["Design", "Colour"], status: "Rough" },
-  { id: "contrast", name: "Contrast Checker", kind: "app", file: "https://colourcontrast.cc/", labels: ["Design", "Colour"], status: "Fine" },
-  { id: "type-scale", name: "Type Scale", kind: "app", file: "https://typescale.com/", labels: ["Design", "Type"], status: "Fine" },
+  { id: "youtube", name: "YouTube", kind: "app", file: "https://www.youtube.com/", labels: ["Video", "Media"], status: "Rough" },
+  { id: "github", name: "GitHub", kind: "app", file: "https://github.com/", labels: ["Code", "Dev"], status: "Rough" },
+  { id: "spotify", name: "Spotify", kind: "app", file: "https://open.spotify.com/", labels: ["Music", "Media"], status: "Rough" },
+  { id: "discord", name: "Discord", kind: "app", file: "https://discord.com/app", labels: ["Chat", "Social"], status: "Rough" },
+  { id: "reddit", name: "Reddit", kind: "app", file: "https://old.reddit.com/", labels: ["Social", "Reading"], status: "Rough" },
+  { id: "x", name: "X", kind: "app", file: "https://x.com/", labels: ["Social", "Media"], status: "Rough" },
+  { id: "instagram", name: "Instagram", kind: "app", file: "https://www.instagram.com/", labels: ["Social", "Images"], status: "Rough" },
+  { id: "tiktok", name: "TikTok", kind: "app", file: "https://www.tiktok.com/", labels: ["Video", "Social"], status: "Rough" },
+  { id: "twitch", name: "Twitch", kind: "app", file: "https://www.twitch.tv/", labels: ["Video", "Streaming"], status: "Rough" },
+  { id: "netflix", name: "Netflix", kind: "app", file: "https://www.netflix.com/", labels: ["Movies", "Media"], status: "Rough" },
+  { id: "primevideo", name: "Prime Video", kind: "app", file: "https://www.primevideo.com/", labels: ["Movies", "Media"], status: "Rough" },
+  { id: "crunchyroll", name: "Crunchyroll", kind: "app", file: "https://www.crunchyroll.com/", labels: ["Anime", "Media"], status: "Rough" },
+  { id: "roblox", name: "Roblox", kind: "app", file: "https://www.roblox.com/", labels: ["Games", "Platform"], status: "Rough" },
+  { id: "steam", name: "Steam", kind: "app", file: "https://store.steampowered.com/", labels: ["Games", "Store"], status: "Rough" },
+  { id: "epic", name: "Epic Games", kind: "app", file: "https://store.epicgames.com/", labels: ["Games", "Store"], status: "Rough" },
+  { id: "chess", name: "Chess.com", kind: "app", file: "https://www.chess.com/", labels: ["Games", "Chess"], status: "Rough" },
+  { id: "lichess", name: "Lichess", kind: "app", file: "https://lichess.org/", labels: ["Games", "Chess"], status: "Fine" },
+  { id: "coolmath", name: "Coolmath Games", kind: "app", file: "https://www.coolmathgames.com/", labels: ["Games", "Web"], status: "Rough" },
+  { id: "poki", name: "Poki", kind: "app", file: "https://poki.com/", labels: ["Games", "Web"], status: "Rough" },
+  { id: "itch", name: "itch.io", kind: "app", file: "https://itch.io/", labels: ["Games", "Indie"], status: "Rough" },
+  { id: "crazygames", name: "CrazyGames", kind: "app", file: "https://www.crazygames.com/", labels: ["Games", "Web"], status: "Rough" },
   { id: "monkeytype", name: "Monkeytype", kind: "app", file: "https://monkeytype.com/", labels: ["Typing", "Games"], status: "Fine" },
-  { id: "radio-garden", name: "Radio Garden", kind: "app", file: "https://radio.garden/", labels: ["Music", "Maps"], status: "Rough" },
-  { id: "photopea-vect", name: "Vector Paint", kind: "app", file: "https://vectorpaint.yaks.co.nz/", labels: ["Drawing", "SVG"], status: "Fine" },
-  { id: "tables", name: "Table Generator", kind: "app", file: "https://www.tablesgenerator.com/", labels: ["Writing", "Tools"], status: "Rough" },
-  { id: "seq", name: "Sequence Diagrams", kind: "app", file: "https://sequencediagram.org/", labels: ["Drawing", "Code"], status: "Fine" },
-  { id: "bpmn", name: "Flowcharts", kind: "app", file: "https://app.diagrams.net/", labels: ["Drawing", "Boards"], status: "Rough" },
-  { id: "tex", name: "TeX Paste", kind: "app", file: "https://texpaste.com/", labels: ["Maths", "Code"], status: "Fine" },
-  { id: "omnicalc", name: "Omni Calculator", kind: "app", file: "https://www.omnicalculator.com/", labels: ["Maths", "Calculator"], status: "Rough" },
+  { id: "wikipedia", name: "Wikipedia", kind: "app", file: "https://www.wikipedia.org/", labels: ["Reference", "Reading"], status: "Fine" },
+  { id: "archive", name: "Internet Archive", kind: "app", file: "https://archive.org/", labels: ["Archive", "Reference"], status: "Fine" },
+  { id: "gmail", name: "Gmail", kind: "app", file: "https://mail.google.com/", labels: ["Mail", "Google"], status: "Rough" },
+  { id: "docs", name: "Google Docs", kind: "app", file: "https://docs.google.com/document/u/0/", labels: ["Writing", "Google"], status: "Rough" },
+  { id: "classroom", name: "Google Classroom", kind: "app", file: "https://classroom.google.com/", labels: ["School", "Google"], status: "Rough" },
+  { id: "drive", name: "Google Drive", kind: "app", file: "https://drive.google.com/", labels: ["Files", "Google"], status: "Rough" },
+  { id: "gemini", name: "Gemini", kind: "app", file: "https://gemini.google.com/", labels: ["AI", "Google"], status: "Rough" },
+  { id: "chatgpt", name: "ChatGPT", kind: "app", file: "https://chatgpt.com/", labels: ["AI", "Tools"], status: "Rough" },
+  { id: "telegram", name: "Telegram", kind: "app", file: "https://web.telegram.org/a/", labels: ["Chat", "Social"], status: "Rough" },
+  { id: "pinterest", name: "Pinterest", kind: "app", file: "https://www.pinterest.com/", labels: ["Images", "Social"], status: "Rough" },
+  { id: "imgur", name: "Imgur", kind: "app", file: "https://imgur.com/", labels: ["Images", "Social"], status: "Rough" },
+  { id: "photopea", name: "Photopea", kind: "app", file: "https://www.photopea.com/", labels: ["Images", "Editing"], status: "Fine" },
+  { id: "desmos", name: "Desmos", kind: "app", file: "https://www.desmos.com/calculator", labels: ["Maths", "School"], status: "Rough" },
+  { id: "cyberchef", name: "CyberChef", kind: "app", file: "https://gchq.github.io/CyberChef/", labels: ["Tools", "Dev"], status: "Fine" },
 ];
 
 const PROXIES: Entry[] = [
@@ -173,9 +206,10 @@ function discovered(): Entry[] {
 /** Everything this repo serves or mirrors, before the cloud titles. */
 const SHELF: Entry[] = [...GAMES, ...discovered()];
 
-/** The cloud catalogue, which is browsable and not playable here. Anything the
- *  shelf already carries is left to the shelf: a game with a file is a game you
- *  can play, and a card for one should not be a card you cannot. */
+/** The cloud catalogue. Anything the shelf already carries is left to the
+ *  shelf: a game with a real file is a game you can play, and a card for one
+ *  should not be a card that streams instead. The rest play in NULL through
+ *  the service's player page, framed like any other game. */
 function cloudGames(): Entry[] {
   const known = new Set(SHELF.map((e) => e.name.toLowerCase()));
   return CLOUD.filter(([, name]) => !known.has(name.toLowerCase())).map(
@@ -183,15 +217,16 @@ function cloudGames(): Entry[] {
       id,
       name,
       kind: "game" as const,
-      url: CLOUD_SITE,
+      file: cloudPlayUrl(key),
+      url: cloudSite(),
       ...(cover ? { thumb: cover } : {}),
       labels: ["Cloud", ...tags, "Remote"],
       status: "Remote" as const,
-      /* the key is what the service files it under, which is the one useful
-         thing to print on a card that cannot be launched */
+      /* the key is what the service files it under — worth printing, because
+         it is the handle another service would know the title by */
       warning: {
-        title: `${name} (${key}) runs in the cloud`,
-        body: "Cloud titles are streamed by a service that holds the licence, so NULL cannot copy one into a frame to play. Opening the service is where it plays.",
+        title: `${name} (${key}) streams from the cloud`,
+        body: "This one is played on a cloud gaming service, and NULL opens its stream right here. Sessions are served in turns, so at busy times there is a short queue.",
       },
     }),
   );
