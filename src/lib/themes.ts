@@ -1,5 +1,5 @@
 /* NULL · themes.ts
-   The twenty-three palettes. Each one re-inks the page through the CSS variables
+   The twenty-four palettes. Each one re-inks the page through the CSS variables
    declared in src/styles/tokens.css, so switching a theme never needs a
    component to know it happened.
 
@@ -13,6 +13,7 @@ import type { EngineId } from "./nav";
 export type PaletteId =
   | "null"
   | "midnight"
+  | "rosewood"
   | "darker"
   | "forest"
   | "sunset"
@@ -47,6 +48,7 @@ export type Palette = {
 export const PALETTES: Palette[] = [
   { id: "null", name: "Null", bg: "#08080a", ink: "#f4f4f5", light: false },
   { id: "midnight", name: "Midnight", bg: "#080c18", ink: "#7aa2ff", light: false },
+  { id: "rosewood", name: "Rosewood", bg: "#11070a", ink: "#ff6b8b", light: false },
   { id: "darker", name: "Darker", bg: "#000000", ink: "#cfcfd6", light: false },
   { id: "forest", name: "Forest", bg: "#070d09", ink: "#7fd18b", light: false },
   { id: "sunset", name: "Sunset", bg: "#150b10", ink: "#ff9a76", light: false },

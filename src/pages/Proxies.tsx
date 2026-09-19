@@ -410,7 +410,7 @@ function Shelf({ onOpenSettings }: { onOpenSettings?: () => void }) {
   };
 
   return (
-    <div className="page page--wide">
+    <div className="page page--wide px">
       <div className="px-top">
         <h1 className="lb-title">Proxies</h1>
         <span className="lb-count tiny faint">{list.length} ready to open</span>

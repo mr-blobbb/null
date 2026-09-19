@@ -350,12 +350,18 @@ function InlineGame({ file, name, onFail }: { file: string; name: string; onFail
         const html = await readPage(file);
         if (!alive) return;
         /* written straight into the document rather than left to a re-render:
-           the scripts are created in the very next line, and one of them may
-           fetch before that render ever happens */
+           mountInline appends the page's scripts before returning, and a boot
+           script that fetches on its first line resolves against whatever the
+           document points at *that moment*. So the base is committed (and a
+           layout pass spent) before the loader is called — scripts appended
+           under a missing or half-written base is how pages come back black,
+           or as a pile of ReferenceErrors. */
         base = document.createElement("base");
         base.href = baseOf(html, file);
         document.head.querySelectorAll("base").forEach((b) => b.remove());
         document.head.prepend(base);
+        await new Promise((r) => requestAnimationFrame(() => r(null)));
+        if (!alive) return;
         mountInline(el, html, file);
         if (alive) setReady(true);
       } catch (e) {

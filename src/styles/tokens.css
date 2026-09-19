@@ -52,9 +52,12 @@
 }
 
 /* ---------- palettes ----------
-   Each block sets the same nine values. `--ac-1` is the accent a palette
-   leans on; the homepage wordmark and every focus ring read it, which is
-   why Forest greens the whole wordmark without any component knowing. */
+   Each block sets the same eleven values: four backgrounds, four lines
+   (one hairline each, per the shape rules), text, dim text — and the
+   accent pair. `--ac-1` is the accent a palette leans on: filled buttons,
+   icons, the homepage wordmark, every focus ring. `--ac-2` is its quieter
+   secondary and `--ac-glow` the halo filled controls cast, both derived,
+   so a palette never has to spell them out. */
 :root,
 [data-palette="null"] {
   --bg: #08080a;
@@ -67,6 +70,8 @@
   --dim: #8b8b95;
   --faint: #5a5a63;
   --ac-1: #f4f4f5;
+  --ac-2: color-mix(in srgb, #f4f4f5 26%, var(--text));
+  --ac-glow: color-mix(in srgb, #f4f4f5 38%, transparent);
   --ok: #4ec97a;
   --warn: #e0b13f;
   --bad: #e2686a;
@@ -83,6 +88,25 @@
   --dim: #7f8bab;
   --faint: #525c78;
   --ac-1: #7aa2ff;
+  --ac-2: color-mix(in srgb, #7aa2ff 26%, var(--text));
+  --ac-glow: color-mix(in srgb, #7aa2ff 38%, transparent);
+}
+/* Rosewood — the visitor palette: a dusty rose accent on a near-black plum
+   stack. Four backgrounds, four lines, and the accent everywhere an icon,
+   a filled button or the wordmark leans. */
+[data-palette="rosewood"] {
+  --bg: #11070a;
+  --bg-2: #170a0d;
+  --bg-3: #1f0e12;
+  --bg-4: #2a1318;
+  --line: #3a1a21;
+  --line-2: #4d2530;
+  --text: #fff5f7;
+  --dim: #b08791;
+  --faint: #7d5a63;
+  --ac-1: #ff6b8b;
+  --ac-2: #f0d8dc;
+  --ac-glow: color-mix(in srgb, #ff6b8b 38%, transparent);
 }
 [data-palette="darker"] {
   --bg: #000000;
@@ -95,6 +119,8 @@
   --dim: #767680;
   --faint: #4a4a52;
   --ac-1: #cfcfd6;
+  --ac-2: color-mix(in srgb, #cfcfd6 26%, var(--text));
+  --ac-glow: color-mix(in srgb, #cfcfd6 38%, transparent);
 }
 [data-palette="forest"] {
   --bg: #070d09;
@@ -107,6 +133,8 @@
   --dim: #7d9a83;
   --faint: #536b58;
   --ac-1: #7fd18b;
+  --ac-2: color-mix(in srgb, #7fd18b 26%, var(--text));
+  --ac-glow: color-mix(in srgb, #7fd18b 38%, transparent);
 }
 [data-palette="sunset"] {
   --bg: #150b10;
@@ -119,6 +147,8 @@
   --dim: #b08a80;
   --faint: #7a5c55;
   --ac-1: #ff9a76;
+  --ac-2: color-mix(in srgb, #ff9a76 26%, var(--text));
+  --ac-glow: color-mix(in srgb, #ff9a76 38%, transparent);
 }
 [data-palette="nord"] {
   --bg: #242933;
@@ -131,6 +161,8 @@
   --dim: #9aa4b5;
   --faint: #6d7688;
   --ac-1: #88c0d0;
+  --ac-2: color-mix(in srgb, #88c0d0 26%, var(--text));
+  --ac-glow: color-mix(in srgb, #88c0d0 38%, transparent);
 }
 [data-palette="mono"] {
   --bg: #0e0e0e;
@@ -143,6 +175,8 @@
   --dim: #8f8f8f;
   --faint: #5c5c5c;
   --ac-1: #ffffff;
+  --ac-2: color-mix(in srgb, #ffffff 26%, var(--text));
+  --ac-glow: color-mix(in srgb, #ffffff 38%, transparent);
 }
 [data-palette="light"] {
   --bg: #f4f4f5;
@@ -155,6 +189,8 @@
   --dim: #63636b;
   --faint: #9a9aa2;
   --ac-1: #101012;
+  --ac-2: color-mix(in srgb, #101012 26%, var(--text));
+  --ac-glow: color-mix(in srgb, #101012 38%, transparent);
 }
 [data-palette="abyss"] {
   --bg: #03060d;
@@ -167,6 +203,8 @@
   --dim: #6f92a0;
   --faint: #46636f;
   --ac-1: #4dd0e1;
+  --ac-2: color-mix(in srgb, #4dd0e1 26%, var(--text));
+  --ac-glow: color-mix(in srgb, #4dd0e1 38%, transparent);
 }
 [data-palette="matcha"] {
   --bg: #0c130d;
@@ -179,6 +217,8 @@
   --dim: #86977a;
   --faint: #5a6a51;
   --ac-1: #a8d98a;
+  --ac-2: color-mix(in srgb, #a8d98a 26%, var(--text));
+  --ac-glow: color-mix(in srgb, #a8d98a 38%, transparent);
 }
 [data-palette="ember"] {
   --bg: #120806;
@@ -191,6 +231,8 @@
   --dim: #b08472;
   --faint: #7b594a;
   --ac-1: #ff7847;
+  --ac-2: color-mix(in srgb, #ff7847 26%, var(--text));
+  --ac-glow: color-mix(in srgb, #ff7847 38%, transparent);
 }
 [data-palette="glacier"] {
   --bg: #070e12;
@@ -203,6 +245,8 @@
   --dim: #79969f;
   --faint: #4e6971;
   --ac-1: #8fd8e8;
+  --ac-2: color-mix(in srgb, #8fd8e8 26%, var(--text));
+  --ac-glow: color-mix(in srgb, #8fd8e8 38%, transparent);
 }
 [data-palette="void"] {
   --bg: #000000;
@@ -215,6 +259,8 @@
   --dim: #7d76a8;
   --faint: #514c72;
   --ac-1: #8b5cf6;
+  --ac-2: color-mix(in srgb, #8b5cf6 26%, var(--text));
+  --ac-glow: color-mix(in srgb, #8b5cf6 38%, transparent);
 }
 [data-palette="peach"] {
   --bg: #fbf1ea;
@@ -227,6 +273,8 @@
   --dim: #8a6f60;
   --faint: #b49a8b;
   --ac-1: #ef7f4f;
+  --ac-2: color-mix(in srgb, #ef7f4f 26%, var(--text));
+  --ac-glow: color-mix(in srgb, #ef7f4f 38%, transparent);
 }
 [data-palette="synthwave"] {
   --bg: #100722;
@@ -239,6 +287,8 @@
   --dim: #a887c8;
   --faint: #745a94;
   --ac-1: #ff5fd2;
+  --ac-2: color-mix(in srgb, #ff5fd2 26%, var(--text));
+  --ac-glow: color-mix(in srgb, #ff5fd2 38%, transparent);
 }
 [data-palette="slate"] {
   --bg: #0d1117;
@@ -251,6 +301,8 @@
   --dim: #94a7c0;
   --faint: #647a95;
   --ac-1: #9db2d0;
+  --ac-2: color-mix(in srgb, #9db2d0 26%, var(--text));
+  --ac-glow: color-mix(in srgb, #9db2d0 38%, transparent);
 }
 
 [data-palette="crimson"] {
@@ -264,6 +316,8 @@
   --dim: #c0888f;
   --faint: #8a565d;
   --ac-1: #ff5b6e;
+  --ac-2: color-mix(in srgb, #ff5b6e 26%, var(--text));
+  --ac-glow: color-mix(in srgb, #ff5b6e 38%, transparent);
 }
 
 [data-palette="cobalt"] {
@@ -277,6 +331,8 @@
   --dim: #8fa3d8;
   --faint: #5f719f;
   --ac-1: #5b8dff;
+  --ac-2: color-mix(in srgb, #5b8dff 26%, var(--text));
+  --ac-glow: color-mix(in srgb, #5b8dff 38%, transparent);
 }
 
 [data-palette="sand"] {
@@ -290,6 +346,8 @@
   --dim: #6f6250;
   --faint: #998b76;
   --ac-1: #8a6a3c;
+  --ac-2: color-mix(in srgb, #8a6a3c 26%, var(--text));
+  --ac-glow: color-mix(in srgb, #8a6a3c 38%, transparent);
 }
 
 [data-palette="bubblegum"] {
@@ -303,6 +361,8 @@
   --dim: #7d5b6b;
   --faint: #a4798c;
   --ac-1: #e0578f;
+  --ac-2: color-mix(in srgb, #e0578f 26%, var(--text));
+  --ac-glow: color-mix(in srgb, #e0578f 38%, transparent);
 }
 
 [data-palette="terminal"] {
@@ -330,6 +390,8 @@
   --dim: #b0937a;
   --faint: #7d6a58;
   --ac-1: #c99a6b;
+  --ac-2: color-mix(in srgb, #c99a6b 26%, var(--text));
+  --ac-glow: color-mix(in srgb, #c99a6b 38%, transparent);
 }
 
 [data-palette="neon"] {
@@ -343,6 +405,8 @@
   --dim: #9fbf6a;
   --faint: #6c8a45;
   --ac-1: #c8ff3d;
+  --ac-2: color-mix(in srgb, #c8ff3d 26%, var(--text));
+  --ac-glow: color-mix(in srgb, #c8ff3d 38%, transparent);
 }
 
 [data-palette="custom"] {
@@ -356,6 +420,8 @@
   --dim: #85858f;
   --faint: #55555e;
   --ac-1: #c9c9d2;
+  --ac-2: color-mix(in srgb, #c9c9d2 26%, var(--text));
+  --ac-glow: color-mix(in srgb, #c9c9d2 38%, transparent);
 }
 
 /* ---------- reset ---------- */
@@ -434,7 +500,10 @@ ol {
   background-clip: content-box;
 }
 
-/* ---------- primitives ---------- */
+/* ---------- primitives ----------
+   Outlined: one hairline, one step brighter than what it sits on — the
+   border is the button. Filled: the accent, because an accent nobody acts
+   on is a colour, not an accent. */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -442,9 +511,9 @@ ol {
   gap: 7px;
   height: 34px;
   padding: 0 13px;
-  border: var(--bw) solid var(--line);
+  border: var(--bw) solid var(--line-2);
   border-radius: var(--r-2);
-  background: var(--bg-2);
+  background: color-mix(in srgb, var(--bg-3) 50%, var(--bg-2));
   color: var(--text);
   font-size: 13px;
   font-weight: 500;
@@ -464,13 +533,17 @@ ol {
   cursor: not-allowed;
 }
 .btn--fill {
-  background: var(--text);
-  border-color: var(--text);
+  background: var(--ac-1);
+  border-color: var(--ac-1);
   color: var(--bg);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ac-1) 26%, transparent),
+    0 6px 22px -12px var(--ac-glow);
 }
 .btn--fill:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--text) 88%, var(--bg));
-  border-color: color-mix(in srgb, var(--text) 88%, var(--bg));
+  background: color-mix(in srgb, var(--ac-1) 86%, var(--text));
+  border-color: color-mix(in srgb, var(--ac-1) 86%, var(--text));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ac-1) 42%, transparent),
+    0 8px 26px -12px var(--ac-glow);
 }
 .btn--quiet {
   background: transparent;

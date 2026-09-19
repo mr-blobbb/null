@@ -167,7 +167,7 @@ const CARDS: Card[] = [
     avatar: "example.com/f.png",
     name: "void",
     role: "Theme collector",
-    text: "Twenty-three palettes and a custom one. I have changed mine four times today.",
+    text: "Twenty-four palettes and a custom one. I have changed mine four times today.",
     lorem: "Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit.",
   },
   {
@@ -245,7 +245,7 @@ export function Home() {
       {/* The wordmark is the only lit thing on the page, so it is lit
           properly: three stacked shadows — a tight rim, a mid bloom and a
           wide haze — because one shadow reads as a sticker and three read
-          as light. The ink comes from the palette, so Forest glows green and
+          as light. The ink comes from the palette, so Rosewood glows rose and
           NULL glows white without a second rule for either. */}
       <h1
         className="hm-word"

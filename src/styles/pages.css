@@ -815,6 +815,12 @@ kbd {
   gap: 6px;
   margin: 18px auto 4px;
 }
+/* what the scroll grows the shelf with: offscreen until it is within a
+   screen of the bottom, then the next block of tiles mounts under it */
+.lb-more-sentinel {
+  width: 100%;
+  height: 2px;
+}
 .lb-empty code {
   font-family: var(--mono);
   font-size: 12px;

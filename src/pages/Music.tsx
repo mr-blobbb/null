@@ -355,6 +355,7 @@ export function Music() {
           {m.queue.map((t, i) => (
             <button
               key={`${t.key}-${i}`}
+              data-track={t.key}
               className={`mu-qrow${i === m.index ? " is-on" : ""}`}
               onClick={() => jumpTo(i)}
               title={t.title}
@@ -453,7 +454,7 @@ function Grid({
   return (
     <div className="mu-grid">
       {tracks.map((t) => (
-        <div className="mu-tile" key={t.key}>
+        <div className="mu-tile" key={t.key} data-track={t.key}>
           <button className="mu-tile-btn" onClick={() => play(t, playList)} title={`Play ${t.title}`}>
             {t.art ? (
               <img src={t.art} alt="" loading="lazy" decoding="async" />
@@ -600,7 +601,7 @@ function PlaylistSheet({ id, onGone }: { id: string; onGone: () => void }) {
       ) : (
         <div className="mu-grid mu-grid--sheet">
           {list.tracks.map((t) => (
-            <div className="mu-tile" key={t.key}>
+            <div className="mu-tile" key={t.key} data-track={t.key}>
               <button className="mu-tile-btn" onClick={() => play(t, list.tracks)} title={`Play ${t.title}`}>
                 {t.art ? <img src={t.art} alt="" /> : <MusicIcon />}
                 {t.explicit && <i className="mu-e mu-tile-e">E</i>}

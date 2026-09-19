@@ -179,10 +179,23 @@ export function mountInline(host: HTMLElement, html: string, file: string): stri
     const el = document.createElement("script");
     if (s.type) el.type = s.type;
     if (s.src) {
-      el.src = new URL(s.src, base).href;
+      /* a src that does not resolve is dropped rather than left to throw —
+         "Uncaught ReferenceError: EngineLoader is not defined" is what an
+         engine page looks like when its own files went missing */
+      let href = "";
+      try {
+        href = new URL(s.src, base).href;
+      } catch {
+        continue;
+      }
+      el.src = href;
       el.async = false; // inserted scripts are async by default, which reorders them
     } else {
-      el.textContent = s.text;
+      /* one line of a page's own boot code throwing must not read as NULL
+         being broken. The wrap is what turns a stranger's ReferenceError
+         into console noise instead of an uncaught error attributed to this
+         document — and `void 0` keeps a bare `return` inside the guard legal. */
+      el.textContent = `try{${s.text}}catch(__e){console.warn("[null] game script:",__e&&__e.message)};void 0;`;
     }
     shadow.append(el);
   }

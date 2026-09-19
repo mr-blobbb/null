@@ -11,6 +11,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Ambient } from "./components/Ambient";
 import { Chrome } from "./components/Chrome";
+import { CtxMenu } from "./components/CtxMenu";
 import { Rail } from "./components/Rail";
 import { SettingsSheet, type SettingsTab } from "./components/SettingsSheet";
 import { NotFound } from "./pages/NotFound";
@@ -57,6 +58,14 @@ export function App() {
     setSettingsTab(tab);
     setSettingsOpen(true);
   };
+
+  /* the right-click menu asks for the themes pane without knowing what a
+     settings sheet is: one event, one listener, here where the sheet lives */
+  useEffect(() => {
+    const ask = () => openSettings("appearance");
+    document.addEventListener("null:settings", ask);
+    return () => document.removeEventListener("null:settings", ask);
+  }, []);
   const [ms, setMs] = useState(0);
   const [milestone, setMilestone] = useState<string | null>(null);
 
@@ -296,6 +305,8 @@ export function App() {
       {milestone && <div className="toast">{milestone}</div>}
 
       <OverlayExts coins={coins} />
+
+      <CtxMenu />
 
       <SettingsSheet
         open={settingsOpen}

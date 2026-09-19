@@ -12,7 +12,7 @@
    when they are asked for. Narrowing the search resets that, so a filtered
    shelf is never a shelf you have to ask twice for. */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Dices,
   Gamepad2,
@@ -22,12 +22,14 @@ import {
 } from "lucide-react";
 
 import { browse, entries, sources, SORTS, type Entry, type Kind, type SortId } from "../lib/catalog";
-import { Cover } from "../components/Cover";
+import { Cover, thumbsOf } from "../components/Cover";
 import { toggleFavorite, pushRecent, useAccount } from "../lib/account";
 import { openTab } from "../lib/tabs";
 import { trackPlay } from "../lib/econ";
 
-/** How many tiles are drawn before the rest wait to be asked for. */
+/** How many tiles mount before the rest mount with the scroll. The shelf is
+ *  still thousands of tiles — React gets a running start — but there is no
+ *  button to press: the scroll itself brings the rest in. */
 const SCREEN = 120;
 
 const WORD: Record<Kind, { title: string; one: string; many: string; ph: string; icon: typeof Gamepad2 }> = {
@@ -45,6 +47,8 @@ export function Library({ kind }: { kind: Kind }) {
   const [onlyFavs, setOnlyFavs] = useState(false);
   const [seed, setSeed] = useState(1);
   const [drawn, setDrawn] = useState(SCREEN);
+  /** the sentinel the scroll grows the shelf with */
+  const more = useRef<HTMLDivElement>(null);
 
   const all = entries(kind);
   const from = useMemo(() => sources(kind), [kind]);
@@ -64,7 +68,32 @@ export function Library({ kind }: { kind: Kind }) {
      screenful */
   useEffect(() => setDrawn(SCREEN), [kind, q, sort, source, onlyFavs, seed]);
 
-  const page = shown.slice(0, drawn);
+  /* the scroll loads the rest: watching the sentinel rather than asking for
+     a click, so a long shelf reads itself without a button in the middle of it */
+  useEffect(() => {
+    const el = more.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (rows) => {
+        if (rows.some((r) => r.isIntersecting)) setDrawn((n) => n + SCREEN);
+      },
+      { rootMargin: "600px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [kind, q, sort, source, onlyFavs, seed, drawn < shown.length]);
+
+  /* tiles with no artwork sink to the bottom of the shelf, in order: the
+     pictureless squares are the ones nobody came here to look at, and a
+     shelf that leads with them reads broken. Stable within each half. */
+  const shelf = useMemo(() => {
+    const withArt: Entry[] = [];
+    const without: Entry[] = [];
+    for (const e of shown) (thumbsOf(e).length ? withArt : without).push(e);
+    return [...withArt, ...without];
+  }, [shown]);
+
+  const page = shelf.slice(0, drawn);
   const favCount = me.favorites.filter((id) => all.some((e) => e.id === id)).length;
 
   const launch = (e: Entry) => {
@@ -150,7 +179,7 @@ export function Library({ kind }: { kind: Kind }) {
         </button>
       </div>
 
-      {shown.length === 0 ? (
+      {shelf.length === 0 ? (
         <div className="lb-empty card card--pad">
           {onlyFavs && !q ? (
             <p>No favorites yet — star a {word.one} to save it here.</p>
@@ -181,12 +210,9 @@ export function Library({ kind }: { kind: Kind }) {
               />
             ))}
           </div>
-          {shown.length > page.length && (
-            <button className="btn lb-more" onClick={() => setDrawn((n) => n + SCREEN)}>
-              Show {Math.min(SCREEN, shown.length - page.length)} more
-              <span className="tiny faint"> {shown.length - page.length} still waiting</span>
-            </button>
-          )}
+          {/* no button: the sentinel grows the shelf as it scrolls into view,
+              and the observer stays attached so a long shelf never runs out */}
+          {shelf.length > page.length && <div ref={more} className="lb-more-sentinel" aria-hidden="true" />}
         </>
       )}
     </div>
