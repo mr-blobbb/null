@@ -37,6 +37,7 @@ import { useAccount } from "../lib/account";
 import {
   addToPlaylist,
   clock,
+  clearMusic,
   clearQueue,
   deletePlaylist,
   isFavorite,
@@ -73,6 +74,8 @@ export function Music() {
   const [busy, setBusy] = useState(false);
   const [sheet, setSheet] = useState<Playlist | null>(null);
   const [menuFor, setMenuFor] = useState<string | null>(null);
+  /** the clear-all button asks twice, because a library is not a mis-click's to take */
+  const [sureWipe, setSureWipe] = useState(false);
   const field = useRef<HTMLInputElement>(null);
   /** the keyed sources join in once their key is here */
   const keyed = SERVER_SOURCES.some((s) => (m.keys[s.id] ?? "").trim());
@@ -123,6 +126,23 @@ export function Music() {
   useEffect(() => {
     field.current?.focus();
   }, []);
+
+  useEffect(() => {
+    if (!sureWipe) return;
+    const t = setTimeout(() => setSureWipe(false), 4000);
+    return () => clearTimeout(t);
+  }, [sureWipe]);
+
+  const wipeAll = () => {
+    if (!sureWipe) {
+      setSureWipe(true);
+      return;
+    }
+    clearMusic();
+    setSureWipe(false);
+    setResults([]);
+    setEnd(false);
+  };
 
   const kept = useMemo(() => m.favorites.length + m.playlists.reduce((n, p) => n + p.tracks.length, 0), [m]);
 
@@ -355,6 +375,24 @@ export function Music() {
           </h2>
           <Grid tracks={m.recent.slice(0, 18)} menuFor={menuFor} setMenuFor={setMenuFor} playList={m.recent} />
         </>
+      )}
+
+      {/* ---------- clearing the whole library ----------
+          One button, asked twice: it takes the favourites, the playlists, the
+          history and whatever is playing with it. */}
+      {(m.favorites.length > 0 || m.recent.length > 0 || m.playlists.length > 0 || m.now) && (
+        <div className="setrow setrow--actions">
+          <button className="btn btn--bad" onClick={wipeAll}
+            title={
+              sureWipe
+                ? "Press again — this clears favourites, playlists, history and the player"
+                : "Clear everything: favourites, playlists, history and the player"
+            }
+          >
+            <Trash2 /> {sureWipe ? "Sure? Clear everything" : "Clear all music"}
+          </button>
+          <span className="tiny faint">Favourites, playlists, history and what is playing — the catalogue keys stay.</span>
+        </div>
       )}
 
       {/* ---------- the optional keys ---------- */}

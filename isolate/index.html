@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="theme-color" content="#08080a" />
+    <title>null</title>
+    <meta
+      name="description"
+      content="NULL: a flat, fast hub for games, apps, proxies and tools. Local first, no accounts."
+    />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="./icon-192.png" />
+
+    <!-- the display faces a profile can put its own name in. They are served
+         from this origin, not from Google: a filter that blocks Google's font
+         hosts would otherwise take every custom name with it. See
+         src/styles/fonts.css. -->
+    <script>
+      /* Paint the palette before React mounts so a dark theme never flashes
+         light. Mirrors src/lib/themes.ts: keep the two in step. */
+      (function () {
+        try {
+          var p = JSON.parse(localStorage.getItem("null:prefs") || "{}");
+          var id = p.palette || "null";
+          var root = document.documentElement;
+          root.dataset.palette = id;
+          var light = id === "light" || id === "peach" || id === "sand" || id === "bubblegum";
+          root.dataset.mode = light ? "light" : "dark";
+          root.style.colorScheme = light ? "light" : "dark";
+        } catch (e) {}
+      })();
+    </script>
+    <script type="module" crossorigin src="./assets/index-DQFoAIvh.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-DCIDvAoL.css">
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>NULL needs JavaScript to run.</noscript>
+  </body>
+</html>

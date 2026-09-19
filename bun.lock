@@ -9,7 +9,7 @@
         "@mercuryworkshop/epoxy-tls": "^2.1.19-1",
         "@titaniumnetwork-dev/ultraviolet": "^3.2.10",
         "@vly-ai/integrations": "^0.6.13",
-        "convex": "^1.40.0",
+        "convex": "^1.46.0",
         "lucide-react": "^1.47.0",
         "react": "^19.3.0",
         "react-dom": "^19.3.0",

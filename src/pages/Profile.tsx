@@ -56,7 +56,7 @@ import {
   verifyPassword,
   type NameStyle,
 } from "../lib/account";
-import { AvatarArt, TagChip } from "../lib/art";
+import { AvatarArt, EffectArt, TagChip } from "../lib/art";
 import { NullFace } from "../lib/brand";
 import { publish, unpublish } from "../lib/members";
 import { ShareCard } from "../components/ShareCard";
@@ -302,6 +302,13 @@ function SignedIn() {
   return (
     <div className="page">
       <section className="card pf-card">
+        {/* the effect covers the whole card, over the banner, settled by its own
+            scrim — the share card and the shop previews draw the same */}
+        {eco.equipped.effect && (
+          <span className="pf-effect">
+            <EffectArt id={eco.equipped.effect} />
+          </span>
+        )}
         <div className="pf-banner" style={{ background: me.banner }}>
           <button className="btn btn--sm pf-banner-edit" onClick={() => setBannerOpen(true)}>
             <Palette /> Edit banner

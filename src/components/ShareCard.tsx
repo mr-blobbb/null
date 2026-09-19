@@ -118,7 +118,7 @@ export function ShareCard({ open, onClose }: { open: boolean; onClose: () => voi
           </div>
         </div>
 
-        <p className="share-bio">{me.bio || "No bio yet."}</p>
+        <p className={`share-bio${me.bio?.trim() ? "" : " is-empty"}`}>{me.bio || "No bio yet."}</p>
 
         <div className="share-foot">
           <span>

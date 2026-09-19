@@ -551,6 +551,26 @@ export function clearQueue() {
   audio().pause();
 }
 
+/** Everything at once: what is playing, the queue, the history, the kept
+ *  tracks and every playlist. Keys survive, because they are how the
+ *  catalogue is widened, not part of the library. */
+export function clearMusic() {
+  music.set({
+    favorites: [],
+    playlists: [],
+    recent: [],
+    queue: [],
+    order: [],
+    index: -1,
+    now: null,
+    playing: false,
+    at: 0,
+    duration: 0,
+    problem: null,
+  });
+  audio().pause();
+}
+
 export function setKey(source: SourceId, key: string) {
   music.set({ keys: { ...music.get().keys, [source]: key } });
 }

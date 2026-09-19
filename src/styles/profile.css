@@ -144,6 +144,21 @@
   padding: 0 0 16px;
   background: var(--bg-2);
 }
+/* the equipped effect, full-bleed across the whole card and kept see-through:
+   the effect's own scrim is what settles it for the words, so the card never
+   needs a second, heavier wash */
+.pf-effect {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  border-radius: inherit;
+}
+/* everything on the card rides above the effect */
+.pf-card > :not(.pf-effect) {
+  position: relative;
+  z-index: 1;
+}
 /* a name with a badge beside it. The badge is a sibling, not a child: a name
    may be a gradient cut out of its own text, which would swallow the icon */
 .pf-name-row,
@@ -172,6 +187,7 @@
   background-position: center;
   border-radius: var(--r-4) var(--r-4) var(--r-2) var(--r-2);
   margin: 2px 2px 0;
+  background-color: transparent;
 }
 .pf-banner-edit {
   position: absolute;
@@ -760,15 +776,18 @@ input[type="color"] {
 
 /* ============================================================
    the share card
+   The same shape as the chat pop-out card: banner seam, overhanging round
+   picture, facts grid. The effect is the background of the whole card.
    ============================================================ */
 .share {
   position: relative;
   overflow: hidden;
   margin-top: 14px;
-  padding: 22px 22px 18px;
+  padding: 0 0 18px;
   border: var(--bw) solid var(--line-2);
   border-radius: var(--r-4);
   background: var(--bg-2);
+  box-shadow: 0 40px 90px -36px #000;
   isolation: isolate;
 }
 /* the art layer: banner first, the equipped effect over it, both full bleed.
@@ -781,10 +800,22 @@ input[type="color"] {
 }
 .share-banner {
   position: absolute;
-  inset: 0;
+  inset: 0 0 auto;
+  height: 124px;
   display: block;
   background-size: cover;
   background-position: center;
+}
+/* the seam between banner and body, drawn where the chat pop-out draws its
+   own: a soft shadow rather than a hard line, so a bright banner does not
+   look pasted on */
+.share-banner::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 34px;
+  background: linear-gradient(to top, color-mix(in srgb, var(--bg-2) 34%, transparent), transparent);
+  pointer-events: none;
 }
 /* the words layer. Named one by one rather than `:not(.share-bg)` so the
    address in the corner keeps its own absolute position. */
@@ -797,6 +828,7 @@ input[type="color"] {
 }
 .share-mark {
   display: block;
+  padding: 16px 22px 0;
   font-family: var(--rounded);
   font-size: 26px;
   font-weight: 700;
@@ -817,21 +849,24 @@ input[type="color"] {
   display: flex;
   align-items: flex-end;
   gap: 15px;
-  margin-top: 96px;
-}
+  padding: 0 22px;
+  margin-top: -52px;
 .share-pic {
   position: relative;
   flex: none;
   display: grid;
   place-items: center;
-  width: 84px;
-  height: 84px;
+  width: 104px;
+  height: 104px;
   border-radius: 50%;
-  border: 2px solid var(--text);
+  /* the thick page-coloured rim is what makes the picture hang over the
+     banner instead of floating on it — the chat pop-out draws the same */
+  border: 3px solid var(--bg-2);
   background: var(--bg-3);
   color: var(--faint);
   overflow: visible;
   isolation: isolate;
+  box-shadow: 0 12px 28px -16px #000;
 }
 .share-pic img {
   width: 100%;
@@ -849,11 +884,17 @@ input[type="color"] {
   gap: 2px;
   min-width: 0;
   padding-bottom: 4px;
+  flex: 1 1 auto;
 }
 .share-name {
-  font-size: 28px;
-  font-weight: 700;
-  letter-spacing: -0.025em;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  font-size: 21px;
+  font-weight: 660;
+  letter-spacing: -0.015em;
 }
 .share-handle {
   font-family: var(--mono);
@@ -867,21 +908,29 @@ input[type="color"] {
   margin-top: 7px;
 }
 .share-bio {
-  margin-top: 16px;
-  font-size: 13px;
+  margin: 12px 22px 0;
+  font-size: 13.5px;
+  line-height: 1.62;
   color: var(--text);
   white-space: pre-wrap;
   word-break: break-word;
   max-width: 62ch;
+}
+.share-bio:empty,
+.share-bio.is-empty {
+  color: var(--faint);
+  font-style: italic;
 }
 .share-foot {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-  margin-top: 20px;
-  padding-top: 13px;
-  border-top: var(--bw) solid color-mix(in srgb, var(--line-2) 80%, transparent);
+  margin: 14px 22px 0;
+  padding: 12px;
+  border: var(--bw) solid var(--line);
+  border-radius: var(--r-3);
+  background: color-mix(in srgb, var(--bg-3) 58%, transparent);
   font-family: var(--mono);
   font-size: 11px;
   color: var(--dim);

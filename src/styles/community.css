@@ -403,15 +403,15 @@
 
 .say-pic {
   flex: none;
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   display: grid;
   place-items: center;
   border: var(--bw) solid var(--line);
   border-radius: 50%;
   background: var(--bg-3);
   color: var(--dim);
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 620;
   /* the picture is a circle and a decoration is drawn around it, so this has
      to be the thing they are positioned against — and isolated, because a
@@ -424,8 +424,8 @@
 /* the mark in an empty frame, and nothing else: a decoration's own svg is
    sized by its own rule, and must not be shrunk to a glyph */
 .say-pic > svg {
-  width: 18px;
-  height: 18px;
+  width: 21px;
+  height: 21px;
 }
 .say-pic img {
   width: 100%;
@@ -1621,10 +1621,11 @@
 .say {
   position: relative;
 }
+/* the actions bar sits further out so a bigger picture still leaves it room */
 .ch-bar {
   position: absolute;
   top: 50%;
-  left: -40px;
+  left: -46px;
   transform: translateY(-50%) translateX(6px);
   z-index: 6;
   display: flex;
