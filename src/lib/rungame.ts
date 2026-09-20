@@ -43,7 +43,13 @@ export async function readPage(url: string): Promise<string> {
   }
   const { read } = await import("./relay");
   const { prefs } = await import("./themes");
-  const got = await read(url, prefs.get().relay);
+  const relayRead = read(url, prefs.get().relay);
+  const got = await Promise.race([
+    relayRead,
+    new Promise<Awaited<typeof relayRead>>((_, reject) =>
+      window.setTimeout(() => reject(new Error("the proxy relay timed out after 15 seconds")), 15_000),
+    ),
+  ]);
   if (got.ok) return got.html;
   throw new Error(`${first?.message ?? "it refused"}; through the relay, ${got.reason}`);
 }
@@ -63,14 +69,25 @@ export function mirrorsOf(url: string): string[] {
  *  for a dozen files at once, and a game that needs clicking twice is a game
  *  that looks broken the first time. */
 export async function grab(url: string): Promise<string> {
-  for (let go = 0; ; go++) {
-    const res = await fetch(url, { credentials: "omit" });
-    if (res.ok) return res.text();
-    if (go === 0 && (res.status === 429 || res.status >= 500)) {
-      await new Promise((r) => setTimeout(r, 700));
-      continue;
+  for (let attempt = 0; ; attempt++) {
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), 10_000);
+    try {
+      const res = await fetch(url, { credentials: "omit", signal: controller.signal });
+      if (res.ok) return await res.text();
+      if (attempt === 0 && (res.status === 429 || res.status >= 500)) {
+        await new Promise((r) => setTimeout(r, 700));
+        continue;
+      }
+      throw new Error(`it answered ${res.status}`);
+    } catch (e) {
+      if (e instanceof DOMException && e.name === "AbortError") {
+        throw new Error("the game host timed out after 10 seconds");
+      }
+      throw e;
+    } finally {
+      window.clearTimeout(timer);
     }
-    throw new Error(`it answered ${res.status}`);
   }
 }
 
@@ -269,10 +286,13 @@ const SHIM = `(function(){
   function fits(store) {
     try { store.setItem("__null__", "1"); store.removeItem("__null__"); return true; } catch (e) { return false; }
   }
-  if (!fits(window.localStorage)) {
+  var ls = null, ss = null;
+  try { ls = window.localStorage; } catch (e) {}
+  try { ss = window.sessionStorage; } catch (e) {}
+  if (!fits(ls)) {
     try { Object.defineProperty(window, "localStorage", { value: shelf(), configurable: true }); } catch (e) {}
   }
-  if (!fits(window.sessionStorage)) {
+  if (!fits(ss)) {
     try { Object.defineProperty(window, "sessionStorage", { value: shelf(), configurable: true }); } catch (e) {}
   }
 
