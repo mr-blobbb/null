@@ -200,13 +200,13 @@ function BrowserChrome({ onSettings, tabId }: { onSettings: () => void; tabId?: 
       </div>
 
       <div className="bar">
-        <button className="bar-btn" onClick={() => goBack(tabId)} disabled={!tab.back.length} aria-label="Back">
+        <button className="bar-btn bar-btn--back" onClick={() => goBack(tabId)} disabled={!tab.back.length} aria-label="Back">
           <ArrowLeft />
         </button>
-        <button className="bar-btn" onClick={() => goFwd(tabId)} disabled={!tab.fwd.length} aria-label="Forward">
+        <button className="bar-btn bar-btn--forward" onClick={() => goFwd(tabId)} disabled={!tab.fwd.length} aria-label="Forward">
           <ArrowRight />
         </button>
-        <button className="bar-btn" onClick={() => reload(tabId)} aria-label="Reload">
+        <button className="bar-btn bar-btn--reload" onClick={() => reload(tabId)} aria-label="Reload">
           <RotateCw />
         </button>
         <ExtButton onManage={onSettings} />
@@ -306,7 +306,7 @@ function ExtButton({ onManage }: { onManage: () => void }) {
   return (
     <div className="extwrap" ref={ref}>
       <button
-        className="bar-btn"
+        className="bar-btn bar-btn--extensions"
         onClick={() => setOpen((v) => !v)}
         aria-label="Extensions"
         aria-expanded={open}

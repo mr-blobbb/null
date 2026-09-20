@@ -185,7 +185,7 @@ export function App() {
       case "movies":
         /* aether.cx refuses to be framed (`x-frame-options: DENY`), so the
            movies door is the rewritten window like any other address */
-        return <Proxies url={PAGES.movies.loads} back="home" onOpenSettings={() => openSettings("browser")} />;
+        return <Proxies url={PAGES.movies.loads} back="home" tabTitle="Movies" onOpenSettings={() => openSettings("browser")} />;
       case "proxies":
         return <Proxies url={t.now.arg?.url} onOpenSettings={() => openSettings("browser")} />;
       case "shop":

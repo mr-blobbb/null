@@ -48,13 +48,15 @@ export function Proxies({
   url,
   back = "proxies",
   onOpenSettings,
+  tabTitle,
 }: {
   url?: string;
   back?: PageId;
   onOpenSettings?: () => void;
+  tabTitle?: string;
 }) {
   const p = useStore(prefs);
-  if (url) return <Browser url={url} relay={p.relay} back={back} tabId={activeTab(useTabs()).id} />;
+  if (url) return <Browser url={url} relay={p.relay} back={back} tabId={activeTab(useTabs()).id} tabTitle={tabTitle} />;
   /* The old proxy shelf is intentionally gone. External sites enter here
      only as a real proxied tab from the address bar or another page. */
   return <NotFound address="null://p" />;
@@ -102,7 +104,7 @@ function look(frame: HTMLIFrameElement | null): { ours: boolean; chars: number }
   }
 }
 
-function Browser({ url, relay, back, tabId }: { url: string; relay: string; back: PageId; tabId: string }) {
+function Browser({ url, relay, back, tabId, tabTitle }: { url: string; relay: string; back: PageId; tabId: string; tabTitle?: string }) {
   const [mode, setMode] = useState<Mode>("booting");
   const [reason, setReason] = useState("");
   /* whichever relay actually carried this page — not necessarily the one the
@@ -146,9 +148,9 @@ function Browser({ url, relay, back, tabId }: { url: string; relay: string; back
     setSheet(prepare(got.html, url));
     try {
       const doc = new DOMParser().parseFromString(got.html, "text/html");
-      setTabMeta({ title: doc.title || host, favicon: faviconOf(url) }, tabId);
+      setTabMeta({ title: tabTitle || doc.title || host, favicon: faviconOf(url) }, tabId);
     } catch {
-      setTabMeta({ title: host, favicon: faviconOf(url) }, tabId);
+      setTabMeta({ title: tabTitle || host, favicon: faviconOf(url) }, tabId);
     }
     setLoading(false, undefined, tabId);
     setMode("reader");
@@ -164,7 +166,7 @@ function Browser({ url, relay, back, tabId }: { url: string; relay: string; back
     setThin(false);
     setSays("");
     setLoading(true);
-    setTabMeta({ title: host, favicon: faviconOf(url), error: undefined }, tabId);
+    setTabMeta({ title: tabTitle || host, favicon: faviconOf(url), error: undefined }, tabId);
     (async () => {
       const b = await start(relay);
       if (!alive) return;

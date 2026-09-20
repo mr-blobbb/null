@@ -105,3 +105,14 @@ img, video, svg { vertical-align: middle; }
   .pf-pic { width: 82px; height: 82px; }
   .pf-txt { flex: 1 1 160px; }
 }
+
+/* Small feedback motions keep the browser chrome lively without moving its
+   layout. They are hover/focus only and respect reduced-motion preferences. */
+@keyframes null-spin { to { transform: rotate(360deg); } }
+@keyframes null-back { 50% { transform: translateX(-3px); } }
+@keyframes null-forward { 50% { transform: translateX(3px); } }
+@keyframes null-shake { 25% { transform: rotate(-7deg); } 75% { transform: rotate(7deg); } }
+.bar-btn--reload:hover svg { animation: null-spin .65s linear; }
+.bar-btn--back:hover svg { animation: null-back .28s ease-out; }
+.bar-btn--forward:hover svg { animation: null-forward .28s ease-out; }
+.bar-btn--extensions:hover svg { animation: null-shake .32s ease-in-out; }

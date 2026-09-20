@@ -104,8 +104,9 @@ export function go(target: Target, opts: { replace?: boolean; tabId?: string } =
   const id = opts.tabId ?? st.active;
   const tabs = st.tabs.map((t) => {
     if (t.id !== id) return t;
-    if (opts.replace) return { ...t, now: target, fwd: [], nonce: t.nonce + 1 };
-    return { ...t, now: target, back: [t.now, ...t.back].slice(0, 40), fwd: [], nonce: t.nonce + 1 };
+    const clean = { title: undefined, favicon: undefined, error: undefined, loading: false };
+    if (opts.replace) return { ...t, ...clean, now: target, fwd: [], nonce: t.nonce + 1 };
+    return { ...t, ...clean, now: target, back: [t.now, ...t.back].slice(0, 40), fwd: [], nonce: t.nonce + 1 };
   });
   tabsStore.set({ tabs });
   if (target.page === "proxies" && target.arg?.url) rememberVisit(target.arg.url, siteName(target.arg.url));
@@ -195,7 +196,7 @@ export function goBack(tabId?: string) {
     tabs: st.tabs.map((t) => {
       if (t.id !== id || !t.back.length) return t;
       const [prev, ...rest] = t.back;
-      return { ...t, now: prev, back: rest, fwd: [t.now, ...t.fwd].slice(0, 40), nonce: t.nonce + 1 };
+      return { ...t, title: undefined, favicon: undefined, error: undefined, loading: false, now: prev, back: rest, fwd: [t.now, ...t.fwd].slice(0, 40), nonce: t.nonce + 1 };
     }),
   });
 }
@@ -207,7 +208,7 @@ export function goFwd(tabId?: string) {
     tabs: st.tabs.map((t) => {
       if (t.id !== id || !t.fwd.length) return t;
       const [next, ...rest] = t.fwd;
-      return { ...t, now: next, back: [t.now, ...t.back].slice(0, 40), fwd: rest, nonce: t.nonce + 1 };
+      return { ...t, title: undefined, favicon: undefined, error: undefined, loading: false, now: next, back: [t.now, ...t.back].slice(0, 40), fwd: rest, nonce: t.nonce + 1 };
     }),
   });
 }
