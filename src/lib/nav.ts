@@ -260,7 +260,7 @@ export const ALL_PAGES: PageId[] = [
 
 /** The rail and the sheets never offer Settings as a page: it is a sheet that
  *  opens over whatever is already there. */
-export const SHEET_PAGES: PageId[] = ALL_PAGES.filter((id) => id !== "settings");
+export const SHEET_PAGES: PageId[] = ALL_PAGES.filter((id) => id !== "settings" && id !== "proxies");
 
 export function pageOf(id: PageId): Page {
   return PAGES[id];
