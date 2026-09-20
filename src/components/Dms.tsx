@@ -1,11 +1,12 @@
 /* NULL · Dms.tsx
-   Messages, laid out the way a messaging app lays them out: who you have been
-   talking to down the left, the conversation on the right, one box at the
-   bottom that sends.
+   The direct-message half of the chat page, which lives in components because
+   it is a part of that page rather than a page of its own: the rail of
+   conversations down the sidebar, and the conversation that replaces the
+   channel feed when a thread is open.
 
    Nothing here is a second kind of message. The rows are the same `dms` table
    the chat pop-out reads and a send goes through the same mutation; what this
-   page adds is the shape a list of conversations needs — every thread you are
+   adds is the shape a list of conversations needs — every thread you are
    already in, most recent first, who is online beside their name, and what
    arrived since you last had that thread open.
 
@@ -20,20 +21,17 @@ import { useMutation, useQuery } from "convex/react";
 import { CircleSlash, MessagesSquare, Search, Send, Trash2, X } from "lucide-react";
 
 import { api } from "../../convex/_generated/api";
-import { Guard } from "../components/Guard";
-import { GiftButton, GiftCard, GiftPop, useGiftRows } from "../components/GiftBox";
-import { parseStyle } from "../components/LineParts";
-import { RoleChip, VerifiedMark } from "../components/RoleMark";
+import { GiftButton, GiftCard, GiftPop, useGiftRows } from "./GiftBox";
+import { parseStyle } from "./LineParts";
+import { RoleChip, VerifiedMark } from "./RoleMark";
 import { useAccount, nameStyleCss, type NameStyle } from "../lib/account";
 import { AvatarArt } from "../lib/art";
 import { NullFace } from "../lib/brand";
-import { machine, cloudOn } from "../lib/cloud";
+import { machine } from "../lib/cloud";
 import { freshPending, markSeen, type Gift as GiftRow } from "../lib/gift";
 import { Markdown } from "../lib/md";
 import { useBlocked } from "../lib/members";
-import { CloudDown } from "../lib/outage";
 import { createStore, useStore } from "../lib/store";
-import { go } from "../lib/tabs";
 
 /** One conversation, as the server summarises it. */
 type Thread = { other: string; at: number; last: string };
@@ -56,122 +54,10 @@ type Person = {
  *  and a server does not. */
 const opened = createStore<{ at: Record<string, number> }>("dmseen", { at: {} });
 
-export function Dms() {
-  if (!cloudOn()) {
-    return (
-      <div className="page">
-        <div className="lb-top">
-          <h1 className="lb-title">Messages</h1>
-          <span className="lb-count tiny faint">offline</span>
-        </div>
-        <div className="card card--pad">
-          <p>
-            Messages live on the server, and this build cannot reach one. Everything else on NULL
-            still works — the rail, the shop, your profile — it is only the shared part that needs
-            somewhere to share through.
-          </p>
-        </div>
-      </div>
-    );
-  }
-  return (
-    <Guard
-      what="Messages"
-      fallback={(err) => <CloudDown what="Messages" err={err} key={err.message} />}
-    >
-      <Inbox />
-    </Guard>
-  );
-}
-
-function Inbox() {
-  const me = useAccount();
-  const handle = (me.user ?? "").replace(/^@/, "").toLowerCase();
-  const people = useQuery(api.members.list) as Person[] | undefined;
-
-  const [open, setOpen] = useState<string | null>(null);
-
-  const who = useMemo(() => {
-    const map = new Map<string, Person>();
-    for (const p of people ?? []) map.set(p.user.toLowerCase(), p);
-    return map;
-  }, [people]);
-
-  if (!handle) {
-    return (
-      <div className="page">
-        <div className="lb-top">
-          <h1 className="lb-title">Messages</h1>
-          <span className="lb-count tiny faint">signed out</span>
-        </div>
-        <div className="card card--pad dms-note">
-          <MessagesSquare />
-          <div>
-            <b>Messages need a name</b>
-            <p className="faint tiny">
-              Pick a handle and the conversations follow you between tabs, phones and machines —
-              signing in does not lose them, and signing out does not hand them to anybody else.
-            </p>
-          </div>
-          <button className="btn btn--fill" onClick={() => go({ page: "profile" })}>
-            Sign in
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="page page--flush dms">
-      {/* ---------- the list ---------- */}
-      <aside className="dms-side">
-        <div className="dms-side-head">
-          <MessagesSquare />
-          <span>Messages</span>
-        </div>
-
-        <DmRail me={handle} active={open} onOpen={setOpen} />
-
-        <p className="dms-side-foot tiny faint">
-          <CircleSlash /> Blocking somebody hides their half of every thread, here and in the chat.
-        </p>
-      </aside>
-
-      {/* ---------- the conversation ---------- */}
-      <section className="dms-main">
-        {open ? (
-          <Thread
-            key={open}
-            other={open}
-            me={me}
-            person={who.get(open.toLowerCase())}
-            onClose={() => setOpen(null)}
-          />
-        ) : (
-          <div className="dms-empty">
-            <NullFace />
-            <h3>Pick a conversation</h3>
-            <p className="faint tiny">Find somebody in the box on the left, or in the member list.</p>
-            <button className="btn btn--sm" onClick={() => go({ page: "users" })}>
-              The member list
-            </button>
-          </div>
-        )}
-      </section>
-    </div>
-  );
-}
-
-/* ============================================================
-   the conversation rail
-   ============================================================
-
-   Everything you are talking to, newest first, plus the box that starts
-   something new. It asks the server for its own rows, which is what makes it
-   safe to draw inside the chat page as well as here: nothing is passed in
-   but the account it belongs to. */
-
-function DmRail({
+/** The conversation rail: fed by its own subscriptions, so the chat page
+ *  drops it into its sidebar and nothing needs passing but the account it
+ *  belongs to. */
+export function DmRail({
   me,
   active,
   onOpen,
@@ -295,9 +181,8 @@ function DmRail({
    one conversation
    ============================================================ */
 
-/** The conversation panel, exported for the chat page: there it takes the
- *  place of the channel feed when the page is switched to DMS, so a DM and a
- *  room read the same way. */
+/** The conversation panel: the chat page puts it in place of the channel feed
+ *  when the sidebar is switched to DMS, so a DM and a room read the same way. */
 export function DmPanel({
   other,
   me,
@@ -310,20 +195,6 @@ export function DmPanel({
   const people = useQuery(api.members.list) as Person[] | undefined;
   const person = (people ?? []).find((p) => p.user.toLowerCase() === other.toLowerCase());
   return <Thread other={other} me={me} person={person} onClose={onBack ?? (() => {})} />;
-}
-
-/** The conversation rail, exported for the chat page's sidebar: the same list
- *  this page keeps, fed by its own subscriptions. */
-export function DmRailExport({
-  me,
-  active,
-  onOpen,
-}: {
-  me: string;
-  active: string | null;
-  onOpen: (user: string) => void;
-}) {
-  return <DmRail me={me} active={active} onOpen={onOpen} />;
 }
 
 function Thread({

@@ -376,6 +376,8 @@
   --dim: #6fbf90;
   --faint: #468a63;
   --ac-1: #3ee07a;
+  --ac-2: color-mix(in srgb, #3ee07a 26%, var(--text));
+  --ac-glow: color-mix(in srgb, #3ee07a 38%, transparent);
   --ok: #3ee07a;
 }
 

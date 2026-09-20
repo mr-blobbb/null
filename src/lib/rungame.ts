@@ -23,23 +23,40 @@
 
 /** Read a page, by whichever road will answer.
  *
- *  This document's own fetch first: it is the fastest by far, and the stashes
- *  that run the library send the one header that makes it legal. When that
- *  fails — no CORS header on the host, or a stash that does not like where the
- *  request came from — the site's own relay is asked instead. That is the
- *  reader the proxy window already uses: it makes the request somewhere else
- *  and hands the page back, which is the only way to read a page whose host
- *  decides who may ask. */
+ *  This document's own fetch first: it is the fastest by far, and the shelves
+ *  mirrored on jsDelivr send the one header that makes it legal. When that
+ *  fails, the same file is asked of the other mirror that carries it — raw
+ *  GitHub answers with CORS too, and between them one of the two is nearly
+ *  always reachable from a filtered network. When both are refused, the site's
+ *  own relay is asked instead: it makes the request somewhere else and hands
+ *  the page back, which is the only way to read a page whose host decides who
+ *  may ask. */
 export async function readPage(url: string): Promise<string> {
-  try {
-    return await grab(url);
-  } catch (direct) {
-    const { read } = await import("./relay");
-    const { prefs } = await import("./themes");
-    const got = await read(url, prefs.get().relay);
-    if (got.ok) return got.html;
-    throw new Error(`${(direct as Error).message}; through the relay, ${got.reason}`);
+  const tries = [url, ...mirrorsOf(url)];
+  let first: Error | null = null;
+  for (const u of tries) {
+    try {
+      return await grab(u);
+    } catch (e) {
+      if (!first) first = e as Error;
+    }
   }
+  const { read } = await import("./relay");
+  const { prefs } = await import("./themes");
+  const got = await read(url, prefs.get().relay);
+  if (got.ok) return got.html;
+  throw new Error(`${first?.message ?? "it refused"}; through the relay, ${got.reason}`);
+}
+
+/** The other address the same file lives at. The two GitHub mirrors spell the
+ *  same repo differently, so one swap covers every shelf file the library
+ *  points at; anything else has no twin, and gets no second direct try. */
+export function mirrorsOf(url: string): string[] {
+  const jd = /^https:\/\/cdn\.jsdelivr\.net\/gh\/([^@/]+)@main\/(.*)$/i.exec(url);
+  if (jd) return [`https://raw.githubusercontent.com/${jd[1]}/main/${jd[2]}`];
+  const rg = /^https:\/\/raw\.githubusercontent\.com\/([^/]+)\/main\/(.*)$/i.exec(url);
+  if (rg) return [`https://cdn.jsdelivr.net/gh/${rg[1]}@main/${rg[2]}`];
+  return [];
 }
 
 /** A stashed page, with one retry. Raw GitHub answers 429 when a page asks it

@@ -43,7 +43,6 @@ export type PageId =
   | "settings"
   | "users"
   | "rich"
-  | "dms"
   | "missing"
   | "player";
 
@@ -183,15 +182,6 @@ export const PAGES: Record<PageId, Page> = {
     blurb: "Everybody who has signed in here, owner first.",
     keywords: "members users people profiles community accounts who joined",
   },
-  dms: {
-    id: "dms",
-    name: "Messages",
-    address: "null://dm",
-    route: "/dms",
-    icon: MessagesSquare,
-    blurb: "Every conversation you are in, with the one you pick beside it.",
-    keywords: "messages dm dms direct talk inbox conversations private",
-  },
   rich: {
     id: "rich",
     name: "Richest",
@@ -243,7 +233,6 @@ export const RAIL_TOP: PageId[] = ["home", "games", "apps", "ai", "chat", "movie
 export const RAIL_BOTTOM: PageId[] = [
   "rich",
   "users",
-  "dms",
   "profile",
   "changelog",
   "extensions",
@@ -263,7 +252,6 @@ export const ALL_PAGES: PageId[] = [
   "shop",
   "rich",
   "users",
-  "dms",
   "profile",
   "changelog",
   "extensions",

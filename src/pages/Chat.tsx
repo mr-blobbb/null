@@ -58,7 +58,7 @@ import {
 
 import { api } from "../../convex/_generated/api";
 import { Guard } from "../components/Guard";
-import { DmPanel, DmRailExport } from "./Dms";
+import { DmPanel, DmRail } from "../components/Dms";
 import { cloudOn, machine } from "../lib/cloud";
 import { CloudDown } from "../lib/outage";
 import { useAccount, nameStyleCss, type NameStyle } from "../lib/account";
@@ -290,7 +290,7 @@ function Rooms() {
           </>
         ) : (
           <>
-            <DmRailExport me={handle} active={dmOpen} onOpen={setDmOpen} />
+            <DmRail me={handle} active={dmOpen} onOpen={setDmOpen} />
             <p className="ch-side-foot tiny faint">
               <CircleSlash /> Blocking somebody hides their half of every thread.
             </p>
@@ -300,6 +300,9 @@ function Rooms() {
 
       {/* ---------- the room ---------- */}
       <section className="ch-main">
+        {/* the channel header belongs to the channel feed: a conversation has
+            its own head, with the person's face and the thread controls on it */}
+        {side !== "dms" && (
         <header className="ch-head">
           <span className="ch-hash">
             <ChannelIcon ch={here ?? ({ kind: "text", gate: null } as Channel)} />
@@ -325,6 +328,7 @@ function Rooms() {
           </label>
           {iAmOwner && here && !here.fixed && <ClearRoom slug={here.slug} me={handle} />}
         </header>
+        )}
 
         {here?.kind === "voice" && (
           <VoiceStage

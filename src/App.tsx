@@ -21,7 +21,6 @@ import { Proxies } from "./pages/Proxies";
 import { Shop } from "./pages/Shop";
 import { Members } from "./pages/Members";
 import { Richest } from "./pages/Richest";
-import { Dms } from "./pages/Dms";
 import { Ai } from "./pages/Ai";
 import { Chat } from "./pages/Chat";
 import { Music } from "./pages/Music";
@@ -200,8 +199,6 @@ export function App() {
         return <Chat />;
       case "rich":
         return <Richest />;
-      case "dms":
-        return <Dms />;
       case "users":
         return <Members />;
       case "profile":
@@ -280,8 +277,7 @@ export function App() {
             className={`page-host${
               tab.now.page === "home" ||
               tab.now.page === "chat" ||
-              tab.now.page === "ai" ||
-              tab.now.page === "dms"
+              tab.now.page === "ai"
                 ? " page-host--fit"
                 : ""
             }`}

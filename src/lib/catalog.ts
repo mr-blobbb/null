@@ -149,45 +149,55 @@ const PROXIES: Entry[] = [
   },
 ];
 
-/** Where the shelves are mirrored. raw.githack and nothing else: it is the
- *  one host that hands html back as html and javascript back as javascript,
- *  and a browser will not run a page — or the scripts inside it — that it has
- *  been told is text. */
-const MIRROR = "https://raw.githack.com";
+/** Where the shelves are mirrored. jsDelivr's CDN: it answers every file
+ *  with the one header that lets this page read it (`access-control-allow-
+ *  origin: *`), which raw.githack — the mirror the library used before — does
+ *  not send. Without that header the copy road cannot fetch the page directly
+ *  and every game is hostage to the relay being up; with it, a game reads in
+ *  one request from a fast CDN that school filters rarely touch.
+ *
+ *  jsDelivr labels html text/plain the way raw GitHub does, which used to
+ *  matter — it no longer does, because the copy road re-labels whatever it
+ *  reads as html on the way into the frame. */
+const MIRROR = "https://cdn.jsdelivr.net/gh";
 
 /** What a shelf is called on a card. */
 const SHELF_NAME: Record<string, string> = {
   "gmshelf/seraph": "Seraph",
   "gmshelf/truffled": "Truffled",
-  "gmshelf/ckv": "CKV",
   "gmshelf/ugs": "UGS",
 };
 
 /** The address of a file inside a shelf. */
-const inShelf = (shelf: string, file: string) => `${MIRROR}/${shelf}/main/${file}`;
+const inShelf = (shelf: string, file: string) => `${MIRROR}/${shelf}@main/${file}`;
 
 /** The same picture at every host that serves it, best first.
  *
- *  jsDelivr leads because it is a real CDN — fast, and the most likely of the
- *  three to be allowed through a school filter. It is left out for ckv, which
- *  is over jsDelivr's package limit: over there every file in the repo, images
- *  included, answers 403. Then GitHub's own file host, then the mirror the
- *  games themselves are served through. */
+ *  jsDelivr leads: a real CDN, fast, the most likely of the mirrors to be
+ *  allowed through a school filter, and the one that answers with CORS. Then
+ *  GitHub's own file host. The ckv shelf is over jsDelivr's package limit, so
+ *  its pictures are asked of the seraph mirror first — it carries the same
+ *  ones — with ckv itself kept behind as the second chance. */
 function coverHosts(shelf: string, cover: string): string[] {
-  const out = [
-    `https://raw.githubusercontent.com/${shelf}/main/${cover}`,
-    inShelf(shelf, cover),
-  ];
-  if (shelf !== "gmshelf/ckv") out.unshift(`https://cdn.jsdelivr.net/gh/${shelf}@main/${cover}`);
-  return out;
+  if (shelf === "gmshelf/ckv") {
+    return [inShelf("gmshelf/seraph", cover), `https://raw.githubusercontent.com/gmshelf/ckv/main/${cover}`];
+  }
+  return [inShelf(shelf, cover), `https://raw.githubusercontent.com/${shelf}/main/${cover}`];
 }
 
 /** Discovered games, marked as remote so a card can say where it loads from.
  *  Local entries win a name clash: this repo's own shelf is always the one
- *  it serves. */
+ *  it serves. The ckv shelf is left out: its files answer permission errors
+ *  no loader can get around, so its titles are the ones that show a dead
+ *  screen. A row whose *cover* sits on ckv stays — the game itself is on a
+ *  shelf that works, and a missing picture is a tile without art, not a
+ *  game anyone cannot play. */
+const SKIP_SHELVES = new Set(["gmshelf/ckv"]);
 function discovered(): Entry[] {
   const local = new Set(GAMES.map((g) => g.name.toLowerCase()));
-  return ROWS.filter(([, name]) => !local.has(name.toLowerCase())).map(
+  return ROWS.filter(([,, shelf]) => !SKIP_SHELVES.has(shelf)).filter(
+    ([, name]) => !local.has(name.toLowerCase()),
+  ).map(
     ([id, name, shelf, file, coverShelf, cover, genre]) => {
       const art = cover ? coverHosts(coverShelf, cover) : [];
       return {
