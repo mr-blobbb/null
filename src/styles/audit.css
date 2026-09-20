@@ -32,32 +32,9 @@ img, video { height: auto; }
   :root { --glass: color-mix(in srgb, var(--bg-2) 58%, transparent); --glass-2: color-mix(in srgb, var(--bg-3) 46%, transparent); --glass-line: color-mix(in srgb, var(--line-2) 72%, transparent); }
 }
 
-/* NULL controls: one compact Discord-like language everywhere. These rules
-   are intentionally last so page-specific declarations cannot reintroduce
-   oversized rectangular controls or misaligned labels. */
-button:not(.rail-btn):not(.bar-btn):not(.tab-new):not(.tab-x):not(.play-btn):not(.ql-btn):not(.tile-btn):not(.tile-star):not(.pf-cam):not(.sheet-x):not(.ch-hbtn):not(.say-react):not(.ch-react):not(.ctx-row) {
-  min-height: 26px;
-  height: auto;
-  min-width: 0;
-  padding: 5px 10px;
-  border: var(--bw) solid var(--line-2);
-  border-radius: 999px;
-  background: var(--bg-3);
-  color: var(--text);
-  font-size: 11px;
-  line-height: 1.15;
-  white-space: nowrap;
-  vertical-align: middle;
-  transition: background .14s var(--ease), border-color .14s var(--ease), color .14s var(--ease), transform .14s var(--ease);
-}
-button:not(.rail-btn):not(.bar-btn):not(.tab-new):not(.tab-x):not(.play-btn):not(.ql-btn):not(.tile-btn):not(.tile-star):not(.pf-cam):not(.sheet-x):not(.ch-hbtn):not(.say-react):not(.ch-react):not(.ctx-row):hover:not(:disabled) {
-  background: var(--bg-4);
-  border-color: var(--ac-2);
-  color: var(--text);
-}
-button:not(.rail-btn):not(.bar-btn):not(.tab-new):not(.tab-x):not(.play-btn):not(.ql-btn):not(.tile-btn):not(.tile-star):not(.pf-cam):not(.sheet-x):not(.ch-hbtn):not(.say-react):not(.ch-react):not(.ctx-row):active:not(:disabled) {
-  transform: translateY(1px);
-}
+/* Compact treatment is intentionally limited to the shared button primitive.
+   Cards, tiles, rails, menus, and page-specific controls keep their own
+   geometry; they are not all the same kind of button. */
 button.btn {
   height: 26px;
   min-height: 26px;
@@ -86,33 +63,18 @@ button.btn--bad {
   border-color: var(--bad);
   color: var(--bad);
 }
-button.btn svg,
-button:not(.rail-btn):not(.bar-btn):not(.tab-new):not(.tab-x):not(.play-btn):not(.ql-btn):not(.tile-btn):not(.tile-star):not(.pf-cam):not(.sheet-x):not(.ch-hbtn):not(.say-react):not(.ch-react):not(.ctx-row) svg {
+button.btn svg {
   flex: none;
   width: 13px;
   height: 13px;
 }
 
-/* Inputs and selects share the same compact pill geometry, with text allowed
-   to shrink rather than push icons or wrappers off-screen. */
+/* Keep form controls from forcing flex rows wider than their container. */
 input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
 select,
 textarea {
   min-width: 0;
   max-width: 100%;
-}
-.fld {
-  height: 30px;
-  min-height: 30px;
-  border-radius: 999px;
-  padding-inline: 10px;
-  font-size: 11px;
-}
-.fld--area,
-textarea.fld {
-  min-height: 64px;
-  border-radius: 12px;
-  padding-block: 8px;
 }
 
 /* Profile composition: the picture owns its decoration and the banner reaches
