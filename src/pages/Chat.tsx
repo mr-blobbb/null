@@ -1586,34 +1586,39 @@ function Line({
         same ? " is-grouped" : ""
       }`}
     >
-      {/* the bar rides the top of the line and only shows up under the pointer */}
-      <div className="ch-bar">
-        <button className="ch-hbtn" title="Add a reaction" onClick={onReact}>
-          <Smile />
-        </button>
-        <button className="ch-hbtn" title="Reply" onClick={onReply}>
-          <Reply />
-        </button>
-        <button className="ch-hbtn" title="Quote this" onClick={onQuote}>
-          <Quote />
-        </button>
-        {!mine && (
-          <button className="ch-hbtn" title="Report" onClick={onReport}>
-            <Flag />
+      {/* the box of actions is part of the line itself: always there, not
+          something a hover has to summon. It is the first column, left of
+          even the picture, and sits at the bottom of the line — a long
+          message stretches the line, and the box rides up with it. */}
+      <div className="ch-gutter" aria-hidden="false">
+        <div className="ch-bar">
+          <button className="ch-hbtn" title="Add a reaction" onClick={onReact}>
+            <Smile />
           </button>
-        )}
-        {/* staff can take down anyone's line, which is the whole point of
-            having staff. Your own words are always yours to remove. */}
-        {(mine || staff) && (
-          <DeleteBtn
-            id={m.id}
-            by={me}
-            owner={staff}
-            onGone={onDelete}
-            onProblem={onProblem}
-            mine={mine}
-          />
-        )}
+          <button className="ch-hbtn" title="Reply" onClick={onReply}>
+            <Reply />
+          </button>
+          <button className="ch-hbtn" title="Quote this" onClick={onQuote}>
+            <Quote />
+          </button>
+          {!mine && (
+            <button className="ch-hbtn" title="Report" onClick={onReport}>
+              <Flag />
+            </button>
+          )}
+          {/* staff can take down anyone's line, which is the whole point of
+              having staff. Your own words are always yours to remove. */}
+          {(mine || staff) && (
+            <DeleteBtn
+              id={m.id}
+              by={me}
+              owner={staff}
+              onGone={onDelete}
+              onProblem={onProblem}
+              mine={mine}
+            />
+          )}
+        </div>
       </div>
 
       {reactor && (

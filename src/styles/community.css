@@ -367,9 +367,9 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  /* the left padding is the action gutter: the box of buttons a hover
-     reveals lives there, left of even the pictures */
-  padding: 14px 14px 20px 48px;
+  /* the left padding is the action gutter: the always-on box of buttons
+     lives there, left of even the pictures */
+  padding: 14px 14px 20px 14px;
   scrollbar-width: thin;
 }
 
@@ -386,14 +386,15 @@
    conversation look like a conversation instead of a receipt. */
 
 .say {
+  position: relative;
   display: flex;
   gap: 10px;
   padding: 4px 8px;
   border-radius: var(--r-2);
 }
 /* no hover wash: the row keeps the page's own background. The actions live
-   in the gutter to the left (see .ch-bar), so the line does not need to
-   change colour to say it is being looked at. */
+   in the gutter column at the start of the line (see .ch-gutter), always
+   visible rather than revealed by a hover. */
 .say.is-grouped {
   padding-top: 0;
 }
@@ -1613,24 +1614,30 @@
 }
 
 /* ---------- a line ----------
-   The actions are not over the message and not under it: they sit in a
-   little box in the gutter, to the left of even the picture. The line itself
-   never changes colour, and nothing about it moves until the pointer is on
-   it — which is what keeps a busy room quiet. */
+   The actions are not over the message and not under it: they sit in the
+   gutter column, to the left of even the picture, on every line. The column
+   is fixed-width so avatars never shift, and the box is anchored to its
+   *bottom*: a tall message stretches the box upward while the buttons —
+   one row, same size — stay where they are. */
 
-.say {
+.ch-gutter {
   position: relative;
+  flex: none;
+  align-self: stretch;
+  width: 44px;
+  min-height: 48px;
 }
-/* the actions bar sits further out so a bigger picture still leaves it room */
 .ch-bar {
   position: absolute;
-  top: 50%;
-  left: -46px;
-  transform: translateY(-50%) translateX(6px);
+  left: 4px;
+  bottom: 4px;
   z-index: 6;
+  max-width: 42px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap-reverse;
   align-items: center;
+  justify-content: flex-end;
   gap: 1px;
   padding: 2px;
   border: var(--bw) solid var(--line-2);
@@ -1639,19 +1646,11 @@
   backdrop-filter: blur(14px) saturate(130%);
   -webkit-backdrop-filter: blur(14px) saturate(130%);
   box-shadow: 0 14px 32px -20px #000;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.14s var(--ease), transform 0.14s var(--ease);
-}
-.say:hover .ch-bar,
-.say:focus-within .ch-bar {
-  opacity: 1;
-  transform: translateY(-50%) translateX(0);
-  pointer-events: auto;
 }
 .ch-hbtn {
-  width: 24px;
-  height: 24px;
+  flex: none;
+  width: 18px;
+  height: 18px;
   display: grid;
   place-items: center;
   border-radius: var(--r-1);
@@ -1672,8 +1671,8 @@
 
 .ch-reactor {
   position: absolute;
-  top: 24px;
-  right: 10px;
+  top: 4px;
+  left: 52px;
   /* above the scrim that closes it, or the first click would land on the
      scrim and the picker would be a thing you can only look at */
   z-index: 37;
