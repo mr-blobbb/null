@@ -27,14 +27,21 @@ export type Tab = {
   nonce: number;
 };
 
+export type SplitState = {
+  left: string;
+  right: string;
+  focus: "left" | "right";
+};
+
 export type TabsState = {
   tabs: Tab[];
   active: string;
+  split: SplitState | null;
 };
 
 const FIRST: Tab = { id: "t1", now: { page: "home" }, back: [], fwd: [], nonce: 0 };
 
-export const tabsStore = createStore<TabsState>("tabs", { tabs: [FIRST], active: "t1" });
+export const tabsStore = createStore<TabsState>("tabs", { tabs: [FIRST], active: "t1", split: null });
 
 /* A stored tab list outlives any one version of NULL. A tab pointing at a
    page that no longer exists is dropped rather than crashing the shell. */
@@ -42,12 +49,13 @@ export const tabsStore = createStore<TabsState>("tabs", { tabs: [FIRST], active:
   const st = tabsStore.get();
   const keep = (st.tabs ?? []).filter((t) => t && t.now && PAGES[t.now.page]);
   if (!keep.length) {
-    tabsStore.set({ tabs: [FIRST], active: FIRST.id });
+    tabsStore.set({ tabs: [FIRST], active: FIRST.id, split: null });
     return;
   }
   const active = keep.some((t) => t.id === st.active) ? st.active : keep[0].id;
-  if (keep.length !== st.tabs.length || active !== st.active) {
-    tabsStore.set({ tabs: keep, active });
+  const split = st.split && keep.some((t) => t.id === st.split?.left) && keep.some((t) => t.id === st.split?.right) ? st.split : null;
+  if (keep.length !== st.tabs.length || active !== st.active || split !== st.split) {
+    tabsStore.set({ tabs: keep, active, split });
   }
 })();
 
@@ -112,12 +120,13 @@ export function openTab(target: Target, opts: { reuse?: boolean } = {}) {
   if (opts.reuse !== false) {
     const hit = st.tabs.find((t) => targetKey(t.now) === key);
     if (hit) {
-      tabsStore.set({ active: hit.id });
+      const split = st.split && (hit.id === st.split.left || hit.id === st.split.right) ? st.split : null;
+      tabsStore.set({ active: hit.id, split });
       return hit.id;
     }
   }
   const tab: Tab = { id: nextId(), now: target, back: [], fwd: [], nonce: 0 };
-  tabsStore.set({ tabs: [...st.tabs, tab], active: tab.id });
+  tabsStore.set({ tabs: [...st.tabs, tab], active: tab.id, split: null });
   syncUrl(target);
   return tab.id;
 }
@@ -132,7 +141,8 @@ export function closeTab(id: string) {
   const i = st.tabs.findIndex((t) => t.id === id);
   const tabs = st.tabs.filter((t) => t.id !== id);
   const active = st.active === id ? (tabs[Math.max(0, i - 1)] ?? tabs[0]).id : st.active;
-  tabsStore.set({ tabs, active });
+  const split = st.split && st.split.left !== id && st.split.right !== id ? st.split : null;
+  tabsStore.set({ tabs, active, split });
 }
 
 /** Drag a tab to a new slot. `before` is the tab it landed on: the moved tab
@@ -149,9 +159,33 @@ export function moveTab(id: string, before: string) {
 }
 
 export function pickTab(id: string) {
-  tabsStore.set({ active: id });
+  const st = tabsStore.get();
+  const split: SplitState | null = st.split
+    ? id === st.split.left || id === st.split.right
+      ? { ...st.split, focus: st.split.left === id ? "left" : "right" }
+      : null
+    : null;
+  tabsStore.set({ active: id, split });
   const t = activeTab();
   syncUrl(t.now);
+}
+
+/** Pair the active tab with a fresh Home tab. The two panes are still normal
+ * tabs, so their histories, loading state, and reload counters stay isolated. */
+export function toggleSplit() {
+  const st = tabsStore.get();
+  if (st.split) {
+    tabsStore.set({ split: null });
+    return;
+  }
+  const right: Tab = { id: nextId(), now: { page: "home" }, back: [], fwd: [], nonce: 0 };
+  tabsStore.set({ tabs: [...st.tabs, right], split: { left: st.active, right: right.id, focus: "left" } });
+}
+
+export function selectSplitPane(id: string) {
+  const st = tabsStore.get();
+  if (!st.split || (id !== st.split.left && id !== st.split.right)) return;
+  pickTab(id);
 }
 
 export function goBack() {

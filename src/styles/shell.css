@@ -255,11 +255,15 @@
 .browser-tools { position: relative; display: flex; align-items: center; gap: 2px; flex: none; }
 .browser-tools .bar-btn.is-on { color: var(--ac-1); }
 .browser-panel {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
+  /* Anchor to the viewport instead of the button group. The group sits near
+     the middle of the toolbar on narrow screens, which used to make a wide
+     panel extend past the left edge. */
+  position: fixed;
+  top: calc(36px + var(--chrome) + 8px);
+  right: 8px;
+  left: auto;
   z-index: 80;
-  width: min(330px, 78vw);
+  width: min(330px, calc(100vw - 16px));
   max-height: 360px;
   overflow: auto;
   padding: 7px;
@@ -275,6 +279,69 @@
 .browser-panel-row:hover { background: var(--bg-3); color: var(--text); }
 .browser-panel-row span, .browser-info span { width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--faint); }
 .browser-panel .tab-x { width: 20px; height: 20px; }
+
+/* Split view keeps each side inside the same shell while the selected pane
+   remains the target of the address bar and existing tab controls. */
+.split-view {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  gap: 1px;
+  background: var(--line);
+}
+.split-pane {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--bg);
+  outline: 1px solid transparent;
+  outline-offset: -1px;
+}
+.split-pane.is-focused {
+  outline-color: var(--ac-1);
+}
+.split-pane-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  height: 25px;
+  padding: 0 9px;
+  border-bottom: var(--bw) solid var(--line);
+  background: var(--bg-2);
+  color: var(--dim);
+  font-size: 10px;
+}
+.split-pane-head > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.split-pane-body {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+}
+.split-pane-body > .page-host {
+  min-height: 100%;
+}
+.split-pane-body > .page-host--fit {
+  height: 100%;
+}
+@media (max-width: 720px) {
+  .split-view { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); }
+  .browser-panel { top: calc(36px + var(--chrome) + 6px); right: 6px; width: calc(100vw - 12px); }
+}
 
 .bar {
   flex: none;

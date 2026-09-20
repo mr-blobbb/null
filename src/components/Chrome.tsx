@@ -12,6 +12,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Bookmark,
+  Columns2,
   Download,
   Globe,
   History,
@@ -45,6 +46,7 @@ import {
   openTab,
   pickTab,
   reload,
+  toggleSplit,
   useTabs,
 } from "../lib/tabs";
 import { useExt } from "../lib/extensions";
@@ -200,6 +202,14 @@ export function Chrome({ onSettings }: { onSettings: () => void }) {
         </button>
         <button className="bar-btn" onClick={reload} aria-label="Reload">
           <RotateCw />
+        </button>
+        <button
+          className={`bar-btn${state.split ? " is-on" : ""}`}
+          onClick={toggleSplit}
+          aria-label={state.split ? "Close split view" : "Split page"}
+          title={state.split ? "Close split view" : "Split page"}
+        >
+          <Columns2 />
         </button>
         {tab.now.page === "proxies" && tab.now.arg?.url && (
           <button

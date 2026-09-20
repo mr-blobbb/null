@@ -38,7 +38,7 @@ import { publish } from "./lib/members";
 import { detectDevice } from "./lib/device";
 import { usePulse } from "./lib/friends";
 import { PAGES } from "./lib/nav";
-import { activeTab, go, openTab, targetFromHash, useTabs } from "./lib/tabs";
+import { activeTab, go, openTab, selectSplitPane, targetFromHash, useTabs } from "./lib/tabs";
 import { overlayExtensions, useExt } from "./lib/extensions";
 import { useJamWatch } from "./lib/jam";
 import { watchLibrary } from "./lib/music";
@@ -171,11 +171,10 @@ export function App() {
     if (tab.now.page === "settings") setSettingsOpen(true);
   }, [tab.now.page]);
 
-  const body = useMemo(() => {
-    const t = tab.now;
-    switch (t.page) {
+  const bodyFor = (t: typeof tab) => {
+    switch (t.now.page) {
       case "missing":
-        return <NotFound address={t.arg?.url} />;
+        return <NotFound address={t.now.arg?.url} />;
       case "home":
       case "settings":
         return <Home />;
@@ -188,7 +187,7 @@ export function App() {
            movies door is the rewritten window like any other address */
         return <Proxies url={PAGES.movies.loads} back="home" onOpenSettings={() => openSettings("browser")} />;
       case "proxies":
-        return <Proxies url={t.arg?.url} onOpenSettings={() => openSettings("browser")} />;
+        return <Proxies url={t.now.arg?.url} onOpenSettings={() => openSettings("browser")} />;
       case "shop":
         return <Shop onOpenSettings={() => setSettingsOpen(true)} />;
       case "music":
@@ -208,12 +207,16 @@ export function App() {
       case "extensions":
         return <Extensions />;
       case "player":
-        return <Player kind={t.arg?.kind ?? "game"} id={t.arg?.id ?? ""} />;
+        return <Player kind={t.now.arg?.kind ?? "game"} id={t.now.arg?.id ?? ""} />;
       default:
         return <NotFound />;
     }
-    /* eslint-disable-next-line react-hooks/exhaustive-deps */
-  }, [tab.now, tab.nonce]);
+  };
+
+  const body = useMemo(() => bodyFor(tab), [tab]);
+  const split = state.split;
+  const leftTab = split ? state.tabs.find((t) => t.id === split.left) : undefined;
+  const rightTab = split ? state.tabs.find((t) => t.id === split.right) : undefined;
 
   const coins = useEcon().coins;
   const showMeta = useStore(prefs).showMeta;
@@ -272,18 +275,39 @@ export function App() {
               it: the front door, the chat rooms, the assistant, and the
               messages page. The shell says so once, here, instead of every
               page guessing its height. */}
-          <div
-            key={`${tab.id}-${tab.nonce}`}
-            className={`page-host${
-              tab.now.page === "home" ||
-              tab.now.page === "chat" ||
-              tab.now.page === "ai"
-                ? " page-host--fit"
-                : ""
-            }`}
-          >
-            {body}
-          </div>
+          {split && leftTab && rightTab ? (
+            <div className="split-view" aria-label="Split page view">
+              <section
+                className={`split-pane${split.focus === "left" ? " is-focused" : ""}`}
+                onMouseDown={() => selectSplitPane(leftTab.id)}
+              >
+                <div className="split-pane-head">
+                  <span>{leftTab.title || PAGES[leftTab.now.page].name}</span>
+                  <span className="tiny faint">left</span>
+                </div>
+                <div className="split-pane-body">{bodyFor(leftTab)}</div>
+              </section>
+              <section
+                className={`split-pane${split.focus === "right" ? " is-focused" : ""}`}
+                onMouseDown={() => selectSplitPane(rightTab.id)}
+              >
+                <div className="split-pane-head">
+                  <span>{rightTab.title || PAGES[rightTab.now.page].name}</span>
+                  <span className="tiny faint">right</span>
+                </div>
+                <div className="split-pane-body">{bodyFor(rightTab)}</div>
+              </section>
+            </div>
+          ) : (
+            <div
+              key={`${tab.id}-${tab.nonce}`}
+              className={`page-host${
+                tab.now.page === "home" || tab.now.page === "chat" || tab.now.page === "ai" ? " page-host--fit" : ""
+              }`}
+            >
+              {body}
+            </div>
+          )}
         </div>
       </div>
 

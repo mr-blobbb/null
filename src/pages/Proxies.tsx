@@ -54,7 +54,7 @@ export function Proxies({
   onOpenSettings?: () => void;
 }) {
   const p = useStore(prefs);
-  if (url) return <Browser url={url} relay={p.relay} back={back} />;
+  if (url) return <Browser url={url} relay={p.relay} back={back} tabId={activeTab(useTabs()).id} />;
   /* The old proxy shelf is intentionally gone. External sites enter here
      only as a real proxied tab from the address bar or another page. */
   return <NotFound address="null://p" />;
@@ -102,7 +102,7 @@ function look(frame: HTMLIFrameElement | null): { ours: boolean; chars: number }
   }
 }
 
-function Browser({ url, relay, back }: { url: string; relay: string; back: PageId }) {
+function Browser({ url, relay, back, tabId }: { url: string; relay: string; back: PageId; tabId: string }) {
   const [mode, setMode] = useState<Mode>("booting");
   const [reason, setReason] = useState("");
   /* whichever relay actually carried this page — not necessarily the one the
@@ -125,7 +125,7 @@ function Browser({ url, relay, back }: { url: string; relay: string; back: PageI
      above reloads it (the tab's nonce), and back and forward walk its own
      history. Nothing down here repeats any of that. */
   const tabs = useTabs();
-  const nonce = activeTab(tabs).nonce;
+  const nonce = tabs.tabs.find((t) => t.id === tabId)?.nonce ?? 0;
 
   const host = useMemo(() => {
     try {
@@ -146,11 +146,11 @@ function Browser({ url, relay, back }: { url: string; relay: string; back: PageI
     setSheet(prepare(got.html, url));
     try {
       const doc = new DOMParser().parseFromString(got.html, "text/html");
-      setTabMeta({ title: doc.title || host, favicon: faviconOf(url) });
+      setTabMeta({ title: doc.title || host, favicon: faviconOf(url) }, tabId);
     } catch {
-      setTabMeta({ title: host, favicon: faviconOf(url) });
+      setTabMeta({ title: host, favicon: faviconOf(url) }, tabId);
     }
-    setLoading(false);
+    setLoading(false, undefined, tabId);
     setMode("reader");
     return true;
   }, [url, relay]);
@@ -164,7 +164,7 @@ function Browser({ url, relay, back }: { url: string; relay: string; back: PageI
     setThin(false);
     setSays("");
     setLoading(true);
-    setTabMeta({ title: host, favicon: faviconOf(url), error: undefined });
+    setTabMeta({ title: host, favicon: faviconOf(url), error: undefined }, tabId);
     (async () => {
       const b = await start(relay);
       if (!alive) return;
@@ -178,8 +178,8 @@ function Browser({ url, relay, back }: { url: string; relay: string; back: PageI
       const got = await viaRelay();
       if (!alive) return;
       if (!got) {
-        setLoading(false, reason || "The proxy relay could not load this site.");
-        setTabMeta({ title: host, error: reason || "Proxy failed" });
+        setLoading(false, reason || "The proxy relay could not load this site.", tabId);
+        setTabMeta({ title: host, error: reason || "Proxy failed" }, tabId);
         setMode("failed");
       }
     })();
@@ -293,20 +293,20 @@ function Browser({ url, relay, back }: { url: string; relay: string; back: PageI
     const onMsg = (e: MessageEvent) => {
       const next = (e.data as { nullFrame?: string } | null)?.nullFrame;
       if (typeof next !== "string" || !next) return;
-      go({ page: "proxies", arg: { url: next } });
+      go({ page: "proxies", arg: { url: next } }, { tabId });
     };
     window.addEventListener("message", onMsg);
     return () => window.removeEventListener("message", onMsg);
-  }, [mode]);
+  }, [mode, tabId]);
 
   /* escape gets you out of the browser and back onto NULL */
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") go({ page: back });
+      if (e.key === "Escape") go({ page: back }, { tabId });
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [back]);
+  }, [back, tabId]);
 
   const src = mode === "uv" || mode === "booting" ? proxied(url) : null;
   const leave = () => go({ page: back });
