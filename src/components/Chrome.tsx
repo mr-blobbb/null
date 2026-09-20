@@ -11,7 +11,11 @@ import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
+  Bookmark,
+  Download,
   Globe,
+  History,
+  Info,
   Lock,
   Music,
   Pause,
@@ -45,15 +49,21 @@ import {
 } from "../lib/tabs";
 import { useExt } from "../lib/extensions";
 import { step, toggle, useMusic } from "../lib/music";
+import { browserData, isBookmarked, toggleBookmark } from "../lib/browserData";
 
 export function Chrome({ onSettings }: { onSettings: () => void }) {
   const state = useTabs();
   const tab = activeTab(state);
-  const { title, address, secure } = describe(tab.now);
+  const described = describe(tab.now);
+  const title = tab.title || described.title;
+  const address = described.address;
+  const secure = described.secure;
   const engine = useStore(prefs).searchEngine;
 
   const [draft, setDraft] = useState(address);
   const [focused, setFocused] = useState(false);
+  const [panel, setPanel] = useState<"history" | "downloads" | "info" | null>(null);
+  const data = useStore(browserData);
   const inputRef = useRef<HTMLInputElement>(null);
 
   /* dragging a tab into a new slot, and the beat a tab spends shrinking out
@@ -83,6 +93,14 @@ export function Chrome({ onSettings }: { onSettings: () => void }) {
         inputRef.current?.focus();
         inputRef.current?.select();
       }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "d" && tab.now.page === "proxies" && tab.now.arg?.url) {
+        e.preventDefault();
+        toggleBookmark(tab.now.arg.url, title);
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "h") {
+        e.preventDefault();
+        setPanel("history");
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -102,7 +120,8 @@ export function Chrome({ onSettings }: { onSettings: () => void }) {
     <>
       <div className="tabs" role="tablist">
         {state.tabs.map((t) => {
-          const d = describe(t.now);
+          const describedTab = describe(t.now);
+          const d = { ...describedTab, title: t.title || describedTab.title };
           const Page = PAGES[t.now.page];
           const isSite = t.now.page === "proxies" && !!t.now.arg?.url;
           const Icon = isSite ? Globe : Page.icon;
@@ -142,7 +161,7 @@ export function Chrome({ onSettings }: { onSettings: () => void }) {
                 <span className="tab-fav">
                   <Globe />
                   <img
-                    src={faviconOf(t.now.arg?.url ?? "")}
+                    src={t.favicon || faviconOf(t.now.arg?.url ?? "")}
                     alt=""
                     loading="lazy"
                     decoding="async"
@@ -182,6 +201,28 @@ export function Chrome({ onSettings }: { onSettings: () => void }) {
         <button className="bar-btn" onClick={reload} aria-label="Reload">
           <RotateCw />
         </button>
+        {tab.now.page === "proxies" && tab.now.arg?.url && (
+          <button
+            className={`bar-btn${isBookmarked(tab.now.arg?.url ?? "") ? " is-on" : ""}`}
+            onClick={() => toggleBookmark(tab.now.arg?.url ?? "", title)}
+            aria-label={isBookmarked(tab.now.arg?.url ?? "") ? "Remove bookmark" : "Bookmark page"}
+            title="Bookmark (Ctrl+D)"
+          >
+            <Bookmark />
+          </button>
+        )}
+        <div className="browser-tools">
+          <button className="bar-btn" onClick={() => setPanel(panel === "history" ? null : "history")} aria-label="History" title="History (Ctrl+H)">
+            <History />
+          </button>
+          <button className="bar-btn" onClick={() => setPanel(panel === "downloads" ? null : "downloads")} aria-label="Downloads" title="Downloads">
+            <Download />
+          </button>
+          <button className="bar-btn" onClick={() => setPanel(panel === "info" ? null : "info")} aria-label="Page information" title="Page information">
+            <Info />
+          </button>
+          {panel && <BrowserPanel kind={panel} data={data} target={tab.now} onClose={() => setPanel(null)} />}
+        </div>
 
         <div className="addr">
           {secure ? (
@@ -217,6 +258,28 @@ export function Chrome({ onSettings }: { onSettings: () => void }) {
         <Tune />
       </div>
     </>
+  );
+}
+
+function BrowserPanel({
+  kind,
+  data,
+  target,
+  onClose,
+}: {
+  kind: "history" | "downloads" | "info";
+  data: ReturnType<typeof browserData.get>;
+  target: ReturnType<typeof activeTab>["now"];
+  onClose: () => void;
+}) {
+  const title = kind === "history" ? "History" : kind === "downloads" ? "Downloads" : "Page information";
+  return (
+    <div className="browser-panel" role="dialog" aria-label={title}>
+      <div className="browser-panel-head"><b>{title}</b><button className="tab-x" onClick={onClose} aria-label="Close">×</button></div>
+      {kind === "history" && (data.history.length ? data.history.slice(0, 8).map((x) => <button className="browser-panel-row" key={x.id} onClick={() => { openTab({ page: "proxies", arg: { url: x.url } }); onClose(); }}><b>{x.title}</b><span>{x.url}</span></button>) : <span className="tiny faint">No visits yet.</span>)}
+      {kind === "downloads" && (data.downloads.length ? data.downloads.slice(0, 8).map((x) => <button className="browser-panel-row" key={x.id} onClick={() => { openTab({ page: "proxies", arg: { url: x.url } }); onClose(); }}><b>{x.name}</b><span>{x.status}</span></button>) : <span className="tiny faint">No downloads yet.</span>)}
+      {kind === "info" && <div className="browser-info"><b>{describe(target).title}</b><span>{describe(target).address}</span><span>Tab state: isolated</span><span>Transport: proxied</span></div>}
+    </div>
   );
 }
 

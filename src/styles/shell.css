@@ -252,6 +252,30 @@
 }
 
 /* ---------- toolbar ---------- */
+.browser-tools { position: relative; display: flex; align-items: center; gap: 2px; flex: none; }
+.browser-tools .bar-btn.is-on { color: var(--ac-1); }
+.browser-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 80;
+  width: min(330px, 78vw);
+  max-height: 360px;
+  overflow: auto;
+  padding: 7px;
+  border: var(--bw) solid var(--glass-line);
+  border-radius: var(--r-2);
+  background: var(--glass);
+  backdrop-filter: blur(var(--blur)) saturate(140%);
+  -webkit-backdrop-filter: blur(var(--blur)) saturate(140%);
+  box-shadow: 0 24px 50px -24px #000;
+}
+.browser-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 2px 4px 7px; border-bottom: var(--bw) solid var(--line); font-size: 11px; }
+.browser-panel-row, .browser-info { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; width: 100%; padding: 7px; border-radius: var(--r-1); color: var(--dim); font-size: 10.5px; text-align: left; }
+.browser-panel-row:hover { background: var(--bg-3); color: var(--text); }
+.browser-panel-row span, .browser-info span { width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--faint); }
+.browser-panel .tab-x { width: 20px; height: 20px; }
+
 .bar {
   flex: none;
   height: var(--chrome);

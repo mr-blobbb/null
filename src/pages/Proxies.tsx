@@ -31,12 +31,14 @@ import {
 } from "lucide-react";
 
 import { entries } from "../lib/catalog";
+import { NotFound } from "./NotFound";
 import { destinationFor, type PageId } from "../lib/nav";
 import { prefs } from "../lib/themes";
 import { useStore } from "../lib/store";
 import { clientFor, proxied, restart, start } from "../lib/browser";
-import { prepare, read } from "../lib/relay";
-import { activeTab, go, openDestination, openTab, useTabs } from "../lib/tabs";
+import { prepare, read, rewriteUpstreamHeaders } from "../lib/relay";
+import { activeTab, go, openDestination, openTab, setLoading, setTabMeta, useTabs } from "../lib/tabs";
+import { faviconOf } from "../lib/favicon";
 
 /** `back` is where the escape hatch leads: a site typed into the address bar
  *  came from the proxy shelf, the movies page came from the front door.
@@ -53,7 +55,9 @@ export function Proxies({
 }) {
   const p = useStore(prefs);
   if (url) return <Browser url={url} relay={p.relay} back={back} />;
-  return <Shelf onOpenSettings={onOpenSettings} />;
+  /* The old proxy shelf is intentionally gone. External sites enter here
+     only as a real proxied tab from the address bar or another page. */
+  return <NotFound address="null://p" />;
 }
 
 /* ============================================================
@@ -69,18 +73,6 @@ type Ask = {
   headers: Record<string, string>;
   body: string | null;
 };
-
-/* The reader is a same-origin copy, so upstream framing and isolation policy
-   headers must not be replayed into it. Keep ordinary content headers and add
-   the browser-safe CORS response used by the copied page's bridge. */
-function rewriteResponseHeaders(source: Headers, url: string): [string, string][] {
-  const blocked = /^(x-frame-options|content-security-policy|content-security-policy-report-only|cross-origin-opener-policy|cross-origin-embedder-policy|cross-origin-resource-policy|origin-agent-cluster|content-length|content-encoding)$/i;
-  const out: [string, string][] = [];
-  source.forEach((value, key) => { if (!blocked.test(key) && key.toLowerCase() !== "set-cookie") out.push([key, value]); });
-  if (!out.some(([key]) => key.toLowerCase() === "access-control-allow-origin")) out.push(["access-control-allow-origin", "*"]);
-  if (/\.wasm(?:$|\?)/i.test(url) && !out.some(([key]) => key.toLowerCase() === "content-type")) out.push(["content-type", "application/wasm"]);
-  return out;
-}
 
 /** Bytes to base64 in chunks: spreading a whole megabyte into fromCharCode
  *  blows the call stack. */
@@ -152,6 +144,13 @@ function Browser({ url, relay, back }: { url: string; relay: string; back: PageI
     }
     setServed(got.relay);
     setSheet(prepare(got.html, url));
+    try {
+      const doc = new DOMParser().parseFromString(got.html, "text/html");
+      setTabMeta({ title: doc.title || host, favicon: faviconOf(url) });
+    } catch {
+      setTabMeta({ title: host, favicon: faviconOf(url) });
+    }
+    setLoading(false);
     setMode("reader");
     return true;
   }, [url, relay]);
@@ -164,6 +163,8 @@ function Browser({ url, relay, back }: { url: string; relay: string; back: PageI
     setServed(relay);
     setThin(false);
     setSays("");
+    setLoading(true);
+    setTabMeta({ title: host, favicon: faviconOf(url), error: undefined });
     (async () => {
       const b = await start(relay);
       if (!alive) return;
@@ -176,7 +177,11 @@ function Browser({ url, relay, back }: { url: string; relay: string; back: PageI
       setReason(b.reason ?? "");
       const got = await viaRelay();
       if (!alive) return;
-      if (!got) setMode("failed");
+      if (!got) {
+        setLoading(false, reason || "The proxy relay could not load this site.");
+        setTabMeta({ title: host, error: reason || "Proxy failed" });
+        setMode("failed");
+      }
     })();
     return () => {
       alive = false;
@@ -258,7 +263,7 @@ function Browser({ url, relay, back }: { url: string; relay: string; back: PageI
           body: req.body ?? undefined,
         } as RequestInit);
 
-        const heads = rewriteResponseHeaders(res.headers, req.url);
+        const heads = rewriteUpstreamHeaders(res.headers, req.url);
 
         post({
           nullRes: {

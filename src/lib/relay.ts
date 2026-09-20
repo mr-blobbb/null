@@ -26,6 +26,22 @@ import { candidates, clientFor } from "./browser";
 
 export type Read = { ok: true; html: string; relay: string } | { ok: false; reason: string };
 
+/** Normalize an upstream response for a same-origin copied page. Entity and
+ * caching headers are retained; only headers that would isolate or frame-block
+ * the copy are removed. */
+export function rewriteUpstreamHeaders(source: Headers, url = ""): [string, string][] {
+  const blocked = /^(x-frame-options|content-security-policy(?:-report-only)?|cross-origin-(?:opener|embedder|resource)-policy|origin-agent-cluster|set-cookie|content-length|content-encoding)$/i;
+  const out: [string, string][] = [];
+  source.forEach((value, key) => {
+    if (!blocked.test(key)) out.push([key, value]);
+  });
+  out.push(["access-control-allow-origin", "*"]);
+  if (/\\.wasm(?:$|\\?)/i.test(url) && !out.some(([key]) => key.toLowerCase() === "content-type")) {
+    out.push(["content-type", "application/wasm"]);
+  }
+  return out;
+}
+
 /** One attempt through one relay. Split out so the walk over the list can be
  *  the only thing with a loop in it. */
 async function once(url: string, relay: string): Promise<Read> {

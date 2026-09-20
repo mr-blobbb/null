@@ -9,6 +9,7 @@
 import { createStore, useStore } from "./store";
 import { siteName } from "./favicon";
 import { PAGES, type Destination, type PageId } from "./nav";
+import { rememberVisit } from "./browserData";
 
 export type Target = { page: PageId; arg?: Record<string, string> };
 
@@ -18,8 +19,11 @@ export type Tab = {
   /** most recent first */
   back: Target[];
   fwd: Target[];
-  /** shown while a proxied site is still loading */
+  /** browser-owned state for this tab, never shared with another tab */
   loading?: boolean;
+  title?: string;
+  favicon?: string;
+  error?: string;
   nonce: number;
 };
 
@@ -96,6 +100,7 @@ export function go(target: Target, opts: { replace?: boolean; tabId?: string } =
     return { ...t, now: target, back: [t.now, ...t.back].slice(0, 40), fwd: [], nonce: t.nonce + 1 };
   });
   tabsStore.set({ tabs });
+  if (target.page === "proxies" && target.arg?.url) rememberVisit(target.arg.url, siteName(target.arg.url));
   syncUrl(target);
 }
 
@@ -178,11 +183,18 @@ export function reload() {
   });
 }
 
-export function setLoading(on: boolean) {
+export function setLoading(on: boolean, error?: string, tabId?: string) {
   const st = tabsStore.get();
+  const id = tabId ?? st.active;
   tabsStore.set({
-    tabs: st.tabs.map((t) => (t.id === st.active ? { ...t, loading: on } : t)),
+    tabs: st.tabs.map((t) => (t.id === id ? { ...t, loading: on, error } : t)),
   });
+}
+
+export function setTabMeta(patch: Pick<Tab, "title" | "favicon" | "error">, tabId?: string) {
+  const st = tabsStore.get();
+  const id = tabId ?? st.active;
+  tabsStore.set({ tabs: st.tabs.map((t) => (t.id === id ? { ...t, ...patch } : t)) });
 }
 
 /** Send a parsed destination to the right place: a page, a website in the
