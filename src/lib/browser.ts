@@ -196,7 +196,20 @@ export function start(preferred: string): Promise<Boot> {
     /* 2 · the service worker that rewrites every request in its scope. This
        does not depend on the relay, so it is done once, before the walk. */
     try {
-      await navigator.serviceWorker.register("/uv/uv.sw.js", { scope: "/uv/" });
+      const registration = await navigator.serviceWorker.register("/uv/uv.sw.js", {
+        scope: "/uv/",
+        updateViaCache: "none",
+      });
+      /* A newly installed worker controls the next navigation unless we wait
+         for it here. Waiting briefly avoids the first proxied page racing the
+         install, while still falling through on browsers that do not expose
+         serviceWorker.ready (notably restricted Chromebook profiles). */
+      if (!navigator.serviceWorker.controller && registration.installing) {
+        await Promise.race([
+          navigator.serviceWorker.ready,
+          new Promise((resolve) => window.setTimeout(resolve, 1200)),
+        ]);
+      }
     } catch (e) {
       return {
         ok: false,

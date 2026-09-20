@@ -1,0 +1,33 @@
+/* NULL · cross-browser visual audit safeguards */
+*, *::before, *::after { box-sizing: border-box; }
+html, body, #root { min-width: 0; min-height: 100%; }
+body { margin: 0; overflow: hidden; font-family: var(--font); background: var(--bg); color: var(--text); text-rendering: optimizeLegibility; }
+button, input, textarea, select { font: inherit; }
+button { border: 0; margin: 0; cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+img, video, canvas, svg { max-width: 100%; }
+img, video { height: auto; }
+.app, .work, .view, .page-host { min-width: 0; }
+.page { width: 100%; overflow-wrap: anywhere; }
+.card, .sheet, .tile, .shop-card, .px-card { min-width: 0; }
+.card { overflow: clip; }
+@supports not (overflow: clip) { .card { overflow: hidden; } }
+:focus-visible { outline: 1px solid var(--ac-1); outline-offset: 2px; }
+@media (max-width: 560px) {
+  .page { padding: 14px 12px 48px; }
+  .lb-top { gap: 6px; }
+  .lb-title { font-size: 18px; }
+  .btn { min-height: 26px; padding-inline: 8px; font-size: 10.5px; }
+  .rail { width: 46px; }
+  .rail-btn { width: 34px; height: 34px; }
+  .meta { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .001ms !important; transition-duration: .001ms !important; }
+}
+/* Fallbacks for browsers without color-mix: the declared solid values keep
+   surfaces readable, while modern browsers use the glass declarations. */
+:root { --glass: var(--bg-2); --glass-2: var(--bg-3); --glass-line: var(--line-2); }
+@supports (background: color-mix(in srgb, black, white)) {
+  :root { --glass: color-mix(in srgb, var(--bg-2) 58%, transparent); --glass-2: color-mix(in srgb, var(--bg-3) 46%, transparent); --glass-line: color-mix(in srgb, var(--line-2) 72%, transparent); }
+}

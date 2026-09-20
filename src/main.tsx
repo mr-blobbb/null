@@ -28,8 +28,12 @@ import "./styles/social.css";
 /* the messages page, which is the one place a conversation gets a whole
    window instead of a pop-out */
 import "./styles/messages.css";
+/* assistant controls and thread history */
+import "./styles/ai.css";
 /* imported last: the quiet pass, which overrides a few wrote-in sizes */
 import "./styles/refine.css";
+/* final cross-browser layout and overflow audit */
+import "./styles/audit.css";
 
 import { App } from "./App";
 import { cloud } from "./lib/cloud";

@@ -121,6 +121,20 @@ const NAV = `<script data-null="nav">(function(){
   try { Object.defineProperty(window, "localStorage", { value: api, configurable: true }); } catch (e) {}
   try { Object.defineProperty(window, "sessionStorage", { value: api, configurable: true }); } catch (e) {}
 
+  /* A copied page must not register a worker against NULL's origin. Expose a
+     small same-page registration facade instead: it preserves the common
+     register/ready/unregister contract while requests remain on this copy's
+     bridge. This prevents service-worker boot code from aborting the app. */
+  try {
+    if (window.navigator && window.navigator.serviceWorker) {
+      var sw = window.navigator.serviceWorker;
+      var registration = { scope: document.baseURI, active: null, installing: null, waiting: null, unregister: function(){ return Promise.resolve(true); }, update: function(){ return Promise.resolve(); } };
+      sw.register = function(){ return Promise.resolve(registration); };
+      sw.ready = Promise.resolve(registration);
+      sw.getRegistrations = function(){ return Promise.resolve([registration]); };
+    }
+  } catch (e) {}
+
   /* ---------- a place to keep things ----------
      An opaque origin has no Indexed Database at all. Asking for one throws a
      SecurityError the moment a page touches it, and a page whose persistence
@@ -543,8 +557,11 @@ const NAV = `<script data-null="nav">(function(){
     }).catch(function () { return false; });
   }
 
-  var WANT = { img: 1, script: 1, link: 1, source: 1, video: 1, audio: 1, track: 1, embed: 1, input: 1, object: 1, image: 1, use: 1 };
+  var WANT = { img: 1, script: 1, link: 1, source: 1, video: 1, audio: 1, track: 1, embed: 1, input: 1, object: 1, image: 1, use: 1, iframe: 1 };
+  /* blob URLs need an explicit type on engines that do not infer it from the
+     remote response. WASM is especially strict on ChromiumOS. */
   function kindFor(tag, raw) {
+    if (/\.wasm($|\\?)/i.test(raw)) return "application/wasm,*/*";
     if (tag === "script") return "text/javascript,*/*";
     if (tag === "img" || tag === "image") return "image/*,*/*";
     if (tag === "video") return "video/*,*/*";

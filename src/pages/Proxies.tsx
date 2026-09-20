@@ -70,6 +70,18 @@ type Ask = {
   body: string | null;
 };
 
+/* The reader is a same-origin copy, so upstream framing and isolation policy
+   headers must not be replayed into it. Keep ordinary content headers and add
+   the browser-safe CORS response used by the copied page's bridge. */
+function rewriteResponseHeaders(source: Headers, url: string): [string, string][] {
+  const blocked = /^(x-frame-options|content-security-policy|content-security-policy-report-only|cross-origin-opener-policy|cross-origin-embedder-policy|cross-origin-resource-policy|origin-agent-cluster|content-length|content-encoding)$/i;
+  const out: [string, string][] = [];
+  source.forEach((value, key) => { if (!blocked.test(key) && key.toLowerCase() !== "set-cookie") out.push([key, value]); });
+  if (!out.some(([key]) => key.toLowerCase() === "access-control-allow-origin")) out.push(["access-control-allow-origin", "*"]);
+  if (/\.wasm(?:$|\?)/i.test(url) && !out.some(([key]) => key.toLowerCase() === "content-type")) out.push(["content-type", "application/wasm"]);
+  return out;
+}
+
 /** Bytes to base64 in chunks: spreading a whole megabyte into fromCharCode
  *  blows the call stack. */
 function seal(buf: ArrayBuffer): string {
@@ -246,11 +258,7 @@ function Browser({ url, relay, back }: { url: string; relay: string; back: PageI
           body: req.body ?? undefined,
         } as RequestInit);
 
-        const heads: [string, string][] = [];
-        res.headers.forEach((v, k) => {
-          /* the length and the encoding belong to this hop, not the next one */
-          if (!/^(content-length|content-encoding)$/i.test(k)) heads.push([k, v]);
-        });
+        const heads = rewriteResponseHeaders(res.headers, req.url);
 
         post({
           nullRes: {
