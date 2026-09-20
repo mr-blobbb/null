@@ -421,6 +421,7 @@ function CopiedFrame({
   onFail: (why: string) => void;
 }) {
   const [blob, setBlob] = useState<string | null>(null);
+  const loaded = useRef(false);
 
   useEffect(() => {
     let url: string | null = null;
@@ -445,12 +446,21 @@ function CopiedFrame({
     };
   }, [file]);
 
+  useEffect(() => {
+    if (!blob) return;
+    loaded.current = false;
+    const timer = window.setTimeout(() => {
+      if (!loaded.current) onFail("the copied game document did not finish loading");
+    }, 12_000);
+    return () => window.clearTimeout(timer);
+  }, [blob, onFail]);
+
   if (!blob) {
     return (
       <div className="play-empty">
         <Gamepad2 />
         <h2>Fetching {name}…</h2>
-        <p>It lives on a stash that serves pages as text, so NULL is copying it over first.</p>
+        <p>NULL is copying the authorized game files into an isolated player.</p>
       </div>
     );
   }
@@ -461,13 +471,16 @@ function CopiedFrame({
       className="play-frame"
       src={blob}
       title={name}
-      onLoad={onLoad}
+      onLoad={() => {
+        loaded.current = true;
+        onLoad();
+      }}
       referrerPolicy="no-referrer"
       allow="fullscreen; gamepad; autoplay; pointer-lock"
-      /* a copied page came from a stranger and inherits this origin, so it is
-         sandboxed without allow-same-origin: its own storage, its own files,
-         no way to read anything of NULL's. */
-      sandbox="allow-scripts allow-popups allow-forms allow-pointer-lock allow-modals"
+      /* Unity/WebGL engines need a normal origin for WASM workers, asset
+         fetches, and storage. The sandbox still blocks top navigation and
+         access to the parent document. */
+      sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-pointer-lock allow-modals"
     />
   );
 }
