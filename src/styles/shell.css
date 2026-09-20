@@ -449,6 +449,15 @@
   color: var(--dim);
   white-space: nowrap;
 }
+.bar-actions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.bar-actions .bar-btn {
+  flex: none;
+}
 
 /* ---------- the extensions menu ----------
    Hangs off the puzzle button, so it has to be positioned rather than a

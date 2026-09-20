@@ -209,24 +209,6 @@ function BrowserChrome({ onSettings, tabId }: { onSettings: () => void; tabId?: 
         <button className="bar-btn bar-btn--reload" onClick={() => reload(tabId)} aria-label="Reload">
           <RotateCw />
         </button>
-        <ExtButton onManage={onSettings} />
-        <button
-          className={`bar-btn${tab.now.page === "proxies" && tab.now.arg?.url && isBookmarked(tab.now.arg.url) ? " is-on" : ""}`}
-          onClick={() => tab.now.page === "proxies" && tab.now.arg?.url && toggleBookmark(tab.now.arg.url, title)}
-          aria-label={tab.now.page === "proxies" && tab.now.arg?.url && isBookmarked(tab.now.arg.url) ? "Remove bookmark" : "Bookmark page"}
-          title="Bookmark (Ctrl+D)"
-        >
-          <Bookmark />
-        </button>
-        <button
-          className={`bar-btn${state.split ? " is-on" : ""}`}
-          onClick={toggleSplit}
-          aria-label={state.split ? "Close split view" : "Split page"}
-          title={state.split ? "Close split view" : "Split page"}
-        >
-          <Columns2 />
-        </button>
-
         <div className="addr">
           {secure ? (
             <Lock className="lock is-safe" aria-label="Secure" />
@@ -255,6 +237,26 @@ function BrowserChrome({ onSettings, tabId }: { onSettings: () => void; tabId?: 
               }
             }}
           />
+        </div>
+
+        <div className="bar-actions" aria-label="Browser tools">
+          <ExtButton onManage={onSettings} />
+          <button
+            className={`bar-btn${tab.now.page === "proxies" && tab.now.arg?.url && isBookmarked(tab.now.arg.url) ? " is-on" : ""}`}
+            onClick={() => tab.now.page === "proxies" && tab.now.arg?.url && toggleBookmark(tab.now.arg.url, title)}
+            aria-label={tab.now.page === "proxies" && tab.now.arg?.url && isBookmarked(tab.now.arg.url) ? "Remove bookmark" : "Bookmark page"}
+            title="Bookmark (Ctrl+D)"
+          >
+            <Bookmark />
+          </button>
+          <button
+            className={`bar-btn${state.split ? " is-on" : ""}`}
+            onClick={toggleSplit}
+            aria-label={state.split ? "Close split view" : "Split page"}
+            title={state.split ? "Close split view" : "Split page"}
+          >
+            <Columns2 />
+          </button>
         </div>
 
         <Tune />

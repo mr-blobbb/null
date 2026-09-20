@@ -1624,21 +1624,24 @@
   position: relative;
   flex: none;
   align-self: stretch;
-  width: 44px;
+  /* Five actions fit in one row. Keeping this column wide means the action
+     surface never has to sit on top of the avatar or message text. */
+  width: 106px;
   min-height: 48px;
 }
 .ch-bar {
   position: absolute;
-  left: 4px;
+  left: 0;
   bottom: 4px;
   z-index: 6;
-  max-width: 42px;
+  width: max-content;
+  max-width: none;
   display: flex;
   flex-direction: row;
-  flex-wrap: wrap-reverse;
+  flex-wrap: nowrap;
   align-items: center;
-  justify-content: flex-end;
-  gap: 1px;
+  justify-content: flex-start;
+  gap: 2px;
   padding: 2px;
   border: var(--bw) solid var(--line-2);
   border-radius: var(--r-2);
@@ -1667,6 +1670,12 @@
 .ch-hbtn svg {
   width: 13px;
   height: 13px;
+}
+@media (max-width: 560px) {
+  .ch-gutter { width: 92px; }
+  .ch-bar { gap: 0; padding: 1px; }
+  .ch-hbtn { width: 17px; height: 17px; }
+  .ch-hbtn svg { width: 12px; height: 12px; }
 }
 
 .ch-reactor {
