@@ -185,9 +185,10 @@
   height: 152px;
   background-size: cover;
   background-position: center;
-  border-radius: var(--r-4) var(--r-4) var(--r-2) var(--r-2);
-  margin: 2px 2px 0;
+  border-radius: var(--r-4) var(--r-4) 0 0;
+  margin: 0;
   background-color: transparent;
+  overflow: hidden;
 }
 .pf-banner-edit {
   position: absolute;

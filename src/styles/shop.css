@@ -319,12 +319,17 @@
    The clips are shot on black, so `screen` drops the black and keeps the
    glow, and nothing of the recording's background ever reaches the face. */
 .art--clip {
-  inset: -6%;
+  inset: -8%;
   border-radius: 50%;
   overflow: hidden;
-  z-index: 2;
+  z-index: 3;
+  isolation: isolate;
+  /* Keep the decoration above the avatar while allowing its black stage to
+     disappear into the picture beneath it. */
+  mix-blend-mode: screen;
 }
 .art-video {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
