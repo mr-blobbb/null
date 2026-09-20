@@ -13,10 +13,7 @@ import {
   ArrowRight,
   Bookmark,
   Columns2,
-  Download,
   Globe,
-  History,
-  Info,
   Lock,
   Music,
   Pause,
@@ -46,16 +43,30 @@ import {
   openTab,
   pickTab,
   reload,
+  selectSplitPane,
   toggleSplit,
   useTabs,
 } from "../lib/tabs";
 import { useExt } from "../lib/extensions";
 import { step, toggle, useMusic } from "../lib/music";
-import { browserData, isBookmarked, toggleBookmark } from "../lib/browserData";
+import { isBookmarked, toggleBookmark } from "../lib/browserData";
 
 export function Chrome({ onSettings }: { onSettings: () => void }) {
   const state = useTabs();
-  const tab = activeTab(state);
+  if (state.split) {
+    return (
+      <div className="split-chrome" aria-label="Split browser view">
+        <BrowserChrome tabId={state.split.left} onSettings={onSettings} />
+        <BrowserChrome tabId={state.split.right} onSettings={onSettings} />
+      </div>
+    );
+  }
+  return <BrowserChrome onSettings={onSettings} />;
+}
+
+function BrowserChrome({ onSettings, tabId }: { onSettings: () => void; tabId?: string }) {
+  const state = useTabs();
+  const tab = tabId ? state.tabs.find((item) => item.id === tabId) ?? activeTab(state) : activeTab(state);
   const described = describe(tab.now);
   const title = tab.title || described.title;
   const address = described.address;
@@ -64,8 +75,6 @@ export function Chrome({ onSettings }: { onSettings: () => void }) {
 
   const [draft, setDraft] = useState(address);
   const [focused, setFocused] = useState(false);
-  const [panel, setPanel] = useState<"history" | "downloads" | "info" | null>(null);
-  const data = useStore(browserData);
   const inputRef = useRef<HTMLInputElement>(null);
 
   /* dragging a tab into a new slot, and the beat a tab spends shrinking out
@@ -90,6 +99,7 @@ export function Chrome({ onSettings }: { onSettings: () => void }) {
   /* ⌘L / ctrl-L focuses the address bar, as it should */
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (tabId && state.active !== tabId) return;
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "l") {
         e.preventDefault();
         inputRef.current?.focus();
@@ -99,14 +109,10 @@ export function Chrome({ onSettings }: { onSettings: () => void }) {
         e.preventDefault();
         toggleBookmark(tab.now.arg.url, title);
       }
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "h") {
-        e.preventDefault();
-        setPanel("history");
-      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [state.active, tabId, tab.now.page, tab.now.arg?.url, title]);
 
   /* the one rule: a null:// page goes there, an address opens in the browser,
      and anything else is a search. Nothing is ever ignored. */
@@ -115,13 +121,13 @@ export function Chrome({ onSettings }: { onSettings: () => void }) {
     if (!parsed) return;
     inputRef.current?.blur();
     if ("page" in parsed && parsed.page === "settings") onSettings();
-    else openDestination(parsed);
+    else openDestination(parsed, tabId);
   }
 
   return (
-    <>
+    <div className={tabId ? "split-chrome-pane" : "chrome-single"} onMouseDown={() => tabId && selectSplitPane(tabId)}>
       <div className="tabs" role="tablist">
-        {state.tabs.map((t) => {
+        {state.tabs.filter((t) => !tabId || t.id === tabId).map((t) => {
           const describedTab = describe(t.now);
           const d = { ...describedTab, title: t.title || describedTab.title };
           const Page = PAGES[t.now.page];
@@ -194,14 +200,23 @@ export function Chrome({ onSettings }: { onSettings: () => void }) {
       </div>
 
       <div className="bar">
-        <button className="bar-btn" onClick={goBack} disabled={!tab.back.length} aria-label="Back">
+        <button className="bar-btn" onClick={() => goBack(tabId)} disabled={!tab.back.length} aria-label="Back">
           <ArrowLeft />
         </button>
-        <button className="bar-btn" onClick={goFwd} disabled={!tab.fwd.length} aria-label="Forward">
+        <button className="bar-btn" onClick={() => goFwd(tabId)} disabled={!tab.fwd.length} aria-label="Forward">
           <ArrowRight />
         </button>
-        <button className="bar-btn" onClick={reload} aria-label="Reload">
+        <button className="bar-btn" onClick={() => reload(tabId)} aria-label="Reload">
           <RotateCw />
+        </button>
+        <ExtButton onManage={onSettings} />
+        <button
+          className={`bar-btn${tab.now.page === "proxies" && tab.now.arg?.url && isBookmarked(tab.now.arg.url) ? " is-on" : ""}`}
+          onClick={() => tab.now.page === "proxies" && tab.now.arg?.url && toggleBookmark(tab.now.arg.url, title)}
+          aria-label={tab.now.page === "proxies" && tab.now.arg?.url && isBookmarked(tab.now.arg.url) ? "Remove bookmark" : "Bookmark page"}
+          title="Bookmark (Ctrl+D)"
+        >
+          <Bookmark />
         </button>
         <button
           className={`bar-btn${state.split ? " is-on" : ""}`}
@@ -211,28 +226,6 @@ export function Chrome({ onSettings }: { onSettings: () => void }) {
         >
           <Columns2 />
         </button>
-        {tab.now.page === "proxies" && tab.now.arg?.url && (
-          <button
-            className={`bar-btn${isBookmarked(tab.now.arg?.url ?? "") ? " is-on" : ""}`}
-            onClick={() => toggleBookmark(tab.now.arg?.url ?? "", title)}
-            aria-label={isBookmarked(tab.now.arg?.url ?? "") ? "Remove bookmark" : "Bookmark page"}
-            title="Bookmark (Ctrl+D)"
-          >
-            <Bookmark />
-          </button>
-        )}
-        <div className="browser-tools">
-          <button className="bar-btn" onClick={() => setPanel(panel === "history" ? null : "history")} aria-label="History" title="History (Ctrl+H)">
-            <History />
-          </button>
-          <button className="bar-btn" onClick={() => setPanel(panel === "downloads" ? null : "downloads")} aria-label="Downloads" title="Downloads">
-            <Download />
-          </button>
-          <button className="bar-btn" onClick={() => setPanel(panel === "info" ? null : "info")} aria-label="Page information" title="Page information">
-            <Info />
-          </button>
-          {panel && <BrowserPanel kind={panel} data={data} target={tab.now} onClose={() => setPanel(null)} />}
-        </div>
 
         <div className="addr">
           {secure ? (
@@ -264,14 +257,15 @@ export function Chrome({ onSettings }: { onSettings: () => void }) {
           />
         </div>
 
-        <ExtButton onManage={onSettings} />
         <Tune />
       </div>
-    </>
+    </div>
   );
 }
 
-function BrowserPanel({
+/* History, downloads, and page-info popovers were intentionally removed from
+   the browser chrome. Their data remains available to the relevant pages. */
+/* function BrowserPanel({ 
   kind,
   data,
   target,
@@ -291,7 +285,7 @@ function BrowserPanel({
       {kind === "info" && <div className="browser-info"><b>{describe(target).title}</b><span>{describe(target).address}</span><span>Tab state: isolated</span><span>Transport: proxied</span></div>}
     </div>
   );
-}
+} */
 
 function ExtButton({ onManage }: { onManage: () => void }) {
   const ext = useExt();

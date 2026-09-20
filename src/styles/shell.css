@@ -282,6 +282,24 @@
 
 /* Split view keeps each side inside the same shell while the selected pane
    remains the target of the address bar and existing tab controls. */
+.chrome-single { display: contents; }
+.split-chrome {
+  flex: none;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  min-width: 0;
+  background: var(--line);
+  gap: 1px;
+}
+.split-chrome-pane {
+  min-width: 0;
+  background: var(--bg);
+  outline: 1px solid transparent;
+  outline-offset: -1px;
+}
+.split-chrome-pane:focus-within {
+  outline-color: var(--ac-1);
+}
 .split-view {
   position: relative;
   z-index: 1;
@@ -339,6 +357,7 @@
   height: 100%;
 }
 @media (max-width: 720px) {
+  .split-chrome { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; }
   .split-view { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); }
   .browser-panel { top: calc(36px + var(--chrome) + 6px); right: 6px; width: calc(100vw - 12px); }
 }

@@ -29,7 +29,7 @@ export function NotFound({ address }: { address?: string }) {
       </p>
       <div className="nf-actions">
         {canGoBack && (
-          <button className="btn" onClick={goBack}>
+          <button className="btn" onClick={() => goBack()}>
             <ArrowLeft /> Go back
           </button>
         )}

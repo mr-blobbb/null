@@ -1,15 +1,32 @@
 /* NULL · Changelog.tsx
    A spine, oldest at the bottom. The newest dot glows; the rest are outlines.
    Every entry is a version, a date, one line about it, and what changed,
-   marked with a green plus for things that arrived and a wrench for things
-   that moved. */
+   marked with a green plus for things that arrived, a wrench for things that
+   moved, and a red X in a circle for things that were removed. */
 
-import { Plus, Wrench } from "lucide-react";
+import { CircleX, Plus, Wrench } from "lucide-react";
 
-type Change = { kind: "add" | "tweak"; text: string };
+type Change = { kind: "add" | "tweak" | "remove"; text: string };
 type Release = { version: string; date: string; note: string; changes: Change[] };
 
 const RELEASES: Release[] = [
+  {
+    version: "v1.2.2",
+    date: "September 20, 2026",
+    note: "The one where NULL became a more complete browser, tightened the UI, and cleaned up the chrome.",
+    changes: [
+      { kind: "add", text: "The AI assistant now supports multiple saved conversation threads, thread switching and deletion, a per-thread token estimate, and a GPT-4o mini model selector with future models clearly marked Coming Soon." },
+      { kind: "add", text: "The browser shell now keeps per-tab titles, favicons, loading and error state, bookmarks, history records, downloads records, keyboard shortcuts, page information, and relay recovery state." },
+      { kind: "add", text: "External sites always enter NULL's proxy path, with expanded rewriting for redirects, cookies, policy headers, CORS, workers, dynamic imports, WebSockets, service workers, manifests, media, WASM, and range/cache headers." },
+      { kind: "add", text: "Games now use a CORS-friendly CDN mirror with automatic fallback, and the removed CKV shelf no longer appears in the games menu." },
+      { kind: "add", text: "Split view now gives both panes their own tab strip and address bar, so two pages can be navigated independently side by side." },
+      { kind: "add", text: "Bookmarking is now a dedicated star in the browser toolbar, next to Split and Extensions." },
+      { kind: "tweak", text: "The global visual audit restored card geometry after an overly broad button rule, then kept compact styling limited to real controls and fields. Profile banners, overlay compositing, responsive wrappers, overflow, and cross-browser fallbacks were tightened." },
+      { kind: "remove", text: "The standalone DMs page and its navigation route were removed; DMs remain inside Chat." },
+      { kind: "remove", text: "The standalone Proxies app was removed from the homepage All Apps shelf; proxy loading remains available to browser tabs and supported media doors." },
+      { kind: "remove", text: "History, Downloads, and Page Info toolbar buttons and popovers were removed from the browser chrome to keep the top bar focused." },
+    ],
+  },
   {
     version: "v1.2.1",
     date: "September 18, 2026",
@@ -140,8 +157,8 @@ export function Changelog() {
     <div className="page">
       <h1 className="lb-title cl-title">Changelog</h1>
       <p className="lede">
-        Everything that changed, newest first. Where a release added something it is marked
-        with a plus; where it moved something, a wrench.
+        Everything that changed, newest first. Added work is marked with a plus, moved or
+        repaired work with a wrench, and removed features with a red X.
       </p>
 
       <ol className="cl">
@@ -157,7 +174,7 @@ export function Changelog() {
             <ul className="cl-list">
               {r.changes.map((c, n) => (
                 <li key={n} className={`cl-change cl-change--${c.kind}`}>
-                  <span className="cl-mark">{c.kind === "add" ? <Plus /> : <Wrench />}</span>
+                  <span className="cl-mark">{c.kind === "add" ? <Plus /> : c.kind === "remove" ? <CircleX /> : <Wrench />}</span>
                   <span>{c.text}</span>
                 </li>
               ))}

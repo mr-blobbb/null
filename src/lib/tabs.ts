@@ -188,32 +188,35 @@ export function selectSplitPane(id: string) {
   pickTab(id);
 }
 
-export function goBack() {
+export function goBack(tabId?: string) {
   const st = tabsStore.get();
+  const id = tabId ?? st.active;
   tabsStore.set({
     tabs: st.tabs.map((t) => {
-      if (t.id !== st.active || !t.back.length) return t;
+      if (t.id !== id || !t.back.length) return t;
       const [prev, ...rest] = t.back;
       return { ...t, now: prev, back: rest, fwd: [t.now, ...t.fwd].slice(0, 40), nonce: t.nonce + 1 };
     }),
   });
 }
 
-export function goFwd() {
+export function goFwd(tabId?: string) {
   const st = tabsStore.get();
+  const id = tabId ?? st.active;
   tabsStore.set({
     tabs: st.tabs.map((t) => {
-      if (t.id !== st.active || !t.fwd.length) return t;
+      if (t.id !== id || !t.fwd.length) return t;
       const [next, ...rest] = t.fwd;
       return { ...t, now: next, back: [t.now, ...t.back].slice(0, 40), fwd: rest, nonce: t.nonce + 1 };
     }),
   });
 }
 
-export function reload() {
+export function reload(tabId?: string) {
   const st = tabsStore.get();
+  const id = tabId ?? st.active;
   tabsStore.set({
-    tabs: st.tabs.map((t) => (t.id === st.active ? { ...t, nonce: t.nonce + 1 } : t)),
+    tabs: st.tabs.map((t) => (t.id === id ? { ...t, nonce: t.nonce + 1 } : t)),
   });
 }
 
@@ -234,10 +237,10 @@ export function setTabMeta(patch: Pick<Tab, "title" | "favicon" | "error">, tabI
 /** Send a parsed destination to the right place: a page, a website in the
  *  browser, or the 404 that names the address that missed. Every box on the
  *  site that accepts an address ends up here, so the rule lives once. */
-export function openDestination(d: Destination) {
-  if ("page" in d) return go({ page: d.page });
-  if ("missing" in d) return go({ page: "missing", arg: { url: d.missing } });
-  return go({ page: "proxies", arg: { url: d.url } });
+export function openDestination(d: Destination, tabId?: string) {
+  if ("page" in d) return go({ page: d.page }, { tabId });
+  if ("missing" in d) return go({ page: "missing", arg: { url: d.missing } }, { tabId });
+  return go({ page: "proxies", arg: { url: d.url } }, { tabId });
 }
 
 export function targetKey(t: Target): string {

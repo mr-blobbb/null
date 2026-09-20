@@ -281,20 +281,12 @@ export function App() {
                 className={`split-pane${split.focus === "left" ? " is-focused" : ""}`}
                 onMouseDown={() => selectSplitPane(leftTab.id)}
               >
-                <div className="split-pane-head">
-                  <span>{leftTab.title || PAGES[leftTab.now.page].name}</span>
-                  <span className="tiny faint">left</span>
-                </div>
                 <div className="split-pane-body">{bodyFor(leftTab)}</div>
               </section>
               <section
                 className={`split-pane${split.focus === "right" ? " is-focused" : ""}`}
                 onMouseDown={() => selectSplitPane(rightTab.id)}
               >
-                <div className="split-pane-head">
-                  <span>{rightTab.title || PAGES[rightTab.now.page].name}</span>
-                  <span className="tiny faint">right</span>
-                </div>
                 <div className="split-pane-body">{bodyFor(rightTab)}</div>
               </section>
             </div>

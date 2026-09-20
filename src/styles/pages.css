@@ -1026,6 +1026,10 @@ kbd {
   background: color-mix(in srgb, var(--warn) 22%, var(--bg-2));
   color: var(--warn);
 }
+.cl-change--remove .cl-mark {
+  background: color-mix(in srgb, var(--bad) 22%, var(--bg-2));
+  color: var(--bad);
+}
 
 /* ============================================================
    extensions
