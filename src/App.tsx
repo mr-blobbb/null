@@ -43,8 +43,8 @@ import { overlayExtensions, useExt } from "./lib/extensions";
 import { useJamWatch } from "./lib/jam";
 import { watchLibrary } from "./lib/music";
 
-const VERSION = "1.2.1";
-const BUILT = "20260918";
+const VERSION = "1.2.3";
+const BUILT = "20260921";
 
 export function App() {
   const palette = usePalette();

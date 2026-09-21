@@ -328,7 +328,14 @@ export function browse(
     const words = q.split(/\s+/).filter(Boolean);
     list = list.filter((e) => {
       const hay = `${e.name} ${e.id} ${e.labels.join(" ")}`.toLowerCase();
-      return words.every((w) => hay.includes(w) || wobbly(hay, w) || prefixish(hay, w));
+      const name = `${e.name} ${e.id}`.toLowerCase();
+      const labels = e.labels.join(" ").toLowerCase();
+      return words.every((w) =>
+        name.includes(w) ||
+        labels.includes(w) ||
+        prefixish(name, w) ||
+        closeNameWord(e.name, w),
+      );
     });
   }
 
@@ -339,29 +346,35 @@ export function browse(
   return list;
 }
 
-/** A subsequence match with the fuzz left in: every letter of `needle` in
- *  order inside `hay`, and up to two of them allowed to be missing entirely,
- *  so a mistyped middle still lands. "srprow" finds "superhot"; "xyzzy"
- *  finds nothing. */
-function wobbly(hay: string, needle: string): boolean {
-  let at = 0;
-  let skipped = 0;
-  for (const ch of needle) {
-    const hit = hay.indexOf(ch, at);
-    if (hit < 0) {
-      skipped += 1;
-      if (skipped > 2) return false;
-      continue;
-    }
-    at = hit + 1;
-  }
-  return true;
-}
-
 /** A three-letter-or-longer word also matches a word it starts: "mario"
  *  finds "Mario Kart" without any fuzzy work at all. */
 function prefixish(hay: string, needle: string): boolean {
   return needle.length >= 3 && hay.split(/\s+/).some((w) => w.startsWith(needle));
+}
+
+/** Allow one small typo in a game name without turning every search into a
+ *  loose metadata match. Comparison is against individual name words only. */
+function closeNameWord(name: string, needle: string): boolean {
+  if (needle.length < 5) return false;
+  return name
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean)
+    .some((word) => editDistance(word, needle) <= 1);
+}
+
+function editDistance(a: string, b: string): number {
+  let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const next = [i];
+    for (let j = 1; j <= b.length; j++) {
+      next[j] = a[i - 1] === b[j - 1]
+        ? prev[j - 1]
+        : Math.min(prev[j - 1], prev[j], next[j - 1]) + 1;
+    }
+    prev = next;
+  }
+  return prev[b.length];
 }
 
 function shuffled<T>(list: T[], seed: number): T[] {

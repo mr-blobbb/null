@@ -1,6 +1,6 @@
 {
   "name": "null",
-  "version": "1.0.0",
+  "version": "1.2.3",
   "private": true,
   "type": "module",
   "description": "NULL: a flat, fast hub for games, apps, proxies and tools. React + TypeScript on Vite.",

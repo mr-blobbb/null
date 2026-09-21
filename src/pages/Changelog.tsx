@@ -11,6 +11,16 @@ type Release = { version: string; date: string; note: string; changes: Change[] 
 
 const RELEASES: Release[] = [
   {
+    version: "v1.2.3",
+    date: "September 21, 2026",
+    note: "The one where searching the games shelf stopped guessing, and the browser got a new little door.",
+    changes: [
+      { kind: "tweak", text: "Game search now matches names, IDs and labels predictably, with partial-name support and only a conservative one-letter typo fallback. Unrelated games no longer appear because their metadata happens to contain the same letters." },
+      { kind: "add", text: "Added the Minecraft top-bar door. It opens the hosted Minecraft page inside NULL while keeping its tab identity as null://minecraft." },
+      { kind: "tweak", text: "The homepage build stamp and visible version are now v1.2.3 · 20260921." },
+    ],
+  },
+  {
     version: "v1.2.2",
     date: "September 20, 2026",
     note: "The one where NULL became a more complete browser, tightened the UI, and cleaned up the chrome.",
