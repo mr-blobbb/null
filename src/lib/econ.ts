@@ -779,6 +779,12 @@ export function mintItemGift(id: string, owner = false): { ok: boolean; code?: s
   return { ok: true, code };
 }
 
+export function applyRedeemedGift(gives: string, amount: number): void {
+  const s = econ.get();
+  if (gives === "coins") econ.set({ coins: s.coins + amount, earned: s.earned + amount });
+  else if (!s.owned.includes(gives)) econ.set({ owned: [...s.owned, gives] });
+}
+
 export function redeem(code: string): { ok: boolean; reason?: string } {
   const s = econ.get();
   const clean = code.trim().toUpperCase();

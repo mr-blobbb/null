@@ -7,6 +7,8 @@
    every fifteen minutes. The rate is in src/lib/econ.ts. */
 
 import { useEffect, useState } from "react";
+import { useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
 import {
   Check,
   Coins,
@@ -28,6 +30,7 @@ import {
   mintItemGift,
   owns,
   redeem,
+  applyRedeemedGift,
   SHOP,
   SHELVES,
   toggleEquip,
@@ -36,7 +39,7 @@ import {
   type Deal,
   type ShopItem,
 } from "../lib/econ";
-import { isOwner } from "../lib/owner";
+import { isCoOwner } from "../lib/owner";
 import { Sheet } from "../components/Sheet";
 import { useAccount } from "../lib/account";
 
@@ -46,9 +49,18 @@ export function Shop({ onOpenSettings }: { onOpenSettings: () => void }) {
   const me = useEcon();
   const account = useAccount();
   /* the account that owns the site takes the whole shelf, on the house */
-  const owner = isOwner(account.user);
+  const owner = isCoOwner(account.user, account.roles);
   const [gift, setGift] = useState<{ code: string; what: string } | null>(null);
   const [note, setNote] = useState<string | null>(null);
+  const createSharedGift = useMutation(api.giftCodes.create);
+  const redeemSharedGift = useMutation(api.giftCodes.redeem);
+
+  const shareCode = (code: string, gives: string, amount: number) => {
+    if (!account.user) return;
+    void createSharedGift({ code, gives, amount, by: account.user }).catch(() => {
+      say("Created locally, but the shared gift service was offline.");
+    });
+  };
 
   const say = (msg: string) => {
     setNote(msg);
@@ -88,6 +100,7 @@ export function Shop({ onOpenSettings }: { onOpenSettings: () => void }) {
               const r = mintCoinsGift();
               if (!r.ok) return say(r.reason ?? "Could not make a code.");
               setGift({ code: r.code as string, what: "100 coins" });
+              shareCode(r.code as string, "coins", 100);
             }}
           >
             <Gift />
@@ -146,6 +159,7 @@ export function Shop({ onOpenSettings }: { onOpenSettings: () => void }) {
 
                     if (!r.ok) return say(r.reason ?? "Could not make a code.");
                     setGift({ code: r.code as string, what: item.name });
+                    shareCode(r.code as string, item.id, 0);
                   }}
                 />
               ))}
@@ -261,6 +275,8 @@ function Card({
 
 function Redeem({ onDone }: { onDone: (msg: string) => void }) {
   const [code, setCode] = useState("");
+  const account = useAccount();
+  const redeemSharedGift = useMutation(api.giftCodes.redeem);
   const [error, setError] = useState<string | null>(null);
   return (
     <div className="gift-redeem">
@@ -277,6 +293,18 @@ function Redeem({ onDone }: { onDone: (msg: string) => void }) {
       <button
         className="btn"
         onClick={() => {
+          if (account.user) {
+            void redeemSharedGift({ code, by: account.user }).then((shared) => {
+              if (!shared.ok) {
+                setError(shared.reason);
+                return;
+              }
+              applyRedeemedGift(shared.gives, shared.amount);
+              setCode("");
+              onDone("Redeemed across devices.");
+            }).catch(() => setError("The shared gift service is offline."));
+            return;
+          }
           const r = redeem(code);
           if (!r.ok) {
             setError(r.reason ?? "That did not work.");

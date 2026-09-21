@@ -15,6 +15,7 @@ import type * as chat from "../chat.js";
 import type * as filter from "../filter.js";
 import type * as friends from "../friends.js";
 import type * as gifs from "../gifs.js";
+import type * as giftCodes from "../giftCodes.js";
 import type * as members from "../members.js";
 import type * as music from "../music.js";
 import type * as presence from "../presence.js";
@@ -37,6 +38,7 @@ declare const fullApi: ApiFromModules<{
   filter: typeof filter;
   friends: typeof friends;
   gifs: typeof gifs;
+  giftCodes: typeof giftCodes;
   members: typeof members;
   music: typeof music;
   presence: typeof presence;

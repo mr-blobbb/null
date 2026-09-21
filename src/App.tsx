@@ -214,6 +214,14 @@ export function App() {
   };
 
   const body = useMemo(() => bodyFor(tab), [tab]);
+  /* Game players are stateful documents (canvas, WebGL workers, audio, and
+     saves). Keep one mounted instance per tab instead of destroying the
+     player whenever the browser tab changes. A nonce still creates a fresh
+     instance when the user explicitly reloads it. */
+  const gameTabs = useMemo(
+    () => state.tabs.filter((t) => t.now.page === "player"),
+    [state.tabs],
+  );
   const split = state.split;
   const leftTab = split ? state.tabs.find((t) => t.id === split.left) : undefined;
   const rightTab = split ? state.tabs.find((t) => t.id === split.right) : undefined;
@@ -292,12 +300,24 @@ export function App() {
             </div>
           ) : (
             <div
-              key={`${tab.id}-${tab.nonce}`}
               className={`page-host${
                 tab.now.page === "home" || tab.now.page === "chat" || tab.now.page === "ai" ? " page-host--fit" : ""
               }`}
             >
-              {body}
+              <div className="page-layer">
+                {tab.now.page !== "player" && body}
+              </div>
+              <div className="game-tab-stack" aria-live="off">
+                {gameTabs.map((gameTab) => (
+                  <div
+                    key={`${gameTab.id}-${gameTab.nonce}`}
+                    className={`game-tab-instance${gameTab.id === tab.id ? " is-active" : ""}`}
+                    aria-hidden={gameTab.id !== tab.id}
+                  >
+                    {bodyFor(gameTab)}
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>

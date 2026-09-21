@@ -56,6 +56,8 @@ export type Account = {
    *  the directory when `deviceVisible` is on */
   device: string | null;
   deviceVisible: boolean;
+  /** shared staff roles copied from the member profile when available */
+  roles?: string[];
 };
 
 export const BANNER_DEFAULT =
@@ -343,6 +345,7 @@ type CloudCard = {
   banner?: string;
   pfp?: string | null;
   nameStyle?: string;
+  roles?: string[];
   wearing?: { avatar: string | null; effect: string | null; tags: string[] };
 };
 
@@ -378,6 +381,7 @@ export async function restoreCard(user: string): Promise<void> {
     /* the same rule for the picture: a card that carries none does not get to
        take away one that is on this browser already */
     if (card.pfp) patch.pfp = card.pfp;
+    if (Array.isArray(card.roles)) patch.roles = card.roles.filter((role) => typeof role === "string").slice(0, 20);
     if (typeof card.nameStyle === "string" && card.nameStyle) {
       try {
         const style = JSON.parse(card.nameStyle);

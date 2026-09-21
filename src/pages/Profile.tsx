@@ -309,7 +309,15 @@ function SignedIn() {
             <EffectArt id={eco.equipped.effect} />
           </span>
         )}
-        <div className="pf-banner" style={{ background: me.banner }}>
+        <div
+          className="pf-banner"
+          style={{
+            background: me.banner,
+            backgroundSize: me.banner.startsWith("url(") ? "cover" : undefined,
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
+          }}
+        >
           <button className="btn btn--sm pf-banner-edit" onClick={() => setBannerOpen(true)}>
             <Palette /> Edit banner
           </button>

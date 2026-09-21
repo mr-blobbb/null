@@ -145,13 +145,19 @@ export function useVoice(me: { user: string; name: string } | null, thread: stri
     };
 
     pc.ontrack = (ev) => {
-      const stream = ev.streams[0];
+      const stream = ev.streams[0] ?? new MediaStream([ev.track]);
       if (!stream) return;
       streams.current.set(who, stream);
       let el = audios.current.get(who);
       if (!el) {
         el = new Audio();
         el.autoplay = true;
+        el.controls = false;
+        el.setAttribute("playsinline", "true");
+        /* Keeping the element in the document makes ChromeOS treat the
+           incoming track as a real media output instead of a detached,
+           autoplay-blocked object. */
+        document.body.appendChild(el);
         audios.current.set(who, el);
       }
       el.srcObject = stream;
@@ -161,6 +167,7 @@ export function useVoice(me: { user: string; name: string } | null, thread: stri
          picture: nothing is measured, kept or sent */
       const ctx = ac.current;
       if (ctx) {
+        void ctx.resume().catch(() => {});
         try {
           const src = ctx.createMediaStreamSource(stream);
           const an = ctx.createAnalyser();

@@ -156,6 +156,15 @@ export default defineSchema({
     handled: v.optional(v.boolean()),
   }).index("by_user", ["user"]),
 
+  giftCodes: defineTable({
+    code: v.string(),
+    gives: v.string(),
+    amount: v.number(),
+    createdBy: v.string(),
+    usedBy: v.union(v.string(), v.null()),
+    at: v.number(),
+  }).index("by_code", ["code"]),
+
   /* ---------- people ---------- */
 
   /** one row per edge; `a` is always the earlier handle alphabetically, so a

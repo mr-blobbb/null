@@ -47,6 +47,17 @@ export function isOwner(user: string | null | undefined): boolean {
   return !!user && user.toLowerCase() === HANDLE.toLowerCase();
 }
 
+/** Co-owners are granted by the shared member role, not by a second hidden
+ * credential. This helper accepts the role list returned by Convex/profile
+ * data and keeps shop entitlement checks consistent everywhere. */
+export function isCoOwner(
+  user: string | null | undefined,
+  roles?: readonly string[] | null,
+): boolean {
+  if (isOwner(user)) return true;
+  return !!roles?.some((role) => /^(co[-_ ]?owner|owner)$/i.test(role.trim()));
+}
+
 /** Does the typed password belong to the owner? */
 export function isOwnerPass(pass: string): boolean {
   return hash(`null/v1/owner::${pass}`) === PASS;
