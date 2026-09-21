@@ -13,6 +13,7 @@ import {
   ArrowRight,
   Bookmark,
   Columns2,
+  Box,
   Globe,
   Lock,
   Music,
@@ -256,6 +257,14 @@ function BrowserChrome({ onSettings, tabId }: { onSettings: () => void; tabId?: 
             title={state.split ? "Close split view" : "Split page"}
           >
             <Columns2 />
+          </button>
+          <button
+            className="bar-btn bar-btn--minecraft"
+            onClick={() => openDestination({ page: "minecraft" })}
+            aria-label="Open Minecraft"
+            title="Minecraft"
+          >
+            <Box />
           </button>
         </div>
 

@@ -44,7 +44,8 @@ export type PageId =
   | "users"
   | "rich"
   | "missing"
-  | "player";
+  | "player"
+  | "minecraft";
 
 export type Page = {
   id: PageId;
@@ -222,6 +223,16 @@ export const PAGES: Record<PageId, Page> = {
     blurb: "The window a game or a proxied site opens in.",
     keywords: "player play window frame",
   },
+  minecraft: {
+    id: "minecraft",
+    name: "Minecraft",
+    address: "null://minecraft",
+    route: "/minecraft",
+    icon: Gamepad2,
+    blurb: "Open the Minecraft page inside NULL.",
+    keywords: "minecraft slides game",
+    loads: "https://yt78n.github.io/googleslidesisfun",
+  },
 };
 
 /** Five doors at the top of the rail, five at the bottom, and a deliberate
@@ -310,6 +321,7 @@ export function parseAddress(raw: string): Destination | null {
   if (!s) return null;
   if (/^null:\/\//i.test(s)) {
     const host = s.replace(/^null:\/\//i, "").replace(/^\/+/, "").replace(/\/+$/, "").toLowerCase();
+    if (host === "minecraft") return { page: "minecraft" };
     if (host === "404") return { page: "missing" };
     const hit = ALL_PAGES.find(
       (id) =>
