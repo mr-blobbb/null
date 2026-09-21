@@ -42,10 +42,8 @@ import { Guard } from "./components/Guard";
 const host = document.getElementById("root");
 if (!host) throw new Error("NULL: the #root element is missing from index.html");
 
-/* With a backend the tree gains one provider, which is what makes the member
-   list and the chat room share state between machines. Without one the tree is
-   exactly as it was and every cloud page falls back to this browser — so the
-   site is never broken by a server being absent, only quieter. */
+/* Shared community features always use the same Convex provider. They do not
+   silently switch to browser storage when the deployment is unavailable. */
 const client = cloud();
 
 createRoot(host).render(

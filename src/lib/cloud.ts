@@ -3,9 +3,9 @@
 
    Everything that used to end at this browser — the member list and the chat
    room — goes through here now. The rest of the site is unchanged and still
-   works with no server at all: if there is no address to reach, `cloud()` is
-   null and every caller falls back to what is on the machine, which is what
-   the Members page did before there was a backend.
+   works without a server at all. Shared community data never falls back to
+   browser storage: a missing or unavailable deployment is reported as an
+   outage so preview and published URLs cannot silently diverge.
 
    The address comes from `VITE_CONVEX_URL` when the build sets it, and from
    BACKEND when it does not, so a plain static deploy still finds the server.

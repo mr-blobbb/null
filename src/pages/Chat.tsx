@@ -248,7 +248,22 @@ function Rooms() {
      you wander off to another channel is half of what a voice room is for. */
   const [voiceWant, setVoiceWant] = useState<string | null>(null);
   const voice = useVoice(me.user ? { user: handle, name: me.name || handle } : null, voiceWant);
+  const voiceInvites = useQuery(api.voice.invites, me.user ? { to: handle } : "skip") as
+    | { id: string; room: string; from: string; at: number }[]
+    | undefined;
+  const sendVoiceInvite = useMutation(api.voice.invite);
+  const answerVoiceInvite = useMutation(api.voice.answerInvite);
   const voiceErr = voice.error;
+
+  const inviteToVoice = async (room: string) => {
+    const target = window.prompt("Invite @handle to this voice room:", "")?.trim().replace(/^@/, "");
+    if (!target || !me.user) return;
+    try {
+      await sendVoiceInvite({ room, from: handle, to: target });
+    } catch (e) {
+      window.alert((e as Error).message.replace(/^.*?Error: /, ""));
+    }
+  };
   useEffect(() => {
     if (!voiceWant || voice.joined || voice.joining || voiceErr) return;
     voice.join();
@@ -300,6 +315,13 @@ function Rooms() {
 
       {/* ---------- the room ---------- */}
       <section className="ch-main">
+        {voiceInvites?.map((invite) => (
+          <div className="ch-voice-invite" key={invite.id} role="dialog" aria-label="Voice invitation">
+            <span><Headphones /> <b>@{invite.from}</b> invited you to <b>#{invite.room}</b></span>
+            <button className="btn btn--fill btn--sm" onClick={() => void answerVoiceInvite({ id: invite.id as never, accept: true, by: handle }).then(() => { setSlug(invite.room); setVoiceWant(invite.room); })}>Join</button>
+            <button className="btn btn--sm" onClick={() => void answerVoiceInvite({ id: invite.id as never, accept: false, by: handle })}>Decline</button>
+          </div>
+        ))}
         {/* the channel header belongs to the channel feed: a conversation has
             its own head, with the person's face and the thread controls on it */}
         {side !== "dms" && (
@@ -340,6 +362,7 @@ function Rooms() {
               setSlug(s);
               setVoiceWant(s);
             }}
+            onInvite={inviteToVoice}
             onLeave={() => {
               setVoiceWant(null);
               voice.leave();
@@ -492,6 +515,7 @@ function VoiceStage({
   voice,
   onJoin,
   onLeave,
+  onInvite,
   me,
   onProfile,
 }: {
@@ -499,6 +523,7 @@ function VoiceStage({
   voice: ReturnType<typeof useVoice>;
   onJoin: (slug: string) => void;
   onLeave: () => void;
+  onInvite: (room: string) => void;
   me: string;
   onProfile: (user: string) => void;
 }) {
@@ -517,6 +542,11 @@ function VoiceStage({
               ? `${others.length} listening`
               : "nobody is in here"}
         </span>
+        {voice.joined && (
+          <button className="btn btn--sm" onClick={() => onInvite(slug)} title="Invite someone by @handle">
+            <UserPlus /> Invite
+          </button>
+        )}
         {voice.joined ? (
           <button className="btn btn--bad btn--sm" onClick={onLeave}>
             <PhoneOff /> Leave
@@ -1277,7 +1307,7 @@ function Feed({
               <input
                 ref={fileRef}
                 type="file"
-                accept="image/*"
+                accept="image/*,video/*,audio/*,.pdf,.txt,.zip"
                 hidden
                 onChange={(e) => {
                   const f = e.target.files?.[0];
@@ -1285,10 +1315,11 @@ function Feed({
                   const fr = new FileReader();
                   fr.onload = () => {
                     const url = String(fr.result);
-                    /* a chat image is a flavour, not an album: small enough
-                       to ride along with the message */
-                    if (url.length > 280_000) {
-                      setNote("That image is too big for chat — 200KB or so is the ceiling.");
+                    /* Convex documents top out around 1 MiB. Keep the encoded
+                       payload just below that boundary so staff images and
+                       member share-link attachments survive cross-device sync. */
+                    if (url.length > 900_000) {
+                      setNote("That image is over NULL's cross-device upload limit (about 900 KB after encoding).");
                       return;
                     }
                     setImage(url);
@@ -1407,8 +1438,20 @@ function Feed({
                           className={`ch-gif${stickered ? " is-sticker" : ""}`}
                           title={g.title || "Send this one"}
                           onClick={() => {
-                            setImage(g.full);
-                            closeTools();
+                            void fetch(g.full)
+                              .then((res) => {
+                                if (!res.ok) throw new Error("GIF unavailable");
+                                return res.blob();
+                              })
+                              .then((blob) => {
+                                const fr = new FileReader();
+                                fr.onload = () => {
+                                  setImage(String(fr.result));
+                                  closeTools();
+                                };
+                                fr.readAsDataURL(blob);
+                              })
+                              .catch(() => setNote("That GIF could not be copied into the message."));
                           }}
                         >
                           <img src={g.thumb} alt={g.title} loading="lazy" decoding="async" />

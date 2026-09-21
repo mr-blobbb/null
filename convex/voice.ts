@@ -27,6 +27,45 @@ const SIGNAL_ALIVE = 60_000;
 
 const key = (s: string) => s.trim().toLowerCase();
 
+export const invite = mutation({
+  args: { room: v.string(), from: v.string(), to: v.string() },
+  handler: async (ctx, { room, from, to }) => {
+    const sender = key(from);
+    const recipient = key(to);
+    if (!sender || !recipient || sender === recipient) throw new Error("pick another member");
+    if (!/^[-a-z0-9._]{3,20}$/.test(recipient)) throw new Error("use a valid @handle");
+    await ctx.db.insert("voiceInvites", {
+      room: room.slice(0, 40),
+      from: sender,
+      to: recipient,
+      kind: "voice",
+      at: Date.now(),
+      status: "pending",
+    });
+    return true;
+  },
+});
+
+export const invites = query({
+  args: { to: v.string() },
+  handler: async (ctx, { to }) => {
+    const rows = await ctx.db.query("voiceInvites")
+      .withIndex("by_to_status", (q) => q.eq("to", key(to)).eq("status", "pending"))
+      .collect();
+    return rows.filter((r) => r.at > Date.now() - 5 * 60_000).map((r) => ({ id: r._id, room: r.room, from: r.from, at: r.at }));
+  },
+});
+
+export const answerInvite = mutation({
+  args: { id: v.id("voiceInvites"), accept: v.boolean(), by: v.string() },
+  handler: async (ctx, { id, accept, by }) => {
+    const row = await ctx.db.get(id);
+    if (!row || row.to !== key(by) || row.status !== "pending") return false;
+    await ctx.db.patch(id, { status: accept ? "accepted" : "declined" });
+    return accept ? row.room : true;
+  },
+});
+
 export const join = mutation({
   args: { thread: v.string(), user: v.string(), name: v.string() },
   handler: async (ctx, { thread, user, name }) => {

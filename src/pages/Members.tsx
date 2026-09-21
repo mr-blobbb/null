@@ -70,11 +70,10 @@ export function Members() {
 
 function Cloud() {
   const rows = useQuery(api.members.list);
-  const local = useMembers();
   const me = useAccount();
 
   const list = useMemo((): CloudMember[] => {
-    if (!rows) return local as CloudMember[];
+    if (!rows) return [];
     const seen = new Set(rows.map((r: any) => r.user.toLowerCase()));
     const remote: CloudMember[] = rows.map((r: any) => ({
       user: r.user,
@@ -97,12 +96,14 @@ function Cloud() {
       seen: 0,
       device: r.device ?? null,
     }));
-    const mine = (local as CloudMember[]).filter((m) => !seen.has(m.user.toLowerCase()));
-    return [...remote, ...mine].sort((a, b) => {
+    /* Never merge browser-only cards into the shared directory. That made
+       preview appear healthier than the published deployment and was the
+       source of cross-URL member drift. */
+    return remote.sort((a, b) => {
       if (a.owner !== b.owner) return a.owner ? -1 : 1;
       return a.joined - b.joined;
     });
-  }, [rows, local]);
+  }, [rows]);
 
   const iAmOwner = isOwner(me.user);
   const myRoles: string[] = list.find((m) => m.user === (me.user ?? "").toLowerCase())?.roles ?? [];

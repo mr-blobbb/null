@@ -310,7 +310,7 @@ export const send = mutation({
       tags: args.tags.slice(0, 2),
       machine: args.machine.slice(0, 40),
       thread: slug,
-      image: args.image ? args.image.slice(0, 300_000) : undefined,
+      image: args.image ? args.image.slice(0, 900_000) : undefined,
       replyTo: args.replyTo ?? undefined,
       /* screened like any other words, and clipped: a quote of a very long
          line should be a quotation, not a second copy of it */

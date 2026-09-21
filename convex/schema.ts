@@ -209,6 +209,17 @@ export default defineSchema({
     .index("by_thread", ["thread"])
     .index("by_thread_user", ["thread", "user"]),
 
+  voiceInvites: defineTable({
+    room: v.string(),
+    from: v.string(),
+    to: v.string(),
+    kind: v.string(),
+    at: v.number(),
+    status: v.string(),
+  })
+    .index("by_to_status", ["to", "status"])
+    .index("by_from", ["from"]),
+
   voiceSignals: defineTable({
     thread: v.string(),
     /** who wrote it */

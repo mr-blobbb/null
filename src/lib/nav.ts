@@ -114,7 +114,7 @@ export const PAGES: Record<PageId, Page> = {
     icon: Clapperboard,
     blurb: "aether.cx, opened inside NULL like any other address.",
     keywords: "movies film watch aether stream cinema",
-    loads: "https://aether.cx",
+    loads: "https://aether.cx/settings",
   },
   music: {
     id: "music",

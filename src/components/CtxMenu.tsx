@@ -24,6 +24,7 @@ import {
   RefreshCw,
   Shield,
   Trash2,
+  EyeOff,
 } from "lucide-react";
 
 import { Sheet } from "./Sheet";
@@ -83,6 +84,19 @@ function rowsFor(e: MouseEvent, page: string): Row[] {
       });
       rows.push({ kind: "gap" });
     }
+  }
+
+  /* ---------- library item tools ---------- */
+  const libraryTile = t.closest?.("[data-library-entry]") as HTMLElement | null;
+  const libraryId = libraryTile?.getAttribute("data-library-entry");
+  if (libraryId && (page === "games" || page === "apps")) {
+    rows.push({
+      kind: "item",
+      label: "Hide this from the shelf",
+      icon: <EyeOff />,
+      run: () => window.dispatchEvent(new CustomEvent("null:hide-library-entry", { detail: { id: libraryId } })),
+    });
+    rows.push({ kind: "gap" });
   }
 
   /* ---------- the page's own things ---------- */

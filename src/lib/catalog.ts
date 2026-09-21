@@ -195,9 +195,10 @@ function coverHosts(shelf: string, cover: string): string[] {
 const SKIP_SHELVES = new Set(["gmshelf/ckv"]);
 function discovered(): Entry[] {
   const local = new Set(GAMES.map((g) => g.name.toLowerCase()));
-  return ROWS.filter(([,, shelf]) => !SKIP_SHELVES.has(shelf)).filter(
-    ([, name]) => !local.has(name.toLowerCase()),
-  ).map(
+  return ROWS.filter(([,, shelf]) => !SKIP_SHELVES.has(shelf))
+    .filter(([, name]) => name.trim().toLowerCase() !== "ai limit")
+    .filter(([, name]) => !local.has(name.toLowerCase()))
+    .map(
     ([id, name, shelf, file, coverShelf, cover, genre]) => {
       const art = cover ? coverHosts(coverShelf, cover) : [];
       return {
@@ -222,7 +223,10 @@ const SHELF: Entry[] = [...GAMES, ...discovered()];
  *  the service's player page, framed like any other game. */
 function cloudGames(): Entry[] {
   const known = new Set(SHELF.map((e) => e.name.toLowerCase()));
-  return CLOUD.filter(([, name]) => !known.has(name.toLowerCase())).map(
+  return CLOUD
+    .filter(([, name]) => name.trim().toLowerCase() !== "ai limit")
+    .filter(([, name]) => !known.has(name.toLowerCase()))
+    .map(
     ([id, name, key, cover, tags]) => ({
       id,
       name,

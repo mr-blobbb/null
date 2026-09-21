@@ -26,6 +26,9 @@ import { Cover, thumbsOf } from "../components/Cover";
 import { toggleFavorite, pushRecent, useAccount } from "../lib/account";
 import { openTab } from "../lib/tabs";
 import { trackPlay } from "../lib/econ";
+import { createStore, useStore } from "../lib/store";
+
+const hidden = createStore<{ ids: string[] }>("hidden-library-entries", { ids: [] });
 
 /** How many tiles mount before the rest mount with the scroll. The shelf is
  *  still thousands of tiles — React gets a running start — but there is no
@@ -47,6 +50,7 @@ export function Library({ kind }: { kind: Kind }) {
   const [onlyFavs, setOnlyFavs] = useState(false);
   const [seed, setSeed] = useState(1);
   const [drawn, setDrawn] = useState(SCREEN);
+  const hiddenIds = useStore(hidden).ids;
   /** the sentinel the scroll grows the shelf with */
   const more = useRef<HTMLDivElement>(null);
 
@@ -62,11 +66,22 @@ export function Library({ kind }: { kind: Kind }) {
         onlyIds: onlyFavs ? me.favorites : undefined,
       }),
     [kind, q, sort, seed, source, onlyFavs, me.favorites],
-  );
+  ).filter((entry) => !hiddenIds.includes(entry.id));
 
   /* anything that changes what is on the shelf puts the shelf back to one
      screenful */
-  useEffect(() => setDrawn(SCREEN), [kind, q, sort, source, onlyFavs, seed]);
+  useEffect(() => setDrawn(SCREEN), [kind, q, sort, source, onlyFavs, seed, hiddenIds]);
+
+  useEffect(() => {
+    const hide = (event: Event) => {
+      const detail = (event as CustomEvent<{ id: string }>).detail;
+      if (!detail?.id) return;
+      const ids = hidden.get().ids;
+      if (!ids.includes(detail.id)) hidden.set({ ids: [...ids, detail.id] });
+    };
+    window.addEventListener("null:hide-library-entry", hide);
+    return () => window.removeEventListener("null:hide-library-entry", hide);
+  }, []);
 
   /* the scroll loads the rest: watching the sentinel rather than asking for
      a click, so a long shelf reads itself without a button in the middle of it */
@@ -233,7 +248,7 @@ function Tile({
   const kind = entry.kind;
   return (
     <div className="tile">
-      <button className="tile-btn" onClick={onOpen} title={entry.name}>
+      <button className="tile-btn" onClick={onOpen} title={entry.name} data-library-entry={entry.id}>
         {/* artwork from someone else's stash, at every host that serves it, and
             a square drawn out of the name when none of them answer */}
         <Cover entry={entry} icon={Icon} />
