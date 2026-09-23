@@ -1,12 +1,13 @@
 /* NULL · art.tsx
-   The artwork the shop sells. Most pieces are drawn rather than downloaded:
-   an animated SVG that takes its colours from the palette, so a decoration
-   looks right in Forest and in Light without a second asset. A few are real
-   clips from public/decor, which is the only reason a <video> appears here.
+   The artwork the shop sells. The picture shelves are real files, kept beside
+   their listings in src/lib/shopAssets.ts: a decoration is a square of art
+   laid over the round picture, a profile effect is a transparent overlay that
+   dresses the whole card. The pieces the shop used to draw are still here for
+   anyone wearing one from before.
 
-   Every piece loops forever and is silent by construction: the clips are
-   muted and carry no audio track of their own, and nothing else is a file at
-   all, only CSS keyframes.
+   Everything loops and is silent: the clips are muted and carry no audio
+   track of their own, and nothing else makes a sound — only CSS keyframes
+   and the art's own frames.
 
    The class names here are animated in src/styles/shop.css. */
 
@@ -15,6 +16,7 @@ import { useRef, useState, type CSSProperties } from "react";
 import { useAccount } from "./account";
 import { NullFace } from "./brand";
 import type { ShopItem } from "./econ";
+import { avatarAsset, effectAsset } from "./shopAssets";
 
 const VB = "0 0 100 100";
 
@@ -45,6 +47,19 @@ const FACE_CLIP: Record<string, string> = {
 
 export function AvatarArt({ id, still }: { id: string | null | undefined; still?: boolean }) {
   if (!id) return null;
+  /* A decoration from the shelf: a square of art sized to 135% of the
+     picture and centred on it, which is the box it is drawn for. `still`
+     asks for the resting frame — chat wears it until the pointer comes near,
+     and the moving twin fades in on hover (see shop.css and community.css). */
+  const deco = avatarAsset(id);
+  if (deco) {
+    return (
+      <span className={`art art--deco${still ? "" : " is-live"}`}>
+        <img className="deco-img deco-still" src={deco.still} alt="" loading="lazy" draggable={false} />
+        <img className="deco-img deco-move" src={deco.moving} alt="" loading="lazy" draggable={false} />
+      </span>
+    );
+  }
   const clip = FACE_CLIP[id];
   if (clip) {
     return (
@@ -519,6 +534,18 @@ function FaceVideo({ file, still }: { file: string; still?: boolean }) {
 }
 
 export function EffectArt({ id }: { id: string | null | undefined }) {
+  /* An overlay from the shelf: transparent art that dresses the whole card —
+     picture, banner and words alike. The wrapper positions it; the card it
+     lands on decides whether it sits over the words (share, chat, profile)
+     or behind them. */
+  const deco = effectAsset(id);
+  if (deco) {
+    return (
+      <span className="fx fx--deco">
+        <img className="fx-deco" src={deco.url} alt="" loading="lazy" draggable={false} />
+      </span>
+    );
+  }
   const draw = id ? EFFECTS[id] : undefined;
   const clip = id ? EFFECT_VIDEO[id] : undefined;
   if (!id || !draw) return null;

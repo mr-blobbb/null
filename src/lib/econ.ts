@@ -10,6 +10,7 @@
    Everything below lives in localStorage. There is no server to lose it on. */
 
 import { createStore, useStore } from "./store";
+import { AVATAR_ASSETS, EFFECT_ASSETS } from "./shopAssets";
 
 export const COINS_PER_MINUTE = 3;
 export const MILESTONE_SECONDS = 15 * 60;
@@ -63,7 +64,7 @@ export const SHELVES: { id: Shelf; name: string; note: string }[] = [
   {
     id: "effect",
     name: "Profile effects",
-    note: "A looping background for your whole card, behind everything it says.",
+    note: "A looping overlay across your whole card — picture, banner and all.",
   },
   {
     id: "tag",
@@ -72,182 +73,26 @@ export const SHELVES: { id: Shelf; name: string; note: string }[] = [
   },
 ];
 
-export const SHOP: ShopItem[] = [
-  /* avatar decorations */
-  {
-    id: "orbit",
+/* The two picture shelves come straight from the asset list, so a
+   decoration and the picture that draws it can never drift apart. */
+const DECOS: ShopItem[] = [
+  ...AVATAR_ASSETS.map((a): ShopItem => ({
+    id: a.id,
     shelf: "avatar",
-    name: "Orbit",
-    desc: "A ring of light circling your picture.",
-    price: 780,
-  },
-  {
-    id: "halo",
-    shelf: "avatar",
-    name: "Halo",
-    desc: "A soft ring that never quite touches.",
-    price: 960,
-  },
-  {
-    id: "eclipse",
-    shelf: "avatar",
-    name: "Eclipse",
-    desc: "A dark disc sliding across your edge.",
-    price: 1040,
-  },
-  {
-    id: "stardust",
-    shelf: "avatar",
-    name: "Stardust",
-    desc: "Slow sparkles drifting off the frame.",
-    price: 1180,
-  },
-  {
-    id: "prism",
-    shelf: "avatar",
-    name: "Prism",
-    desc: "A rotating band of colour round the rim.",
-    price: 1240,
-  },
-  {
-    id: "signal",
-    shelf: "avatar",
-    name: "Signal",
-    desc: "Scanlines rolling up your picture.",
-    price: 1320,
-  },
-  {
-    id: "solar",
-    shelf: "avatar",
-    name: "Solar flare",
-    desc: "A hot arc that laps you, once a loop.",
-    price: 1480,
-  },
-  {
-    id: "rift",
-    shelf: "avatar",
-    name: "Rift",
-    desc: "Two rings spinning opposite ways.",
-    price: 1600,
-  },
-  /* the two that are real footage: a light that runs round the rim, and
-     violet fire that climbs the face. Both screen onto the picture, so the
-     black they were shot on never shows. */
-  {
-    id: "chroma",
-    shelf: "avatar",
-    name: "Chroma",
-    desc: "A soft light that circles your picture and never stops.",
-    price: 1380,
-  },
-  {
-    id: "ember",
-    shelf: "avatar",
-    name: "Ember",
-    desc: "Violet fire, climbing the edge of your face.",
-    price: 1540,
-  },
-  {
-    id: "pulse",
-    shelf: "avatar",
-    name: "Pulse",
-    desc: "A ring leaving your picture, three times a loop.",
-    price: 920,
-  },
-  {
-    id: "meridian",
-    shelf: "avatar",
-    name: "Meridian",
-    desc: "Two thin rings crossing on different axes.",
-    price: 1260,
-  },
-  {
-    id: "glitch",
-    shelf: "avatar",
-    name: "Glitch",
-    desc: "Bars that tear sideways across the frame.",
-    price: 1440,
-  },
-  {
-    id: "comet",
-    shelf: "avatar",
-    name: "Comet",
-    desc: "A bead with a burning tail, going round and round.",
-    price: 1580,
-  },
-  {
-    id: "ash",
-    shelf: "avatar",
-    name: "Ashfall",
-    desc: "Fine grey ash coming off the top of the frame.",
-    price: 1720,
-  },
+    name: a.name,
+    desc: a.desc,
+    price: a.price,
+  })),
+  ...EFFECT_ASSETS.map((a): ShopItem => ({
+    id: a.id,
+    shelf: "effect",
+    name: a.name,
+    desc: a.desc,
+    price: a.price,
+  })),
+];
 
-  /* profile effects: whole-card backgrounds, looping and silent */
-  {
-    id: "rainy",
-    shelf: "effect",
-    name: "Pixel Art",
-    desc: "A pixel image: rain and a cat.",
-    price: 1180,
-  },
-  {
-    id: "blocks",
-    shelf: "effect",
-    name: "Calm Forest",
-    desc: "Minecraft landscape!",
-    price: 1320,
-  },
-  {
-    id: "hex",
-    shelf: "effect",
-    name: "Hexagon",
-    desc: "Moving hexagons moving in and out of a plane.",
-    price: 1080,
-  },
-  {
-    id: "galaxy",
-    shelf: "effect",
-    name: "Galaxy",
-    desc: "A ringed disk and a sky that never holds still.",
-    price: 1520,
-  },
-  {
-    id: "drift",
-    shelf: "effect",
-    name: "Drift",
-    desc: "Slow white specks crossing the card, the way dust does.",
-    price: 1260,
-  },
-  {
-    id: "static",
-    shelf: "effect",
-    name: "Static",
-    desc: "Television snow that never settles into a picture.",
-    price: 1180,
-  },
-  {
-    id: "crt",
-    shelf: "effect",
-    name: "Dead Channel",
-    desc: "Scanlines, a bar that never arrives, and a wandering glow.",
-    price: 1420,
-  },
-  {
-    id: "aurora",
-    shelf: "effect",
-    name: "Aurora",
-    desc: "Bands of light breathing over your card.",
-    price: 1660,
-  },
-  {
-    id: "ashfall",
-    shelf: "effect",
-    name: "Ashfall",
-    desc: "Petals of ash coming down, turning as they fall.",
-    price: 1780,
-  },
-
+const TAGS: ShopItem[] = [
   /* name tags */
   {
     id: "tstar",
@@ -461,6 +306,8 @@ export const SHOP: ShopItem[] = [
     art: "cursed",
   },
 ];
+
+export const SHOP: ShopItem[] = [...DECOS, ...TAGS];
 
 export type Gift = {
   code: string;

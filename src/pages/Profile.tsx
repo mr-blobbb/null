@@ -57,6 +57,7 @@ import {
   type NameStyle,
 } from "../lib/account";
 import { AvatarArt, EffectArt, TagChip } from "../lib/art";
+import { effectAsset } from "../lib/shopAssets";
 import { NullFace } from "../lib/brand";
 import { publish, unpublish } from "../lib/members";
 import { ShareCard } from "../components/ShareCard";
@@ -251,6 +252,9 @@ function SignedIn() {
 
   const tags = itemsOf(eco.equipped.tags);
   const avatar = eco.equipped.avatar;
+  /* the overlay, when they are wearing one: it dresses the whole card, and
+     the card takes its shape so nothing of it is cropped away */
+  const overlay = effectAsset(eco.equipped.effect);
   /* the owner wears their own tag, on top of whatever they picked up in the
      shop — the two sit side by side rather than replacing each other */
   const owner = isOwner(me.user);
@@ -301,11 +305,13 @@ function SignedIn() {
 
   return (
     <div className="page">
-      <section className="card pf-card">
-        {/* the effect covers the whole card, over the banner, settled by its own
-            scrim — the share card and the shop previews draw the same */}
+      <section className={`card pf-card${overlay ? " pf-card--fx" : ""}`}>
+        {/* an overlay dresses the whole card — over the banner, the picture
+            and the words alike — and the card takes its shape so nothing of
+            it is cropped; the older drawn effects still sit behind
+            everything, settled by their own scrim */}
         {eco.equipped.effect && (
-          <span className="pf-effect">
+          <span className={`pf-effect${overlay ? " pf-effect--over" : ""}`}>
             <EffectArt id={eco.equipped.effect} />
           </span>
         )}

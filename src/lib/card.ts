@@ -25,12 +25,13 @@ export type CardInput = {
   coins: number;
   /** the effect clip, if the player is wearing one and it is playing */
   video?: HTMLVideoElement | null;
+  /** the whole-card overlay, read from the <img> already playing on the page */
+  fx?: HTMLImageElement | null;
+  /** the square decoration around the picture, likewise */
+  deco?: HTMLImageElement | null;
   /** the resolved family of the name, so the card and the page agree */
   font?: string;
 };
-
-const W = 1200;
-const H = 760;
 
 /** The palette the card is drawn in: the page's own, so a forest card is
  *  green and a light card is pale. */
@@ -72,10 +73,11 @@ function fade(color: string, a: number): string {
   return color;
 }
 
-function bannerPaint(ctx: CanvasRenderingContext2D, banner: string, fallback: Ink) {
+/** The banner sweep, drawn across the card it is given. */
+function bannerPaint(ctx: CanvasRenderingContext2D, banner: string, fallback: Ink, w: number, h: number) {
   const found = colorsIn(banner);
   if (found.length === 0) return fallback.ac1;
-  const g = ctx.createLinearGradient(0, 0, W, H * 0.9);
+  const g = ctx.createLinearGradient(0, 0, w, h * 0.9);
   found.forEach((c, i) => g.addColorStop(found.length === 1 ? 1 : i / (found.length - 1), c));
   return g;
 }
@@ -166,6 +168,11 @@ function pill(
 /** Draw the card. Returns the canvas so the caller decides what to do with
  *  it: a data URL for a download, or nothing at all. */
 export async function paintCard(input: CardInput): Promise<HTMLCanvasElement> {
+  /* The card's shape: with an overlay on, the art's own (45:88) so the art
+     lands edge to edge with nothing cropped; without one, the wide card it
+     has always been. */
+  const W = input.fx ? 900 : 1200;
+  const H = input.fx ? 1760 : 760;
   const c = document.createElement("canvas");
   c.width = W;
   c.height = H;
@@ -184,7 +191,7 @@ export async function paintCard(input: CardInput): Promise<HTMLCanvasElement> {
 
   /* the banner, then the effect clip screened over it, exactly as the page
      composites them: black in the clip disappears, the glow stays */
-  ctx.fillStyle = bannerPaint(ctx, input.banner, k);
+  ctx.fillStyle = bannerPaint(ctx, input.banner, k, W, H);
   ctx.fillRect(0, 0, W, H);
 
   const photo = input.banner.includes("url(") ? /url\((['"]?)(.*?)\1\)/.exec(input.banner)?.[2] : null;
@@ -246,6 +253,14 @@ export async function paintCard(input: CardInput): Promise<HTMLCanvasElement> {
   ctx.strokeStyle = k.text;
   ctx.lineWidth = 4;
   ctx.stroke();
+
+  /* the decoration around the picture: its square art at 135% of the circle,
+     centred on it — the box the art is drawn for, corners and all */
+  const deco = input.deco;
+  if (deco && deco.complete && deco.naturalWidth) {
+    const box = pr * 2 * 1.35;
+    ctx.drawImage(deco, px + pr - box / 2, py + pr - box / 2, box, box);
+  }
 
   /* the name, in the colour or gradient they chose, and the handle under it */
   const style = input.nameStyle;
@@ -309,6 +324,13 @@ export async function paintCard(input: CardInput): Promise<HTMLCanvasElement> {
   ctx.fillStyle = k.dim;
   const foot = `joined ${when} · ${input.favorites} favorites · ${input.coins.toLocaleString()} coins`;
   ctx.fillText(foot, 46, H - 52);
+
+  /* the whole-card overlay, last of the art: it dresses the card over the
+     words as well, exactly as it sits on the page */
+  const fx = input.fx;
+  if (fx && fx.complete && fx.naturalWidth) {
+    cover(ctx, fx, fx.naturalWidth, fx.naturalHeight, 0, 0, W, H);
+  }
 
   ctx.restore();
 

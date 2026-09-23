@@ -17,6 +17,7 @@ import { nameStyleCss, useAccount } from "../lib/account";
 import { itemsOf, useEcon } from "../lib/econ";
 import { isOwner, OWNER_TAG } from "../lib/owner";
 import { cardPng } from "../lib/card";
+import { effectAsset } from "../lib/shopAssets";
 import { AvatarArt, EffectArt, TagChip } from "../lib/art";
 import { NullFace } from "../lib/brand";
 import { Sheet } from "./Sheet";
@@ -31,6 +32,9 @@ export function ShareCard({ open, onClose }: { open: boolean; onClose: () => voi
 
   const owner = isOwner(me.user);
   const tags = itemsOf(eco.equipped.tags);
+  /* the overlay, when they are wearing one: it dresses the whole card, and
+     the card takes its shape so nothing of it is cropped away */
+  const overlay = effectAsset(eco.equipped.effect);
 
   const say = (msg: string) => {
     setNote(msg);
@@ -40,6 +44,15 @@ export function ShareCard({ open, onClose }: { open: boolean; onClose: () => voi
   const download = async () => {
     setBusy(true);
     try {
+      /* the frames already playing on this card, so the PNG is painted with
+         the same frame the eye is looking at */
+      const first = (...sels: string[]) => {
+        for (const sel of sels) {
+          const el = card.current?.querySelector<HTMLImageElement>(sel);
+          if (el?.complete && el.naturalWidth) return el;
+        }
+        return null;
+      };
       const png = await cardPng({
         name: me.name || me.user || "someone",
         handle: me.user ?? "",
@@ -54,6 +67,8 @@ export function ShareCard({ open, onClose }: { open: boolean; onClose: () => voi
         coins: eco.coins,
         /* the clip already playing on this card, drawn frame by frame */
         video: card.current?.querySelector("video") ?? null,
+        fx: first(".share-fx img"),
+        deco: first(".share-pic .art--deco .deco-move", ".share-pic .art--deco .deco-still"),
         font: nameEl.current ? getComputedStyle(nameEl.current).fontFamily : undefined,
       });
       const a = document.createElement("a");
@@ -74,10 +89,12 @@ export function ShareCard({ open, onClose }: { open: boolean; onClose: () => voi
         a PNG here in the browser; nothing is uploaded.
       </p>
 
-      <div className="share" ref={card}>
+      <div className={`share${overlay ? " share--fx" : ""}`} ref={card}>
         <span className="share-bg">
           <span className="share-banner" style={{ background: me.banner }} />
-          {eco.equipped.effect && (
+          {/* the older drawn effects live behind the words, settled by their
+              own scrim; the overlays below dress the whole card instead */}
+          {eco.equipped.effect && !overlay && (
             <span className="fx-clear">
               <EffectArt id={eco.equipped.effect} />
             </span>
@@ -138,6 +155,12 @@ export function ShareCard({ open, onClose }: { open: boolean; onClose: () => voi
             <Coins /> {eco.coins.toLocaleString()}
           </span>
         </div>
+
+        {overlay && (
+          <span className="share-fx">
+            <EffectArt id={eco.equipped.effect} />
+          </span>
+        )}
       </div>
 
       <div className="share-actions">
