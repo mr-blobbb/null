@@ -53,17 +53,31 @@ export function AvatarArt({ id, still }: { id: string | null | undefined; still?
   const deco = avatarAsset(id);
   if (deco) {
     return (
-      <span className="art art--deco">
-        <img
-          className={`deco-img ${still ? "deco-still" : "deco-move"}`}
-          src={still ? deco.still : deco.moving}
-          alt=""
-          loading="lazy"
-          draggable={false}
-        />
+      <span className={`art art--deco${still ? " art--hover-move" : ""}`}>
+        {still ? (
+          <>
+            <img
+              className="deco-img deco-still"
+              src={deco.still}
+              alt=""
+              loading="lazy"
+              draggable={false}
+            />
+            <img
+              className="deco-img deco-move"
+              src={deco.moving}
+              alt=""
+              loading="lazy"
+              draggable={false}
+            />
+          </>
+        ) : (
+          <img className="deco-img deco-move" src={deco.moving} alt="" loading="lazy" draggable={false} />
+        )}
       </span>
     );
   }
+
   const clip = FACE_CLIP[id];
   if (clip) {
     return (
