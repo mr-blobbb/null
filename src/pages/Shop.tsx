@@ -236,7 +236,7 @@ function Card({
   const cost = deal?.price ?? item.price;
   const afford = coins >= cost;
   return (
-    <article className={`shop-card${owned ? " is-owned" : ""}${on ? " is-on" : ""}`}>
+    <article className={`shop-card${item.shelf === "effect" ? " shop-card--effect" : ""}${owned ? " is-owned" : ""}${on ? " is-on" : ""}`}>
       <div className="shop-art">
         <PreviewArt item={item} />
       </div>

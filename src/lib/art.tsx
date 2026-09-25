@@ -47,16 +47,20 @@ const FACE_CLIP: Record<string, string> = {
 
 export function AvatarArt({ id, still }: { id: string | null | undefined; still?: boolean }) {
   if (!id) return null;
-  /* A decoration from the shelf: a square of art sized to 135% of the
-     picture and centred on it, which is the box it is drawn for. `still`
-     asks for the resting frame — chat wears it until the pointer comes near,
-     and the moving twin fades in on hover (see shop.css and community.css). */
+  /* A decoration from the shelf: one frame at a time. Chat can request the
+     resting image; everywhere else (including the shop) gets only the moving
+     asset, so the still twin cannot leak out beneath it. */
   const deco = avatarAsset(id);
   if (deco) {
     return (
-      <span className={`art art--deco${still ? "" : " is-live"}`}>
-        <img className="deco-img deco-still" src={deco.still} alt="" loading="lazy" draggable={false} />
-        <img className="deco-img deco-move" src={deco.moving} alt="" loading="lazy" draggable={false} />
+      <span className="art art--deco">
+        <img
+          className={`deco-img ${still ? "deco-still" : "deco-move"}`}
+          src={still ? deco.still : deco.moving}
+          alt=""
+          loading="lazy"
+          draggable={false}
+        />
       </span>
     );
   }
