@@ -22,10 +22,12 @@ import {
   ShieldAlert,
   SkipBack,
   SkipForward,
+  WifiOff,
   X,
 } from "lucide-react";
 
 import { faviconOf } from "../lib/favicon";
+import { useServerless } from "../lib/outage";
 import { destinationFor, PAGES } from "../lib/nav";
 import { useStore } from "../lib/store";
 import { prefs } from "../lib/themes";
@@ -69,6 +71,9 @@ function BrowserChrome({ onSettings, tabId }: { onSettings: () => void; tabId?: 
   const address = described.address;
   const secure = described.secure;
   const engine = useStore(prefs).searchEngine;
+  /* a chip in the toolbar, so a missing door on the rail is explained rather
+     than mysterious */
+  const offline = useServerless();
 
   const [draft, setDraft] = useState(address);
   const [focused, setFocused] = useState(false);
@@ -250,6 +255,16 @@ function BrowserChrome({ onSettings, tabId }: { onSettings: () => void; tabId?: 
             <Columns2 />
           </button>
         </div>
+
+        {offline && (
+          <span
+            className="bar-offline"
+            title="Running without a backend: the chat, the member list and the board are off. Settings → Server turns it back on."
+          >
+            <WifiOff />
+            <em>backendless</em>
+          </span>
+        )}
 
         <Tune />
       </div>

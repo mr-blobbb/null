@@ -22,7 +22,8 @@ import {
 import type { LucideIcon } from "lucide-react";
 
 import { createStore, useStore } from "../lib/store";
-import { destinationFor, PAGES, parseAddress, SHEET_PAGES, type PageId } from "../lib/nav";
+import { destinationFor, doors, PAGES, parseAddress, SHEET_PAGES, type PageId } from "../lib/nav";
+import { useServerless } from "../lib/outage";
 import { go, openDestination } from "../lib/tabs";
 import { Sheet } from "../components/Sheet";
 import { Tour, tourSeen } from "../components/Tour";
@@ -219,6 +220,9 @@ const CARDS: Card[] = [
 export function Home() {
   const palette = usePalette();
   const engine = useStore(prefs).searchEngine;
+  /* the All Apps sheet is the rail in another shape, so it loses the same
+     doors when there is no server to open them onto */
+  const offline = useServerless();
   const [line] = useState(() => LINES[Math.floor(Math.random() * LINES.length)]);
   const [q, setQ] = useState("");
   const [appsOpen, setAppsOpen] = useState(false);
@@ -298,9 +302,11 @@ export function Home() {
         <QuickLink icon={Grid3x3} label="All Apps" muted onClick={() => setAppsOpen(true)} fixed />
       </div>
 
-      <Guard what="the online counter" fallback={null}>
-        <OnlineCount />
-      </Guard>
+      {!offline && (
+        <Guard what="the online counter" fallback={null}>
+          <OnlineCount />
+        </Guard>
+      )}
 
       <div className="hm-strip">
         <div className="hm-band">
@@ -321,7 +327,7 @@ export function Home() {
 
       <Sheet open={appsOpen} onClose={() => setAppsOpen(false)} title="Apps" icon={<Grid3x3 />} width={560}>
         <div className="appgrid">
-          {SHEET_PAGES.map((id: PageId) => {
+          {doors(SHEET_PAGES, offline).map((id: PageId) => {
             const p = PAGES[id];
             const Icon = p.icon;
             return (

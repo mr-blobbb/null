@@ -73,6 +73,7 @@ import { FriendsPanel } from "../components/FriendsPanel";
 import { CloudSaves } from "../components/CloudSaves";
 import { AppealBox } from "../components/Appeals";
 import { detectDevice } from "../lib/device";
+import { CloudOff, useServerless } from "../lib/outage";
 
 export function Profile() {
   const me = useAccount();
@@ -244,6 +245,9 @@ function SignIn() {
 function SignedIn() {
   const me = useAccount();
   const eco = useEcon();
+  /* friends, save slots and the appeal queue are the three things on this page
+     that are somebody else's server; the rest of the card is this machine */
+  const offline = useServerless();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState({ name: me.name, bio: me.bio });
   const [bioOpen, setBioOpen] = useState(false);
@@ -508,19 +512,19 @@ function SignedIn() {
 
       <h2 className="pf-h">Friends</h2>
       <section className="card card--pad">
-        <FriendsPanel />
+        {offline ? <CloudOff what="A friends list" /> : <FriendsPanel />}
       </section>
 
       <h2 className="pf-h">Cloud saves</h2>
       <section className="card card--pad">
         {/* the same panel the player floats over a game, with the controls
             that need a game open left out */}
-        <CloudSaves embedded />
+        {offline ? <CloudOff what="A save slot" /> : <CloudSaves embedded />}
       </section>
 
       <h2 className="pf-h">Appeals</h2>
       <section className="card card--pad">
-        <AppealBox />
+        {offline ? <CloudOff what="The appeal queue" /> : <AppealBox />}
       </section>
 
       <AccountCard />
@@ -532,6 +536,9 @@ function SignedIn() {
         <Share2 />
       </button>
 
+      {/* the share card is drawn here, from this browser's own account and
+          shop state, so it is the one cloud-shaped thing that still works
+          with no backend at all */}
       <ShareCard open={shareOpen} onClose={() => setShareOpen(false)} />
     </div>
   );

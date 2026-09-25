@@ -8,11 +8,13 @@
 
 import { ArrowLeft, Compass, Home } from "lucide-react";
 
-import { SHEET_PAGES, PAGES } from "../lib/nav";
+import { doors, SHEET_PAGES, PAGES } from "../lib/nav";
+import { useServerless } from "../lib/outage";
 import { go, goBack, useTabs } from "../lib/tabs";
 
 export function NotFound({ address }: { address?: string }) {
   const { tabs, active } = useTabs();
+  const offline = useServerless();
   const here = tabs.find((t) => t.id === active);
   const canGoBack = !!here?.back.length;
   const tried = address || "null://404";
@@ -38,7 +40,7 @@ export function NotFound({ address }: { address?: string }) {
         </button>
       </div>
       <div className="nf-grid">
-        {SHEET_PAGES.map((id) => {
+        {doors(SHEET_PAGES, offline).map((id) => {
           const p = PAGES[id];
           const Icon = p.icon;
           return (

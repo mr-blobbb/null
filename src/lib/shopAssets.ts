@@ -1,31 +1,45 @@
 /* NULL · shopAssets.ts
-   The non-tag shelf comes from cherriunblocked/svg. The repository keeps a
-   moving transparent avatar frame beside a small still frame, and its profile
-   effects are full-card transparent overlays. Keeping the URLs in one place
-   makes the shop and every card renderer use the same asset pair.
-*/
+   The non-tag shelf. The art is part of the site: three folders under
+   public/decor/shop, next to the clips the older effects are drawn from.
 
-/* ---------- what the art actually is ----------
-   Measured from the files rather than guessed at, because a card can only be
-   sized to fit an overlay if the overlay's shape is known.
+   It used to be fetched from raw.githubusercontent at runtime, which was
+   wrong twice: a school filter that blocks that host took every card's
+   picture with it, and the shop stopped being part of the site. The files
+   ship with the build now, so the shop works on the same connection that
+   loaded the page. Nothing is fetched from anywhere to draw a shelf.
 
-   · A face decoration is a square: 288px when it is moving, 144px for the
-     frame it rests on.
-   · A profile effect is a portrait card, 450×880, and every piece on the
-     shelf is that size — which is the whole reason a share card and a chat
-     card can take the art's own shape and have it land on the rim.
+   The three folders, and why each has the shape it has:
 
-   All of them are animated PNGs. The name says .png and the acTL chunk in
-   the header says otherwise; anything that measures one as a still picture
-   is right about the first frame and wrong about every frame after it. */
+   · shop/pfp — a face decoration, 288px square, animated. Drawn over the
+     round picture, which is why it is transparent in the middle.
+   · shop/pfp-still — the same art as a 144px resting frame, for the places a
+     room full of motion would be unreadable (chat, the member rail).
+   · shop/fx — a profile effect, 450×880, a transparent overlay for a whole
+     card. Every piece on the shelf is that size, which is the whole reason a
+     share card and a chat card can take the art's own shape and have it land
+     on the rim.
+
+   All of them are animated PNGs — a gif that kept its alpha and its edges,
+   which is why one file is 288px and still a megabyte. The name says .png and
+   the acTL chunk in the header says otherwise; anything that measures one as a
+   still picture is right about the first frame and wrong about every frame
+   after it. They are served as they are: no build step re-encodes them, so
+   nothing has to be regenerated when one is added to the folder. */
+
+/* ---------- measured from the files rather than guessed at ----------
+   A card can only be sized to fit an overlay if the overlay's shape is
+   known. */
 export const FACE_ART = 288;
 export const FACE_STILL_ART = 144;
 export const CARD_ART = { w: 450, h: 880 };
 
-const ROOT = "https://raw.githubusercontent.com/cherriunblocked/svg/main/elements";
-
-function repo(dir: string, file: string): string {
-  return `${ROOT}/${dir}/${file}`;
+/** One piece of art, by the folder it lives in and the name it was shipped
+ *  under. public/ is served from the site root and every route is a hash on
+ *  the same document, so a relative path lands on the file in dev, on a
+ *  preview host and on GitHub Pages alike — the same rule the decor clips in
+ *  src/lib/art.tsx use. */
+function art(dir: string, file: string): string {
+  return `decor/shop/${dir}/${file}.png`;
 }
 
 export type AvatarAsset = {
@@ -82,8 +96,8 @@ export const AVATAR_ASSETS: AvatarAsset[] = AVATAR_SEEDS.map(([file, name, desc,
   name,
   desc,
   price,
-  moving: repo("pfpdeco", `${file}.png`),
-  still: repo("pfpdeco-still", `${file}.png`),
+  moving: art("pfp", file),
+  still: art("pfp-still", file),
 }));
 
 const EFFECT_SEEDS: Seed[] = [
@@ -113,16 +127,16 @@ export const EFFECT_ASSETS: EffectAsset[] = EFFECT_SEEDS.map(([file, name, desc,
   name,
   desc,
   price,
-  url: repo("profiledeco", `${file}.png`),
+  url: art("fx", file),
 }));
 
 const avatars = new Map(AVATAR_ASSETS.map((asset) => [asset.id, asset]));
-const effects = new Map(EFFECT_ASSETS.map((asset) => [asset.id, asset]));
+const effectsById = new Map(EFFECT_ASSETS.map((asset) => [asset.id, asset]));
 
 export function avatarAsset(id: string | null | undefined): AvatarAsset | undefined {
   return id ? avatars.get(id) : undefined;
 }
 
 export function effectAsset(id: string | null | undefined): EffectAsset | undefined {
-  return id ? effects.get(id) : undefined;
+  return id ? effectsById.get(id) : undefined;
 }

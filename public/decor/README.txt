@@ -25,9 +25,35 @@ no controls, so nothing in the shop can make a sound.
                 answer 403 to anything but a signed-in browser, so a new clip
                 has to be saved by hand rather than fetched.
 
+shop/ — the shelf's own art
+---------------------------
+Three folders of still files, listed one row at a time in
+src/lib/shopAssets.ts. Nothing here is drawn from a URL at runtime: they ship
+with the build, because they used to be fetched from raw.githubusercontent and
+a school filter that blocks that host took every card's picture with it.
+
+  shop/pfp/*.png        avatar decorations, 288px square, animated
+  shop/pfp-still/*.png  the same art at 144px, the resting frame
+  shop/fx/*.png         profile effects, 450×880, a transparent overlay
+
+They are animated PNGs — the extension says .png and the acTL chunk in the
+header says otherwise — which is why one 288px face is a megabyte. A browser
+plays an APNG on its own, so there is no code behind them and no build step
+that re-encodes them: drop a file in the folder, add its name and its price to
+the seed table in src/lib/shopAssets.ts, and the shelf, the profile and the
+share card all pick it up.
+
 Source
 ------
-The files were fetched from Pinterest's own CDN (v1.pinimg.com), one per pin:
+The shelf art came from cherriunblocked/svg (elements/pfpdeco,
+elements/pfpdeco-still and elements/profiledeco), which collects widely
+reposted decoration art. Two of them are also sold under different names in
+both folders — that is why hallelujamountains, lonewolf and whiteroses appear
+twice with a pfp- and an fx- prefix. Replace them with art you have the rights
+to before publishing.
+
+The video clips were fetched from Pinterest's own CDN (v1.pinimg.com), one per
+pin:
 
   card-rainy.mp4    pin 8936899257249307    pixel-art night: a cat on a roof in the rain
   card-voxel.mp4    pin 1134344224938245036  block landscape, drifting clouds

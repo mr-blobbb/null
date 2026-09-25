@@ -37,19 +37,25 @@ import { account, useAccount } from "./lib/account";
 import { publish } from "./lib/members";
 import { detectDevice } from "./lib/device";
 import { usePulse } from "./lib/friends";
-import { PAGES } from "./lib/nav";
+import { needsCloud, PAGES } from "./lib/nav";
+import { CloudDown, serverlessNow, useServerless } from "./lib/outage";
 import { activeTab, go, openTab, selectSplitPane, targetFromHash, useTabs } from "./lib/tabs";
 import { overlayExtensions, useExt } from "./lib/extensions";
 import { useJamWatch } from "./lib/jam";
 import { watchLibrary } from "./lib/music";
 
-const VERSION = "1.3.0";
+const VERSION = "1.3.1";
 const BUILT = "20260925";
 
 export function App() {
   const palette = usePalette();
   const state = useTabs();
   const tab = activeTab(state);
+  /* Is the shared side of the site available? Either the deployment stopped
+     answering, or somebody asked for the backendless build in Settings. The
+     doors that need it come off the rail and the pages behind them say so
+     instead of throwing. */
+  const offline = useServerless();
 
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsTab, setSettingsTab] = useState<SettingsTab>("appearance");
@@ -172,6 +178,10 @@ export function App() {
   }, [tab.now.page]);
 
   const bodyFor = (t: typeof tab) => {
+    /* A cloud door opened in the backendless build shows the honest card
+       rather than the page: the page's first act would be a query against a
+       server that is not there, and a throw here takes the tab with it. */
+    if (offline && needsCloud(t.now.page)) return <CloudDown what={PAGES[t.now.page].name} />;
     switch (t.now.page) {
       case "missing":
         return <NotFound address={t.now.arg?.url} />;
@@ -213,7 +223,7 @@ export function App() {
     }
   };
 
-  const body = useMemo(() => bodyFor(tab), [tab]);
+  const body = useMemo(() => bodyFor(tab), [tab, offline]);
   /* Game players are stateful documents (canvas, WebGL workers, audio, and
      saves). Keep one mounted instance per tab instead of destroying the
      player whenever the browser tab changes. A nonce still creates a fresh
@@ -246,7 +256,9 @@ export function App() {
   }, [me.user]);
 
   useEffect(() => {
-    if (!me.user) return;
+    /* the leaderboard keeps itself fresh, which is a write — and there is
+       nowhere to write it in the backendless build */
+    if (!me.user || serverlessNow()) return;
     const send = () => {
       if (eco.coins === lastSent.current) return;
       lastSent.current = eco.coins;
@@ -334,10 +346,14 @@ export function App() {
       {milestone && <div className="toast">{milestone}</div>}
 
       {/* The beats that need the server, in a component of their own so a
-          deployment that is switched off takes them out and nothing else. */}
-      <Guard what="the shared side" fallback={null}>
-        <CloudBeats user={me.user} />
-      </Guard>
+          deployment that is switched off takes them out and nothing else.
+          In the backendless build they are not started at all: presence,
+          the jam and the music shelf all open a socket on mount. */}
+      {!offline && (
+        <Guard what="the shared side" fallback={null}>
+          <CloudBeats user={me.user} />
+        </Guard>
+      )}
 
       <OverlayExts coins={coins} />
 

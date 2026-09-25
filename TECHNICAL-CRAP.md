@@ -51,7 +51,13 @@ src/lib/
   extensions.ts       the add-on registry
   browser.ts relay.ts the two roads a proxied address can take
   crx.ts chromeext.ts a Chrome extension: its archive, and its APIs
-  art.tsx brand.tsx   the artwork the shop sells, and the wordmark
+  art.tsx             the artwork the shop draws, for anything wearing a piece
+                      bought before the shelf became real files
+  brand.tsx           the wordmark, and the face NULL wears when you have none
+  shopAssets.ts       the shelf: what a piece is called, what it costs, and
+                      which file in public/decor/shop it is
+  outage.tsx          whether the server is there at all, the card a cloud page
+                      shows when it is not, and the backendless switch
   card.ts             the share card, painted to a canvas for a PNG
 src/components/
   Rail.tsx            the 56px spine
@@ -291,6 +297,26 @@ The loop stops the moment the tab is hidden, and the performance and motion
 switches both mean the same thing — draw it once and leave it alone. A
 background that costs frames is a background that has to go.
 
+**The shared side is optional, and says so.** Three doors on NULL are really
+one server: the chat rooms, the member directory and the Richest board. When
+that deployment stops answering — a spent usage limit is what happened to the
+old one — the doors come off the rail (and out of All Apps and the 404) rather
+than being offered and then throwing, and the pages behind them say which of
+the two things happened: the server is gone, or this page has a bug. The
+switch in Settings → Server does the same thing on purpose, which is the shape
+the site takes on a network the server is not welcome on. Chat, presence, the
+jam, the shared music shelf, cloud saves, friends and the assistant all stop
+cleanly; the shop, the library, the player, the profile and the browser never
+spoke to a server in the first place, so nothing about them changes.
+
+**Art that ships with the site does not get filtered.** Every card in the shop
+used to point at raw.githubusercontent, which is a host half the school
+districts in the world block, and a blocked host cost the shelf every picture
+it had. The art is in `public/decor/shop` now and is served from whatever
+served the page, so the shelf draws on the same connection the visitor
+already had. It is not inlined into the bundle: a 288px animated PNG is about
+a megabyte, and 73 of them as base64 would be a 100MB JavaScript file.
+
 **Nothing is advertised.** There are no adverts on NULL, no ad slots, no
 sponsored tiles and no placeholder for one to arrive in. It is a rule, not a
 roadmap item, and the front door says so in as many words.
@@ -307,7 +333,14 @@ roadmap item, and the front door says so in as many words.
   Extensions page prints both on its card.
 * **A shop item** — one entry in `src/lib/econ.ts`. A drawn piece also needs
   its class in `shop.css`; a clip needs its file in `public/decor/` and a line
-  in the map at the top of `src/lib/art.tsx`.
+  in the map at the top of `src/lib/art.tsx`; a piece of shelf art needs the
+  file in `public/decor/shop/` and its name, name and price in the seed table
+  in `src/lib/shopAssets.ts` (see `public/decor/README.txt`).
+* **A page that needs the server** — the door goes in `src/lib/nav.ts` and its
+  id goes in `CLOUD_PAGES` beside it, which is what takes it off the rail,
+  out of All Apps and out of the 404's list in the backendless build
+  (`src/lib/outage.tsx`). Everything else on the site has to keep working with
+  no deployment at all.
 
 ## Icons and fonts
 

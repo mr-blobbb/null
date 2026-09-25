@@ -5,14 +5,20 @@
    wordmark on the front door is the only mark the site has.
 
    The active door's icon goes white and an ultra thin line appears flush
-   against the window edge beside it. */
+   against the window edge beside it.
 
-import { PAGES, RAIL_BOTTOM, RAIL_TOP, type PageId } from "../lib/nav";
+   In the backendless build the doors that need a server are not drawn at
+   all: the rail is what the site offers, and it does not offer a room nobody
+   can walk into. */
+
+import { doors, PAGES, RAIL_BOTTOM, RAIL_TOP, type PageId } from "../lib/nav";
+import { useServerless } from "../lib/outage";
 import { activeTab, go, useTabs } from "../lib/tabs";
 
 export function Rail({ onSettings, openSheetCount }: { onSettings: () => void; openSheetCount: number }) {
   const { tabs, active } = useTabs();
   const here = tabs.find((t) => t.id === active)?.now.page;
+  const offline = useServerless();
 
   const click = (id: PageId) => {
     if (id === "settings") {
@@ -27,13 +33,13 @@ export function Rail({ onSettings, openSheetCount }: { onSettings: () => void; o
 
   return (
     <nav className="rail" aria-label="Primary">
-      {RAIL_TOP.map((id) => (
+      {doors(RAIL_TOP, offline).map((id) => (
         <Door key={id} id={id} on={here === id} onClick={() => click(id)} />
       ))}
 
       <div className="rail-gap" />
 
-      {RAIL_BOTTOM.map((id) => (
+      {doors(RAIL_BOTTOM, offline).map((id) => (
         <Door key={id} id={id} on={here === id} onClick={() => click(id)} />
       ))}
     </nav>

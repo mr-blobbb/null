@@ -104,6 +104,11 @@ export type Prefs = {
   cloak: string;
   /** the key that hides the tab instantly: a single character, or "" for none */
   panicKey: string;
+  /** the backendless build: nothing on the site reaches for the server, and
+   *  every door that needs one is taken off the rail (src/lib/outage.tsx).
+   *  Off until somebody asks for it, or until a dead deployment asks for
+   *  them. */
+  offline: boolean;
 };
 
 export const DEFAULT_CUSTOM: CustomColors = {
@@ -129,6 +134,7 @@ export const prefs = createStore<Prefs>("prefs", {
   showMeta: true,
   cloak: "off",
   panicKey: "`",
+  offline: false,
 });
 
 /* The relay that used to be the default has gone quiet. Anybody who never

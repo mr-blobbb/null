@@ -1,7 +1,7 @@
 /* NULL · SettingsSheet.tsx
    Settings is not a page. It opens over whatever is already on screen, so
-   changing a theme never loses your place. Five tabs down the side:
-   Appearance, the cloak, the browser, Data, and the paperwork. */
+   changing a theme never loses your place. Six tabs down the side:
+   Appearance, the cloak, the browser, Data, the server, and the paperwork. */
 
 import { useEffect, useState } from "react";
 import {
@@ -13,6 +13,7 @@ import {
   Palette,
   Radio,
   RotateCcw,
+  ServerOff,
   ShieldCheck,
   Sparkles,
   Trash2,
@@ -28,8 +29,10 @@ import { econ, resetEcon } from "../lib/econ";
 import { account } from "../lib/account";
 import { ENGINES, type EngineId } from "../lib/nav";
 import { ping, RELAYS, restart } from "../lib/browser";
+import { cloudOn, cloudUrl } from "../lib/cloud";
+import { clearOutage, setBackendless, useOutage, useServerless } from "../lib/outage";
 
-type Tab = "appearance" | "cloak" | "browser" | "data" | "legal";
+type Tab = "appearance" | "cloak" | "browser" | "data" | "server" | "legal";
 export type SettingsTab = Tab;
 
 export function SettingsSheet({
@@ -65,6 +68,9 @@ export function SettingsSheet({
           </button>
           <button className={`setnav-btn${tab === "data" ? " is-on" : ""}`} onClick={() => setTab("data")}>
             <Database /> Data
+          </button>
+          <button className={`setnav-btn${tab === "server" ? " is-on" : ""}`} onClick={() => setTab("server")}>
+            <ServerOff /> Server
           </button>
           <button className={`setnav-btn${tab === "legal" ? " is-on" : ""}`} onClick={() => setTab("legal")}>
             <FileText /> Privacy &amp; ToS
@@ -237,6 +243,8 @@ export function SettingsSheet({
               </div>
             </>
           )}
+
+          {tab === "server" && <ServerPane />}
 
           {tab === "legal" && (
             <>
@@ -475,6 +483,77 @@ function BrowserPane() {
             {e.name}
           </button>
         ))}
+      </div>
+    </>
+  );
+}
+
+/* ---------- the server ----------
+   Two different things look the same from here. NULL might be pointed at a
+   deployment that has gone quiet, in which case the shared rooms report
+   themselves and the site carries on without them; or somebody might want
+   that shape on purpose, on a network where the server is not reachable or
+   not welcome. Either way the doors that need it come off the rail — see
+   src/lib/outage.tsx for what counts as a door that needs one. */
+function ServerPane() {
+  const asked = useStore(prefs).offline;
+  const down = useOutage();
+  const offline = useServerless();
+  const wired = cloudOn();
+
+  return (
+    <>
+      <h3 className="set-h">Server</h3>
+      <p className="set-note">
+        Only three things on NULL need a server: the chat room, the member directory and
+        the Richest board. Everything else — the library, the player, the shop, your profile,
+        the browser — is this machine, and always was.
+      </p>
+
+      <label className="setrow">
+        <span>
+          <b>Backendless</b>
+          <em>
+            Takes those three doors off the rail and stops anything reaching for the
+            server. Signing in, coins and your card keep working; the shop's preview does
+            not need it either.
+          </em>
+        </span>
+        <input
+          type="checkbox"
+          className="switch"
+          checked={asked}
+          onChange={(e) => setBackendless(e.target.checked)}
+        />
+      </label>
+
+      <div className="setrow setrow--col">
+        <span>
+          <b>Right now</b>
+          <em>
+            {asked
+              ? "Backendless, because you asked for it"
+              : down
+                ? "The server stopped answering, so NULL is running without it"
+                : wired
+                  ? `Reachable — ${cloudUrl}`
+                  : "No deployment is configured in this build"}
+          </em>
+        </span>
+        {offline && (
+          <div className="setrow setrow--actions">
+            {down && (
+              <button className="btn btn--sm" onClick={() => clearOutage()}>
+                <RotateCcw /> Try the server again
+              </button>
+            )}
+            {asked && (
+              <button className="btn btn--sm" onClick={() => setBackendless(false)}>
+                <Radio /> Go back online
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </>
   );

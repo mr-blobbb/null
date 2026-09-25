@@ -579,6 +579,14 @@ kbd {
   flex-wrap: wrap;
   margin-bottom: 14px;
 }
+/* the retry rows under a page that could not reach the server */
+.cl-out-actions {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
 .lb-find {
   flex: 1 1 240px;
   min-width: 180px;

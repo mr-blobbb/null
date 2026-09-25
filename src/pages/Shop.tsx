@@ -12,6 +12,7 @@ import { api } from "../../convex/_generated/api";
 import {
   Check,
   Coins,
+  Eye,
   Gift,
   Lock,
   LockOpen,
@@ -21,6 +22,7 @@ import {
 } from "lucide-react";
 
 import { PreviewArt } from "../lib/art";
+import { ShareCard } from "../components/ShareCard";
 import {
   buy,
   dealOf,
@@ -37,6 +39,7 @@ import {
   useEcon,
   wearing,
   type Deal,
+  type Shelf,
   type ShopItem,
 } from "../lib/econ";
 import { isCoOwner } from "../lib/owner";
@@ -52,6 +55,15 @@ export function Shop({ onOpenSettings }: { onOpenSettings: () => void }) {
   const owner = isCoOwner(account.user, account.roles);
   const [gift, setGift] = useState<{ code: string; what: string } | null>(null);
   const [note, setNote] = useState<string | null>(null);
+  /* the card preview: closed, your own look, or your look wearing one piece
+     off the shelf. It is the same card the profile shares, drawn from this
+     browser alone, so it works signed out and with no server at all. */
+  const [peek, setPeek] = useState<{ shelf: Shelf; id: string } | null>(null);
+  const [peeking, setPeeking] = useState(false);
+  const openPeek = (item?: { shelf: Shelf; id: string }) => {
+    setPeek(item ?? null);
+    setPeeking(true);
+  };
   const createSharedGift = useMutation(api.giftCodes.create);
   const redeemSharedGift = useMutation(api.giftCodes.redeem);
 
@@ -94,6 +106,14 @@ export function Shop({ onOpenSettings }: { onOpenSettings: () => void }) {
             <b>{me.coins.toLocaleString()}</b>
             <em>coins</em>
           </span>
+          <button
+            className="wallet-box wallet-box--btn"
+            onClick={() => openPeek()}
+            title="See your card as it is now"
+          >
+            <Eye />
+            <b>Preview profile</b>
+          </button>
           <button
             className="wallet-box wallet-box--btn"
             onClick={() => {
@@ -154,6 +174,7 @@ export function Shop({ onOpenSettings }: { onOpenSettings: () => void }) {
                     say(`${item.name} is yours.`);
                   }}
                   onEquip={() => toggleEquip(shelf.id, item.id)}
+                  onPreview={() => openPeek({ shelf: shelf.id, id: item.id })}
                   onGift={() => {
                     const r = mintItemGift(item.id, owner);
 
@@ -180,6 +201,9 @@ export function Shop({ onOpenSettings }: { onOpenSettings: () => void }) {
           Profile page.
         </p>
       </div>
+
+      {/* the same card the profile shares, with the piece you clicked on it */}
+      <ShareCard open={peeking} onClose={() => setPeeking(false)} preview={peek} />
 
       <Sheet open={!!gift} onClose={() => setGift(null)} title="Your gift code" width={420}>
         <div className="gift">
@@ -221,6 +245,7 @@ function Card({
   coins,
   onBuy,
   onEquip,
+  onPreview,
   onGift,
 }: {
   item: ShopItem;
@@ -231,15 +256,24 @@ function Card({
   coins: number;
   onBuy: () => void;
   onEquip: () => void;
+  /** look at this piece on your own card before paying for it */
+  onPreview: () => void;
   onGift: () => void;
 }) {
   const cost = deal?.price ?? item.price;
   const afford = coins >= cost;
   return (
     <article className={`shop-card${item.shelf === "effect" ? " shop-card--effect" : ""}${owned ? " is-owned" : ""}${on ? " is-on" : ""}`}>
-      <div className="shop-art">
+      {/* the picture is the preview button: it is the thing you are deciding
+          about, so it is the thing you click */}
+      <button
+        className="shop-art shop-art--btn"
+        onClick={onPreview}
+        title={`See ${item.name} on your card`}
+        aria-label={`Preview ${item.name} on your profile card`}
+      >
         <PreviewArt item={item} />
-      </div>
+      </button>
       <h3 className="shop-name">{item.name}</h3>
       <p className="shop-desc">{item.desc}</p>
       <div className="shop-price">

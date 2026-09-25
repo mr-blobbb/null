@@ -11,6 +11,19 @@ type Release = { version: string; date: string; note: string; changes: Change[] 
 
 const RELEASES: Release[] = [
   {
+    version: "v1.3.1",
+    date: "September 25, 2026",
+    note: "The one where the shelf stopped borrowing its pictures from somebody else's server, the card got a preview, and NULL learned how to run with no backend at all.",
+    changes: [
+      { kind: "tweak", text: "The shop's artwork ships with the site now. Every card used to fetch its picture from raw.githubusercontent while it was being drawn, which meant a school filter that blocks that one host took every face, every frame and every overlay with it. The files live in the repo and are served from the same connection that loaded the page, so nothing about the shelf is fetched from anywhere." },
+      { kind: "add", text: "Preview profile. The shop header has a button that opens your card at full size as it stands, and clicking the art on any shelf opens the same card with that piece on it — before paying for it, signed out, with no server in the room. It is the same card the profile shares; downloading it still paints a PNG in the browser and uploads nothing." },
+      { kind: "add", text: "A backendless build. Only three things on NULL ever needed a server — the chat room, the member directory and the Richest board — and when it cannot be reached they now come off the rail, out of All Apps and out of the 404's list, instead of being offered and then failing. Presence, the listen-along jam and the shared music shelf stop with them, the assistant says why it is quiet, and the profile keeps its card and loses only the panels that live on somebody else's machine." },
+      { kind: "add", text: "Settings → Server, where the switch for it lives: run backendless on purpose on a network the server is not welcome on, see whether the deployment is answering, and turn it back on. While it is on, a small chip in the toolbar says so, which is why the missing doors read as a decision rather than as a bug." },
+      { kind: "tweak", text: "A dead deployment is no longer the end of the session: “Try the server again” clears the flag the outage set and lets the next query through, without a reload." },
+      { kind: "tweak", text: "The homepage build stamp and visible version are now v1.3.1 · 20260925." },
+    ],
+  },
+  {
     version: "v1.3.0",
     date: "September 25, 2026",
     note: "The one where the shop got real artwork, the shelves got their own rooms, and one broken page stopped being able to take the whole site down with it.",

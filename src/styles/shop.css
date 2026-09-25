@@ -114,6 +114,34 @@
 .shop-card--effect .shop-art {
   height: 220px;
 }
+/* the picture is a button: a click shows the piece on your own card */
+.shop-art--btn {
+  width: 100%;
+  padding: 0;
+  border: var(--bw) solid transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+.shop-art--btn:hover {
+  background: var(--bg-4);
+  border-color: var(--line-2);
+}
+.shop-art--btn:focus-visible {
+  outline: none;
+  border-color: var(--ac-1);
+}
+/* the preview sheet says what it is without competing with the card */
+.share-preview-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: center;
+}
+.share-preview-note svg {
+  width: 14px;
+  height: 14px;
+}
 .shop-name {
   font-size: 13.5px;
   font-weight: 600;

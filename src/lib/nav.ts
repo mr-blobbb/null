@@ -254,6 +254,25 @@ export const ALL_PAGES: PageId[] = [
  *  opens over whatever is already there. */
 export const SHEET_PAGES: PageId[] = ALL_PAGES.filter((id) => id !== "settings" && id !== "proxies");
 
+/** The doors that are only there because something else is holding the other
+ *  end: a chat room and a member directory and a board of everyone's purses
+ *  are all the same room on a server. Nothing else about NULL needs one —
+ *  games, apps, the shop, the profile and the browser are all this machine.
+ *
+ *  When the deployment cannot be reached, or somebody has asked for the
+ *  backendless build, these are the doors that go: an offer nobody can take
+ *  is worse than no offer. See src/lib/outage.tsx. */
+export const CLOUD_PAGES: PageId[] = ["chat", "users", "rich"];
+
+/** A list of doors, minus the ones that need a server there is not one of. */
+export function doors(ids: readonly PageId[], offline: boolean): PageId[] {
+  return offline ? ids.filter((id) => !CLOUD_PAGES.includes(id)) : [...ids];
+}
+
+export function needsCloud(id: PageId): boolean {
+  return CLOUD_PAGES.includes(id);
+}
+
 export function pageOf(id: PageId): Page {
   return PAGES[id];
 }

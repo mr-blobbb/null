@@ -6,6 +6,7 @@ import { api } from "../../convex/_generated/api";
 import { Guard } from "../components/Guard";
 import { askModel, BUILT_IN_MODEL, builtInReady, type Said as Turn } from "../lib/ai";
 import { cloudOn, machine } from "../lib/cloud";
+import { useServerless } from "../lib/outage";
 import { CloudDown } from "../lib/outage";
 import { createStore, useStore } from "../lib/store";
 import { Markdown } from "../lib/md";
@@ -38,7 +39,27 @@ function estimate(lines: Line[]): number {
 }
 
 export function Ai() {
-  if (!cloudOn()) return <div className="page"><div className="lb-top"><h1 className="lb-title">Assistant</h1><span className="lb-count tiny faint">offline</span></div><div className="card card--pad"><p>The assistant runs on the server and this build cannot reach one. Everything else on NULL still works.</p></div></div>;
+  /* The assistant is one of the few things that can answer from this machine
+     alone, but the preferred road is the deployment's key. In the backendless
+     build that road is not offered rather than offered and left to fail. */
+  const offline = useServerless();
+  if (offline || !cloudOn())
+    return (
+      <div className="page">
+        <div className="lb-top">
+          <h1 className="lb-title">Assistant</h1>
+          <span className="lb-count tiny faint">backendless</span>
+        </div>
+        <div className="card card--pad">
+          <p>
+            The assistant answers through a model, and the key for one lives on the
+            deployment — so with no deployment there is nothing to ask. Turn the backend back
+            on in Settings → Server, or read the rest of NULL: everything else here is this
+            machine.
+          </p>
+        </div>
+      </div>
+    );
   return <Guard what="AI" fallback={(err) => <CloudDown what="AI" err={err} key={err.message} />}><Desk /></Guard>;
 }
 

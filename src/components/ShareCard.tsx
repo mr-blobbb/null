@@ -8,13 +8,19 @@
    that is kept clear for them.
 
    Download paints the same card onto a canvas (src/lib/card.ts) and hands
-   back a PNG. Nothing is uploaded anywhere. */
+   back a PNG. Nothing is uploaded anywhere.
+
+   The same card is what the Shop's preview shows, with one piece swapped in:
+   `preview` wears an item instead of what is equipped, so you can look at a
+   decoration on your own card before paying for it. Nothing about either use
+   touches the server — the card is drawn from this browser's account and
+   shop state, and the preview works signed out and offline. */
 
 import { useRef, useState } from "react";
-import { BadgeCheck, Coins, Copy, Crown, Download, Trophy } from "lucide-react";
+import { BadgeCheck, Coins, Copy, Crown, Download, Eye, Trophy } from "lucide-react";
 
 import { nameStyleCss, useAccount } from "../lib/account";
-import { itemsOf, useEcon } from "../lib/econ";
+import { itemsOf, useEcon, type Shelf } from "../lib/econ";
 import { isOwner, OWNER_TAG } from "../lib/owner";
 import { cardPng } from "../lib/card";
 import { effectAsset } from "../lib/shopAssets";
@@ -22,7 +28,16 @@ import { AvatarArt, EffectArt, TagChip } from "../lib/art";
 import { NullFace } from "../lib/brand";
 import { Sheet } from "./Sheet";
 
-export function ShareCard({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function ShareCard({
+  open,
+  onClose,
+  preview,
+}: {
+  open: boolean;
+  onClose: () => void;
+  /** an item to wear for this card only, from the Shop's preview */
+  preview?: { shelf: Shelf; id: string } | null;
+}) {
   const me = useAccount();
   const eco = useEcon();
   const card = useRef<HTMLDivElement>(null);
@@ -31,10 +46,15 @@ export function ShareCard({ open, onClose }: { open: boolean; onClose: () => voi
   const [busy, setBusy] = useState(false);
 
   const owner = isOwner(me.user);
-  const tags = itemsOf(eco.equipped.tags);
+  /* what the card wears: normally the equipped set, and in a preview the one
+     piece that was asked for instead of it */
+  const avatar = preview?.shelf === "avatar" ? preview.id : eco.equipped.avatar;
+  const effect = preview?.shelf === "effect" ? preview.id : eco.equipped.effect;
+  const tagIds = preview?.shelf === "tag" ? [preview.id] : eco.equipped.tags;
+  const tags = itemsOf(tagIds);
   /* the overlay, when they are wearing one: it dresses the whole card, and
      the card takes its shape so nothing of it is cropped away */
-  const overlay = effectAsset(eco.equipped.effect);
+  const overlay = effectAsset(effect);
 
   const say = (msg: string) => {
     setNote(msg);
@@ -83,10 +103,11 @@ export function ShareCard({ open, onClose }: { open: boolean; onClose: () => voi
   };
 
   return (
-    <Sheet open={open} onClose={onClose} title="Share card" width={640}>
+    <Sheet open={open} onClose={onClose} title={preview ? "Preview" : "Share card"} width={640}>
       <p className="muted tiny">
-        This is your card at full size — banner and effect included. Downloading it paints
-        a PNG here in the browser; nothing is uploaded.
+        {preview
+          ? "Your card as it would look wearing this. Nothing is bought and nothing is sent anywhere — the card is drawn on this machine."
+          : "This is your card at full size — banner and effect included. Downloading it paints a PNG here in the browser; nothing is uploaded."}
       </p>
 
       <div className={`share${overlay ? " share--fx" : ""}`} ref={card}>
@@ -94,9 +115,9 @@ export function ShareCard({ open, onClose }: { open: boolean; onClose: () => voi
           <span className="share-banner" style={{ background: me.banner }} />
           {/* the older drawn effects live behind the words, settled by their
               own scrim; the overlays below dress the whole card instead */}
-          {eco.equipped.effect && !overlay && (
+          {effect && !overlay && (
             <span className="fx-clear">
-              <EffectArt id={eco.equipped.effect} />
+              <EffectArt id={effect} />
             </span>
           )}
         </span>
@@ -107,19 +128,22 @@ export function ShareCard({ open, onClose }: { open: boolean; onClose: () => voi
         <div className="share-id">
           <span className="share-pic">
             {me.pfp ? <img src={me.pfp} alt="" /> : <NullFace />}
-            <AvatarArt id={eco.equipped.avatar} />
+            <AvatarArt id={avatar} />
           </span>
 
           <div className="share-txt">
             {/* the badge is beside the name, never inside it: the name can be
                 a gradient cut out of its own text, which eats the icon */}
             <div className="share-name-row">
+              {/* somebody looking at this from the shop may not have signed
+                  in at all, and a card with a nameless line above an empty
+                  @handle is not a preview of anything */}
               <h3 ref={nameEl} className="share-name" style={nameStyleCss(me.nameStyle)}>
-                {me.name || me.user}
+                {me.name || me.user || "someone"}
               </h3>
               {owner && <BadgeCheck className="pf-verified" aria-label="Owner" />}
             </div>
-            <span className="share-handle">@{me.user}</span>
+            <span className="share-handle">{me.user ? `@${me.user}` : "not signed in"}</span>
 
             <div className="share-tags">
               {owner && (
@@ -158,21 +182,27 @@ export function ShareCard({ open, onClose }: { open: boolean; onClose: () => voi
 
         {overlay && (
           <span className="share-fx">
-            <EffectArt id={eco.equipped.effect} />
+            <EffectArt id={effect} />
           </span>
         )}
       </div>
 
       <div className="share-actions">
-        <button
-          className="btn"
-          onClick={() => {
-            navigator.clipboard?.writeText(`${location.origin}${location.pathname}#/profile`);
-            say("Link copied.");
-          }}
-        >
-          <Copy /> Copy link
-        </button>
+        {preview ? (
+          <span className="share-preview-note tiny faint">
+            <Eye /> A preview only. Wear it from the shelf when you own it.
+          </span>
+        ) : (
+          <button
+            className="btn"
+            onClick={() => {
+              navigator.clipboard?.writeText(`${location.origin}${location.pathname}#/profile`);
+              say("Link copied.");
+            }}
+          >
+            <Copy /> Copy link
+          </button>
+        )}
         <button className="btn btn--fill" onClick={download} disabled={busy}>
           <Download /> {busy ? "Painting…" : "Download PNG"}
         </button>

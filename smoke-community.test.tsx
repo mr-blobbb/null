@@ -206,6 +206,12 @@ mock.module("convex/react", () => ({
 }));
 
 const { renderToStaticMarkup } = await import("react-dom/server");
+/* One bun run shares a module registry between files, and the outage flag is
+   deliberately a module-level one — a test file that proved it goes sticky
+   will have left it set. This file renders the rail and the chat, so it starts
+   from a server that is up rather than from whatever ran before it. */
+const { clearOutage } = await import("./src/lib/outage");
+clearOutage();
 const { Chat } = await import("./src/pages/Chat");
 const { Ai } = await import("./src/pages/Ai");
 const { Tour } = await import("./src/components/Tour");
@@ -438,9 +444,11 @@ ok("and no shelf carries a blank", GROUPS.every((g) => g.list.every((e) => e.tri
 ok("the pad is reachable from the composer", ownerOut.includes("ch-tools"));
 const pad = renderToStaticMarkup(<EmojiPicker onPick={() => {}} /> as never);
 ok("the pad has a search box", pad.includes("emopick-find") && pad.includes("Search emoji"));
+/* one tab per shelf, plus Recently used and the two the picker adds itself:
+   the custom packs and the stickers */
 ok(
   "and a tab for every shelf",
-  (pad.match(/class="emopick-tab[ "]/g) ?? []).length === GROUPS.length + 1,
+  (pad.match(/class="emopick-tab[ "]/g) ?? []).length === GROUPS.length + 3,
 );
 ok("opening on what was used last, which is nothing yet", pad.includes("emopick-none"));
 
