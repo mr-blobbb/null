@@ -44,7 +44,7 @@ import { overlayExtensions, useExt } from "./lib/extensions";
 import { useJamWatch } from "./lib/jam";
 import { watchLibrary } from "./lib/music";
 
-const VERSION = "1.3.1";
+const VERSION = "1.3.2";
 const BUILT = "20260925";
 
 export function App() {
@@ -276,9 +276,10 @@ export function App() {
       <div className="work">
         <Chrome onSettings={() => setSettingsOpen(true)} />
         <div className="view">
-          {/* the fog sits under the dot grid, which sits under the page */}
+          {/* the fog sits under the dot grid, which sits under the page. The
+              front door draws a scene of its own instead of the grid. */}
           <Ambient />
-          <div className="dots" aria-hidden="true" />
+          {tab.now.page !== "home" && <div className="dots" aria-hidden="true" />}
           {/* Four pages own the whole window rather than scrolling inside
               it: the front door, the chat rooms, the assistant, and the
               messages page. The shell says so once, here, instead of every

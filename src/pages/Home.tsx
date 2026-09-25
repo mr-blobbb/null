@@ -245,6 +245,23 @@ export function Home() {
 
   return (
     <div className="hm">
+      {/* Behind the wordmark: a horizon with the floor running away from it,
+          two blooms of the palette's ink breathing in the middle, and two
+          rings turning around them. The dot grid the rest of the site sits
+          on is not drawn here — the front door has a scene instead. All of it
+          is CSS and all of it stops with the performance switches. */}
+      <div className="hm-scene" aria-hidden="true">
+        <span className="hm-bloom b1" />
+        <span className="hm-bloom b2" />
+        <span className="hm-orbit r1" />
+        <span className="hm-orbit r2" />
+        <span className="hm-floor">
+          <i className="hm-grid" />
+        </span>
+        <span className="hm-horizon" />
+        <span className="hm-vig" />
+      </div>
+
       {/* the first-run tour: on the front door, once, and only ever here */}
       {due && <Tour onDone={() => setDue(false)} />}
 

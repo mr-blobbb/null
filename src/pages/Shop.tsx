@@ -109,7 +109,7 @@ export function Shop({ onOpenSettings }: { onOpenSettings: () => void }) {
           <button
             className="wallet-box wallet-box--btn"
             onClick={() => openPeek()}
-            title="See your card as it is now"
+            title="See your card, and change how it looks"
           >
             <Eye />
             <b>Preview profile</b>
@@ -197,13 +197,17 @@ export function Shop({ onOpenSettings }: { onOpenSettings: () => void }) {
         </p>
         <Redeem onDone={(msg) => say(msg)} />
         <p className="tiny faint">
-          Wearing something? Your tag, decoration and effect show on your card in the
-          Profile page.
+          Wearing something? Your tag, decoration and effect show on your card — and the
+          Preview profile button above is where the card, the banner and the name are
+          changed. Clicking the picture on any shelf tries that piece on your own card
+          before you pay for it.
         </p>
       </div>
 
-      {/* the same card the profile shares, with the piece you clicked on it */}
-      <ShareCard open={peeking} onClose={() => setPeeking(false)} preview={peek} />
+      {/* The same card the profile shares, as the editor: your own look when
+          the header button opened it, and that look wearing the piece you
+          clicked when a shelf card did. Neither needs a server. */}
+      <ShareCard open={peeking} onClose={() => setPeeking(false)} preview={peek} editing />
 
       <Sheet open={!!gift} onClose={() => setGift(null)} title="Your gift code" width={420}>
         <div className="gift">

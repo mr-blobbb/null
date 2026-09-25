@@ -11,6 +11,17 @@ type Release = { version: string; date: string; note: string; changes: Change[] 
 
 const RELEASES: Release[] = [
   {
+    version: "v1.3.2",
+    date: "September 25, 2026",
+    note: "The one where the front door got a scene instead of a texture, the card started fitting the window, and the shop's preview turned into the profile editor.",
+    changes: [
+      { kind: "tweak", text: "The front door has a backdrop of its own: a horizon with the floor running away from it, two slow blooms of the palette's ink behind the wordmark, and two rings turning around the middle. It is all CSS, it takes the colour of whichever palette is on, and it stops dead with the performance and reduce-motion switches. The dot grid is not drawn on this page any more — the front door has a scene instead." },
+      { kind: "tweak", text: "The card fits the window. A card wearing an effect is the shape the art was drawn for, which made it taller than the sheet and left you scrolling to see who it was; its height is now what the window can spare and everything inside is measured against the card rather than in pixels, so a shorter card is a smaller card instead of a cropped one. The banner takes a little more of it, because the space was there." },
+      { kind: "add", text: "The shop's preview is the editor now. Name, bio, picture, banner and the way the name is written are all in it, and the card on the left is drawn from what you are changing, so you are looking at what you would be saving. Nothing leaves the machine: it is one write to your local card when Save is pressed, and Revert puts it back." },
+      { kind: "tweak", text: "The homepage build stamp and visible version are now v1.3.2 · 20260925." },
+    ],
+  },
+  {
     version: "v1.3.1",
     date: "September 25, 2026",
     note: "The one where the shelf stopped borrowing its pictures from somebody else's server, the card got a preview, and NULL learned how to run with no backend at all.",

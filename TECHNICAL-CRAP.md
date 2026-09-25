@@ -291,6 +291,18 @@ reading, the day is written once where the day changes, and what has arrived
 since you last had a thread open is this browser's own stamp — a thing a
 machine can know and a server cannot.
 
+**The front door has a scene, not a texture.** The dot grid the rest of the
+site sits on is not drawn on the home page: it draws a horizon instead, with
+the floor running away from it, two blooms of the palette's ink behind the
+wordmark and two rings turning around the middle (`.hm-scene` in pages.css).
+It is all CSS — no canvas, no frames, nothing fetched — and the two things
+that make it work are the transform origin and the mask. `transform-origin:
+50% 0` is what makes the grid recede upwards instead of converging at the
+bottom of the screen, and the mask on the floor is what fades it into the
+horizon line rather than stopping it at a hard edge. It carries the palette
+by construction: every colour in it is `var(--ac-1)` or `var(--text)` mixed
+with the page.
+
 **The background is one canvas, or it is a still frame.** `Ambient.tsx` draws
 the fog and the specks itself: nothing is fetched and nothing is a library.
 The loop stops the moment the tab is hidden, and the performance and motion

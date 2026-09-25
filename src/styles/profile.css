@@ -1051,9 +1051,17 @@ input[type="color"] {
    pop-out and the live profile, so the art lands whole instead of being
    cropped into a wide card, and the overlay is drawn over the words. */
 .share--fx {
-  width: min(430px, 100%);
+  /* A card taller than the window is a card nobody sees whole, so the height
+     is what the sheet can spare and the width follows from the art's own
+     shape — 450×880, nothing cropped. `container-type: size` makes the card
+     the thing everything inside is measured against, and the block further
+     down sizes the words from it in cqw: a shorter card is a smaller card
+     rather than a card with its head cut off. */
+  --card-h: clamp(360px, 58vh, 620px);
+  container-type: size;
+  height: var(--card-h);
+  width: calc(var(--card-h) * 450 / 880);
   margin-inline: auto;
-  aspect-ratio: 450 / 880;
   /* the words sit where the painted PNG puts them: the wordmark at the top of
      the card, the identity block at the bottom, the art showing through the
      middle. `margin-top: auto` on the identity block is what keeps the
@@ -1074,6 +1082,144 @@ input[type="color"] {
 }
 .share-fx .fx-deco {
   object-fit: contain;
+}
+
+/* Every measurement inside the portrait card, in percent of the card rather
+   than in pixels. It is the same design at 620px tall and at 360px, which is
+   the only way a card that has to fit any window can still look deliberate.
+   The percentages are the original pixel values over a 430px-wide card:
+   104px of picture is 24cqw, a 21px name is 4.9cqw, and so on. */
+.share--fx .share-banner {
+  /* the banner takes a little more of the card than it used to: on a smaller
+     card the words take proportionally the same room, and the picture wants
+     the space back */
+  height: 34cqw;
+}
+.share--fx .share-banner::after {
+  height: 9cqw;
+}
+.share--fx .share-mark {
+  padding: 3.7cqw 5.1cqw 0;
+  font-size: 6cqw;
+}
+.share--fx .share-addr {
+  top: 5.6cqw;
+  right: 5.1cqw;
+  font-size: 2.55cqw;
+}
+.share--fx .share-id {
+  gap: 3.5cqw;
+  padding: 0 5.1cqw;
+  margin-top: -12cqw;
+}
+.share--fx .share-pic {
+  width: 24cqw;
+  height: 24cqw;
+  border-width: 0.7cqw;
+}
+.share--fx .share-pic > svg {
+  width: 7.4cqw;
+  height: 7.4cqw;
+}
+.share--fx .share-txt {
+  gap: 0.45cqw;
+  padding-bottom: 0.9cqw;
+}
+.share--fx .share-name {
+  gap: 1.6cqw;
+  font-size: 4.9cqw;
+}
+.share--fx .share-name svg {
+  width: 4.4cqw;
+  height: 4.4cqw;
+}
+.share--fx .share-handle {
+  font-size: 2.8cqw;
+}
+.share--fx .share-tags {
+  gap: 1.4cqw;
+  margin-top: 1.6cqw;
+}
+/* a tag chip and the owner's crown are the same components the rest of the
+   site wears, so they are only told to be smaller here */
+.share--fx .tagchip {
+  gap: 1cqw;
+  padding: 0.8cqw 1.6cqw;
+  font-size: 2.6cqw;
+}
+.share--fx .tagchip svg {
+  width: 2.6cqw;
+  height: 2.6cqw;
+}
+.share--fx .share-bio {
+  margin: 2.8cqw 5.1cqw 0;
+  font-size: 3.15cqw;
+}
+.share--fx .share-foot {
+  gap: 1.9cqw;
+  margin: 3.3cqw 5.1cqw 0;
+  padding: 2.8cqw;
+  border-radius: 2.3cqw;
+  font-size: 2.55cqw;
+}
+.share--fx .share-foot svg {
+  width: 2.8cqw;
+  height: 2.8cqw;
+}
+
+/* ============================================================
+   the card and its editor
+   The shop's preview is the card plus the four things that decide what is
+   on it. Side by side when the sheet is wide enough for both, stacked when
+   it is not — which is a thing a grid does on its own, so no media query
+   has to guess where the break is.
+   ============================================================ */
+.carded {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
+  align-items: start;
+  margin-top: 14px;
+}
+.carded > * {
+  min-width: 0;
+}
+/* on its own line the card takes the middle of it */
+.carded > .share {
+  justify-self: center;
+  margin-top: 0;
+}
+.card-ed {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 14px;
+  border: var(--bw) solid var(--line);
+  border-radius: var(--r-3);
+  background: color-mix(in srgb, var(--bg-3) 42%, transparent);
+}
+.card-ed .pf-label {
+  margin-top: 3px;
+}
+.card-ed-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.card-ed-row .fld {
+  flex: 1 1 170px;
+  min-width: 0;
+}
+.card-ed-row--end {
+  justify-content: flex-end;
+  margin-top: 5px;
+}
+.card-ed .swatch {
+  cursor: pointer;
+}
+.card-ed .swatch:hover {
+  border-color: var(--line-2);
 }
 
 .share-actions {

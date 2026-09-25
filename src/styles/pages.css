@@ -13,6 +13,7 @@
    whatever is left — so a laptop and a projector both get the whole page
    without a scrollbar appearing on the one screen that should not have one. */
 .hm {
+  position: relative;
   height: 100%;
   min-height: 0;
   display: flex;
@@ -23,6 +24,185 @@
   padding: clamp(8px, 2.5vh, 26px) 24px clamp(6px, 1.8vh, 18px);
   text-align: center;
   overflow: hidden;
+}
+
+/* ============================================================
+   the front door's scene
+   What is behind the wordmark. Not the dot grid and not the fog: a horizon,
+   with the floor running away from it, two blooms of the palette's ink, and
+   two rings turning very slowly around the middle. It is all CSS, so the one
+   page that has to open instantly still does, and it all stops with the
+   performance and reduce-motion switches (`[data-motion]` is handled for
+   every animation at once in shop.css).
+   ============================================================ */
+.hm-scene {
+  position: absolute;
+  inset: 0;
+  /* behind the words, and behind nothing else: the page host is its own
+     stacking context, so this stays above the fog and the page background
+     while every child of the page — sheets, the tour, the cards — draws over
+     it without being told to. Styling the siblings instead would have meant
+     an `position: relative` on the tour and the sheets, which are fixed. */
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* the horizon line, and the glow that makes it read as light rather than as
+   a border */
+.hm-horizon {
+  position: absolute;
+  left: -10%;
+  right: -10%;
+  /* the far edge of the floor, where the grid has faded to nothing: the line
+     is what the eye reads as the horizon, and the glow under it is what
+     stops it reading as a border. The wordmark sits a little above it. */
+  bottom: 58%;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    color-mix(in srgb, var(--ac-1) 65%, transparent) 50%,
+    transparent
+  );
+  box-shadow: 0 0 30px 7px color-mix(in srgb, var(--ac-1) 16%, transparent);
+  opacity: 0.8;
+}
+
+/* the floor: a grid laid flat and run towards the viewer. One background
+   cell is 72px and the animation travels exactly that far, so the loop has
+   no seam — the same trick the drifting band of cards uses. */
+.hm-floor {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 260vw;
+  height: 58%;
+  overflow: hidden;
+  /* The origin is the top edge, which is what makes this a floor rather than
+     a lid: the far edge stays where the horizon line is drawn and the cells
+     widen as they come towards the viewer. With the origin at the bottom the
+     same two functions converge downwards and read as a ceiling. */
+  transform: translateX(-50%) perspective(700px) rotateX(62deg);
+  transform-origin: 50% 0;
+  -webkit-mask-image: linear-gradient(to top, #000 2%, rgba(0, 0, 0, 0.35) 46%, transparent 96%);
+  mask-image: linear-gradient(to top, #000 2%, rgba(0, 0, 0, 0.35) 46%, transparent 96%);
+}
+.hm-grid {
+  position: absolute;
+  inset: -140% 0 0;
+  display: block;
+  background-image:
+    repeating-linear-gradient(
+      to right,
+      color-mix(in srgb, var(--ac-1) 60%, transparent) 0 1px,
+      transparent 1px 72px
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--ac-1) 45%, transparent) 0 1px,
+      transparent 1px 72px
+    );
+  opacity: 0.22;
+  animation: hm-run 15s linear infinite;
+}
+@keyframes hm-run {
+  to {
+    transform: translateY(72px);
+  }
+}
+
+/* two blooms of ink behind the wordmark, breathing rather than travelling:
+   motion in the middle of the page is motion under the words */
+/* Soft on its own: the gradient is the blur, so there is no filter here to
+   re-render every frame of the breathe — one is a paint, the other is a
+   paint and a blur pass on a page that is supposed to open instantly. */
+.hm-bloom {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+  will-change: transform, opacity;
+}
+.hm-bloom.b1 {
+  left: 50%;
+  top: 40%;
+  width: 54vw;
+  height: 54vw;
+  translate: -50% -50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--ac-1) 24%, transparent),
+    color-mix(in srgb, var(--ac-1) 10%, transparent) 44%,
+    transparent 72%
+  );
+  animation: hm-breathe 22s ease-in-out infinite;
+}
+.hm-bloom.b2 {
+  left: 50%;
+  top: 74%;
+  width: 40vw;
+  height: 26vw;
+  translate: -50% -50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--ac-1) 15%, transparent),
+    transparent 70%
+  );
+  animation: hm-breathe 33s ease-in-out infinite reverse;
+}
+@keyframes hm-breathe {
+  50% {
+    scale: 1.16;
+    opacity: 0.72;
+  }
+}
+
+/* two rings around the middle. The outer one is dashed and turning, which is
+   the whole ornament: an empty page with a circle on it is a page with a
+   circle on it. */
+.hm-orbit {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  translate: -50% -50%;
+  display: block;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--text) 9%, transparent);
+}
+.hm-orbit.r1 {
+  width: 74vh;
+  height: 74vh;
+}
+.hm-orbit.r2 {
+  width: 104vh;
+  height: 104vh;
+  border-style: dashed;
+  border-color: color-mix(in srgb, var(--ac-1) 16%, transparent);
+  animation: hm-spin 150s linear infinite;
+}
+@keyframes hm-spin {
+  to {
+    rotate: 360deg;
+  }
+}
+
+/* and the vignette: the corners fall away so the words in the middle are the
+   brightest thing on the page, which is what an empty page needs */
+.hm-vig {
+  position: absolute;
+  inset: 0;
+  display: block;
+  background:
+    radial-gradient(120% 88% at 50% 42%, transparent 38%, color-mix(in srgb, var(--bg) 72%, transparent) 100%),
+    linear-gradient(to bottom, color-mix(in srgb, var(--bg) 55%, transparent), transparent 22%);
+}
+
+/* the performance switch means the same thing here as everywhere else: draw
+   it once and leave it alone */
+[data-perf] .hm-grid,
+[data-perf] .hm-bloom,
+[data-perf] .hm-orbit {
+  animation: none;
 }
 .hm-word {
   flex: none;
