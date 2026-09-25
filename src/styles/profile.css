@@ -921,7 +921,8 @@ input[type="color"] {
 .share-mark,
 .share-id,
 .share-bio,
-.share-foot {
+.share-facts,
+.share-decide {
   position: relative;
   z-index: 1;
 }
@@ -997,9 +998,37 @@ input[type="color"] {
   letter-spacing: -0.015em;
 }
 .share-handle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-family: var(--mono);
   font-size: 12px;
   color: var(--dim);
+}
+/* the dot on the picture and the word beside the handle are the chat card's
+   own way of saying somebody is here, so the preview says it the same way */
+.share-on {
+  position: absolute;
+  right: 1px;
+  bottom: 1px;
+  width: 15px;
+  height: 15px;
+  border: 3px solid var(--bg-2);
+  border-radius: 50%;
+  background: var(--ok);
+}
+.share-presence {
+  font-style: normal;
+  font-size: 10.5px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ok);
+}
+.share-acts {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
 }
 .share-tags {
   display: flex;
@@ -1021,31 +1050,62 @@ input[type="color"] {
   color: var(--faint);
   font-style: italic;
 }
-.share-foot {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  margin: 14px 22px 0;
+/* ---------- the numbers ----------
+   The same box the chat card keeps its own in: labels above their values, and
+   as many to a row as the card has room for. */
+.share-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(126px, 1fr));
+  gap: 9px;
+  margin: 12px 22px 0;
   padding: 12px;
   border: var(--bw) solid var(--line);
   border-radius: var(--r-3);
   background: color-mix(in srgb, var(--bg-3) 58%, transparent);
+}
+.share-fact {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.share-fact i {
   font-family: var(--mono);
-  font-size: 11px;
-  color: var(--dim);
-}
-.share-foot span {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-.share-foot svg {
-  width: 12px;
-  height: 12px;
-}
-.share-dot {
+  font-size: 9.5px;
+  font-style: normal;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
   color: var(--faint);
+}
+.share-fact b {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 620;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- what a visitor can do ----------
+   Nothing here is live: it is your own card, so there is nobody to message and
+   nobody to follow. It is drawn because the question this card answers is what
+   somebody else sees, and that row is part of what they see. */
+.share-decide {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 12px 22px 0;
+}
+.share-follow {
+  flex: 1 1 auto;
+}
+.share-follow svg {
+  width: 14px;
+  height: 14px;
+}
+.share-decide .btn,
+.share-acts .btn {
+  cursor: default;
 }
 /* A share card wearing a shelf overlay: same portrait shape as the chat
    pop-out and the live profile, so the art lands whole instead of being
@@ -1056,21 +1116,24 @@ input[type="color"] {
      shape — 450×880, nothing cropped. `container-type: size` makes the card
      the thing everything inside is measured against, and the block further
      down sizes the words from it in cqw: a shorter card is a smaller card
-     rather than a card with its head cut off. */
-  --card-h: clamp(360px, 58vh, 620px);
+     rather than a card with its head cut off.
+
+     `100vh - 224px` is the sheet's own chrome — its head, its padding, its
+     buttons — taken off the top of the window, which is the most a card can
+     have and still be seen whole without the sheet scrolling. The shop's
+     preview asks for a little less again, because there is an editor beside
+     the card there; see `.carded` below. */
+  --card-h: min(calc(100vh - 224px), 640px);
   container-type: size;
   height: var(--card-h);
   width: calc(var(--card-h) * 450 / 880);
   margin-inline: auto;
-  /* the words sit where the painted PNG puts them: the wordmark at the top of
-     the card, the identity block at the bottom, the art showing through the
-     middle. `margin-top: auto` on the identity block is what keeps the
-     download and the card on screen the same shape. */
+  /* The words run from the top of the card down, exactly as they do in the
+     chat: banner, the picture over the seam, then one thing under another.
+     Nothing is pushed to the foot except the social row, which is what gives
+     the card its floor and leaves the middle to the art. */
   display: flex;
   flex-direction: column;
-}
-.share--fx .share-id {
-  margin-top: auto;
 }
 .share-fx {
   position: absolute;
@@ -1155,16 +1218,51 @@ input[type="color"] {
   margin: 2.8cqw 5.1cqw 0;
   font-size: 3.15cqw;
 }
-.share--fx .share-foot {
+.share--fx .share-on {
+  width: 3.3cqw;
+  height: 3.3cqw;
+  border-width: 0.7cqw;
+}
+.share--fx .share-presence {
+  font-size: 2.3cqw;
+}
+.share--fx .share-acts .btn {
+  height: 6.7cqw;
+  padding: 0 3.4cqw;
+  border-radius: 2cqw;
+  font-size: 2.7cqw;
+}
+.share--fx .share-facts {
   gap: 1.9cqw;
   margin: 3.3cqw 5.1cqw 0;
   padding: 2.8cqw;
   border-radius: 2.3cqw;
-  font-size: 2.55cqw;
 }
-.share--fx .share-foot svg {
-  width: 2.8cqw;
-  height: 2.8cqw;
+.share--fx .share-fact i {
+  font-size: 2.1cqw;
+}
+.share--fx .share-fact b {
+  font-size: 2.9cqw;
+}
+/* the social row is the floor of the card: the art is what the middle is for */
+.share--fx .share-decide {
+  gap: 1.8cqw;
+  margin: auto 5.1cqw 0;
+  padding-bottom: 0.4cqw;
+}
+.share--fx .share-decide .btn {
+  height: 6.7cqw;
+  padding: 0 3.4cqw;
+  border-radius: 2cqw;
+  font-size: 2.7cqw;
+}
+.share--fx .share-decide .btn--icon {
+  width: 6.7cqw;
+  padding: 0;
+}
+.share--fx .share-decide svg {
+  width: 3.4cqw;
+  height: 3.4cqw;
 }
 
 /* ============================================================
@@ -1180,6 +1278,17 @@ input[type="color"] {
   gap: 18px;
   align-items: start;
   margin-top: 14px;
+  /* the width is what the card's height is checked against below, so the grid
+     has to be the thing `cqw` measures. `inline-size` and not `size`: the
+     sheet is as tall as its contents and must stay that way. */
+  container-type: inline-size;
+}
+/* The preview card, at the size the editor leaves it. Two limits and the
+   smaller wins: what the window can spare, and what one column of the grid
+   can hold. The second one is what stops a tall window from growing a card
+   wider than the column and pushing the editor off the sheet. */
+.carded > .share--fx {
+  --card-h: min(calc(100vh - 224px), calc(44cqw * 880 / 450));
 }
 .carded > * {
   min-width: 0;
@@ -1231,6 +1340,17 @@ input[type="color"] {
 .share-note {
   margin-top: 8px;
   text-align: right;
+}
+
+/* The sheet the card lives in. A card wants the whole window — it is the one
+   thing in here that is looked at rather than filled in — so this sheet takes
+   the veil's padding and not much more, which is where the height the card
+   spends its own budget on comes from. */
+.sheet--card {
+  max-height: calc(100vh - 56px);
+}
+.sheet--card .sheet-body {
+  padding-top: 12px;
 }
 
 @media (max-width: 620px) {

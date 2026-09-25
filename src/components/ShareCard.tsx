@@ -2,36 +2,39 @@
    The card a profile turns into when it leaves the site, and the card the
    shop shows when you want to look before you buy.
 
-   This is where the profile effects went: instead of being painted behind
-   the live profile — where a wide looping clip is squashed into a strip and
-   tinted until nothing of it shows — the effect is the background of this
-   one card, at the size it was made for, with the words sitting in the part
-   that is kept clear for them.
-
-   Download paints the same card onto a canvas (src/lib/card.ts) and hands
-   back a PNG. Nothing is uploaded anywhere.
+   It is drawn the way the chat draws a profile card, because that is the
+   question this card answers: what does somebody else see when they open you?
+   Banner, the picture hanging over the seam, the name and the tags, what you
+   wrote, the numbers, and the row of things a visitor can do — with the shop's
+   effect behind all of it, at the size it was made for instead of squashed
+   into a strip.
 
    Two other uses ride on the same card. `preview` wears one piece off the
-   shelf instead of what is equipped, so the shop can show you a decoration
-   on your own card before you pay for it. `editing` turns the sheet into the
+   shelf instead of what is equipped, so the shop can show you a decoration on
+   your own card before you pay for it. `editing` turns the sheet into the
    profile editor: name, picture, banner and name style are drawn from a
    draft, so what you are looking at is what you would be saving. Neither use
-   touches the server — the card is this browser's account and shop state. */
+   touches the server — the card is this browser's account and shop state.
+
+   Download paints the card in src/lib/card.ts: a PNG for a still, and a GIF
+   that loops for the copy that moves. Nothing is uploaded anywhere. */
 
 import { useEffect, useRef, useState } from "react";
 import {
   BadgeCheck,
   Camera,
   Check,
-  Coins,
+  CircleSlash,
   Copy,
   Crown,
   Download,
   Eye,
+  Film,
+  Gift,
   RotateCcw,
   Trash2,
-  Trophy,
   Upload,
+  UserPlus,
 } from "lucide-react";
 
 import {
@@ -44,10 +47,11 @@ import {
 } from "../lib/account";
 import { itemsOf, useEcon, type Shelf } from "../lib/econ";
 import { isOwner, OWNER_TAG } from "../lib/owner";
-import { cardPng } from "../lib/card";
+import { cardGif, cardPng } from "../lib/card";
 import { effectAsset } from "../lib/shopAssets";
 import { AvatarArt, EffectArt, TagChip } from "../lib/art";
 import { NullFace } from "../lib/brand";
+import { memberId } from "./LineParts";
 import { Sheet } from "./Sheet";
 
 type Draft = { name: string; bio: string; pfp: string | null; banner: string; nameStyle: NameStyle };
@@ -70,7 +74,8 @@ export function ShareCard({
   const card = useRef<HTMLDivElement>(null);
   const nameEl = useRef<HTMLHeadingElement>(null);
   const [note, setNote] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  /* null, or which of the two files is being painted */
+  const [busy, setBusy] = useState<"png" | "gif" | null>(null);
 
   const owner = isOwner(me.user);
   /* The draft starts from the account every time the sheet opens — the sheet
@@ -116,7 +121,7 @@ export function ShareCard({
 
   const say = (msg: string) => {
     setNote(msg);
-    window.setTimeout(() => setNote(null), 2400);
+    window.setTimeout(() => setNote(null), 3200);
   };
 
   const revert = () => {
@@ -135,11 +140,11 @@ export function ShareCard({
     say("Saved to your card.");
   };
 
-  const download = async () => {
-    setBusy(true);
+  const download = async (kind: "png" | "gif") => {
+    setBusy(kind);
     try {
-      /* the frames already playing on this card, so the PNG is painted with
-         the same frame the eye is looking at */
+      /* the art already playing on this card, so the file is painted with the
+         same frames the eye is looking at rather than with the first ones */
       const first = (...sels: string[]) => {
         for (const sel of sels) {
           const el = card.current?.querySelector<HTMLImageElement>(sel);
@@ -147,7 +152,7 @@ export function ShareCard({
         }
         return null;
       };
-      const png = await cardPng({
+      const input = {
         name: shown.name || me.user || "someone",
         handle: me.user ?? "",
         bio: shown.bio,
@@ -159,29 +164,37 @@ export function ShareCard({
         nameStyle: shown.nameStyle,
         favorites: me.favorites.length,
         coins: eco.coins,
+        id: me.user ? memberId(me.user) : undefined,
         /* the clip already playing on this card, drawn frame by frame */
         video: card.current?.querySelector("video") ?? null,
         fx: first(".share-fx img"),
         deco: first(".share-pic .art--deco .deco-move", ".share-pic .art--deco .deco-still"),
         font: nameEl.current ? getComputedStyle(nameEl.current).fontFamily : undefined,
-      });
+      };
+      const href = kind === "gif" ? await cardGif(input) : await cardPng(input);
       const a = document.createElement("a");
-      a.href = png;
-      a.download = `null-${(me.user ?? "card").toLowerCase()}.png`;
+      a.href = href;
+      a.download = `null-${(me.user ?? "card").toLowerCase()}.${kind}`;
       a.click();
-      say("Saved.");
+      say(kind === "gif" ? "Saved. It plays again by itself." : "Saved.");
     } catch {
-      say("The card would not paint.");
+      say(kind === "gif" ? "The card would not record." : "The card would not paint.");
     }
-    setBusy(false);
+    setBusy(null);
   };
 
   return (
-    <Sheet open={open} onClose={onClose} title={editing ? "Preview" : "Share card"} width={editing ? 780 : 640}>
+    <Sheet
+      open={open}
+      onClose={onClose}
+      title={editing ? "Preview" : "Share card"}
+      width={editing ? 860 : 700}
+      className="sheet--card"
+    >
       <p className="muted tiny">
         {editing
-          ? "Your card as it would look. Change the picture, the banner, the name or the way the name is written and it appears straight away — nothing is sent anywhere, and Save is what makes it yours."
-          : "This is your card at full size — banner and effect included. Downloading it paints a PNG here in the browser; nothing is uploaded."}
+          ? "Your card, laid out the way the chat shows it to somebody else. Change the picture, the banner, the name or the way the name is written and it appears straight away — nothing is sent anywhere, and Save is what makes it yours."
+          : "This is your card at full size — banner, decoration and effect included. Downloading it paints the file here in the browser, and the GIF loops; nothing is uploaded."}
       </p>
 
       <div className={editing ? "carded" : undefined}>
@@ -204,6 +217,7 @@ export function ShareCard({
             <span className="share-pic">
               {shown.pfp ? <img src={shown.pfp} alt="" /> : <NullFace />}
               <AvatarArt id={avatar} />
+              <i className="share-on" />
             </span>
 
             <div className="share-txt">
@@ -218,7 +232,11 @@ export function ShareCard({
                 </h3>
                 {owner && <BadgeCheck className="pf-verified" aria-label="Owner" />}
               </div>
-              <span className="share-handle">{me.user ? `@${me.user}` : "not signed in"}</span>
+
+              <div className="share-handle">
+                {me.user ? `@${me.user}` : "not signed in"}
+                <em className="share-presence">online</em>
+              </div>
 
               <div className="share-tags">
                 {owner && (
@@ -232,26 +250,41 @@ export function ShareCard({
                 ))}
               </div>
             </div>
+
+            {/* What a visitor is offered. Spans rather than buttons on purpose:
+                it is your own card, so there is nobody on the other end of a
+                message — this is the shape of the thing, not the thing. */}
+            <div className="share-acts" aria-hidden="true">
+              <span className="btn btn--sm">Message</span>
+            </div>
           </div>
 
           <p className={`share-bio${shown.bio?.trim() ? "" : " is-empty"}`}>{shown.bio || "No bio yet."}</p>
 
-          <div className="share-foot">
-            <span>
-              joined{" "}
-              {new Date(me.joined || Date.now()).toLocaleDateString(undefined, {
+          <div className="share-facts">
+            {me.user && <ShareFact label="member id" value={`#${memberId(me.user)}`} />}
+            <ShareFact
+              label="joined"
+              value={new Date(me.joined || Date.now()).toLocaleDateString(undefined, {
                 month: "short",
                 day: "numeric",
                 year: "numeric",
               })}
+            />
+            <ShareFact label="favorites" value={String(me.favorites.length)} />
+            <ShareFact label="coins" value={eco.coins.toLocaleString()} />
+          </div>
+
+          <div className="share-decide" aria-hidden="true">
+            <span className="btn btn--sm btn--icon">
+              <Gift />
             </span>
-            <span className="share-dot">∙</span>
-            <span>
-              <Trophy /> {me.favorites.length} favorites
+            <span className="btn btn--sm btn--fill share-follow">
+              <UserPlus />
+              Follow
             </span>
-            <span className="share-dot">∙</span>
-            <span>
-              <Coins /> {eco.coins.toLocaleString()}
+            <span className="btn btn--sm btn--icon">
+              <CircleSlash />
             </span>
           </div>
 
@@ -281,13 +314,29 @@ export function ShareCard({
             <Copy /> Copy link
           </button>
         )}
-        <button className="btn btn--fill" onClick={download} disabled={busy}>
-          <Download /> {busy ? "Painting…" : "Download PNG"}
+        <button className="btn" onClick={() => download("png")} disabled={busy !== null}>
+          <Download /> {busy === "png" ? "Painting…" : "Download PNG"}
+        </button>
+        <button className="btn btn--fill" onClick={() => download("gif")} disabled={busy !== null}>
+          <Film /> {busy === "gif" ? "Recording…" : "Download GIF"}
         </button>
       </div>
 
       {note && <p className="tiny faint share-note">{note}</p>}
+      {busy === "gif" && (
+        <p className="tiny faint share-note">The card is being recorded frame by frame. Leave it on screen for a moment.</p>
+      )}
     </Sheet>
+  );
+}
+
+/** One line of the facts box, drawn the way the chat card draws its own. */
+function ShareFact({ label, value }: { label: string; value: string }) {
+  return (
+    <span className="share-fact">
+      <i>{label}</i>
+      <b>{value}</b>
+    </span>
   );
 }
 

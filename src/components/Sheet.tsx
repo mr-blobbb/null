@@ -17,6 +17,9 @@ type Props = {
   width?: number;
   /** a corner X is the default; quiet turns it off for very small prompts */
   closeButton?: boolean;
+  /** an extra class for a sheet that wants to be a shape of its own — the
+   *  share card takes more of the window than a form needs */
+  className?: string;
 };
 
 export function Sheet({
@@ -27,6 +30,7 @@ export function Sheet({
   children,
   width = 520,
   closeButton = true,
+  className,
 }: Props) {
   useEffect(() => {
     if (!open) return;
@@ -42,7 +46,7 @@ export function Sheet({
   return (
     <div className="veil" onMouseDown={onClose} role="presentation">
       <div
-        className="sheet"
+        className={`sheet${className ? ` ${className}` : ""}`}
         style={{ maxWidth: width }}
         role="dialog"
         aria-modal="true"
