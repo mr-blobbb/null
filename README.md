@@ -2,7 +2,7 @@
 
 ![null Header](https://capsule-render.vercel.app/api?type=venom&height=200&text=null&fontSize=80&color=0:1A1A1A,50:808080,100:FFFFFF&stroke=ffffff&strokeWidth=2&fontFamily=silkscreen&animation=twinkling)
 
-### a premium web proxy & unblocked games platform 🎮🌌
+### a premium web proxy & unblocked games platform
 
 explore null: https://null.freebuff.app • bugs: https://github.com/mr-blobbb/null/issues
 
