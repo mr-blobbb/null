@@ -17,7 +17,6 @@ import {
   House,
   Link2,
   Play,
-  Puzzle,
   ScrollText,
   ShoppingBag,
   SlidersHorizontal,
@@ -39,7 +38,6 @@ export type PageId =
   | "shop"
   | "profile"
   | "changelog"
-  | "extensions"
   | "settings"
   | "users"
   | "rich"
@@ -165,15 +163,6 @@ export const PAGES: Record<PageId, Page> = {
     blurb: "Every release, newest first, with what was added and fixed.",
     keywords: "changelog release notes news update version",
   },
-  extensions: {
-    id: "extensions",
-    name: "Extensions",
-    address: "null://ext",
-    route: "/extensions",
-    icon: Puzzle,
-    blurb: "Add-ons that draw inside NULL, in any page you are on.",
-    keywords: "extension addon plugin widget popup",
-  },
   users: {
     id: "users",
     name: "Members",
@@ -241,14 +230,7 @@ export const PAGES: Record<PageId, Page> = {
  *  The bottom group is read upward from the last door, so the two that are
  *  about people sit together: members just above the profile. */
 export const RAIL_TOP: PageId[] = ["home", "games", "apps", "ai", "chat", "movies", "music", "shop"];
-export const RAIL_BOTTOM: PageId[] = [
-  "rich",
-  "users",
-  "profile",
-  "changelog",
-  "extensions",
-  "settings",
-];
+export const RAIL_BOTTOM: PageId[] = ["rich", "users", "profile", "changelog", "settings"];
 
 /** Everything the All Apps sheet lists, in reading order. */
 export const ALL_PAGES: PageId[] = [
@@ -265,7 +247,6 @@ export const ALL_PAGES: PageId[] = [
   "users",
   "profile",
   "changelog",
-  "extensions",
   "settings",
 ];
 

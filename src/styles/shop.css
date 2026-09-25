@@ -323,6 +323,35 @@
   height: 100%;
   object-fit: contain;
   object-position: center;
+  transition: opacity 0.18s var(--ease);
+}
+
+/* A decoration with two files: one that moves, one frame of it standing
+   still. Chat, the member rail and the messages page ask for the pair, so a
+   room full of looping art stays readable; the shelf asks for the moving one
+   alone, because a tile that never moves is a tile nobody buys.
+
+   Both files are in the tree — the coming one is only held at nothing — so
+   the swap is instant and costs no request. Painting them at once is the
+   thing this exists to prevent: two frames of the same art, one frozen, one
+   moving, stacked a pixel apart. */
+.art--hover-move .deco-move {
+  opacity: 0;
+}
+:is(.avbox, .dms-pic, .say-picbtn, .ch-member-pic, .ch-pop-pic, .pf-pic, .share-pic):hover
+  .art--hover-move
+  .deco-still {
+  opacity: 0;
+}
+:is(.avbox, .dms-pic, .say-picbtn, .ch-member-pic, .ch-pop-pic, .pf-pic, .share-pic):hover
+  .art--hover-move
+  .deco-move {
+  opacity: 1;
+}
+/* the switch is a nicety, not the point: with motion off the still is all
+   there is, which is exactly what reducing motion asks for */
+[data-motion="off"] .art--hover-move .deco-move {
+  display: none;
 }
 
 /* A decoration that is a real clip.

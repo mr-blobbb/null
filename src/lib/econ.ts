@@ -292,6 +292,57 @@ const TAGS: ShopItem[] = [
     color: "#79c9d6",
     art: "drip",
   },
+  /* the dark end of the shelf: fill colours deep enough that the chip has to
+     hand its own ink over, or the name disappears into the tag */
+  {
+    id: "tsnek",
+    shelf: "tag",
+    name: "SNEK",
+    desc: "Just a little guy",
+    price: 940,
+    color: "#10643c",
+    ink: "#d6ffe8",
+    art: "sway",
+  },
+  {
+    id: "tangel",
+    shelf: "tag",
+    name: "ANGEL",
+    desc: "Better than you",
+    price: 1240,
+    color: "#fbfbfd",
+    art: "glow",
+  },
+  {
+    id: "ttsundere",
+    shelf: "tag",
+    name: "TSUNDERE",
+    desc: "It is not like I like you",
+    price: 880,
+    color: "#a34a0f",
+    ink: "#ffe7cf",
+    art: "split",
+  },
+  {
+    id: "tevil",
+    shelf: "tag",
+    name: "EVIL",
+    desc: "It has to be on purpose",
+    price: 1320,
+    color: "#761326",
+    ink: "#ffd8df",
+    art: "haunt",
+  },
+  {
+    id: "tbeans",
+    shelf: "tag",
+    name: "BEANS",
+    desc: "Six kinds, one tin",
+    price: 820,
+    color: "#44301c",
+    ink: "#f2e2cd",
+    art: "doze",
+  },
   /* the one that is genuinely wrong to wear: sold at full price, and the
      only piece whose finish moves on its own */
   {

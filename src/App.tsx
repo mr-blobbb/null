@@ -11,6 +11,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Ambient } from "./components/Ambient";
 import { Chrome } from "./components/Chrome";
+import { Guard } from "./components/Guard";
 import { CtxMenu } from "./components/CtxMenu";
 import { Rail } from "./components/Rail";
 import { SettingsSheet, type SettingsTab } from "./components/SettingsSheet";
@@ -26,7 +27,6 @@ import { Chat } from "./pages/Chat";
 import { Music } from "./pages/Music";
 import { Profile } from "./pages/Profile";
 import { Changelog } from "./pages/Changelog";
-import { Extensions } from "./pages/Extensions";
 import { Player } from "./pages/Player";
 
 import { applyPalette, applyPerf, prefs, usePalette } from "./lib/themes";
@@ -43,8 +43,8 @@ import { overlayExtensions, useExt } from "./lib/extensions";
 import { useJamWatch } from "./lib/jam";
 import { watchLibrary } from "./lib/music";
 
-const VERSION = "1.2.3";
-const BUILT = "20260921";
+const VERSION = "1.3.0";
+const BUILT = "20260925";
 
 export function App() {
   const palette = usePalette();
@@ -206,8 +206,6 @@ export function App() {
         return <Profile />;
       case "changelog":
         return <Changelog />;
-      case "extensions":
-        return <Extensions />;
       case "player":
         return <Player kind={t.now.arg?.kind ?? "game"} id={t.now.arg?.id ?? ""} />;
       default:
@@ -247,9 +245,6 @@ export function App() {
     if (account.get().device !== label) account.set({ device: label });
   }, [me.user]);
 
-  /* the presence beat: this page says "still me" every forty-five seconds,
-     which is what draws the green dot beside a name */
-  usePulse(me.user);
   useEffect(() => {
     if (!me.user) return;
     const send = () => {
@@ -262,15 +257,6 @@ export function App() {
     return () => window.clearInterval(id);
   }, [me, eco]);
 
-  /* A jam runs from the shell, not from the music page: the point of listening
-     together is that you can wander off to the games and it keeps playing. */
-  useJamWatch(me.user);
-
-  /* And the kept music follows the account rather than the machine: sign in
-     and the shelf is merged, sign out and it stays where it is. */
-  useEffect(() => {
-    watchLibrary(me.user);
-  }, [me.user]);
 
   return (
     <div className="app">
@@ -306,8 +292,17 @@ export function App() {
                 tab.now.page === "home" || tab.now.page === "chat" || tab.now.page === "ai" ? " page-host--fit" : ""
               }`}
             >
+              {/* One page falling over is that page's problem. Without this
+                  the error reached main.tsx's guard, which replaces the
+                  whole site — rail, chrome and sign-in card included — and a
+                  backend having a day became a site nobody could sign in
+                  to. */}
               <div className="page-layer">
-                {tab.now.page !== "player" && body}
+                {tab.now.page !== "player" && (
+                  <Guard what={PAGES[tab.now.page].name}>
+                    {body}
+                  </Guard>
+                )}
               </div>
               <div className="game-tab-stack" aria-live="off">
                 {gameTabs.map((gameTab) => (
@@ -338,6 +333,12 @@ export function App() {
 
       {milestone && <div className="toast">{milestone}</div>}
 
+      {/* The beats that need the server, in a component of their own so a
+          deployment that is switched off takes them out and nothing else. */}
+      <Guard what="the shared side" fallback={null}>
+        <CloudBeats user={me.user} />
+      </Guard>
+
       <OverlayExts coins={coins} />
 
       <CtxMenu />
@@ -349,6 +350,25 @@ export function App() {
       />
     </div>
   );
+}
+
+/** Presence, the listen-along jam, and the kept music shelf: three things
+ *  that talk to the server and none of which anyone needs before they are
+ *  signed in. Kept apart from the shell for the reason in the guard above. */
+function CloudBeats({ user }: { user: string | null }) {
+  /* the presence beat: this page says "still me" every forty-five seconds,
+     which is what draws the green dot beside a name */
+  usePulse(user);
+  /* A jam runs from the shell, not from the music page: the point of
+     listening together is that you can wander off to the games and it keeps
+     playing. */
+  useJamWatch(user);
+  /* And the kept music follows the account rather than the machine: sign in
+     and the shelf is merged, sign out and it stays where it is. */
+  useEffect(() => {
+    watchLibrary(user);
+  }, [user]);
+  return null;
 }
 
 /** The chips extensions float over the page. They are deliberately the only

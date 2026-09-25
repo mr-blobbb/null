@@ -756,6 +756,28 @@ kbd {
   height: 15px;
   color: var(--faint);
 }
+/* An app's own mark, drawn in the site's own colour and sized to the square.
+   The stripes come off for these: the shape is the whole tile, and a lean of
+   hazard tape behind it only muddies a logo. */
+.tile-art--app {
+  background-image: linear-gradient(150deg, var(--bg-4), var(--bg-3));
+}
+.tile-art .tile-brand {
+  display: grid;
+  place-items: center;
+  width: 44%;
+  height: 44%;
+}
+.tile-art .tile-brand svg {
+  position: static;
+  right: auto;
+  bottom: auto;
+  width: 100%;
+  height: 100%;
+  color: inherit;
+  opacity: 0.94;
+  filter: drop-shadow(0 0 16px color-mix(in srgb, currentColor 45%, transparent));
+}
 .tile-star {
   position: absolute;
   top: 7px;

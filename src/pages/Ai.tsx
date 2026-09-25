@@ -101,7 +101,25 @@ function Desk() {
   }
 
   return <div className="page ai">
-    <div className="lb-top ai-top"><div><h1 className="lb-title">Assistant</h1><span className="lb-count tiny faint"><Bot /> {said === null ? "checking…" : ready ? `running on ${said.ready ? said.provider : BUILT_IN_MODEL}` : "no key set"}</span></div><button className="btn btn--sm" onClick={newThread}><MessageSquarePlus /> New</button></div>
+    <div className="lb-top ai-top">
+      <div className="ai-head-txt">
+        <h1 className="lb-title">Assistant</h1>
+        {/* the model is a caption on the page, not a chip beside its name:
+            it is the one thing you want to know before you type, and it
+            belongs under the word Assistant rather than next to it */}
+        <span className="ai-model tiny faint">
+          <Bot />
+          {said === null
+            ? "checking…"
+            : ready
+              ? `Running on ${said.ready ? said.provider : BUILT_IN_MODEL}`
+              : "no key set"}
+        </span>
+      </div>
+      <button className="btn btn--sm" onClick={newThread}>
+        <MessageSquarePlus /> New
+      </button>
+    </div>
     <div className="ai-layout">
       <aside className="ai-threads" aria-label="Conversation history">
         <div className="ai-threads-head"><span>Conversations</span><button className="btn btn--xs" onClick={newThread} title="New conversation"><MessageSquarePlus /></button></div>

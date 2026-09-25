@@ -11,6 +11,27 @@ type Release = { version: string; date: string; note: string; changes: Change[] 
 
 const RELEASES: Release[] = [
   {
+    version: "v1.3.0",
+    date: "September 25, 2026",
+    note: "The one where the shop got real artwork, the shelves got their own rooms, and one broken page stopped being able to take the whole site down with it.",
+    changes: [
+      { kind: "add", text: "The Shop's pictures and cards are real artwork now, and they move: every face is a looping portrait with a still twin that is used where a room full of motion would be unreadable, so chat, the member rail and the messages page stay quiet while the shelf itself never sits still. Passing the cursor over a picture swaps the still for the moving one, and nothing is ever drawn twice on top of itself." },
+      { kind: "add", text: "Profile effects are shown whole. The art is a portrait card, 450×880, so the shop tile, the chat pop-out, the live profile and the share card all take that shape instead of slicing the composition into a strip. The overlay is drawn over the banner, the picture and the words, and the pop-out scrolls its body rather than the whole card, so the frame stays where it was put." },
+      { kind: "add", text: "Five new tags: SNEK, ANGEL, TSUNDERE, EVIL and BEANS. Each one wears its own colour and its own small animation." },
+      { kind: "add", text: "Every app on the apps shelf has a mark of its own now, in the service's own colours, instead of initials." },
+      { kind: "add", text: "The Assistant says what it is running on, under its title: the model the deployment has a key for, or that there is no key set." },
+      { kind: "add", text: "Music has rooms: Featured, Search, Library and Queue, with a handful of stations — Late night, Neon, Small hours jazz, Rain on a window, No words, Loud — so the page opens on something rather than on a form. Featured picks up where you left off." },
+      { kind: "add", text: "The cloak list is drawn by hand in the Settings: Google, Classroom, Docs, Drive, Gmail, Clever, Canvas, Khan, Schoology, Quizlet, Blooket, Edpuzzle, Kahoot, Wikipedia, Infinite Campus, PowerSchool, i-Ready and a plain tab. Icons rather than pictures, so the picker reads at a glance and every fake tab keeps a real favicon." },
+      { kind: "add", text: "Being the owner is enough. A page that falls over is that page's problem now, not the site's: the error is caught where it happened, so the rail, the chrome and the sign-in card keep working when a backend is having a day." },
+      { kind: "tweak", text: "The default theme is Midnight, and it was retuned while it was at it — a deeper sky, cooler lines, an accent that reads on it. Ambience starts off." },
+      { kind: "tweak", text: "Richest is a board rather than a list: the top three stand on a podium and everybody else is a row with a rank, a face, a share of the purse and what they are worth." },
+      { kind: "tweak", text: "Members opens with numbers — how many there are, how many are here now, how many are wearing something, and who is richest — and every card carries their purse and whether they are about. The staff log and the appeals queue moved back where the decisions are made: the profile card." },
+      { kind: "remove", text: "Minecraft and the bookmark star left the top bar. The bar is one button now, Split; Ctrl+D still bookmarks, and null://minecraft still opens." },
+      { kind: "remove", text: "The Extensions page is gone, along with its door on the rail and its icon in the tab strip." },
+      { kind: "tweak", text: "The homepage build stamp and visible version are now v1.3.0 · 20260925." },
+    ],
+  },
+  {
     version: "v1.2.3",
     date: "September 21, 2026",
     note: "The one where searching the games shelf stopped guessing, and the browser got a new little door.",

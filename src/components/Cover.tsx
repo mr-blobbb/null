@@ -20,7 +20,45 @@
      shelf. */
 
 import { useEffect, useRef, useState } from "react";
-import { Gamepad2 } from "lucide-react";
+import {
+  Archive,
+  BookOpen,
+  Bot,
+  Brain,
+  Calculator,
+  Camera,
+  ChartSpline,
+  ChefHat,
+  Clapperboard,
+  Code,
+  Crown,
+  Dices,
+  FileText,
+  Film,
+  Flame,
+  Gamepad2,
+  GraduationCap,
+  Hash,
+  HardDrive,
+  Images,
+  Joystick,
+  Keyboard,
+  Mail,
+  MessageCircle,
+  MessagesSquare,
+  Music,
+  Music2,
+  Palette,
+  Plus,
+  Radio,
+  Send,
+  Shapes,
+  Sparkles,
+  Store,
+  Swords,
+  Video,
+  type LucideIcon,
+} from "lucide-react";
 
 import type { Entry } from "../lib/catalog";
 
@@ -53,6 +91,62 @@ function lean(id: string): number {
 
 /** How close a tile has to be to the viewport before its picture mounts. */
 const NEAR = "800px";
+
+/* ---------- the apps shelf's own marks ----------
+   The apps page is a list of other people's front doors, and every one of
+   them is a site with a mark the visitor has already seen a hundred times.
+   Drawing the shape in the site's own colour is what makes the shelf
+   readable at a glance; a square of initials for YouTube next to a square of
+   initials for Twitch is a shelf nobody can scan.
+
+   These are the drawn shapes from the icon set — the brands' own logos are
+   not in it, and a redrawn logo is a trademark argument, so what is here is
+   a shape and a colour that reads as the right door with the name beside it.
+   Anything not in the table keeps the drawn square below. */
+const APP_MARKS: Record<string, { icon: LucideIcon; color: string }> = {
+  youtube: { icon: Video, color: "#ff4d4d" },
+  github: { icon: Code, color: "#c9c9d2" },
+  spotify: { icon: Music, color: "#4fcf7e" },
+  discord: { icon: MessageCircle, color: "#7b86ff" },
+  reddit: { icon: MessagesSquare, color: "#ff7043" },
+  x: { icon: Hash, color: "#e8e8ee" },
+  instagram: { icon: Camera, color: "#ff5f9e" },
+  tiktok: { icon: Music2, color: "#5fd6d6" },
+  twitch: { icon: Radio, color: "#a678ff" },
+  netflix: { icon: Film, color: "#ff4d5e" },
+  primevideo: { icon: Clapperboard, color: "#4fc3f7" },
+  crunchyroll: { icon: Sparkles, color: "#ff9a5c" },
+  roblox: { icon: Shapes, color: "#ff6b6b" },
+  steam: { icon: Gamepad2, color: "#8fd0ff" },
+  epic: { icon: Store, color: "#c6c6c6" },
+  chess: { icon: Crown, color: "#d3a86a" },
+  lichess: { icon: Swords, color: "#b3b8c2" },
+  coolmath: { icon: Plus, color: "#7fd1ae" },
+  poki: { icon: Dices, color: "#ff8a8a" },
+  itch: { icon: Joystick, color: "#ff7b7b" },
+  crazygames: { icon: Flame, color: "#f4c95d" },
+  monkeytype: { icon: Keyboard, color: "#e8cf6a" },
+  wikipedia: { icon: BookOpen, color: "#d5d5de" },
+  archive: { icon: Archive, color: "#8fd8e8" },
+  gmail: { icon: Mail, color: "#ff6b5e" },
+  docs: { icon: FileText, color: "#7aa2ff" },
+  classroom: { icon: GraduationCap, color: "#5fd68c" },
+  drive: { icon: HardDrive, color: "#f2c94c" },
+  gemini: { icon: Brain, color: "#a6b8ff" },
+  chatgpt: { icon: Bot, color: "#63d6b0" },
+  telegram: { icon: Send, color: "#6cc7f5" },
+  pinterest: { icon: Images, color: "#ff5a76" },
+  imgur: { icon: Images, color: "#5fd6a6" },
+  photopea: { icon: Palette, color: "#4fd6d0" },
+  desmos: { icon: ChartSpline, color: "#7fb6ff" },
+  cyberchef: { icon: ChefHat, color: "#dcdce6" },
+};
+
+/** The mark an entry wears, if it has one. Games are all drawn squares: there
+ *  are thousands of them and no two share a mark to draw. */
+export function markOf(e: Entry): { icon: LucideIcon; color: string } | undefined {
+  return e.kind === "app" ? APP_MARKS[e.id] : undefined;
+}
 
 export function Cover({
   entry,
@@ -115,15 +209,24 @@ function Drawn({
   icon: typeof Gamepad2;
   innerRef: React.RefObject<HTMLSpanElement | null>;
 }) {
+  const brand = markOf(entry);
+  const Brand = brand?.icon;
   return (
     <span
       ref={innerRef}
-      className="tile-art"
+      className={`tile-art${Brand ? " tile-art--app" : ""}`}
       style={{ ["--lean" as string]: `${lean(entry.id)}deg` }}
       aria-hidden="true"
     >
-      <b>{mark(entry.name)}</b>
-      <Icon />
+      {/* a door with its own mark on it, or a square of the name */}
+      {Brand ? (
+        <span className="tile-brand" style={{ color: brand.color }}>
+          <Brand />
+        </span>
+      ) : (
+        <b>{mark(entry.name)}</b>
+      )}
+      {!Brand && <Icon />}
     </span>
   );
 }

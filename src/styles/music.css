@@ -5,7 +5,104 @@
    borders, and the theme's own colours throughout.
    ============================================================ */
 
-/* ---------- now playing ---------- */
+/* ---------- the four shelves ----------
+   What NULL would put on, the box that asks every catalogue, what you kept,
+   and what is lined up. The hero and the transport sit above all four, so the
+   controls never scroll away from the shelf you are reading. */
+.mu-tabs {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 14px;
+  padding: 4px;
+  border: var(--bw) solid var(--line);
+  border-radius: var(--r-2);
+  background: color-mix(in srgb, var(--bg-2) 70%, transparent);
+  backdrop-filter: blur(var(--blur));
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.mu-tabs::-webkit-scrollbar {
+  display: none;
+}
+.mu-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 32px;
+  padding: 0 13px;
+  border-radius: var(--r-1);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--dim);
+  white-space: nowrap;
+  transition: color 0.14s var(--ease), background 0.14s var(--ease);
+}
+.mu-tab:hover {
+  color: var(--text);
+  background: var(--bg-3);
+}
+.mu-tab.is-on {
+  color: var(--text);
+  background: var(--bg-4);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+}
+.mu-tab b {
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--bg-3);
+  color: var(--dim);
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+}
+.mu-tab.is-on b {
+  background: var(--ac-1);
+  color: var(--bg);
+}
+
+/* ---------- featured ----------
+   Six doors rather than a chart. NULL has no listening data to rank with,
+   and a chart invented by the house is worse than a shelf of moods. */
+.mu-stations {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+.mu-station {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 13px 14px;
+  text-align: left;
+  border: var(--bw) solid var(--line);
+  border-radius: var(--r-2);
+  background: linear-gradient(160deg, var(--bg-3), var(--bg-2));
+  transition: border-color 0.16s var(--ease), transform 0.16s var(--ease);
+}
+.mu-station:hover {
+  border-color: var(--line-2);
+  transform: translateY(-2px);
+}
+.mu-station.is-on {
+  border-color: color-mix(in srgb, var(--ac-1) 55%, var(--line));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ac-1) 28%, transparent);
+}
+.mu-station b {
+  font-size: 13.5px;
+  font-weight: 650;
+  color: var(--text);
+}
+.mu-station span {
+  font-size: 11.5px;
+  color: var(--dim);
+  line-height: 1.4;
+}
+
+/* ---------- now playing ----------
+   The one panel on the page with light in it: a breath of the palette's
+   accent coming in from the corner the sleeve sits in, so the hero reads as
+   the live part of the player rather than another card in a stack. */
 .mu-hero {
   display: flex;
   align-items: center;
@@ -14,7 +111,12 @@
   padding: 16px;
   border: var(--bw) solid var(--line);
   border-radius: var(--r-3);
-  background: var(--bg-2);
+  background: linear-gradient(
+    150deg,
+    color-mix(in srgb, var(--ac-1) 10%, var(--bg-2)),
+    var(--bg-2) 48%
+  );
+  box-shadow: 0 22px 48px -38px var(--ac-1);
 }
 .mu-art {
   flex: none;

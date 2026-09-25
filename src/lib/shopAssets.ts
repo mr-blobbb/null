@@ -5,6 +5,23 @@
    makes the shop and every card renderer use the same asset pair.
 */
 
+/* ---------- what the art actually is ----------
+   Measured from the files rather than guessed at, because a card can only be
+   sized to fit an overlay if the overlay's shape is known.
+
+   · A face decoration is a square: 288px when it is moving, 144px for the
+     frame it rests on.
+   · A profile effect is a portrait card, 450×880, and every piece on the
+     shelf is that size — which is the whole reason a share card and a chat
+     card can take the art's own shape and have it land on the rim.
+
+   All of them are animated PNGs. The name says .png and the acTL chunk in
+   the header says otherwise; anything that measures one as a still picture
+   is right about the first frame and wrong about every frame after it. */
+export const FACE_ART = 288;
+export const FACE_STILL_ART = 144;
+export const CARD_ART = { w: 450, h: 880 };
+
 const ROOT = "https://raw.githubusercontent.com/cherriunblocked/svg/main/elements";
 
 function repo(dir: string, file: string): string {

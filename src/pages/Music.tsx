@@ -62,6 +62,30 @@ import {
   type Track,
 } from "../lib/music";
 
+type Tab = "featured" | "search" | "library" | "queue";
+
+/** The four shelves, in the order they are worth reading. */
+const TABS: { id: Tab; name: string }[] = [
+  { id: "featured", name: "Featured" },
+  { id: "search", name: "Search" },
+  { id: "library", name: "Your library" },
+  { id: "queue", name: "Queue" },
+];
+
+/** Featured is a set of doors rather than a chart: NULL has no listen data to
+ *  rank with, and a made-up chart is worse than a shelf of moods. Each one is
+ *  a search the catalogues answer well, with the words already chosen. */
+const STATIONS: { name: string; term: string; note: string }[] = [
+  { name: "Late night", term: "lofi beats", note: "slow drums and a warm hiss" },
+  { name: "Neon", term: "synthwave", note: "arpeggios, drum machines, one long drive" },
+  { name: "Small hours jazz", term: "jazz quartet", note: "brushes, upright bass, a muted horn" },
+  { name: "Rain on a window", term: "ambient rain", note: "nothing happens, pleasantly" },
+  { name: "No words", term: "instrumental study", note: "for reading something else" },
+  { name: "Loud", term: "garage rock", note: "guitars, and a lot of them" },
+];
+
+const FIRST_STATION = STATIONS[0];
+
 export function Music() {
   const m = useMusic();
   const me = useAccount();
@@ -79,6 +103,15 @@ export function Music() {
   const field = useRef<HTMLInputElement>(null);
   /** the keyed sources join in once their key is here */
   const keyed = SERVER_SOURCES.some((s) => (m.keys[s.id] ?? "").trim());
+  /* The player is four shelves rather than one long scroll: what NULL would
+     put on for you, the box that asks every catalogue, the things you kept,
+     and what is lined up next. The hero and the transport sit above all four,
+     because a player that scrolls away from its own controls is a web page
+     pretending to be one. */
+  const [tab, setTab] = useState<Tab>("featured");
+  /** the station the featured grid is showing, if any */
+  const [station, setStation] = useState<string | null>(null);
+  const primed = useRef(false);
 
   const ask = async (term: string, page: number) => {
     setBusy(true);
@@ -126,6 +159,18 @@ export function Music() {
   useEffect(() => {
     field.current?.focus();
   }, []);
+
+  /* Featured opens with a shelf already on it — an empty player with a search
+     box is a player most visitors close. Once, and only until something is
+     playing or the visitor picks a station of their own. */
+  useEffect(() => {
+    if (tab !== "featured" || primed.current) return;
+    primed.current = true;
+    setQ(FIRST_STATION.term);
+    setStation(FIRST_STATION.name);
+    void ask(FIRST_STATION.term, 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab]);
 
   useEffect(() => {
     if (!sureWipe) return;
@@ -247,7 +292,75 @@ export function Music() {
         />
       </section>
 
+      {/* ---------- the four shelves ---------- */}
+      <nav className="mu-tabs" aria-label="Music sections">
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            className={`mu-tab${tab === t.id ? " is-on" : ""}`}
+            onClick={() => {
+              setTab(t.id);
+              if (t.id === "search") window.setTimeout(() => field.current?.focus(), 0);
+            }}
+          >
+            {t.name}
+            {t.id === "library" && kept > 0 && <b>{kept}</b>}
+            {t.id === "queue" && m.queue.length > 0 && <b>{m.queue.length}</b>}
+          </button>
+        ))}
+      </nav>
+
+      {/* ---------- featured: doors, not a chart ---------- */}
+      {tab === "featured" && (
+        <>
+          <div className="mu-stations">
+            {STATIONS.map((s) => (
+              <button
+                key={s.term}
+                className={`mu-station${station === s.name ? " is-on" : ""}`}
+                onClick={() => {
+                  setStation(s.name);
+                  setQ(s.term);
+                  run(s.term);
+                }}
+              >
+                <b>{s.name}</b>
+                <span>{s.note}</span>
+              </button>
+            ))}
+          </div>
+
+          {station && results.length > 0 && (
+            <>
+              <h2 className="mu-h">
+                {station} <b>{results.length}</b>
+              </h2>
+              <Grid tracks={results} menuFor={menuFor} setMenuFor={setMenuFor} playList={results} />
+              {!end && (
+                <button className="btn lb-more" disabled={busy} onClick={() => void ask(q, pages)}>
+                  {busy ? "Looking…" : "More from this shelf"}
+                </button>
+              )}
+            </>
+          )}
+
+          {m.recent.length > 0 && (
+            <>
+              <h2 className="mu-h">Picked up where you left off</h2>
+              <Grid
+                tracks={m.recent.slice(0, 12)}
+                menuFor={menuFor}
+                setMenuFor={setMenuFor}
+                playList={m.recent}
+              />
+            </>
+          )}
+        </>
+      )}
+
       {/* ---------- search: one box, every catalogue ---------- */}
+      {tab === "search" && (
+        <>
       <form
         className="hm-search mu-find"
         role="search"
@@ -292,9 +405,14 @@ export function Music() {
           {end && !busy && <p className="tiny faint mu-endnote">That is every match the catalogues had.</p>}
         </>
       )}
+        </>
+      )}
 
       {menuFor && <AddMenu trackKey={menuFor} results={results} onClose={() => setMenuFor(null)} />}
 
+      {/* ---------- what you kept ---------- */}
+      {tab === "library" && (
+        <>
       {/* ---------- kept ---------- */}
       <h2 className="mu-h">
         Favourites <b>{m.favorites.length}</b>
@@ -339,7 +457,12 @@ export function Music() {
         </div>
       )}
 
+        </>
+      )}
+
       {/* ---------- queue and history ---------- */}
+      {tab === "queue" && (
+        <>
       <h2 className="mu-h">
         Queue <b>{m.queue.length}</b>
         {m.queue.length > 0 && (
@@ -378,10 +501,15 @@ export function Music() {
         </>
       )}
 
+        </>
+      )}
+
       {/* ---------- clearing the whole library ----------
           One button, asked twice: it takes the favourites, the playlists, the
-          history and whatever is playing with it. */}
-      {(m.favorites.length > 0 || m.recent.length > 0 || m.playlists.length > 0 || m.now) && (
+          history and whatever is playing with it. It lives on the library
+          shelf, next to the things it takes. */}
+      {tab === "library" &&
+        (m.favorites.length > 0 || m.recent.length > 0 || m.playlists.length > 0 || m.now) && (
         <div className="setrow setrow--actions">
           <button className="btn btn--bad" onClick={wipeAll}
             title={
@@ -397,6 +525,7 @@ export function Music() {
       )}
 
       {/* ---------- the optional keys ---------- */}
+      {tab === "search" && (
       <section className="card card--pad mu-keys">
         <h3 className="set-h">Widen the catalogue</h3>
         <p className="set-note">
@@ -423,6 +552,7 @@ export function Music() {
           Or set {SERVER_SOURCES.map((s) => s.env).join(" and ")} on the deployment and every visitor gets them.
         </p>
       </section>
+      )}
 
       <Sheet
         open={!!sheet}

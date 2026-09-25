@@ -47,7 +47,7 @@ export type Palette = {
 
 export const PALETTES: Palette[] = [
   { id: "null", name: "Null", bg: "#08080a", ink: "#f4f4f5", light: false },
-  { id: "midnight", name: "Midnight", bg: "#080c18", ink: "#7aa2ff", light: false },
+  { id: "midnight", name: "Midnight", bg: "#060a15", ink: "#8aa8ff", light: false },
   { id: "rosewood", name: "Rosewood", bg: "#11070a", ink: "#ff6b8b", light: false },
   { id: "darker", name: "Darker", bg: "#000000", ink: "#cfcfd6", light: false },
   { id: "forest", name: "Forest", bg: "#070d09", ink: "#7fd18b", light: false },
@@ -115,8 +115,11 @@ export const DEFAULT_CUSTOM: CustomColors = {
 };
 
 export const prefs = createStore<Prefs>("prefs", {
-  palette: "null",
-  ambient: "fog",
+  /* Midnight, and no fog behind it: the palette is the identity, and the
+     drift is something a visitor asks for rather than something they arrive
+     to (src/components/Ambient.tsx). */
+  palette: "midnight",
+  ambient: "off",
   custom: DEFAULT_CUSTOM,
   perf: "",
   reduceMotion: false,

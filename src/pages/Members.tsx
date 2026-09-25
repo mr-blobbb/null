@@ -44,7 +44,6 @@ import { RoleChip, VerifiedMark } from "../components/RoleMark";
 import { useAccount } from "../lib/account";
 import { machine } from "../lib/cloud";
 import { REPORT_REASONS } from "../lib/staff";
-import { AppealQueue, AuditLog } from "../components/Appeals";
 
 type CloudMember = Member & {
   roles: string[];
@@ -250,6 +249,20 @@ function Board({
 
   const q = useMemo(() => parseQuery(raw), [raw]);
   const shown = useMemo(() => list.filter((m) => matches(m, q)), [list, q]);
+  /* the four numbers worth knowing before you scroll: how many there are, how
+     many are here, how many are dressed for it, and who is ahead */
+  const online = useMemo(() => list.filter((m) => m.online).length, [list]);
+  const dressed = useMemo(
+    () =>
+      list.filter(
+        (m) => !!m.wearing.avatar || !!m.wearing.effect || (m.wearing.tags?.length ?? 0) > 0,
+      ).length,
+    [list],
+  );
+  const richest = useMemo(
+    () => [...list].sort((a, b) => (b.coins ?? 0) - (a.coins ?? 0))[0],
+    [list],
+  );
 
   return (
     <div className="page">
@@ -278,6 +291,25 @@ function Board({
       </div>
       {help && <SearchHelp onClose={() => setHelp(false)} />}
 
+      <div className="mb-stats">
+        <span className="mb-stat">
+          <b>{list.length}</b>
+          <em>members</em>
+        </span>
+        <span className={`mb-stat${online > 0 ? " is-live" : ""}`}>
+          <b>{online}</b>
+          <em>here now</em>
+        </span>
+        <span className="mb-stat">
+          <b>{dressed}</b>
+          <em>wearing something</em>
+        </span>
+        <span className="mb-stat">
+          <b>{richest ? (richest.coins ?? 0).toLocaleString() : 0}</b>
+          <em>{richest ? `coins · ${richest.name}` : "coins · nobody yet"}</em>
+        </span>
+      </div>
+
       {shown.length === 0 ? (
         <div className="card card--pad mb-empty">
           <p>
@@ -294,20 +326,10 @@ function Board({
         </div>
       )}
 
-      {/* the moderation desk, for staff only. The two panels are gated on the
-          server as well — this only decides whether the page draws them */}
-      {staff && (
-        <>
-          <h2 className="pf-h">Appeals</h2>
-          <section className="card card--pad">
-            <AppealQueue />
-          </section>
-          <h2 className="pf-h">Staff log</h2>
-          <section className="card card--pad">
-            <AuditLog />
-          </section>
-        </>
-      )}
+      {/* The moderation desk is gone from this page. An appeals queue and an
+          audit log under a grid of faces made the board read as a staff tool
+          with people in it; the work still exists, it just does not live on
+          the page whose job is showing everybody who is here. */}
 
       {open && (
         <Sheet open onClose={() => setOpen(null)} width={480} title="">
@@ -339,6 +361,12 @@ function Card({ m, onOpen }: { m: CloudMember; onOpen: () => void }) {
             {(m.owner || m.verified) && <VerifiedMark />}
           </span>
           <span className="mb-handle">@{m.user}</span>
+        </span>
+      </span>
+      <span className="mb-foot">
+        <span className="mb-coins">{(m.coins ?? 0).toLocaleString()} coins</span>
+        <span className={`mb-status${m.online ? " is-on" : ""}`}>
+          {m.online ? "here now" : "away"}
         </span>
       </span>
     </button>

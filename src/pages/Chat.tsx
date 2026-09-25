@@ -58,6 +58,7 @@ import {
 
 import { api } from "../../convex/_generated/api";
 import { Guard } from "../components/Guard";
+import { CardFx } from "../components/CardFx";
 import { DmPanel, DmRail } from "../components/Dms";
 import { cloudOn, machine } from "../lib/cloud";
 import { CloudDown } from "../lib/outage";
@@ -396,17 +397,26 @@ function Rooms() {
       <MemberRail members={members} me={handle} onOpen={setProfileFor} />
 
       {profileFor && (
-        <ProfilePopout
-          user={profileFor}
-          onClose={() => setProfileFor(null)}
-          onDm={(u) => {
-            setProfileFor(null);
-            setDmWith(u);
-          }}
-          staff={staff}
-          owner={iAmOwner}
-          me={handle}
-        />
+        /* the card takes the shape of the overlay it is wearing, and the
+           overlay is painted by the card's own ::after — see CardFx */
+        <CardFx
+          effect={
+            members?.find((m) => m.user.toLowerCase() === profileFor.toLowerCase())?.wearing
+              ?.effect ?? null
+          }
+        >
+          <ProfilePopout
+            user={profileFor}
+            onClose={() => setProfileFor(null)}
+            onDm={(u) => {
+              setProfileFor(null);
+              setDmWith(u);
+            }}
+            staff={staff}
+            owner={iAmOwner}
+            me={handle}
+          />
+        </CardFx>
       )}
 
       {dmWith && me.user && (

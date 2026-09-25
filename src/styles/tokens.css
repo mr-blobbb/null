@@ -77,19 +77,27 @@
   --bad: #e2686a;
 }
 
+/* Midnight — the palette NULL ships on. A deep navy stack rather than a grey
+   one, so the four surfaces step in blue as they rise instead of washing out,
+   and one icy periwinkle accent bright enough to read as light against it.
+   The three status colours are lifted off the near-black the default palette
+   uses: on navy, a red mixed for black reads as brown. */
 [data-palette="midnight"] {
-  --bg: #080c18;
-  --bg-2: #0c1222;
-  --bg-3: #121a2e;
-  --bg-4: #18233c;
-  --line: #1d2740;
-  --line-2: #2a3654;
-  --text: #e6ecff;
-  --dim: #7f8bab;
-  --faint: #525c78;
-  --ac-1: #7aa2ff;
-  --ac-2: color-mix(in srgb, #7aa2ff 26%, var(--text));
-  --ac-glow: color-mix(in srgb, #7aa2ff 38%, transparent);
+  --bg: #060a15;
+  --bg-2: #0a1020;
+  --bg-3: #101830;
+  --bg-4: #16203e;
+  --line: #1b2544;
+  --line-2: #2a3760;
+  --text: #e9eeff;
+  --dim: #8a97bd;
+  --faint: #5a6691;
+  --ac-1: #8aa8ff;
+  --ac-2: color-mix(in srgb, #8aa8ff 26%, var(--text));
+  --ac-glow: color-mix(in srgb, #8aa8ff 38%, transparent);
+  --ok: #4fd68c;
+  --warn: #e8bd57;
+  --bad: #ff7183;
 }
 /* Rosewood — the visitor palette: a dusty rose accent on a near-black plum
    stack. Four backgrounds, four lines, and the accent everywhere an icon,

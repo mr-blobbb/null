@@ -5,8 +5,11 @@
    spent money — it is a list of people who were here. That is a better board
    than the alternative, and it is why the page says so out loud.
 
-   Rank 1 gets the only filled row. Everything else is a line of text with a
-   number in front of it, because five rows do not need five medals. */
+   It is drawn the way a board is drawn: three places on a podium, in the
+   order a podium is read — second, first, third — and the whole five as a
+   table underneath, with a share bar behind every name. One place has a
+   medal; the rest have a number and a length of bar, which is the honest
+   shape of a board where the leader is usually far ahead. */
 
 import { useMemo } from "react";
 import { useQuery } from "convex/react";
@@ -66,6 +69,17 @@ function Local({ why }: { why: string }) {
   return <Board list={useMembers()} live={false} why={why} />;
 }
 
+/** A member's picture with whatever they are wearing on it. The podium and
+ *  the table are the same face at two sizes, so it is drawn once. */
+function Face({ m, size }: { m: Member; size: number }) {
+  return (
+    <span className="rich-pic" style={{ width: size, height: size }}>
+      {m.pfp ? <img src={m.pfp} alt="" /> : <NullFace />}
+      <AvatarArt id={m.wearing.avatar} />
+    </span>
+  );
+}
+
 function parseStyle(raw: string): NameStyle {
   try {
     const v = JSON.parse(raw || "{}");
@@ -81,6 +95,11 @@ function Board({ list, live, why }: { list: Member[]; live: boolean; why?: strin
     [list],
   );
   const top = ranked[0]?.coins ?? 0;
+  /** the width of a name's share of the leader, never thinner than a comma */
+  const share = (m: Member) => (top ? Math.max(4, Math.round(((m.coins ?? 0) / top) * 100)) : 4);
+  /* a podium is read second, first, third, and a board with fewer than three
+     names still draws in that order with the empty seats left out */
+  const podium: (Member | undefined)[] = [ranked[1], ranked[0], ranked[2]];
 
   return (
     <div className="page">
@@ -94,7 +113,7 @@ function Board({ list, live, why }: { list: Member[]; live: boolean; why?: strin
 
       <p className="lede">
         Coins come from time on NULL and nothing else — three a minute, plus a milestone every
-        fifteen. So this is a list of who was here longest, not who paid the most. Nobody can.
+        fifteen. So this is a board of who was here longest, not who paid the most. Nobody can.
       </p>
 
       {ranked.length === 0 || top === 0 ? (
@@ -102,31 +121,58 @@ function Board({ list, live, why }: { list: Member[]; live: boolean; why?: strin
           <p>No one has any coins yet. Play something for a few minutes and take the top spot.</p>
         </div>
       ) : (
-        <ol className="rich-list">
-          {ranked.map((m, i) => (
-            <li key={m.user} className={`rich-row${i === 0 ? " is-top" : ""}`}>
-              <span className="rich-rank">
-                {i === 0 ? <Trophy aria-label="First" /> : i + 1}
-              </span>
-              <span className="rich-pic">
-                {m.pfp ? <img src={m.pfp} alt="" /> : <NullFace />}
-                <AvatarArt id={m.wearing.avatar} />
-              </span>
-              <span className="rich-mid">
-                <span className="rich-name" style={nameStyleCss(m.nameStyle)}>
-                  {m.name}
-                </span>
-                <span className="rich-bar" aria-hidden="true">
-                  <i style={{ width: `${top ? Math.max(4, Math.round(((m.coins ?? 0) / top) * 100)) : 4}%` }} />
-                </span>
-              </span>
-              <span className="rich-dot">∙</span>
-              <span className="rich-coins">
-                <Coins /> {(m.coins ?? 0).toLocaleString()}
-              </span>
-            </li>
-          ))}
-        </ol>
+        <>
+          <div className="rich-podium">
+            {podium.map((m, seat) => {
+              const place = seat === 1 ? 1 : seat === 0 ? 2 : 3;
+              if (!m) return <span key={`seat-${place}`} className="rich-seat is-empty" aria-hidden="true" />;
+              return (
+                <div key={m.user} className={`rich-seat place-${place}`} data-user={m.user}>
+                  <span className="rich-medal" aria-label={`Place ${place}`}>
+                    {place === 1 ? <Trophy /> : place}
+                  </span>
+                  <Face m={m} size={place === 1 ? 62 : 48} />
+                  <span className="rich-seat-name" style={nameStyleCss(m.nameStyle)}>
+                    {m.name}
+                  </span>
+                  <span className="rich-seat-coins">
+                    <Coins /> {(m.coins ?? 0).toLocaleString()}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="rich-board">
+            <div className="rich-head" aria-hidden="true">
+              <span>#</span>
+              <span />
+              <span>Member</span>
+              <span className="rich-head-share">Share of the leader</span>
+              <span>Coins</span>
+            </div>
+            <ol className="rich-list">
+              {ranked.map((m, i) => (
+                <li key={m.user} className={`rich-row${i === 0 ? " is-top" : ""}`} data-user={m.user}>
+                  <span className="rich-rank">{i + 1}</span>
+                  <Face m={m} size={40} />
+                  <span className="rich-mid">
+                    <span className="rich-name" style={nameStyleCss(m.nameStyle)}>
+                      {m.name}
+                    </span>
+                    <span className="rich-handle tiny faint">@{m.user}</span>
+                  </span>
+                  <span className="rich-bar" aria-hidden="true">
+                    <i style={{ width: `${share(m)}%` }} />
+                  </span>
+                  <span className="rich-coins">
+                    <Coins /> {(m.coins ?? 0).toLocaleString()}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </>
       )}
 
       <div className="nf-actions">

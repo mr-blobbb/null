@@ -34,13 +34,7 @@ export function Rail({ onSettings, openSheetCount }: { onSettings: () => void; o
       <div className="rail-gap" />
 
       {RAIL_BOTTOM.map((id) => (
-        <Door
-          key={id}
-          id={id}
-          on={here === id}
-          onClick={() => click(id)}
-          badge={id === "extensions" && openSheetCount > 0 ? openSheetCount : undefined}
-        />
+        <Door key={id} id={id} on={here === id} onClick={() => click(id)} />
       ))}
     </nav>
   );

@@ -11,16 +11,13 @@ import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
-  Bookmark,
   Columns2,
-  Box,
   Globe,
   Lock,
   Music,
   Pause,
   Play,
   Plus,
-  Puzzle,
   RotateCw,
   ShieldAlert,
   SkipBack,
@@ -48,7 +45,6 @@ import {
   toggleSplit,
   useTabs,
 } from "../lib/tabs";
-import { useExt } from "../lib/extensions";
 import { step, toggle, useMusic } from "../lib/music";
 import { isBookmarked, toggleBookmark } from "../lib/browserData";
 
@@ -240,16 +236,11 @@ function BrowserChrome({ onSettings, tabId }: { onSettings: () => void; tabId?: 
           />
         </div>
 
+        {/* Two buttons, not five. The extension menu, the bookmark star and
+            the Minecraft door all left the bar: the first two have a key
+            (Ctrl+D still bookmarks) and there is a row of doors on the front
+            page for the third. A toolbar is for what you reach for mid-page. */}
         <div className="bar-actions" aria-label="Browser tools">
-          <ExtButton onManage={onSettings} />
-          <button
-            className={`bar-btn${tab.now.page === "proxies" && tab.now.arg?.url && isBookmarked(tab.now.arg.url) ? " is-on" : ""}`}
-            onClick={() => tab.now.page === "proxies" && tab.now.arg?.url && toggleBookmark(tab.now.arg.url, title)}
-            aria-label={tab.now.page === "proxies" && tab.now.arg?.url && isBookmarked(tab.now.arg.url) ? "Remove bookmark" : "Bookmark page"}
-            title="Bookmark (Ctrl+D)"
-          >
-            <Bookmark />
-          </button>
           <button
             className={`bar-btn${state.split ? " is-on" : ""}`}
             onClick={toggleSplit}
@@ -257,14 +248,6 @@ function BrowserChrome({ onSettings, tabId }: { onSettings: () => void; tabId?: 
             title={state.split ? "Close split view" : "Split page"}
           >
             <Columns2 />
-          </button>
-          <button
-            className="bar-btn bar-btn--minecraft"
-            onClick={() => openDestination({ page: "minecraft" })}
-            aria-label="Open Minecraft"
-            title="Minecraft"
-          >
-            <Box />
           </button>
         </div>
 
@@ -298,67 +281,7 @@ function BrowserChrome({ onSettings, tabId }: { onSettings: () => void; tabId?: 
   );
 } */
 
-function ExtButton({ onManage }: { onManage: () => void }) {
-  const ext = useExt();
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!open) return;
-    const onDoc = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
-  }, [open]);
-
-  const installed = ext.installed;
-
-  return (
-    <div className="extwrap" ref={ref}>
-      <button
-        className="bar-btn bar-btn--extensions"
-        onClick={() => setOpen((v) => !v)}
-        aria-label="Extensions"
-        aria-expanded={open}
-      >
-        <Puzzle />
-      </button>
-      {open && (
-        <div className="extmenu">
-          <div className="extmenu-head">
-            <Puzzle />
-            <span>Extensions</span>
-          </div>
-          {installed.length === 0 && <p className="extmenu-empty muted">Nothing installed yet.</p>}
-          {installed.map((id) => (
-            <button
-              key={id}
-              className="extmenu-row"
-              onClick={() => go({ page: "extensions" })}
-            >
-              <span className="extmenu-dot" data-on={ext.on[id] !== false} />
-              <span>{EX_NAME(id)}</span>
-            </button>
-          ))}
-          <button
-            className="extmenu-manage"
-            onClick={() => {
-              setOpen(false);
-              go({ page: "extensions" });
-            }}
-          >
-            Manage extensions
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function EX_NAME(id: string): string {
-  return id === "clock" ? "Clock" : id === "notes" ? "Scratchpad" : "Coin meter";
-}
 
 /* The mini player. It is the music page's engine, just smaller — the same
    play, step and pause — and its name is a door to that page.
